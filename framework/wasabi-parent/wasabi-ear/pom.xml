@@ -35,8 +35,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.1</version>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -44,7 +44,20 @@
 				<artifactId>maven-ear-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
-					<version>6</version>
+					<displayName>wasabibeans</displayName>
+					<modules>
+						<webModule>
+							<groupId>de.wasabibeans.framework</groupId>
+							<artifactId>wasabi-server-init</artifactId>
+							<contextRoot>wasabi-server-init</contextRoot>
+						</webModule>
+						<webModule>
+							<groupId>de.wasabibeans.framework</groupId>
+							<artifactId>wasabi-server-web</artifactId>
+							<contextRoot>wasabi-server-web</contextRoot>
+						</webModule>
+					</modules>
+					<defaultLibBundleDir>lib</defaultLibBundleDir>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -56,6 +69,11 @@
 					<serverName>default</serverName>
 					<fileName>target/wasabibeans.ear</fileName>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<version>2.4.2</version>
 			</plugin>
 		</plugins>
 	</build>
