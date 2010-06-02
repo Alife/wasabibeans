@@ -87,7 +87,7 @@
 				<version>1.4</version>
 				<configuration>
 					<jbossHome>/Users/schulte/development/code/wasabibeans2/jboss510</jbossHome>
-					<serverName>default</serverName>
+					<serverName>wasabi</serverName>
 					<fileName>target/wasabibeans.ear</fileName>
 				</configuration>
 			</plugin>
