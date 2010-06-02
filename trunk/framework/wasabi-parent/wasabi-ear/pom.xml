@@ -5,14 +5,14 @@
 	<groupId>de.wasabibeans.framework</groupId>
 	<artifactId>wasabi-ear</artifactId>
 	<packaging>ear</packaging>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>wasabi-ear JavaEE6 Assembly</name>
+	<version>1.9-SNAPSHOT</version>
+	<name>wasabi-ear JavaEE6</name>
 	<url>http://www.wasabibeans.de</url>
 
 	<parent>
 		<artifactId>wasabi-parent</artifactId>
 		<groupId>de.wasabibeans.framework</groupId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.9-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
