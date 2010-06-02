@@ -5,9 +5,9 @@
 	<groupId>de.wasabibeans.framework</groupId>
 	<artifactId>wasabi-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.9-SNAPSHOT</version>
 	<name>wasabi-parent Multi Project</name>
-	<url>http://maven.apache.org</url>
+	<url>http://www.wasabibeans.de</url>
 
 	<repositories>
 		<repository>

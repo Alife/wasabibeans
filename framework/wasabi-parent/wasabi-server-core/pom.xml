@@ -4,14 +4,14 @@
     <parent>
         <artifactId>wasabi-parent</artifactId>
         <groupId>de.wasabibeans.framework</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.9-SNAPSHOT</version>
     </parent>
     <groupId>de.wasabibeans.framework</groupId>
     <artifactId>wasabi-server-core</artifactId>
     <packaging>ejb</packaging>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>wasabi-server-core Java EE 6 EJB</name>
-    <url>http://maven.apache.org</url>
+    <version>1.9-SNAPSHOT</version>
+    <name>wasabi-server-core JavaEE6 EJB</name>
+    <url>http://www.wasabibeans.de</url>
     <dependencies>
 
         <dependency>
