@@ -15,7 +15,7 @@ import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiRoomDTO;
  * Session Bean implementation class ConnectionTest
  */
 @Stateful
-public class ConnectionTest implements ConnectionTestRemote {
+public class ConnectionTest implements ConnectionTestRemote, ConnectionTestLocal {
 	
 	/**
 	 * Default constructor.
