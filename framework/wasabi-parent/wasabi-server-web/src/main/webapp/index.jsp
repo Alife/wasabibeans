@@ -1,5 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"
-	import="javax.naming.*,de.wasabibeans.framework.server.core.transfer.model.dto.*,de.wasabibeans.framework.server.core.jcrTest.*,de.wasabibeans.framework.server.core.local.model.service.*"%>
+	import="javax.naming.*,de.wasabibeans.framework.server.core.dto.*,de.wasabibeans.framework.server.core.jcrTest.*,de.wasabibeans.framework.server.core.local.*"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
    "http://www.w3.org/TR/html4/loose.dtd">
 
@@ -19,7 +19,7 @@
 		WasabiRoomDTO root = bean.login();
 
 		DocumentServiceLocal documentService = (DocumentServiceLocal) context
-				.lookup("wasabibeans/DocumentServiceLocal/local");
+				.lookup("wasabibeans/DocumentService/local");
 		documentService.create("hallo", root);
 		for (WasabiDocumentDTO doc : documentService.getDocuments(root)) {
 			s += documentService.getName(doc) + " -- ";

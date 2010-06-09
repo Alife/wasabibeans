@@ -18,21 +18,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.remote.model.service;
+package de.wasabibeans.framework.server.core.remote;
 
 import java.io.Serializable;
 import java.util.Collection;
 
 import javax.ejb.Remote;
 
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiDocumentDTO;
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiLocationDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 
 /**
  * Interface, that defines the remote access on WasabiDocumentDTO objects.
  */
-@Remote(de.wasabibeans.framework.server.core.remote.model.service.impl.DocumentServiceImpl.class)
-public interface DocumentService extends ObjectService {
+@Remote(de.wasabibeans.framework.server.core.internal.DocumentService.class)
+public interface DocumentServiceRemote extends ObjectServiceRemote {
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment);
 

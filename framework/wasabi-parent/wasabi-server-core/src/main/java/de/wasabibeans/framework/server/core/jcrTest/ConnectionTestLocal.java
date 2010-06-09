@@ -1,7 +1,7 @@
 package de.wasabibeans.framework.server.core.jcrTest;
 import javax.ejb.Local;
 
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 
 @Local
 public interface ConnectionTestLocal {
