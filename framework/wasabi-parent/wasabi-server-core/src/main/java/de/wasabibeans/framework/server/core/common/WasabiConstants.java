@@ -20,6 +20,10 @@ public interface WasabiConstants {
 	public final static String ADMINS_GROUP_NAME = "admins";
 
 	public final static String WASABI_GROUP_NAME = "wasabi";
+	
+	public final static String JCR_NS_PREFIX = "wasabi";
+	
+	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
 
 	public enum SortType {
 		ASCENDING, DESCENDING
