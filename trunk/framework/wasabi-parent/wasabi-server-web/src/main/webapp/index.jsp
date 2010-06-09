@@ -24,6 +24,10 @@
 		for (WasabiDocumentDTO doc : documentService.getDocuments(root)) {
 			s += documentService.getName(doc) + " -- ";
 		}
+		
+		s += "<br/>";
+		s += bean.printNodeTypes();
+		
 	} catch (Exception e) {
 		s = e.toString();
 	}

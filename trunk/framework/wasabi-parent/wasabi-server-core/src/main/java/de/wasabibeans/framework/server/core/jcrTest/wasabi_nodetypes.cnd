@@ -1,0 +1,79 @@
+<nt='http://www.jcp.org/jcr/nt/1.0'>
+<mix='http://www.jcp.org/jcr/mix/1.0'>
+<wasabi='http://www.wasabibeans.de/jcr/1.0'>
+
+[wasabi:object] > nt:base, mix:referenceable
+	abstract
+	- wasabi:createdBy (REFERENCE) mandatory protected < 'wasabi:user'
+	- wasabi:createdOn (DATE) mandatory protected
+	- wasabi:modifiedBy (REFERENCE) mandatory protected < 'wasabi:user'
+	- wasabi:modifiedOn (DATE) mandatory protected
+	+ wasabi:attributes (wasabi:attributes) = 'wasabi:attributes' autocreated protected
+	+ wasabi:tags (wasabi:tags) = 'wasabi:tags' autocreated protected
+	
+[wasabi:location] > wasabi:object
+	abstract
+	+ wasabi:documents (wasabi:documents) = 'wasabi:documents' autocreated protected
+	+ wasabi:containers (wasabi:containers) = 'wasabi:containers' autocreated protected
+	+ wasabi:links (wasabi:links) = 'wasabi:links' autocreated protected
+	
+[wasabi:room] > wasabi:location
+	+ wasabi:rooms (wasabi:rooms) = 'wasabi:rooms' autocreated protected
+	
+[wasabi:container] > wasabi:location
+
+[wasabi:identity] > wasabi:object
+	abstract
+	- wasabi:displayName (STRING) mandatory protected
+	- wasabi:homeRoom (REFERENCE) mandatory protected < 'wasabi:room'
+	
+[wasabi:group] > wasabi:identity
+	+ wasabi:subgroups (wasabi:subgroups) = 'wasabi:subgroups' autocreated protected
+	+ wasabi:members (wasabi:members) = 'wasabi:members' autocreated protected
+	
+[wasabi:user] > wasabi:identity
+	- wasabi:password (STRING) mandatory protected
+	- wasabi:startRoom (REFERENCE) mandatory protected < 'wasabi:room'
+	- wasabi:active (BOOLEAN) = 'true' mandatory protected
+	+ wasabi:memberships (wasabi:memberships) = 'wasabi:memberships' autocreated protected
+
+[wasabi:document] > wasabi:object
+	- wasabi:content (UNDEFINED) mandatory protected
+	
+[wasabi:link] > wasabi:object
+	- wasabi:destination (REFERENCE) mandatory protected < 'wasabi:object'
+	
+[wasabi:attribute] > wasabi:object
+	- * (UNDEFINED)
+	
+[wasabi:attributes] > nt:base
+	+ * (wasabi:attribute)
+	
+[wasabi:tags] > nt:base
+	+ * (wasabi:tag) sns
+	
+[wasabi:tag] > nt:base
+	- wasabi:createdBy (REFERENCE) mandatory protected < 'wasabi:user'
+	- wasabi:createdOn (DATE) mandatory protected
+	- wasabi:text (STRING) mandatory protected
+	
+[wasabi:documents] > nt:base
+	+ * (wasabi:document)
+	
+[wasabi:containers] > nt:base
+	+ * (wasabi:container)
+	
+[wasabi:links] > nt:base
+	+ * (wasabi:link)
+	
+[wasabi:rooms] > nt:base
+	+ * (wasabi:room) 
+	
+[wasabi:subgroups] > nt:base
+	+ * (wasabi:group)
+	
+[wasabi:members] > nt:base
+	- * (REFERENCE) < 'wasabi:user' 
+	
+[wasabi:memberships] > nt:base
+	- * (REFERENCE) < 'wasabi:group'
