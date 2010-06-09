@@ -1,12 +1,9 @@
 package de.wasabibeans.framework.server.init;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -14,7 +11,6 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.Workspace;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServlet;
@@ -22,13 +18,11 @@ import javax.servlet.http.HttpServlet;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 
-import de.wasabibeans.framework.server.core.common.WasabiConstants;
-
 public class Init extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String WASABI_NODETYPES_RESOURCE_PATH = "de/wasabibeans/framework/server/core/jcrTest/wasabi_nodetypes.cnd";
+	private static final String WASABI_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
 
 	private InitialContext ctx = null;
 

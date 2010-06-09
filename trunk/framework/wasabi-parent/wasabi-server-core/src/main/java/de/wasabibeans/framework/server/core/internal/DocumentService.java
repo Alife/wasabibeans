@@ -18,9 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.internal.model.service.impl;
+package de.wasabibeans.framework.server.core.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.ejb.Stateless;
 import javax.jcr.Node;
@@ -30,16 +32,19 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 
-import de.wasabibeans.framework.server.core.internal.model.service.DocumentServiceInternal;
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
+import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
+import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
 /**
  * Class, that implements the internal access on WasabiDocuments objects.
  */
-@Stateless(name = "DocumentServiceInternal")
-public class DocumentServiceInternalImpl extends ObjectServiceInternalImpl
-		implements DocumentServiceInternal {
+@Stateless(name = "DocumentService")
+public class DocumentService extends ObjectService
+		implements DocumentServiceLocal, DocumentServiceRemote {
 
-	public Node create(String name, Node environment) {
+	public WasabiDocumentDTO create(String name, WasabiLocationDTO environmentDTO) {
 		if (name == null) {
 			throw new IllegalArgumentException("Name cannot be null.");
 		}
@@ -47,28 +52,31 @@ public class DocumentServiceInternalImpl extends ObjectServiceInternalImpl
 		// throw new EntityExistsException("Document " + name
 		// + " already exist in " + environment.getName() + ".");
 		// }
+		Node environmentNode = convertDTO2Node(environmentDTO);
 		try {
-			Node document = environment.addNode(name);
-			document.setPrimaryType(NodeType.NT_UNSTRUCTURED);
-			environment.getSession().save();
+			Node documentNode = environmentNode.addNode(name);
+			documentNode.setPrimaryType(NodeType.NT_UNSTRUCTURED);
+			environmentNode.getSession().save();
 
-			return document;
+			return convertNode2DTO(documentNode);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public Serializable getContent(Node wasabiDocument) {
+	public Serializable getContent(WasabiDocumentDTO documentDTO) {
+		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			return wasabiDocument.getProperty("content").getString();
+			return documentNode.getProperty("content").getString();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public Node getDocumentByName(Node wasabiLocation, String name) {
+	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO locationDTO, String name) {
+		Node locationNode = convertDTO2Node(locationDTO);
 		try {
-			return wasabiLocation.getNode(name);
+			return convertNode2DTO(locationNode.getNode(name));
 		} catch (PathNotFoundException e) {
 			return null;
 		} catch (RepositoryException e) {
@@ -76,9 +84,15 @@ public class DocumentServiceInternalImpl extends ObjectServiceInternalImpl
 		}
 	}
 
-	public NodeIterator getDocuments(Node wasabiLocation) {
+	public Collection<WasabiDocumentDTO> getDocuments(WasabiLocationDTO locationDTO) {
+		Node locationNode = convertDTO2Node(locationDTO);
 		try {
-			return wasabiLocation.getNodes();
+			ArrayList<WasabiDocumentDTO> documents = new ArrayList<WasabiDocumentDTO>();
+			NodeIterator iter = locationNode.getNodes();
+			while (iter.hasNext()) {
+				documents.add((WasabiDocumentDTO) convertNode2DTO(iter.nextNode()));
+			}
+			return documents;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -244,9 +258,10 @@ public class DocumentServiceInternalImpl extends ObjectServiceInternalImpl
 	// }
 	// }
 
-	public Node getEnvironment(Node wasabiDocument) {
+	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO documentDTO) {
+		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			return wasabiDocument.getParent();
+			return convertNode2DTO(documentNode.getParent());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -296,43 +311,48 @@ public class DocumentServiceInternalImpl extends ObjectServiceInternalImpl
 	// }
 	// }
 
-	public void move(Node wasabiDocument, Node newEnvironment) {
+	public void move(WasabiDocumentDTO documentDTO, WasabiLocationDTO newEnvironmentDTO) {
+		Node documentNode = convertDTO2Node(documentDTO);
+		Node newEnvironmentNode = convertDTO2Node(newEnvironmentDTO);
 		try {
-			wasabiDocument.getSession().move(wasabiDocument.getPath(),
-					newEnvironment.getPath() + "/" + wasabiDocument.getName());
-			wasabiDocument.getSession().save();
+			documentNode.getSession().move(documentNode.getPath(),
+					newEnvironmentNode.getPath() + "/" + documentNode.getName());
+			documentNode.getSession().save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void remove(Node wasabiDocument) {
+	public void remove(WasabiDocumentDTO documentDTO) {
+		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			Session s = wasabiDocument.getSession();
-			wasabiDocument.remove();
+			Session s = documentNode.getSession();
+			documentNode.remove();
 			s.save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void rename(Node wasabiDocument, String name) {
+	public void rename(WasabiDocumentDTO documentDTO, String name) {
 		if (name == null) {
 			throw new IllegalArgumentException("Name cannot be null.");
 		}
+		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			wasabiDocument.getSession().move(wasabiDocument.getPath(),
-					wasabiDocument.getParent().getPath() + "/" + name);
-			wasabiDocument.getSession().save();
+			documentNode.getSession().move(documentNode.getPath(),
+					documentNode.getParent().getPath() + "/" + name);
+			documentNode.getSession().save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void setContent(Node wasabiDocument, Serializable content) {
+	public void setContent(WasabiDocumentDTO documentDTO, Serializable content) {
+		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			wasabiDocument.setProperty("content", (String) content);
-			wasabiDocument.getSession().save();
+			documentNode.setProperty("content", (String) content);
+			documentNode.getSession().save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

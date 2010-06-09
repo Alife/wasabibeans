@@ -10,7 +10,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.naming.InitialContext;
 
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 
 /**
  * Session Bean implementation class ConnectionTest

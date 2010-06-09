@@ -18,19 +18,22 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.internal.model.service.impl;
+package de.wasabibeans.framework.server.core.internal;
 
 import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import de.wasabibeans.framework.server.core.internal.model.service.ObjectServiceInternal;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
+import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
+import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 
 /**
  * Class, that implements the internal access on WasabiObject objects.
  */
-@Stateless(name = "ObjectServiceInternal")
-public class ObjectServiceInternalImpl implements ObjectServiceInternal {
+@Stateless(name = "ObjectService")
+public class ObjectService extends TransferManager implements ObjectServiceLocal, ObjectServiceRemote {
 
 
 //	Logger log = Logger.getLogger(ObjectServiceInternal.class);
@@ -60,12 +63,13 @@ public class ObjectServiceInternalImpl implements ObjectServiceInternal {
 //		return new Date(wasabiObject.getModifiedOn());
 //	}
 
-	public String getName(Node wasabiObject) {
-		if (wasabiObject == null) {
+	public String getName(WasabiObjectDTO objectDTO) {
+		Node objectNode = convertDTO2Node(objectDTO);
+		if (objectNode == null) {
 			return "";
 		}
 		try {
-			return wasabiObject.getName();
+			return objectNode.getName();
 		} catch (RepositoryException e) {
 			throw new RuntimeException(e);
 		}
@@ -116,12 +120,13 @@ public class ObjectServiceInternalImpl implements ObjectServiceInternal {
 //		return (Collection<WasabiObject>) query.getResultList();
 //	}
 
-	public String getUUID(Node wasabiObject) {
-		if (wasabiObject == null) {
+	public String getUUID(WasabiObjectDTO objectDTO) {
+		Node objectNode = convertDTO2Node(objectDTO);
+		if (objectNode == null) {
 			return "";
 		}
 		try {
-			return wasabiObject.getIdentifier();
+			return objectNode.getIdentifier();
 		} catch (RepositoryException e) {
 			throw new RuntimeException(e);
 		}

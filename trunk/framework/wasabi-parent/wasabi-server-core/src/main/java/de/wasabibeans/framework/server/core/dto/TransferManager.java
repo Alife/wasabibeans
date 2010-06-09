@@ -18,9 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.transfer.model.dto;
+package de.wasabibeans.framework.server.core.dto;
 
-import javax.ejb.Stateless;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -28,8 +27,7 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 
-@Stateless
-public class TransferManager implements TransferManagerInterface {
+public class TransferManager {
 	
 	private final String suffix = "DTO";
 

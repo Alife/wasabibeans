@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.transfer.model.dto;
+package de.wasabibeans.framework.server.core.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -26,10 +26,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name="WasabiLocationDTO", namespace="org.wasabibeans.server.core.transfer.model.dto")
+@XmlType(name="WasabiLocationDTO", namespace="org.wasabibeans.server.core.dto")
 public abstract class WasabiLocationDTO extends WasabiObjectDTO {
 
-	@XmlElement(namespace="org.wasabibeans.server.core.transfer.model.dto",required=true)
+	@XmlElement(namespace="org.wasabibeans.server.core.dto",required=true)
 	private static final long serialVersionUID = -3061976862076696813L;
 
 }

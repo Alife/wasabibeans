@@ -18,20 +18,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.local.model.service;
+package de.wasabibeans.framework.server.core.local;
 
 import java.io.Serializable;
 import java.util.Collection;
 
 import javax.ejb.Local;
 
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiDocumentDTO;
-import de.wasabibeans.framework.server.core.transfer.model.dto.WasabiLocationDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 
 /**
  * Interface, that defines the local access on WasabiDocumentDTO objects.
  */
-@Local(de.wasabibeans.framework.server.core.local.model.service.impl.DocumentServiceLocalImpl.class)
+@Local(de.wasabibeans.framework.server.core.internal.DocumentService.class)
 public interface DocumentServiceLocal extends ObjectServiceLocal {
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment);
