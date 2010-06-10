@@ -1,7 +1,6 @@
 package de.wasabibeans.framework.server.core.dbTest;
 
 import java.sql.SQLException;
-import java.util.Properties;
 
 import javax.ejb.Stateful;
 import javax.naming.Context;
@@ -24,13 +23,7 @@ public class ConnectionTestDB implements ConnectionTestDBRemote,
 
 	public void createDatabase() throws SQLException, NamingException {
 
-		Properties properties = new Properties();
-		properties.put(Context.INITIAL_CONTEXT_FACTORY,
-				"org.jnp.interfaces.NamingContextFactory");
-		properties.put(Context.URL_PKG_PREFIXES,
-				"org.jboss.naming:org.jnp.interfaces");
-		properties.put(Context.PROVIDER_URL, "localhost:1099");
-		Context context = new InitialContext(properties);
+		Context context = new InitialContext();
 
 		DataSource dataSource = (DataSource) context.lookup("java:/wasabi");
 
