@@ -25,7 +25,21 @@ public interface WasabiConstants {
 	
 	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
 
+	/* Enumerations */
 	public enum SortType {
 		ASCENDING, DESCENDING
 	}
+	
+	public enum hashAlgorithms {
+		SHA, MD5
+	}
+	
+	/* Login Module */
+	public final static int USE_JCR_LOGIN_MODULE = 1;
+	public final static int USE_USERNAME_PASSWORD_LOGIN_MODULE = 2;
+	public final static int USE_DATABASE_SERVER_LOGIN_MODULE = 3;
+	public final static int USE_NO_PASSWORD_LOGIN_MODULE = 4;
+	public final static int USE_LDAP_LOGIN_MODULE = 5;
+	
+	public final static int preferredLoginModule = USE_JCR_LOGIN_MODULE;
 }
