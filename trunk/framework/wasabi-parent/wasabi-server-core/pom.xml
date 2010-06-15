@@ -13,8 +13,12 @@
 	<version>1.9-SNAPSHOT</version>
 	<name>wasabi-server-core JavaEE6 EJB</name>
 	<url>http://www.wasabibeans.de</url>
-	<dependencies>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
 		<dependency>
 			<groupId>javax</groupId>
 			<artifactId>javaee-api</artifactId>
@@ -46,8 +50,6 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.12</version>
 		</dependency>
-
-
 	</dependencies>
 
 	<repositories>
