@@ -9,6 +9,10 @@
 	<name>wasabi-parent Multi Project</name>
 	<url>http://www.wasabibeans.de</url>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>jboss</id>
