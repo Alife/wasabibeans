@@ -9,6 +9,10 @@
 	<name>wasabi-ear JavaEE6</name>
 	<url>http://www.wasabibeans.de</url>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<parent>
 		<artifactId>wasabi-parent</artifactId>
 		<groupId>de.wasabibeans.framework</groupId>
