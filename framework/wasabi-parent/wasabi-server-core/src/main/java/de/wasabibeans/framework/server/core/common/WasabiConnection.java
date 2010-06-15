@@ -34,12 +34,15 @@ public class WasabiConnection {
 
 	public void connect(String host, String port) throws NamingException {
 		if (host == null || port == null)
-			throw new IllegalArgumentException(WasabiExceptionMessages.WASABI_CONNECTION_ILLEGAL_ARGUMENTS);
+			throw new IllegalArgumentException(
+					WasabiExceptionMessages.WASABI_CONNECTION_ILLEGAL_ARGUMENTS);
 
 		environment.clear();
 
-		//environment.put(Context.INITIAL_CONTEXT_FACTORY, "org.jnp.interfaces.NamingContextFactory");
-		//environment.put(Context.URL_PKG_PREFIXES, "org.jboss.naming:org.jnp.interfaces");
+		// environment.put(Context.INITIAL_CONTEXT_FACTORY,
+		// "org.jnp.interfaces.NamingContextFactory");
+		// environment.put(Context.URL_PKG_PREFIXES,
+		// "org.jboss.naming:org.jnp.interfaces");
 		environment.put(Context.PROVIDER_URL, host + ":" + port);
 
 		initialContext = new InitialContext(environment);
@@ -47,14 +50,18 @@ public class WasabiConnection {
 		connected = true;
 	}
 
-	public void login(String username, String password) throws NamingException, LoginException {
+	public void login(String username, String password) throws NamingException,
+			LoginException {
 
 		if (!connected)
-			throw new NoInitialContextException(WasabiExceptionMessages.WASABI_CONNECTION_NOT_CONNECTED);
+			throw new NoInitialContextException(
+					WasabiExceptionMessages.WASABI_CONNECTION_NOT_CONNECTED);
 		if (loggedIn)
-			throw new LoginException(WasabiExceptionMessages.WASABI_CONNECTION_ALREADY_LOGGED_IN);
+			throw new LoginException(
+					WasabiExceptionMessages.WASABI_CONNECTION_ALREADY_LOGGED_IN);
 
-		// TODO: Modulspezifische Passwortverschlüsseltung noch berücksichtigen
+		// TODO: Modulspezifische Passwortverschlüsseltung noch
+		// berücksichtigen
 
 		Configuration.setConfiguration(new Configuration() {
 			public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
@@ -70,7 +77,8 @@ public class WasabiConnection {
 			}
 		});
 
-		loginContext = new LoginContext("wasabi", new SimpleUsrPwdCallbackHandler(username, password));
+		loginContext = new LoginContext("wasabi",
+				new SimpleUsrPwdCallbackHandler(username, password));
 		loginContext.login();
 		this.username = username;
 		initialContext = new InitialContext(environment);

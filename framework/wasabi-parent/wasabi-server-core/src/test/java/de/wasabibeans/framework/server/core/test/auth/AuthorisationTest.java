@@ -1,4 +1,4 @@
-package de.wasabibeans.framework.server.core.test;
+package de.wasabibeans.framework.server.core.test.auth;
 
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
