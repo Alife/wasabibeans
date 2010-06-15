@@ -17,7 +17,7 @@ public class AuthorisationTest {
 		wasabiConnection.connect("localhost", "1099");
 		wasabiConnection.login("root", "meerrettich");
 	}
-	
+
 	@Test
 	public void test() {
 		System.out.println("HelloWorld");
