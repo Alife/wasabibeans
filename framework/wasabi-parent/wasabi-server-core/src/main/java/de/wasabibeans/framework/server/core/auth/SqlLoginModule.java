@@ -25,6 +25,7 @@ import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
+import de.wasabibeans.framework.server.core.util.WasabiUser;
 
 public class SqlLoginModule implements LoginModule {
 
@@ -122,9 +123,9 @@ public class SqlLoginModule implements LoginModule {
 			DataSource dataSource = (DataSource) context.lookup("java:/wasabi");
 			QueryRunner run = new QueryRunner(dataSource);
 
-			ResultSetHandler<List<WasabiPassword>> h = new BeanListHandler(WasabiPassword.class);
+			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
 
-			List<WasabiPassword> result = run.query("SELECT password FROM wasabi_users WHERE username=?", h, username);
+			List<WasabiUser> result = run.query("SELECT password FROM wasabi_user WHERE username=?", h, username);
 
 			if (result.size() > 1)
 				return null;
@@ -147,20 +148,4 @@ public class SqlLoginModule implements LoginModule {
 		userPrincipal = null;
 		return true;
 	}
-
-	class WasabiPassword {
-		String password;
-
-		WasabiPassword() {
-		}
-
-		void setPassword(String pw) {
-			this.password = pw;
-		}
-
-		String getPassword() {
-			return this.password;
-		}
-	}
-
 }
