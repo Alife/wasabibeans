@@ -25,7 +25,7 @@ public class WasabiManager implements WasabiManagerLocal {
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
 
 		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
-				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL" + "PRIMARY KEY (username));";
+				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL," + "PRIMARY KEY (username));";
 		try {
 			run.update(createWasabiUserTableQuery);
 		} catch (SQLException e) {
