@@ -72,7 +72,7 @@ public class WasabiConnection {
 //						LoginModuleControlFlag.REQUIRED, properties) };
 				
 				return new AppConfigurationEntry[] { new AppConfigurationEntry(
-						"de.wasabibeans.framework.server.core.auth.SQLLoginModule",
+						"de.wasabibeans.framework.server.core.auth.SqlLoginModule",
 						LoginModuleControlFlag.REQUIRED, properties) };
 				
 			}
