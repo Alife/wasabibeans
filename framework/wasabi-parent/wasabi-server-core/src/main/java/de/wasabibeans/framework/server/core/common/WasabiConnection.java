@@ -67,9 +67,14 @@ public class WasabiConnection {
 			public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
 				HashMap<String, String> properties = new HashMap<String, String>();
 
+//				return new AppConfigurationEntry[] { new AppConfigurationEntry(
+//						"de.wasabibeans.framework.server.core.auth.UsernamePasswordLoginModule",
+//						LoginModuleControlFlag.REQUIRED, properties) };
+				
 				return new AppConfigurationEntry[] { new AppConfigurationEntry(
-						"de.wasabibeans.framework.server.core.auth.UsernamePasswordLoginModule",
+						"de.wasabibeans.framework.server.core.auth.SQLLoginModule",
 						LoginModuleControlFlag.REQUIRED, properties) };
+				
 			}
 
 			public void refresh() {

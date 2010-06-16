@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServlet;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 
+import de.wasabibeans.framework.server.core.manager.WasabiManager;
+
 public class Init extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
@@ -36,8 +38,11 @@ public class Init extends HttpServlet {
 				int sleepTime = 2000;
 				while (true) {
 					try {
+						WasabiManager wasabiManager = (WasabiManager) ctx.lookup("wasabibeans/WasabiManager/local");
+						
 						Thread.sleep(sleepTime);
 						initialize();
+						wasabiManager.init();
 						System.out.println("Wasabi initialization completed.");
 						break;
 					} catch (Exception e) {

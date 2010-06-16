@@ -42,4 +42,8 @@ public interface WasabiConstants {
 	public final static int USE_LDAP_LOGIN_MODULE = 5;
 	
 	public final static int preferredLoginModule = USE_JCR_LOGIN_MODULE;
+	
+	/* JNDI datasources */
+	public final static String JDNI_SQL_DATASOURCE = "java:/wasabi";
+	public final static String JDNI_JCR_DATASOURCE = "java:/jcr";	
 }
