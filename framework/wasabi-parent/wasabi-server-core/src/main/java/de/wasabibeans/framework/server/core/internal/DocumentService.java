@@ -32,6 +32,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
@@ -40,6 +42,7 @@ import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 /**
  * Class, that implements the internal access on WasabiDocuments objects.
  */
+@SecurityDomain("wasabi")
 @Stateless(name = "DocumentService")
 public class DocumentService extends ObjectService
 		implements DocumentServiceLocal, DocumentServiceRemote {
