@@ -24,6 +24,8 @@ import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
@@ -32,6 +34,7 @@ import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 /**
  * Class, that implements the internal access on WasabiObject objects.
  */
+@SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
 public class ObjectService extends TransferManager implements ObjectServiceLocal, ObjectServiceRemote {
 

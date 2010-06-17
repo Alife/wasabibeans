@@ -1,5 +1,7 @@
 package de.wasabibeans.framework.server.core.jcrTest;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
@@ -10,14 +12,20 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.naming.InitialContext;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 
 /**
  * Session Bean implementation class ConnectionTest
  */
+@SecurityDomain("wasabi")
 @Stateless
 public class ConnectionTest implements ConnectionTestRemote,
 		ConnectionTestLocal {
+	
+	@Resource
+	private SessionContext sessionContext;
 
 	/**
 	 * Default constructor.
@@ -27,6 +35,7 @@ public class ConnectionTest implements ConnectionTestRemote,
 	}
 
 	public WasabiRoomDTO login() {
+		System.out.println("LOGGED IN AS: " + sessionContext.getCallerPrincipal());
 		try {
 			InitialContext ctx = new InitialContext();
 			Repository rep = (Repository) ctx.lookup("java:jcr/local");
