@@ -37,6 +37,14 @@ $Revision: 87078 $
       </login-module>
     </authentication>
   </application-policy>
+  
+  <application-policy name="wasabi">
+    <authentication>
+      <login-module code="de.wasabibeans.framework.server.core.auth.SqlLoginModule"
+        flag="required">
+      </login-module>
+    </authentication>
+  </application-policy>
 
   <!-- Security domains for testing new jca framework -->
   <application-policy name="HsqlDbRealm">
