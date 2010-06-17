@@ -1,5 +1,3 @@
-import jackrabbit.ConnectionTestRemote;
-
 import java.io.IOException;
 import java.util.Properties;
 
@@ -7,9 +5,10 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.wasabibeans.server.core.remote.model.service.DocumentService;
-import org.wasabibeans.server.core.transfer.model.dto.WasabiDocumentDTO;
-import org.wasabibeans.server.core.transfer.model.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.jcrTest.ConnectionTestRemote;
+import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
 public class RemoteClient {
 	public static void main(String[] horst) throws NamingException {
@@ -20,11 +19,21 @@ public class RemoteClient {
 				"org.jboss.naming:org.jnp.interfaces");
 		properties.put(Context.PROVIDER_URL, "localhost:1099");
 		Context context = new InitialContext(properties);
+		
+		/*Test1Remote test1 = (Test1Remote) context.lookup("Test1/remote");
+		Test2Remote test2 = (Test2Remote) context.lookup("Test2/remote");
+		
+		print(test1.get());
+		test1.set("ufftata");
+		print(test1.get());
+		
+		
+		print(test2.get());*/
 
 		ConnectionTestRemote bean = (ConnectionTestRemote) context
-				.lookup("ConnectionTest/remote");
-		DocumentService documentService = (DocumentService) context
-				.lookup("DocumentService/remote");
+				.lookup("wasabibeans/ConnectionTest/remote");
+		DocumentServiceRemote documentService = (DocumentServiceRemote) context
+				.lookup("wasabibeans/DocumentService/remote");
 		try {
 			String input = "";
 			WasabiRoomDTO root = null;
@@ -83,5 +92,10 @@ public class RemoteClient {
 			e.printStackTrace();
 			return "";
 		}
+	}
+	
+	private static void print(String string) {
+		System.out.println(string);
+		System.out.println("-----------");
 	}
 }
