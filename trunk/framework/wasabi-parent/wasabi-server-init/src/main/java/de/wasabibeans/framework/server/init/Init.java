@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServlet;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 
-import de.wasabibeans.framework.server.core.manager.WasabiManager;
+import de.wasabibeans.framework.server.core.manager.WasabiManagerLocal;
 
 public class Init extends HttpServlet {
 
@@ -38,7 +38,7 @@ public class Init extends HttpServlet {
 				int sleepTime = 2000;
 				while (true) {
 					try {
-						WasabiManager wasabiManager = (WasabiManager) ctx.lookup("wasabibeans/WasabiManager/local");
+						WasabiManagerLocal wasabiManager = (WasabiManagerLocal) ctx.lookup("wasabibeans/WasabiManager/local");
 						
 						Thread.sleep(sleepTime);
 						initialize();
@@ -62,7 +62,7 @@ public class Init extends HttpServlet {
 		Credentials cred = new SimpleCredentials("user", new char[] { 'p', 'w',
 				'd' });
 		Session s = rep.login(cred);
-
+		System.out.println("USERID: " + s.getUserID());
 		// register wasabi nodetypes (also registers the wasabi jcr namespace)
 		InputStream in = getClass().getClassLoader().getResourceAsStream(
 				WASABI_NODETYPES_RESOURCE_PATH);
