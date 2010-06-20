@@ -32,7 +32,7 @@
 			<version>1.1.1</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.jcr</groupId>
 			<artifactId>jcr</artifactId>
@@ -57,34 +57,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.jboss.embedded</groupId>
-			<artifactId>jboss-embedded-all</artifactId>
-			<version>beta3.SP9</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.embedded</groupId>
-			<artifactId>jboss-embedded</artifactId>
-			<version>beta3.SP9</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.embedded</groupId>
-			<artifactId>thirdparty-all</artifactId>
-			<version>beta3.SP9</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.jackrabbit</groupId>
-			<artifactId>jackrabbit-jca</artifactId>
-			<version>2.1.0</version>
-			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
@@ -117,6 +89,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.1</version>
 			</plugin>
+
 		</plugins>
 		<finalName>wasabi-server-core</finalName>
 	</build>
@@ -154,18 +127,6 @@
 								<version>6.0</version>
 							</dependency>
 						</dependencies>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<configuration>
-							<!--
-								Workaround: Use of JBoss Embedded requires the JVM which
-								executes the unit tests to run in Java 5 compatible mode
-							-->
-							<forkMode>once</forkMode>
-							<argLine>-Dsun.lang.ClassLoader.allowArraySyntax=true</argLine>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
