@@ -1,7 +1,6 @@
 /* 
- * Copyright (C) 2007-2009 
- * Thorsten Hampel, Jonas Schulte, Daniel Buese,
- * Andreas Oberhoff, Thomas Bopp, and Robert Hinn
+ * Copyright (C) 2010 
+ * Dominik Klaholt, Jannis Sauer
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
