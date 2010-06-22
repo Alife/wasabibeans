@@ -42,15 +42,17 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
+import de.wasabibeans.framework.server.core.util.SqlConnector;
 import de.wasabibeans.framework.server.core.util.WasabiUser;
 
 public class SqlLoginModule implements LoginModule {
 
 	private CallbackHandler callbackHandler;
 	private Subject subject;
-	private String dsJndiName;
 	private String username;
 	private char[] password;
 	private UsernamePasswordPrincipal userPrincipal;
@@ -93,9 +95,6 @@ public class SqlLoginModule implements LoginModule {
 			Map<String, ?> options) {
 		this.callbackHandler = callbackHandler;
 		this.subject = subject;
-		dsJndiName = (String) options.get("dsJndiName");
-		if (dsJndiName == null)
-			dsJndiName = "java:/wasabi";
 	}
 
 	@Override
@@ -124,7 +123,7 @@ public class SqlLoginModule implements LoginModule {
 			succeeded = true;
 			return true;
 		} else {
-			throw new FailedLoginException("Username or Password incorrect");
+			throw new FailedLoginException(WasabiExceptionMessages.SQL_LOGIN_MODULE_LOGIN_FAILURE);
 		}
 
 	}
@@ -137,21 +136,16 @@ public class SqlLoginModule implements LoginModule {
 	protected String getUsersPassword(String username) throws LoginException {
 
 		try {
-			//TODO: dsJndiName in eine globale Konfigdatei auslagern, Query auch, übergabe per put in der WasabiConnection. Initialisierung nicht vergessen
-			Context context = new InitialContext();
-			DataSource dataSource = (DataSource) context.lookup("java:/wasabi");
-			QueryRunner run = new QueryRunner(dataSource);
+			QueryRunner run = new QueryRunner(SqlConnector.connect());
 
 			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
 
-			List<WasabiUser> result = run.query("SELECT password FROM wasabi_user WHERE username=?", h, username);
+			List<WasabiUser> result = run.query(WasabiConstants.SQL_LOGIN_MODULE_QUERY, h, username);
 
 			if (result.size() > 1)
 				return null;
 			else
 				return result.get(0).getPassword();
-		} catch (NamingException ex) {
-			throw new LoginException(ex.toString(true));
 		} catch (SQLException ex) {
 			throw new LoginException(ex.toString());
 		}

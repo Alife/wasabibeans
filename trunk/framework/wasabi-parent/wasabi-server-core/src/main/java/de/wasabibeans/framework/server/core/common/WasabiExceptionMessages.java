@@ -21,8 +21,9 @@ package de.wasabibeans.framework.server.core.common;
 
 public class WasabiExceptionMessages {
 
-	/* WasabiConnection */
-	public final static String WASABI_CONNECTION_ILLEGAL_ARGUMENTS = "Arguments cannot be null";
-	public final static String WASABI_CONNECTION_NOT_CONNECTED = "Not connected.";
-	public final static String WASABI_CONNECTION_ALREADY_LOGGED_IN = "Already logged in.";
+	/* UsernamePasswordPrincipal */
+	public final static String USERNAME_PASSWORD_PRINCIPAL_NULL_NAME = "Name cannot be null";
+	
+	/* SqlLoginModule */
+	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or Password incorrect";
 }
