@@ -39,10 +39,6 @@ public interface WasabiConstants {
 	public final static String ADMINS_GROUP_NAME = "admins";
 
 	public final static String WASABI_GROUP_NAME = "wasabi";
-	
-	public final static String JCR_NS_PREFIX = "wasabi";
-	
-	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
 
 	/* Enumerations */
 	public enum SortType {
@@ -62,7 +58,14 @@ public interface WasabiConstants {
 	
 	public final static int preferredLoginModule = USE_JCR_LOGIN_MODULE;
 	
+	public final static String SQL_LOGIN_MODULE_QUERY = "SELECT password FROM wasabi_user WHERE username=?";
+	
 	/* JNDI datasources */
-	public final static String JDNI_SQL_DATASOURCE = "java:/wasabi";
-	public final static String JDNI_JCR_DATASOURCE = "java:/jcr";	
+	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
+	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
+	
+	/* JCR Options */
+	public final static String JCR_NS_PREFIX = "wasabi";
+	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
+	
 }

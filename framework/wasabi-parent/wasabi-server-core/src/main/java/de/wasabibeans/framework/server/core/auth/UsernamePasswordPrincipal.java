@@ -21,6 +21,8 @@ package de.wasabibeans.framework.server.core.auth;
 
 import java.security.Principal;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+
 public class UsernamePasswordPrincipal implements Principal, java.io.Serializable {
 
 	private static final long serialVersionUID = -6659927928185347112L;
@@ -29,7 +31,7 @@ public class UsernamePasswordPrincipal implements Principal, java.io.Serializabl
 
 	public UsernamePasswordPrincipal(String name) {
 		if (name == null)
-			throw new IllegalArgumentException("Name cannot be null.");
+			throw new IllegalArgumentException(WasabiExceptionMessages.USERNAME_PASSWORD_PRINCIPAL_NULL_NAME);
 		this.name = name;
 	}
 
