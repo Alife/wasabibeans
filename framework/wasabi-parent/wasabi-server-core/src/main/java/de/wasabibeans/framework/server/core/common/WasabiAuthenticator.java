@@ -17,8 +17,29 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.manager;
+package de.wasabibeans.framework.server.core.common;
 
-public interface WasabiManagerLocal {
-	public void init();
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
+
+import de.wasabibeans.framework.server.core.auth.SimpleUsrPwdCallbackHandler;
+
+public class WasabiAuthenticator {
+
+	public WasabiAuthenticator() {
+
+	}
+
+	public boolean verifyLogin(String username, String password) {
+
+		try {
+			LoginContext loginContext = new LoginContext("wasabi", new SimpleUsrPwdCallbackHandler(username, password));
+			loginContext.login();
+			loginContext.logout();
+		} catch (LoginException e) {
+			return false;
+		}
+
+		return true;
+	}
 }
