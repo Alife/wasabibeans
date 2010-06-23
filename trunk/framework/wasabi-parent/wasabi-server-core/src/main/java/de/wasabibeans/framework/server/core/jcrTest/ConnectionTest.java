@@ -14,6 +14,7 @@ import javax.naming.InitialContext;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 
 /**
@@ -21,7 +22,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
  */
 @SecurityDomain("wasabi")
 @Stateless
-public class ConnectionTest implements ConnectionTestRemote,
+public class ConnectionTest extends TransferManager implements ConnectionTestRemote,
 		ConnectionTestLocal {
 	
 	@Resource
@@ -35,7 +36,7 @@ public class ConnectionTest implements ConnectionTestRemote,
 	}
 
 	public WasabiRoomDTO login() {
-		System.out.println("LOGGED IN AS: " + sessionContext.getCallerPrincipal());
+		logger.info("LOGGED IN AS: " + sessionContext.getCallerPrincipal());
 		try {
 			InitialContext ctx = new InitialContext();
 			Repository rep = (Repository) ctx.lookup("java:jcr/local");
