@@ -25,4 +25,24 @@ public class WasabiLogger {
 	public void error(String msg) {
 		logger.error(msg);
 	}
+	
+	public void warn(String msg) {
+		logger.warn(msg);
+	}
+	
+	public void debug(String msg, Throwable t) {
+		logger.debug(msg);
+	}
+	
+	public void info(String msg, Throwable t) {
+		logger.info(msg);
+	}
+	
+	public void error(String msg, Throwable t) {
+		logger.error(msg);
+	}
+	
+	public void warn(String msg, Throwable t) {
+		logger.warn(msg);
+	}
 }
