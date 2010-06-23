@@ -23,7 +23,17 @@ public class WasabiExceptionMessages {
 
 	/* UsernamePasswordPrincipal */
 	public final static String USERNAME_PASSWORD_PRINCIPAL_NULL_NAME = "Name cannot be null";
-	
+
 	/* SqlLoginModule */
 	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or Password incorrect";
+
+	/* TransferManager */
+	public final static String TRANSFER_NODE2DTO_FAILURE = "Could not convert DTO to internal representation. Internal representation may not exist anymore.";
+	
+	/* JNDI */
+	public final static String JNDI_NO_CONTEXT = "Could not initialize JNDI context";
+	
+	/* JCR */
+	public final static String JCR_REPOSITORY_FAILURE = "Could not access the JCR repository.";
+	public final static String JCR_LOGIN_FAILURE = "Could not establish JCR session. Login failed.";
 }

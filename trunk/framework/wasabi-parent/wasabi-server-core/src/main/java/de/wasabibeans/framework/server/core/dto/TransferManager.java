@@ -20,13 +20,18 @@
 package de.wasabibeans.framework.server.core.dto;
 
 import javax.jcr.Credentials;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
 import javax.jcr.Node;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public abstract class TransferManager {
@@ -72,8 +77,17 @@ public abstract class TransferManager {
 				Session s = rep.login(cred);
 				Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
 				return node;
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (NamingException ne) {
+				logger.error(WasabiExceptionMessages.JNDI_NO_CONTEXT, ne);
+				return null;
+			} catch (LoginException le) {
+				logger.error(WasabiExceptionMessages.JCR_LOGIN_FAILURE, le);
+				return null;
+			} catch (ItemNotFoundException ie) {
+				logger.warn(WasabiExceptionMessages.TRANSFER_NODE2DTO_FAILURE, ie);
+				return null;
+			} catch (RepositoryException re) {
+				logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				return null;
 			}
 		} else {
