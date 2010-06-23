@@ -26,9 +26,18 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 
-public class TransferManager {
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.util.WasabiLogger;
+
+public abstract class TransferManager {
 	
 	private final String suffix = "DTO";
+	
+	protected WasabiLogger logger;
+	
+	protected TransferManager() {
+		this.logger = WasabiLogger.getLogger(this.getClass());
+	}
 
 	@SuppressWarnings("unchecked")
 	protected <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject) {
@@ -57,13 +66,14 @@ public class TransferManager {
 		if (wasabiObjectDTO != null) {
 			try {
 				InitialContext ctx = new InitialContext();
-				Repository rep = (Repository) ctx.lookup("java:jcr/local");
+				Repository rep = (Repository) ctx.lookup(WasabiConstants.JNDI_JCR_DATASOURCE);
 				Credentials cred = new SimpleCredentials("user", new char[] { 'p',
 						'w', 'd' });
 				Session s = rep.login(cred);
 				Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
 				return node;
 			} catch (Exception e) {
+				e.printStackTrace();
 				return null;
 			}
 		} else {
