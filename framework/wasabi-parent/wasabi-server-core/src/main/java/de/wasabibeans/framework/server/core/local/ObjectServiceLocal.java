@@ -19,49 +19,51 @@
 
 package de.wasabibeans.framework.server.core.local;
 
+import java.util.Date;
+import java.util.Vector;
+
 import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 
 /**
  * Interface, that defines the local access on WasabiObjectDTO objects.
  */
-@Local(de.wasabibeans.framework.server.core.internal.ObjectService.class)
+@Local
 public interface ObjectServiceLocal {
 
-//	public boolean exists(WasabiObjectDTO object);
-//
-//	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object);
-//
-//	public Date getCreatedOn(WasabiObjectDTO object);
-//
-//	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object);
-//
-//	public Date getModifiedOn(WasabiObjectDTO object);
-//	
-//	public boolean isRightsActive(WasabiObjectDTO object);
+	public boolean exists(WasabiObjectDTO object);
+
+	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object);
+
+	public Date getCreatedOn(WasabiObjectDTO object);
+
+	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object);
+
+	public Date getModifiedOn(WasabiObjectDTO object);
+
+	public boolean isRightsActive(WasabiObjectDTO object);
 
 	public String getName(WasabiObjectDTO object);
 
-//	public Collection<WasabiObjectDTO> getObjectsByAttributeName(
-//			String attributeName);
-//
-//	public Collection<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator);
-//
-//	public Collection<WasabiObjectDTO> getObjectsByModifier(
-//			WasabiUserDTO modifier);
-//
-//	public Collection<WasabiObjectDTO> getObjectsByName(String name);
+	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName);
+
+	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator);
+
+	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier);
+
+	public Vector<WasabiObjectDTO> getObjectsByName(String name);
 
 	public String getUUID(WasabiObjectDTO object);
 
-//	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user);
-//
-//	public void setCreatedOn(WasabiObjectDTO object, Date creationTime);
-//	
-//	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user);
-//
-//	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime);
-//	
-//	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive);
+	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user);
+
+	public void setCreatedOn(WasabiObjectDTO object, Date creationTime);
+
+	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user);
+
+	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime);
+
+	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive);
 }

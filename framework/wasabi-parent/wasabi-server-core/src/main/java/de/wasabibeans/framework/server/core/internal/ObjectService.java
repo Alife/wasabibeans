@@ -19,6 +19,9 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
+import java.util.Date;
+import java.util.Vector;
+
 import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -27,6 +30,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 
@@ -36,34 +40,6 @@ import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 @SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
 public class ObjectService extends TransferManager implements ObjectServiceLocal, ObjectServiceRemote {
-
-
-//	Logger log = Logger.getLogger(ObjectServiceInternal.class);
-//
-//	@Override
-//	public boolean exists(WasabiObject wasabiObject) {
-//		return entityManager.contains(wasabiObject);
-//	}
-//
-//	@Override
-//	public WasabiUser getCreatedBy(WasabiObject wasabiObject) {
-//		return wasabiObject.getCreatedBy();
-//	}
-//
-//	@Override
-//	public Date getCreatedOn(WasabiObject wasabiObject) {
-//		return new Date(wasabiObject.getCreatedOn());
-//	}
-//
-//	@Override
-//	public WasabiUser getModifiedBy(WasabiObject wasabiObject) {
-//		return wasabiObject.getModifiedBy();
-//	}
-//
-//	@Override
-//	public Date getModifiedOn(WasabiObject wasabiObject) {
-//		return new Date(wasabiObject.getModifiedOn());
-//	}
 
 	public String getName(WasabiObjectDTO objectDTO) {
 		Node objectNode = convertDTO2Node(objectDTO);
@@ -77,51 +53,6 @@ public class ObjectService extends TransferManager implements ObjectServiceLocal
 		}
 	}
 
-//	@WasabiResultFilter(type = FilterType.VIEW)
-//	@SuppressWarnings("unchecked")
-//	@Override
-//	public Collection<WasabiObject> getObjectsByAttributeName(
-//			String attributeName) {
-//		Query query = entityManager
-//				.createNamedQuery("WasabiObject.getObjectsByAttributeName");
-//		query.setParameter("attributeName", attributeName);
-//
-//		return (Collection<WasabiObject>) query.getResultList();
-//	}
-//
-//	@WasabiResultFilter(type = FilterType.VIEW)
-//	@SuppressWarnings("unchecked")
-//	@Override
-//	public Collection<WasabiObject> getObjectsByCreator(WasabiUser creator) {
-//		Query query = entityManager
-//				.createNamedQuery("WasabiObject.getObjectsByCreator");
-//		query.setParameter("creator", creator);
-//
-//		return (Collection<WasabiObject>) query.getResultList();
-//	}
-//
-//	@WasabiResultFilter(type = FilterType.VIEW)
-//	@SuppressWarnings("unchecked")
-//	@Override
-//	public Collection<WasabiObject> getObjectsByModifier(WasabiUser modifier) {
-//		Query query = entityManager
-//				.createNamedQuery("WasabiObject.getObjectsByModifier");
-//		query.setParameter("modifier", modifier);
-//
-//		return (Collection<WasabiObject>) query.getResultList();
-//	}
-//
-//	@WasabiResultFilter(type = FilterType.VIEW)
-//	@SuppressWarnings("unchecked")
-//	@Override
-//	public Collection<WasabiObject> getObjectsByName(String name) {
-//		Query query = entityManager
-//				.createNamedQuery("WasabiObject.getObjectsByName");
-//		query.setParameter("name", name);
-//
-//		return (Collection<WasabiObject>) query.getResultList();
-//	}
-
 	public String getUUID(WasabiObjectDTO objectDTO) {
 		Node objectNode = convertDTO2Node(objectDTO);
 		if (objectNode == null) {
@@ -134,173 +65,94 @@ public class ObjectService extends TransferManager implements ObjectServiceLocal
 		}
 	}
 
-//	@Override
-//	public boolean removeSubObjects(WasabiObject wasabiObject) {
-//
-//		boolean success = true;
-//
-//		if (wasabiObject.getType().getSuperclass() == WasabiLocation.class) {
-//
-//			WasabiLocation location;
-//
-//			location = (WasabiLocation) wasabiObject;
-//
-//			Collection<WasabiContainer> containers = location.getContainers();
-//			Collection<WasabiContainer> removeContainers = new Vector<WasabiContainer>();
-//
-//			for (WasabiContainer wasabiContainer : containers) {
-//				if (removeSubObjects(wasabiContainer) == true) {
-//					removeContainers.add(wasabiContainer);
-//				}
-//			}
-//
-//			for (WasabiContainer wasabiContainer : removeContainers) {
-//				containers.remove(wasabiContainer);
-//				entityManager.remove(wasabiContainer);
-//			}
-//
-//			if (!containers.isEmpty()) {
-//				success = false;
-//			}
-//
-//			Collection<WasabiDocument> documents = location.getDocuments();
-//			Collection<WasabiDocument> removeDocuments = new Vector<WasabiDocument>();
-//
-//			for (WasabiDocument wasabiDocument : documents) {
-//				if (removeSubObjects(wasabiDocument)) {
-//					removeDocuments.add(wasabiDocument);
-//				}
-//			}
-//
-//			for (WasabiDocument wasabiDocument : removeDocuments) {
-//				documents.remove(wasabiDocument);
-//				entityManager.remove(wasabiDocument);
-//			}
-//
-//			if (!documents.isEmpty()) {
-//				success = false;
-//			}
-//
-//			Collection<WasabiLink> links = location.getLinks();
-//			Collection<WasabiLink> removeLinks = new Vector<WasabiLink>();
-//
-//			for (WasabiLink wasabiLink : links) {
-//				if (removeSubObjects(wasabiLink)) {
-//					removeLinks.add(wasabiLink);
-//				}
-//			}
-//
-//			for (WasabiLink wasabiLink : removeLinks) {
-//				links.remove(wasabiLink);
-//				entityManager.remove(wasabiLink);
-//			}
-//
-//			if (!links.isEmpty()) {
-//				success = false;
-//			}
-//
-//			if (wasabiObject.isType(WasabiRoom.class)) {
-//				WasabiRoom room;
-//
-//				room = (WasabiRoom) wasabiObject;
-//
-//				Collection<WasabiRoom> rooms = room.getRooms();
-//				Collection<WasabiRoom> removeRooms = new Vector<WasabiRoom>();
-//
-//				for (WasabiRoom wasabiRoom : rooms) {
-//					if (removeSubObjects(wasabiRoom)) {
-//						removeRooms.add(wasabiRoom);
-//					}
-//				}
-//
-//				for (WasabiRoom wasabiRoom : removeRooms) {
-//					rooms.remove(wasabiRoom);
-//					entityManager.remove(wasabiRoom);
-//				}
-//
-//				if (!rooms.isEmpty()) {
-//					success = false;
-//				}
-//			}
-//		} else if (wasabiObject.isType(WasabiGroup.class)) {
-//			WasabiGroup group;
-//			group = (WasabiGroup) wasabiObject;
-//
-//			Collection<WasabiGroup> groups = group.getSubGroups();
-//			Collection<WasabiGroup> removeGroups = new Vector<WasabiGroup>();
-//
-//			for (WasabiGroup wasabiGroup : groups) {
-//				if (removeSubObjects(wasabiGroup)) {
-//					removeGroups.add(wasabiGroup);
-//				}
-//			}
-//
-//			for (WasabiGroup wasabiGroup : removeGroups) {
-//				groups.remove(wasabiGroup);
-//				entityManager.remove(wasabiGroup);
-//			}
-//
-//			if (!groups.isEmpty()) {
-//				success = false;
-//			}
-//		}
-//
-//		Collection<WasabiAttribute> attributes = wasabiObject.getAttributes();
-//		Collection<WasabiAttribute> removeAttributes = new Vector<WasabiAttribute>();
-//
-//		for (WasabiAttribute wasabiAttribute : attributes) {
-//			if (removeSubObjects(wasabiAttribute)) {
-//				removeAttributes.add(wasabiAttribute);
-//			}
-//		}
-//
-//		for (WasabiAttribute wasabiAttribute : removeAttributes) {
-//			attributes.remove(wasabiAttribute);
-//			entityManager.remove(wasabiAttribute);
-//		}
-//
-//		if (!attributes.isEmpty()) {
-//			success = false;
-//		}
-//
-//		if ((success == true)
-//				&& (authorizationService.hasPermission(wasabiObject,
-//						WasabiPermission.WRITE))) {
-//			return true;
-//		}
-//
-//		return false;
-//
-//	}
-//
-//	@Override
-//	public void setCreatedBy(WasabiObject wasabiObject, WasabiUser wasabiUser) {
-//		wasabiObject.setCreatedBy(wasabiUser);
-//	}
-//
-//	@Override
-//	public void setCreatedOn(WasabiObject wasabiObject, Date creationTime) {
-//		wasabiObject.setCreatedOn(creationTime.getTime());
-//	}
-//
-//	@Override
-//	public void setModifiedBy(WasabiObject wasabiObject, WasabiUser wasabiUser) {
-//		wasabiObject.setModifiedBy(wasabiUser);
-//	}
-//
-//	@Override
-//	public void setModifiedOn(WasabiObject wasabiObject, Date modificationTime) {
-//		wasabiObject.setModifiedOn(modificationTime.getTime());
-//	}
-//
-//	@Override
-//	public boolean isRightsActive(WasabiObject wasabiObject) {
-//		return wasabiObject.isRightsActive();
-//	}
-//
-//	@Override
-//	public void setRightsActive(WasabiObject wasabiObject, boolean rightsActive) {
-//		wasabiObject.setRightsActive(rightsActive);		
-//	}
+	@Override
+	public boolean exists(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getCreatedOn(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getModifiedOn(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByName(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isRightsActive(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCreatedOn(WasabiObjectDTO object, Date creationTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive) {
+		// TODO Auto-generated method stub
+
+	}
 
 }

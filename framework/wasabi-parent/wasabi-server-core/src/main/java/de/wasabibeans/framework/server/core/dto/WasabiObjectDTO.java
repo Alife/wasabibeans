@@ -27,13 +27,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name="WasabiObjectDTO", namespace="org.wasabibeans.server.core.dto")
+@XmlType(name="WasabiObjectDTO", namespace="de.wasabibeans.framework.server.core.dto")
 public abstract class WasabiObjectDTO implements Serializable {
 
-	@XmlElement(namespace="org.wasabibeans.server.core.dto",required=true)
+	@XmlElement(namespace="de.wasabibeans.framework.server.core.dto",required=true)
 	private static final long serialVersionUID = -3996987979960095763L;
 	
-	@XmlElement(namespace="org.wasabibeans.server.core.dto",required=true)
+	@XmlElement(namespace="de.wasabibeans.framework.server.core.dto",required=true)
 	protected String id;
 
 	protected WasabiObjectDTO() {

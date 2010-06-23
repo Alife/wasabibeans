@@ -20,8 +20,8 @@
 package de.wasabibeans.framework.server.core.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Date;
+import java.util.Vector;
 
 import javax.ejb.Stateless;
 import javax.jcr.Node;
@@ -33,8 +33,11 @@ import javax.jcr.nodetype.NodeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
@@ -43,8 +46,7 @@ import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "DocumentService")
-public class DocumentService extends ObjectService
-		implements DocumentServiceLocal, DocumentServiceRemote {
+public class DocumentService extends ObjectService implements DocumentServiceLocal, DocumentServiceRemote {
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environmentDTO) {
 		if (name == null) {
@@ -86,10 +88,10 @@ public class DocumentService extends ObjectService
 		}
 	}
 
-	public Collection<WasabiDocumentDTO> getDocuments(WasabiLocationDTO locationDTO) {
+	public Vector<WasabiDocumentDTO> getDocuments(WasabiLocationDTO locationDTO) {
 		Node locationNode = convertDTO2Node(locationDTO);
 		try {
-			ArrayList<WasabiDocumentDTO> documents = new ArrayList<WasabiDocumentDTO>();
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			NodeIterator iter = locationNode.getNodes();
 			while (iter.hasNext()) {
 				documents.add((WasabiDocumentDTO) convertNode2DTO(iter.nextNode()));
@@ -100,166 +102,6 @@ public class DocumentService extends ObjectService
 		}
 	}
 
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByCreationDate(
-	// WasabiLocation environment, Date startDate, Date endDate) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByCreationDateAndEnvironment");
-	// // "start" and "end" must be long values, since they are stored in the
-	// // database as long types for higher precision.
-	// query.setParameter("start", startDate.getTime());
-	// query.setParameter("end", endDate.getTime());
-	// query.setParameter("environment", environment);
-	//
-	// return query.getResultList();
-	// }
-
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByCreationDate(
-	// WasabiLocation environment, Date startDate, Date endDate, int depth) {
-	// Collection<WasabiDocument> allDocumentsByCreationDate = new
-	// HashSet<WasabiDocument>();
-	// allDocumentsByCreationDate.addAll(getDocumentsByCreationDate(
-	// environment, startDate, endDate));
-	// Collection<WasabiLocation> subLocations = new HashSet<WasabiLocation>();
-	//
-	// subLocations.addAll(environment.getContainers());
-	//
-	// if (environment.getClass() == WasabiRoom.class) {
-	// subLocations.addAll(((WasabiRoom) environment).getRooms());
-	// }
-	//
-	// for (WasabiLocation subLocation : subLocations) {
-	// if (depth > 0) {
-	// allDocumentsByCreationDate.addAll(getDocumentsByCreationDate(
-	// subLocation, startDate, endDate, depth - 1));
-	// } else if (depth < 0) {
-	// allDocumentsByCreationDate.addAll(getDocumentsByCreationDate(
-	// subLocation, startDate, endDate, depth));
-	// }
-	// }
-	//
-	// return allDocumentsByCreationDate;
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByCreator(WasabiUser
-	// creator) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByCreator");
-	// query.setParameter("creator", creator);
-	//
-	// return query.getResultList();
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByCreator(WasabiUser
-	// creator,
-	// WasabiLocation environment) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByCreatorAndEnvironment");
-	// query.setParameter("creator", creator);
-	// query.setParameter("environment", environment);
-	//
-	// return query.getResultList();
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByModificationDate(
-	// WasabiLocation environment, Date startDate, Date endDate) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByModificationDateAndEnvironment");
-	// // "start" and "end" must be long values, since they are stored in the
-	// // database as long types for higher precision.
-	// query.setParameter("start", startDate.getTime());
-	// query.setParameter("end", endDate.getTime());
-	// query.setParameter("environment", environment);
-	//
-	// return query.getResultList();
-	// }
-
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByModificationDate(
-	// WasabiLocation environment, Date startDate, Date endDate, int depth) {
-	// Collection<WasabiDocument> allDocumentsByModificationDate = new
-	// HashSet<WasabiDocument>();
-	// allDocumentsByModificationDate.addAll(getDocumentsByModificationDate(
-	// environment, startDate, endDate));
-	// Collection<WasabiLocation> subLocations = new HashSet<WasabiLocation>();
-	//
-	// subLocations.addAll(environment.getContainers());
-	//
-	// if (environment.getClass() == WasabiRoom.class) {
-	// subLocations.addAll(((WasabiRoom) environment).getRooms());
-	// }
-	//
-	// for (WasabiLocation subLocation : subLocations) {
-	// if (depth > 0) {
-	// allDocumentsByModificationDate
-	// .addAll(getDocumentsByModificationDate(subLocation,
-	// startDate, endDate, depth - 1));
-	// } else if (depth < 0) {
-	// allDocumentsByModificationDate
-	// .addAll(getDocumentsByModificationDate(subLocation,
-	// startDate, endDate, depth));
-	// }
-	// }
-	//
-	// return allDocumentsByModificationDate;
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByModifier(WasabiUser
-	// modifier) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByModifier");
-	// query.setParameter("modifier", modifier);
-	//
-	// return query.getResultList();
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsByModifier(
-	// WasabiUser modifier, WasabiLocation environment) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsByModifierAndEnvironment");
-	// query.setParameter("modifier", modifier);
-	// query.setParameter("environment", environment);
-	//
-	// return query.getResultList();
-	// }
-
-	// @WasabiResultFilter(type = FilterType.VIEW)
-	// @SuppressWarnings("unchecked")
-	// @Override
-	// public Collection<WasabiDocument> getDocumentsOrderedByCreationDate(
-	// WasabiLocation wasabiLocation, SortType order) {
-	// if (order == SortType.DESCENDING) {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsOrderedByCreationDateDESC");
-	// query.setParameter("environment", wasabiLocation);
-	// return query.getResultList();
-	//
-	// } else {
-	// Query query = entityManager
-	// .createNamedQuery("WasabiDocument.getDocumentsOrderedByCreationDateASC");
-	// query.setParameter("environment", wasabiLocation);
-	// return query.getResultList();
-	// }
-	// }
-
 	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO documentDTO) {
 		Node documentNode = convertDTO2Node(documentDTO);
 		try {
@@ -268,50 +110,6 @@ public class DocumentService extends ObjectService
 			throw new RuntimeException(e);
 		}
 	}
-
-	// @Override
-	// public boolean hasDocumentsCreatedAfter(WasabiLocation environment,
-	// Long timestamp) {
-	// if (getDocumentsByCreationDate(environment, new Date(timestamp),
-	// new Date(Long.MAX_VALUE)).isEmpty()) {
-	// return false;
-	// } else {
-	// return true;
-	// }
-	// }
-
-	// @Override
-	// public boolean hasDocumentsCreatedBefore(WasabiLocation environment,
-	// Long timestamp) {
-	// if (getDocumentsByCreationDate(environment, new Date(Long.MIN_VALUE),
-	// new Date(timestamp)).isEmpty()) {
-	// return false;
-	// } else {
-	// return true;
-	// }
-	// }
-
-	// @Override
-	// public boolean hasDocumentsModifiedAfter(WasabiLocation environment,
-	// Long timestamp) {
-	// if (getDocumentsByModificationDate(environment, new Date(timestamp),
-	// new Date(Long.MAX_VALUE)).isEmpty()) {
-	// return false;
-	// } else {
-	// return true;
-	// }
-	// }
-
-	// @Override
-	// public boolean hasDocumentsModifiedBefore(WasabiLocation environment,
-	// Long timestamp) {
-	// if (getDocumentsByModificationDate(environment,
-	// new Date(Long.MIN_VALUE), new Date(timestamp)).isEmpty()) {
-	// return false;
-	// } else {
-	// return true;
-	// }
-	// }
 
 	public void move(WasabiDocumentDTO documentDTO, WasabiLocationDTO newEnvironmentDTO) {
 		Node documentNode = convertDTO2Node(documentDTO);
@@ -342,8 +140,7 @@ public class DocumentService extends ObjectService
 		}
 		Node documentNode = convertDTO2Node(documentDTO);
 		try {
-			documentNode.getSession().move(documentNode.getPath(),
-					documentNode.getParent().getPath() + "/" + name);
+			documentNode.getSession().move(documentNode.getPath(), documentNode.getParent().getPath() + "/" + name);
 			documentNode.getSession().save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -360,29 +157,175 @@ public class DocumentService extends ObjectService
 		}
 	}
 
-	// /*
-	// * (non-Javadoc)
-	// * @see
-	// org.wasabibeans.server.core.internal.model.service.DocumentServiceInternal#copy(org.wasabibeans.server.core.internal.model.WasabiDocument,
-	// org.wasabibeans.server.core.internal.model.WasabiLocation)
-	// */
-	// @Override
-	// public void copy(WasabiDocument wasabiDocument,
-	// WasabiLocation destination) {
-	// WasabiDocument copy = create(wasabiDocument.getName(), destination);
-	// entityManager.flush();
-	// destination.getDocuments().add(copy);
-	//		
-	// for (Iterator<WasabiAttribute> iterator =
-	// wasabiDocument.getAttributes().iterator(); iterator
-	// .hasNext();) {
-	// WasabiAttribute wasabiAttribute = (WasabiAttribute) iterator.next();
-	//			
-	// }
-	//			
-	// wasabiDocument.getEnvironment().getDocuments().remove(wasabiDocument);
-	// wasabiDocument.setEnvironment(newEnvironment);
-	// entityManager.flush();
-	// newEnvironment.getDocuments().add(wasabiDocument);
-	// }
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
+			Date endDate) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
+			Date endDate, int depth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
+			Date endDate) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
+			Date endDate, int depth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean exists(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getCreatedOn(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getModifiedOn(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Vector<WasabiObjectDTO> getObjectsByName(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isRightsActive(WasabiObjectDTO object) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCreatedOn(WasabiObjectDTO object, Date creationTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive) {
+		// TODO Auto-generated method stub
+
+	}
 }

@@ -17,18 +17,22 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package de.wasabibeans.framework.server.core.dto;
+package de.wasabibeans.framework.server.core.exception;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+public class DestinationNotFoundException extends Exception {
+	
+	/**
+	 * Generated serial version UID
+	 */
+	private static final long serialVersionUID = -8358456200950706434L;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name="WasabiRoomDTO", namespace="de.wasabibeans.framework.server.core.dto")
-public class WasabiRoomDTO extends WasabiLocationDTO {
+	public DestinationNotFoundException() {
 
-	@XmlElement(namespace="de.wasabibeans.framework.server.core.dto",required=true)
-	private static final long serialVersionUID = 1006555762472557076L;
+		super();
+	}
 
+	public DestinationNotFoundException(String s) {
+
+		super(s);
+	}
 }

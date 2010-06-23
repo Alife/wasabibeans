@@ -25,10 +25,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name="WasabiLocationDTO", namespace="org.wasabibeans.server.core.dto")
+@XmlType(name="WasabiLocationDTO", namespace="de.wasabibeans.framework.server.core.dto")
 public abstract class WasabiLocationDTO extends WasabiObjectDTO {
 
-	@XmlElement(namespace="org.wasabibeans.server.core.dto",required=true)
+	@XmlElement(namespace="de.wasabibeans.framework.server.core.dto",required=true)
 	private static final long serialVersionUID = -3061976862076696813L;
 
 }
