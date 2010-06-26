@@ -24,20 +24,28 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NodeType;
+import javax.jcr.Value;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ContentNotSerializableException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
@@ -48,112 +56,226 @@ import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 @Stateless(name = "DocumentService")
 public class DocumentService extends ObjectService implements DocumentServiceLocal, DocumentServiceRemote {
 
-	public WasabiDocumentDTO create(String name, WasabiLocationDTO environmentDTO) {
+	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment) {
 		if (name == null) {
-			throw new IllegalArgumentException("Name cannot be null.");
+			logger.error(WasabiExceptionMessages.INTERNAL_NAME_NULL);
+			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 		}
-		// if (getDocumentByName(environment, name) != null) {
-		// throw new EntityExistsException("Document " + name
-		// + " already exist in " + environment.getName() + ".");
-		// }
-		Node environmentNode = convertDTO2Node(environmentDTO);
+		Session s = getJCRSession();
+		Node environmentNode = convertDTO2Node(environment, s);
 		try {
-			Node documentNode = environmentNode.addNode(name);
-			documentNode.setPrimaryType(NodeType.NT_UNSTRUCTURED);
-			environmentNode.getSession().save();
+			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
+					WasabiNodeType.WASABI_DOCUMENT);
+			s.save();
 
 			return convertNode2DTO(documentNode);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		} catch (ItemExistsException iee) {
+			String msg = "Document " + name + " already exists.";
+			logger.warn(msg, iee);
+			throw new ObjectAlreadyExistsException(msg, name);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public Serializable getContent(WasabiDocumentDTO documentDTO) {
-		Node documentNode = convertDTO2Node(documentDTO);
+	public Serializable getContent(WasabiDocumentDTO document) {
+		Session s = getJCRSession();
+		Node documentNode = convertDTO2Node(document, s);
 		try {
-			return documentNode.getProperty("content").getString();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			Value value = ((Property) documentNode.getPrimaryItem()).getValue();
+			switch (value.getType()) {
+			case PropertyType.BINARY:
+				try {
+					byte[] bytes = new byte[(int) value.getBinary().getSize()];
+					value.getBinary().read(bytes, 0);
+					return bytes;
+				} catch (Exception e) {
+					String msg = "The content of the document " + documentNode.getName() + " cannot be serialized.";
+					logger.warn(msg);
+					throw new ContentNotSerializableException(msg, documentNode.getName());
+				}
+			case PropertyType.BOOLEAN:
+				return value.getBoolean();
+			case PropertyType.DATE:
+				return value.getDate();
+			case PropertyType.DECIMAL:
+				return value.getDecimal();
+			case PropertyType.DOUBLE:
+				return value.getDouble();
+			case PropertyType.LONG:
+				return value.getLong();
+			case PropertyType.NAME:
+				return value.getString();
+			case PropertyType.PATH:
+				return value.getString();
+			case PropertyType.REFERENCE:
+				return value.getString();
+			case PropertyType.STRING:
+				return value.getString();
+			case PropertyType.URI:
+				return value.getString();
+			case PropertyType.WEAKREFERENCE:
+				return value.getString();
+			default:
+				return null;
+			}
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO locationDTO, String name) {
-		Node locationNode = convertDTO2Node(locationDTO);
+	public void setContent(WasabiDocumentDTO document, Serializable content) {
+		// Session s = getJCRSession();
+		// Node documentNode = convertDTO2Node(documentDTO, s);
+		// Binary bin; InputStream in = new InputStream();
+		// ByteArrayInputStream baos = new ByteArrayOutputStream();
+		// ObjectOutputStream pf =new ObjectOutputStream(baos).writeObject(content);
+		// s.getValueFactory().
+		// // stream closed in the finally
+		// out = new ObjectOutputStream JavaDoc(outputStream);
+		// out.writeObject(obj);
+		//		              
+		// } catch (IOException JavaDoc ex) {
+		// throw new SerializationException(ex);
+		// } finally {
+		// try {
+		// if (out != null) {
+		// out.close();
+		// }
+		// } catch (IOException JavaDoc ex) {
+		// // ignore;
+		// }
+		// }
+		//
+		// Read more: http://kickjava.com/src/org/apache/commons/lang/SerializationUtils.java.htm#ixzz0rrpAh7C1
+		//
+		//		
+		//		
+		// try {
+		// Property currentContent = (Property) documentNode.getPrimaryItem();
+		// if (content instanceof String) {
+		// currentContent.setValue((String) content);
+		// } else if (content instanceof Date) {
+		// Calendar cal = Calendar.getInstance();
+		// cal.setTime((Date) content);
+		// currentContent.setValue(cal);
+		// } else if (content instanceof Calendar) {
+		// currentContent.setValue((Calendar) content);
+		// } else if (content instanceof Double) {
+		// currentContent.setValue((Double) content);
+		// } else if (content instanceof Boolean) {
+		// currentContent.setValue((Boolean) content);
+		// } else if (content instanceof BigDecimal) {
+		// currentContent.setValue((BigDecimal) content);
+		// } else if (content instanceof Long) {
+		// currentContent.setValue((Long) content);
+		// } else {
+		// }
+		// s.save();
+		// } catch (RepositoryException re) {
+		// logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		// throw new RuntimeException(re);
+		// }
+	}
+
+	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name) {
+		if (name == null) {
+			logger.error(WasabiExceptionMessages.INTERNAL_NAME_NULL);
+			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
+		}
+		Session s = getJCRSession();
+		Node locationNode = convertDTO2Node(location, s);
 		try {
-			return convertNode2DTO(locationNode.getNode(name));
+			return convertNode2DTO(locationNode.getNode(WasabiNodeProperty.DOCUMENTS + "/" + name));
 		} catch (PathNotFoundException e) {
 			return null;
-		} catch (RepositoryException e) {
-			throw new RuntimeException(e);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public Vector<WasabiDocumentDTO> getDocuments(WasabiLocationDTO locationDTO) {
-		Node locationNode = convertDTO2Node(locationDTO);
+	public Vector<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location) {
+		Session s = getJCRSession();
+		Node locationNode = convertDTO2Node(location, s);
 		try {
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-			NodeIterator iter = locationNode.getNodes();
+			NodeIterator iter = locationNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
 			while (iter.hasNext()) {
 				documents.add((WasabiDocumentDTO) convertNode2DTO(iter.nextNode()));
 			}
 			return documents;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO documentDTO) {
-		Node documentNode = convertDTO2Node(documentDTO);
+	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO document) {
+		Session s = getJCRSession();
+		Node documentNode = convertDTO2Node(document, s);
 		try {
-			return convertNode2DTO(documentNode.getParent());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			return convertNode2DTO(documentNode.getParent().getParent());
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public void move(WasabiDocumentDTO documentDTO, WasabiLocationDTO newEnvironmentDTO) {
-		Node documentNode = convertDTO2Node(documentDTO);
-		Node newEnvironmentNode = convertDTO2Node(newEnvironmentDTO);
+	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment) {
+		Session s = getJCRSession();
+		Node documentNode = convertDTO2Node(document, s);
+		Node newEnvironmentNode = convertDTO2Node(newEnvironment, s);
 		try {
-			documentNode.getSession().move(documentNode.getPath(),
-					newEnvironmentNode.getPath() + "/" + documentNode.getName());
-			documentNode.getSession().save();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			s.move(documentNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/"
+					+ documentNode.getName());
+			s.save();
+		} catch (ItemExistsException iee) {
+			try {
+				String msg = "Document " + documentNode.getName() + " already exists.";
+				logger.warn(msg, iee);
+				throw new ObjectAlreadyExistsException(msg, documentNode.getName());
+			} catch (RepositoryException re) {
+				logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+				throw new RuntimeException(re);
+			}
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public void remove(WasabiDocumentDTO documentDTO) {
-		Node documentNode = convertDTO2Node(documentDTO);
+	public void remove(WasabiDocumentDTO document) {
+		Session s = getJCRSession();
+		Node documentNode = convertDTO2Node(document, s);
 		try {
-			Session s = documentNode.getSession();
 			documentNode.remove();
 			s.save();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public void rename(WasabiDocumentDTO documentDTO, String name) {
+	public void rename(WasabiDocumentDTO document, String name) {
 		if (name == null) {
-			throw new IllegalArgumentException("Name cannot be null.");
+			logger.error(WasabiExceptionMessages.INTERNAL_NAME_NULL);
+			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 		}
-		Node documentNode = convertDTO2Node(documentDTO);
+		Session s = getJCRSession();
+		Node documentNode = convertDTO2Node(document, s);
 		try {
-			documentNode.getSession().move(documentNode.getPath(), documentNode.getParent().getPath() + "/" + name);
-			documentNode.getSession().save();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void setContent(WasabiDocumentDTO documentDTO, Serializable content) {
-		Node documentNode = convertDTO2Node(documentDTO);
-		try {
-			documentNode.setProperty("content", (String) content);
-			documentNode.getSession().save();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			s.move(documentNode.getPath(), documentNode.getParent().getPath() + "/" + name);
+			s.save();
+		} catch (ItemExistsException iee) {
+			String msg = "Document " + name + " already exists.";
+			logger.warn(msg, iee);
+			throw new ObjectAlreadyExistsException(msg, name);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 

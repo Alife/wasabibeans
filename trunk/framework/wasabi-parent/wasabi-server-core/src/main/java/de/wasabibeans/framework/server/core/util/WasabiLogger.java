@@ -40,6 +40,7 @@ public class WasabiLogger {
 	
 	public void error(String msg, Throwable t) {
 		logger.error(msg);
+		t.printStackTrace();
 	}
 	
 	public void warn(String msg, Throwable t) {

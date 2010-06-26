@@ -25,9 +25,11 @@ import java.util.Vector;
 import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -41,27 +43,31 @@ import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 @Stateless(name = "ObjectService")
 public class ObjectService extends TransferManager implements ObjectServiceLocal, ObjectServiceRemote {
 
-	public String getName(WasabiObjectDTO objectDTO) {
-		Node objectNode = convertDTO2Node(objectDTO);
+	public String getName(WasabiObjectDTO object) {
+		Session s = getJCRSession();
+		Node objectNode = convertDTO2Node(object, s);
 		if (objectNode == null) {
 			return "";
 		}
 		try {
 			return objectNode.getName();
-		} catch (RepositoryException e) {
-			throw new RuntimeException(e);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 
-	public String getUUID(WasabiObjectDTO objectDTO) {
-		Node objectNode = convertDTO2Node(objectDTO);
+	public String getUUID(WasabiObjectDTO object) {
+		Session s = getJCRSession();
+		Node objectNode = convertDTO2Node(object, s);
 		if (objectNode == null) {
 			return "";
 		}
 		try {
 			return objectNode.getIdentifier();
-		} catch (RepositoryException e) {
-			throw new RuntimeException(e);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
 	}
 

@@ -4,44 +4,40 @@
 
 [wasabi:object] > nt:base, mix:referenceable
 	abstract
-	- wasabi:createdBy (REFERENCE) mandatory protected < 'wasabi:user'
-	- wasabi:createdOn (DATE) mandatory protected
-	- wasabi:modifiedBy (REFERENCE) mandatory protected < 'wasabi:user'
-	- wasabi:modifiedOn (DATE) mandatory protected
-	+ wasabi:attributes (wasabi:attributes) = 'wasabi:attributes' autocreated protected
-	+ wasabi:tags (wasabi:tags) = 'wasabi:tags' autocreated protected
+	+ wasabi:attributes (wasabi:attributes) = 'wasabi:attributes' autocreated 
+	+ wasabi:tags (wasabi:tags) = 'wasabi:tags' autocreated
 	
 [wasabi:location] > wasabi:object
 	abstract
-	+ wasabi:documents (wasabi:documents) = 'wasabi:documents' autocreated protected
-	+ wasabi:containers (wasabi:containers) = 'wasabi:containers' autocreated protected
-	+ wasabi:links (wasabi:links) = 'wasabi:links' autocreated protected
+	+ wasabi:documents (wasabi:documents) = 'wasabi:documents' autocreated 
+	+ wasabi:containers (wasabi:containers) = 'wasabi:containers' autocreated 
+	+ wasabi:links (wasabi:links) = 'wasabi:links' autocreated 
 	
 [wasabi:room] > wasabi:location
-	+ wasabi:rooms (wasabi:rooms) = 'wasabi:rooms' autocreated protected
+	+ wasabi:rooms (wasabi:rooms) = 'wasabi:rooms' autocreated 
 	
 [wasabi:container] > wasabi:location
 
 [wasabi:identity] > wasabi:object
 	abstract
-	- wasabi:displayName (STRING) mandatory protected
-	- wasabi:homeRoom (REFERENCE) mandatory protected < 'wasabi:room'
+	- wasabi:displayName (STRING) mandatory 
+	- wasabi:homeRoom (REFERENCE) mandatory < 'wasabi:room'
 	
 [wasabi:group] > wasabi:identity
-	+ wasabi:subgroups (wasabi:subgroups) = 'wasabi:subgroups' autocreated protected
-	+ wasabi:members (wasabi:members) = 'wasabi:members' autocreated protected
+	+ wasabi:subgroups (wasabi:subgroups) = 'wasabi:subgroups' autocreated 
+	+ wasabi:members (wasabi:members) = 'wasabi:members' autocreated 
 	
 [wasabi:user] > wasabi:identity
-	- wasabi:password (STRING) mandatory protected
-	- wasabi:startRoom (REFERENCE) mandatory protected < 'wasabi:room'
-	- wasabi:active (BOOLEAN) = 'true' mandatory protected
-	+ wasabi:memberships (wasabi:memberships) = 'wasabi:memberships' autocreated protected
+	- wasabi:startRoom (REFERENCE) mandatory < 'wasabi:room'
+	- wasabi:active (BOOLEAN) = 'true' mandatory 
+	+ wasabi:memberships (wasabi:memberships) = 'wasabi:memberships' autocreated 
 
 [wasabi:document] > wasabi:object
-	- wasabi:content (UNDEFINED) mandatory protected
+	primaryitem 'wasabi:content'
+	- wasabi:content (UNDEFINED) mandatory 
 	
 [wasabi:link] > wasabi:object
-	- wasabi:destination (REFERENCE) mandatory protected < 'wasabi:object'
+	- wasabi:destination (REFERENCE) mandatory < 'wasabi:object'
 	
 [wasabi:attribute] > wasabi:object
 	- * (UNDEFINED)
@@ -53,9 +49,9 @@
 	+ * (wasabi:tag) sns
 	
 [wasabi:tag] > nt:base
-	- wasabi:createdBy (REFERENCE) mandatory protected < 'wasabi:user'
-	- wasabi:createdOn (DATE) mandatory protected
-	- wasabi:text (STRING) mandatory protected
+	- wasabi:createdBy (REFERENCE) mandatory < 'wasabi:user'
+	- wasabi:createdOn (DATE) mandatory 
+	- wasabi:text (STRING) mandatory
 	
 [wasabi:documents] > nt:base
 	+ * (wasabi:document)
