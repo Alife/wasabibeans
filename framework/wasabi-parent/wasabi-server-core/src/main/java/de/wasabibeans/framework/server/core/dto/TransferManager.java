@@ -19,7 +19,8 @@
 
 package de.wasabibeans.framework.server.core.dto;
 
-import javax.jcr.Credentials;
+import java.util.Locale;
+
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.LoginException;
 import javax.jcr.Node;
@@ -32,66 +33,94 @@ import javax.naming.NamingException;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public abstract class TransferManager {
-	
+
 	private final String suffix = "DTO";
-	
+	private final String prefix = "Wasabi";
+
 	protected WasabiLogger logger;
-	
+	protected Repository jcrRepository;
+
 	protected TransferManager() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
+		try {
+			InitialContext jndiContext = new InitialContext();
+			this.jcrRepository = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		} catch (NamingException ne) {
+			logger.error(WasabiExceptionMessages.JNDI_NO_CONTEXT, ne);
+			throw new RuntimeException(ne);
+		}
+	}
+
+	protected Session getJCRSession() {
+		try {
+			return jcrRepository.login(new SimpleCredentials("user", "pwd".toCharArray()));
+		} catch (LoginException le) {
+			logger.error(WasabiExceptionMessages.JCR_LOGIN_FAILURE, le);
+			throw new RuntimeException(le);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	protected <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject) {
 		if (wasabiObject == null) {
+			logger.warn(WasabiExceptionMessages.TRANSFER_NODE2DTO_NULLNODE);
 			return null;
 		}
 		Class<T> clazz = null;
 		try {
-			clazz = (Class<T>) Class.forName(WasabiObjectDTO.class.getPackage()
-					.getName()
-					+ "." + "WasabiDocument" + suffix);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			String wasabiObjectName = generateWasabiObjectDTOName(wasabiObject.getPrimaryNodeType().getName());
+			clazz = (Class<T>) Class.forName(WasabiObjectDTO.class.getPackage().getName() + "." + wasabiObjectName);
+		} catch (ClassNotFoundException cnfe) {
+			logger.error(WasabiExceptionMessages.TRANSFER_NODE2DTO_REFLECTERROR, cnfe);
+			throw new RuntimeException(cnfe);
+		} catch (RepositoryException re) {
+			logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new RuntimeException(re);
 		}
-		WasabiObjectDTO object = null;
+		WasabiObjectDTO dto = null;
 		try {
-			object = clazz.newInstance();
-			object.setId(wasabiObject.getIdentifier());
+			dto = clazz.newInstance();
+			dto.setId(wasabiObject.getIdentifier());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(WasabiExceptionMessages.TRANSFER_NODE2DTO_REFLECTERROR, e);
+			throw new RuntimeException(e);
 		}
-		return (T) object;
+		return (T) dto;
 	}
 
-	protected Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO) {
+	protected Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) {
 		if (wasabiObjectDTO != null) {
-			try {
-				InitialContext ctx = new InitialContext();
-				Repository rep = (Repository) ctx.lookup(WasabiConstants.JNDI_JCR_DATASOURCE);
-				Credentials cred = new SimpleCredentials("user", new char[] { 'p',
-						'w', 'd' });
-				Session s = rep.login(cred);
-				Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
-				return node;
-			} catch (NamingException ne) {
-				logger.error(WasabiExceptionMessages.JNDI_NO_CONTEXT, ne);
-				return null;
-			} catch (LoginException le) {
-				logger.error(WasabiExceptionMessages.JCR_LOGIN_FAILURE, le);
-				return null;
-			} catch (ItemNotFoundException ie) {
-				logger.warn(WasabiExceptionMessages.TRANSFER_NODE2DTO_FAILURE, ie);
-				return null;
-			} catch (RepositoryException re) {
-				logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-				return null;
+			if (s != null) {
+				try {
+					Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
+					return node;
+				} catch (ItemNotFoundException ie) {
+					logger.warn(WasabiExceptionMessages.TRANSFER_DTO2NODE_FAILURE, ie);
+					throw new ObjectDoesNotExistException(wasabiObjectDTO);
+				} catch (RepositoryException re) {
+					logger.error(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+					throw new RuntimeException(re);
+				}
+			} else {
+				logger.error(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLSESSION);
+				throw new IllegalArgumentException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLSESSION);
 			}
 		} else {
-			return null;
+			logger.error(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLDTO);
+			throw new IllegalArgumentException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLDTO);
 		}
+	}
+
+	private String generateWasabiObjectDTOName(String nodeTypeName) {
+		String[] tmp = nodeTypeName.split(":");
+		String firstLetter = tmp[1].substring(0, 1).toUpperCase(Locale.ENGLISH);
+		return prefix + firstLetter + tmp[1].substring(1) + suffix;
 	}
 }

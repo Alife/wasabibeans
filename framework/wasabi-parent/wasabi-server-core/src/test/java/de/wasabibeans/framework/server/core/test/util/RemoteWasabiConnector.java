@@ -66,6 +66,10 @@ public class RemoteWasabiConnector {
 		connect();
 		login("root", "meerrettich");
 	}
+	
+	public void defaultLogin() throws LoginException, NoInitialContextException  {
+		login("root", "meerrettich");
+	}
 
 	public void logout() throws LoginException {
 		if (loggedIn) {

@@ -28,7 +28,11 @@ public class WasabiExceptionMessages {
 	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or Password incorrect";
 
 	/* TransferManager */
-	public final static String TRANSFER_NODE2DTO_FAILURE = "Could not convert DTO to internal representation. Internal representation may not exist anymore.";
+	public final static String TRANSFER_DTO2NODE_FAILURE = "Could not convert DTO to internal representation. Internal representation may not exist anymore.";
+	public final static String TRANSFER_DTO2NODE_NULLDTO = "Attempted to convert null to internal representation.";
+	public final static String TRANSFER_DTO2NODE_NULLSESSION = "Attempted to convert DTO to internal respresentation without a given JCR session";
+	public final static String TRANSFER_NODE2DTO_NULLNODE = "Attempted to convert null to DTO";
+	public final static String TRANSFER_NODE2DTO_REFLECTERROR = "Could not create corresponding DTO for given internal representation.";
 	
 	/* JNDI */
 	public final static String JNDI_NO_CONTEXT = "Could not initialize JNDI context";
@@ -36,4 +40,10 @@ public class WasabiExceptionMessages {
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Could not access the JCR repository.";
 	public final static String JCR_LOGIN_FAILURE = "Could not establish JCR session. Login failed.";
+	
+	/* Internal Services */
+	public final static String INTERNAL_NAME_NULL = "The given name must not be null";
+	public final static String INTERNAL_ENVIRONMENT_NULL = "The given environment must not be null.";
+	public final static String INTERNAL_NO_ROOT_ROOM = "The root room does not exist";
+	public final static String INTERNAL_NO_HOME_ROOM = "The home room does not exist";
 }

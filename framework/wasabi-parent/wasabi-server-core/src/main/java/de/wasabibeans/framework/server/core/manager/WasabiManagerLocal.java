@@ -19,6 +19,11 @@
 
 package de.wasabibeans.framework.server.core.manager;
 
+import javax.ejb.Local;
+
+@Local
 public interface WasabiManagerLocal {
-	public void init();
+	public void initDatabase();
+	public void initRepository();
+	public void initWorkspace(String workspacename);
 }

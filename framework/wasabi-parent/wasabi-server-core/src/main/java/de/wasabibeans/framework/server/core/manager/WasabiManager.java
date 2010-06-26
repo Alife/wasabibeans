@@ -19,24 +19,41 @@
 
 package de.wasabibeans.framework.server.core.manager;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.SQLException;
 
 import javax.ejb.Stateless;
+import javax.jcr.Credentials;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.naming.InitialContext;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 @Stateless(name = "WasabiManager")
-public class WasabiManager implements WasabiManagerLocal {
+public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 	public final static String rootUserName = "root";
 	public final static String rootUserPassword = "meerrettich";
 
+	private static final String WASABI_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
+
 	@Override
-	public void init() {
+	public void initDatabase() {
 
 		/**
 		 * Create user database and entries
@@ -62,6 +79,48 @@ public class WasabiManager implements WasabiManagerLocal {
 			e.printStackTrace();
 		}
 
+	}
+
+	public void initRepository() {
+		try {
+			InitialContext ctx = new InitialContext();
+			Repository rep = (Repository) ctx.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+			Credentials cred = new SimpleCredentials("user", new char[] { 'p', 'w', 'd' });
+			Session s = rep.login(cred);
+			// register wasabi nodetypes (also registers the wasabi jcr namespace)
+			InputStream in = getClass().getClassLoader().getResourceAsStream(WASABI_NODETYPES_RESOURCE_PATH);
+			Reader r = new InputStreamReader(in, "utf-8");
+			CndImporter.registerNodeTypes(r, s);
+			s.logout();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void initWorkspace(String workspacename) {
+		try {
+			InitialContext ctx = new InitialContext();
+			Repository rep = (Repository) ctx.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+			Credentials cred = new SimpleCredentials("user", new char[] { 'p', 'w', 'd' });
+			Session s = rep.login(cred, workspacename);
+
+			// for testing: clear maybe existing wasabi content of workspace
+			NodeIterator ni = s.getRootNode().getNodes();
+			while (ni.hasNext()) {
+				Node aNode = ni.nextNode();
+				if (!aNode.getName().equals("jcr:system")) {
+					aNode.remove();
+				}
+			}
+
+			Node rootRoomNode = s.getRootNode().addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
+			rootRoomNode.addNode(WasabiNodeProperty.ROOMS + "/" + WasabiConstants.HOME_ROOM_NAME,
+					WasabiNodeType.WASABI_ROOM);
+			s.save();
+			s.logout();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

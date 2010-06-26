@@ -1,32 +1,18 @@
 package de.wasabibeans.framework.server.init;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServlet;
 
-import org.apache.jackrabbit.commons.cnd.CndImporter;
-import org.apache.jackrabbit.commons.cnd.ParseException;
-
 import de.wasabibeans.framework.server.core.manager.WasabiManagerLocal;
+import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class Init extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String WASABI_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
-
 	private InitialContext ctx = null;
+	private WasabiLogger logger = WasabiLogger.getLogger(this.getClass());
 
 	public Init() throws NamingException {
 		ctx = new InitialContext();
@@ -38,35 +24,21 @@ public class Init extends HttpServlet {
 				int sleepTime = 2000;
 				while (true) {
 					try {
-						WasabiManagerLocal wasabiManager = (WasabiManagerLocal) ctx.lookup("wasabibeans/WasabiManager/local");
-						
+						WasabiManagerLocal wasabiManager = (WasabiManagerLocal) ctx
+								.lookup("wasabibeans/WasabiManager/local");
 						Thread.sleep(sleepTime);
-						initialize();
-						wasabiManager.init();
-						System.out.println("Wasabi initialization completed.");
+						wasabiManager.initDatabase();
+						wasabiManager.initRepository();
+						wasabiManager.initWorkspace("default");
+						logger.info("Wasabi initialization completed.");
 						break;
 					} catch (Exception e) {
-						System.out.println("Wasabi initialization failed:");
-						e.printStackTrace();
+						logger.error("Wasabi initialization failed:", e);
 						break;
 					}
 				}
 			}
 
 		}.start();
-	}
-
-	public void initialize() throws NamingException, LoginException,
-			RepositoryException, ParseException, IOException {
-		Repository rep = (Repository) ctx.lookup("java:jcr/local");
-		Credentials cred = new SimpleCredentials("user", new char[] { 'p', 'w',
-				'd' });
-		Session s = rep.login(cred);
-		System.out.println("USERID: " + s.getUserID());
-		// register wasabi nodetypes (also registers the wasabi jcr namespace)
-		InputStream in = getClass().getClassLoader().getResourceAsStream(
-				WASABI_NODETYPES_RESOURCE_PATH);
-		Reader r = new InputStreamReader(in, "utf-8");
-		CndImporter.registerNodeTypes(r, s);
 	}
 }

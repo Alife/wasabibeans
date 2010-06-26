@@ -40,9 +40,9 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name);
 
-	public Collection<WasabiRoomDTO> getRooms(WasabiRoomDTO room);
+	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO room);
 
-	public Collection<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth);
+	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth);
 
 	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate);
 
