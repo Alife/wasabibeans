@@ -25,7 +25,7 @@ public class WasabiExceptionMessages {
 	public final static String USERNAME_PASSWORD_PRINCIPAL_NULL_NAME = "Name cannot be null";
 
 	/* SqlLoginModule */
-	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or Password incorrect";
+	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or password incorrect";
 
 	/* TransferManager */
 	public final static String TRANSFER_DTO2NODE_FAILURE = "Could not convert DTO to internal representation. Internal representation may not exist anymore.";
