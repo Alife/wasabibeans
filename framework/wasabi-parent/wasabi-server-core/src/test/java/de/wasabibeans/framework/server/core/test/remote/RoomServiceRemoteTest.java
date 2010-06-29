@@ -39,7 +39,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 
 	@Deployment
 	public static JavaArchive deploy() {
-		JavaArchive testArchive = ShrinkWrap.create("test.jar", JavaArchive.class);
+		JavaArchive testArchive = ShrinkWrap.create("wasabibeans-test.jar", JavaArchive.class);
 		testArchive.addPackage(SqlLoginModule.class.getPackage()) // auth
 				.addPackage(WasabiConstants.class.getPackage()) // common
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
