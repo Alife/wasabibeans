@@ -20,13 +20,18 @@
 package de.wasabibeans.framework.server.core.internal;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.security.auth.login.LoginException;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
@@ -36,6 +41,7 @@ import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
+import de.wasabibeans.framework.server.core.util.WasabiUser;
 
 /**
  * Class, that implements the internal access on WasabiUser objects.
@@ -86,10 +92,25 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public String getPassword(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getPassword(WasabiUserDTO user) throws SQLException {
+		QueryRunner run = new QueryRunner(SqlConnector.connect());
+		
+		String wasabiUser = getName(user);
+		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
+		try {
+			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
+
+			List<WasabiUser> result = run.query(getPasswordQuery, h, wasabiUser);
+
+			if (result.size() > 1)
+				return null;
+			else
+				return result.get(0).getPassword();
+		} catch (SQLException e) {
+			throw new SQLException(e.toString());
+		}
 	}
 
 	@Override
@@ -154,7 +175,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void setPassword(WasabiUserDTO user, String password) throws SQLException {
-
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
 
 		String wasabiUser = getName(user);

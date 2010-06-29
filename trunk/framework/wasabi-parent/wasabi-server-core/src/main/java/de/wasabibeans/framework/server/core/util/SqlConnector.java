@@ -34,6 +34,7 @@ public class SqlConnector {
 			DataSource dataSource = (DataSource) context.lookup(WasabiConstants.JNDI_SQL_DATASOURCE);
 			return dataSource;
 		} catch (NamingException e) {
+			//TODO: Exception hinzufügen
 			return null;
 		}
 	}
