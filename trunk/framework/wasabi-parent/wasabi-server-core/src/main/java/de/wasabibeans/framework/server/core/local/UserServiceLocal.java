@@ -19,6 +19,7 @@
 
 package de.wasabibeans.framework.server.core.local;
 
+import java.sql.SQLException;
 import java.util.Vector;
 
 import javax.ejb.Local;
@@ -69,7 +70,7 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public void setDisplayName(WasabiUserDTO user, String displayName);
 
-	public void setPassword(WasabiUserDTO user, String password);
+	public void setPassword(WasabiUserDTO user, String password) throws SQLException;
 	
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room);
 
