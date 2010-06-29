@@ -48,7 +48,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user);
 
-	public String getPassword(WasabiUserDTO user);
+	public String getPassword(WasabiUserDTO user) throws SQLException;
 
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user);
 
