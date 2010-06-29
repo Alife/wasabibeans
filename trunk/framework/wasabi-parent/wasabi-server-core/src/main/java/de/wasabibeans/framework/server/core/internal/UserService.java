@@ -20,7 +20,6 @@
 package de.wasabibeans.framework.server.core.internal;
 
 import java.sql.SQLException;
-
 import java.util.Vector;
 
 import javax.ejb.Stateless;
@@ -28,6 +27,7 @@ import javax.ejb.Stateless;
 import org.apache.commons.dbutils.QueryRunner;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -36,7 +36,6 @@ import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
-import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 
 /**
  * Class, that implements the internal access on WasabiUser objects.
@@ -155,20 +154,19 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void setPassword(WasabiUserDTO user, String password) throws SQLException {
-		
+
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
-		
+
 		String wasabiUser = getName(user);
 		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
 		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE user=?";
-		
+
 		try {
 			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			throw new SQLException(WasabiExceptionMessages.INTERNAL_NO_USER + ": "+ e.toString());
+			throw new SQLException(WasabiExceptionMessages.INTERNAL_NO_USER + ": " + e.toString());
 		}
-
 	}
 
 	@Override
