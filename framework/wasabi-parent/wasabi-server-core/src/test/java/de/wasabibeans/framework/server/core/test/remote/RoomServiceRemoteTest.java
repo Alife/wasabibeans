@@ -1,3 +1,24 @@
+/* 
+ * Copyright (C) 2010 
+ * Jonas Schulte, Dominik Klaholt, Jannis Sauer
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU GENERAL PUBLIC LICENSE as published by
+ *  the Free Software Foundation; either version 3 of the license, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU GENERAL PUBLIC LICENSE (GPL) for more details.
+ *
+ *  You should have received a copy of the GNU GENERAL PUBLIC LICENSE version 3
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ *  Further information are online available at: http://www.wasabibeans.de
+ */
+
 package de.wasabibeans.framework.server.core.test.remote;
 
 import java.util.Vector;
@@ -34,7 +55,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceRemoteTest extends Arquillian {
-	
+
 	private RemoteWasabiConnector reWaCon;
 
 	@Deployment
@@ -51,24 +72,24 @@ public class RoomServiceRemoteTest extends Arquillian {
 
 		return testArchive;
 	}
-	
+
 	@BeforeClass
 	public void setUpBeforeAllMethods() throws NamingException, LoginException {
 		reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 	}
-	
+
 	@AfterClass
 	public void tearDownAfterAllMethos() throws LoginException, NamingException {
 		reWaCon.disconnect();
 	}
-	
+
 	@BeforeMethod
 	public void setUpForEachMethod() throws NamingException, LoginException, RepositoryException {
 		WasabiManagerRemote waMan = (WasabiManagerRemote) reWaCon.lookup("WasabiManager/remote");
 		waMan.initWorkspace("default");
 	}
-	
+
 	@Test
 	public void test() throws LoginException, NamingException {
 		// *** room service lookup
@@ -78,7 +99,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 		// *** getRootRoom
 		WasabiRoomDTO rootRoom = roomService.getRootRoom();
 		AssertJUnit.assertNotNull(rootRoom);
-		
+
 		// *** getRootHome
 		WasabiRoomDTO rootHome = roomService.getRootHome();
 		AssertJUnit.assertNotNull(rootHome);
@@ -93,44 +114,44 @@ public class RoomServiceRemoteTest extends Arquillian {
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof IllegalArgumentException;
 		}
-		
+
 		try {
 			roomService.create("test", null);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof IllegalArgumentException;
 		}
-		
+
 		try {
 			roomService.create("newRoom", rootRoom);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof ObjectAlreadyExistsException;
 		}
-		
+
 		// *** getEnvironment
 		WasabiRoomDTO environment = roomService.getEnvironment(newRoom);
 		AssertJUnit.assertEquals(rootRoom, environment);
-		
+
 		// *** getRoomByName
 		roomService.create("newRoom2", rootRoom);
 		WasabiRoomDTO newRoom2 = roomService.getRoomByName(rootRoom, "newRoom2");
 		AssertJUnit.assertEquals("newRoom2", roomService.getName(newRoom2));
-		
+
 		try {
 			roomService.getRoomByName(rootRoom, null);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof IllegalArgumentException;
 		}
-		
+
 		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "doesNotExist"));
-		
+
 		// *** getRooms
 		Vector<WasabiRoomDTO> rooms = roomService.getRooms(rootRoom);
 		AssertJUnit.assertTrue(rooms.contains(newRoom));
 		AssertJUnit.assertTrue(rooms.contains(newRoom2));
-		
+
 		// *** rename
 		try {
 			roomService.rename(newRoom2, "newRoom");
@@ -140,13 +161,13 @@ public class RoomServiceRemoteTest extends Arquillian {
 			AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "newRoom2"));
 			AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
 		}
-		
+
 		roomService.rename(newRoom2, "room2");
 		AssertJUnit.assertEquals("room2", roomService.getName(newRoom2));
 		AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "room2"));
 		AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
 		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "newRoom2"));
-		
+
 		// *** move
 		try {
 			roomService.create("newRoom", rootHome);
@@ -157,13 +178,13 @@ public class RoomServiceRemoteTest extends Arquillian {
 			AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
 			AssertJUnit.assertEquals(1, roomService.getRooms(rootHome).size());
 		}
-		
+
 		roomService.move(newRoom2, rootHome);
 		AssertJUnit.assertNotNull(roomService.getRoomByName(rootHome, "room2"));
 		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "room2"));
 		AssertJUnit.assertEquals(2, roomService.getRooms(rootHome).size());
 		AssertJUnit.assertEquals(2, roomService.getRooms(rootRoom).size());
-		
+
 		// *** remove
 		roomService.remove(newRoom2);
 		AssertJUnit.assertNull(roomService.getRoomByName(rootHome, "room2"));
