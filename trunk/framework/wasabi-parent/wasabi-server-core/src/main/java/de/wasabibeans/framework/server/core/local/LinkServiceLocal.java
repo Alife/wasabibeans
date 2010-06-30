@@ -1,20 +1,22 @@
 /* 
  * Copyright (C) 2010 
- * Dominik Klaholt, Jannis Sauer
+ * Jonas Schulte, Dominik Klaholt, Jannis Sauer
  *
  *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
- *  the Free Software Foundation; either version 3 of the License, or
+ *  it under the terms of the GNU GENERAL PUBLIC LICENSE as published by
+ *  the Free Software Foundation; either version 3 of the license, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU LESSER GENERAL PUBLIC LICENSE (LGPL) for more details.
+ *  GNU GENERAL PUBLIC LICENSE (GPL) for more details.
  *
- *  You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
+ *  You should have received a copy of the GNU GENERAL PUBLIC LICENSE version 3
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *  
+ *  Further information are online available at: http://www.wasabibeans.de
  */
 
 package de.wasabibeans.framework.server.core.local;
@@ -37,11 +39,9 @@ import de.wasabibeans.framework.server.core.exception.DestinationNotFoundExcepti
 @Local
 public interface LinkServiceLocal extends ObjectServiceLocal {
 
-	public WasabiLinkDTO create(String name, WasabiObjectDTO destination,
-			WasabiLocationDTO environment);
+	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment);
 
-	public WasabiObjectDTO getDestination(WasabiLinkDTO link)
-			throws DestinationNotFoundException;
+	public WasabiObjectDTO getDestination(WasabiLinkDTO link) throws DestinationNotFoundException;
 
 	public WasabiLocationDTO getEnvironment(WasabiLinkDTO link);
 
@@ -49,32 +49,25 @@ public interface LinkServiceLocal extends ObjectServiceLocal {
 
 	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location);
 
-	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(
-			WasabiLocationDTO location, SortType order);
+	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order);
 
-	public Vector<WasabiLinkDTO> getLinksByCreationDate(
-			WasabiLocationDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate);
 
-	public Vector<WasabiLinkDTO> getLinksByCreationDate(
-			WasabiLocationDTO environment, Date startDate, Date endDate,
+	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate,
 			int depth);
 
 	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator);
 
-	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator,
-			WasabiLocationDTO environment);
+	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment);
 
-	public Vector<WasabiLinkDTO> getLinksByModificationDate(
-			WasabiLocationDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate);
 
-	public Vector<WasabiLinkDTO> getLinksByModificationDate(
-			WasabiLocationDTO environment, Date startDate, Date endDate,
-			int depth);
+	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate,
+			Date endDate, int depth);
 
 	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier);
 
-	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier,
-			WasabiLocationDTO environment);
+	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment);
 
 	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment);
 

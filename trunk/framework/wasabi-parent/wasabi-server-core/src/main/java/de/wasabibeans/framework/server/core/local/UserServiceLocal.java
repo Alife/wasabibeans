@@ -1,20 +1,22 @@
 /* 
  * Copyright (C) 2010 
- * Dominik Klaholt, Jannis Sauer
+ * Jonas Schulte, Dominik Klaholt, Jannis Sauer
  *
  *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
- *  the Free Software Foundation; either version 3 of the License, or
+ *  it under the terms of the GNU GENERAL PUBLIC LICENSE as published by
+ *  the Free Software Foundation; either version 3 of the license, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU LESSER GENERAL PUBLIC LICENSE (LGPL) for more details.
+ *  GNU GENERAL PUBLIC LICENSE (GPL) for more details.
  *
- *  You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
+ *  You should have received a copy of the GNU GENERAL PUBLIC LICENSE version 3
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *  
+ *  Further information are online available at: http://www.wasabibeans.de
  */
 
 package de.wasabibeans.framework.server.core.local;
@@ -53,7 +55,7 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user);
 
 	public boolean getStatus(WasabiUserDTO user);
-	
+
 	public WasabiUserDTO getUserByName(String userName);
 
 	public WasabiUserDTO getUserByName(WasabiRoomDTO room, String userName);
@@ -71,7 +73,7 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 	public void setDisplayName(WasabiUserDTO user, String displayName);
 
 	public void setPassword(WasabiUserDTO user, String password) throws SQLException;
-	
+
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room);
 
 	public void setStatus(WasabiUserDTO user, boolean active);
