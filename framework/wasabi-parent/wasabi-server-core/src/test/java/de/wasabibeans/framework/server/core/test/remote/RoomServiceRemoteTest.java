@@ -24,7 +24,6 @@ package de.wasabibeans.framework.server.core.test.remote;
 import java.util.Vector;
 
 import javax.ejb.EJBException;
-import javax.jcr.RepositoryException;
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
 
@@ -57,6 +56,11 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 public class RoomServiceRemoteTest extends Arquillian {
 
 	private RemoteWasabiConnector reWaCon;
+	private WasabiManagerRemote waMan;
+
+	private RoomServiceRemote roomService;
+
+	private WasabiRoomDTO rootRoom;
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -74,39 +78,34 @@ public class RoomServiceRemoteTest extends Arquillian {
 	}
 
 	@BeforeClass
-	public void setUpBeforeAllMethods() throws NamingException, LoginException {
+	public void setUpBeforeAllMethods() throws LoginException, NamingException {
+		// connect and login
 		reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
+
+		// lookup wasabi manager
+		waMan = (WasabiManagerRemote) reWaCon.lookup("WasabiManager/remote");
+
+		// lookup services
+		roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
 	}
 
 	@AfterClass
 	public void tearDownAfterAllMethos() throws LoginException, NamingException {
+		// disconnect and logout
 		reWaCon.disconnect();
 	}
 
 	@BeforeMethod
-	public void setUpForEachMethod() throws NamingException, LoginException, RepositoryException {
-		WasabiManagerRemote waMan = (WasabiManagerRemote) reWaCon.lookup("WasabiManager/remote");
-		waMan.initWorkspace("default");
+	public void setUpBeforeEachMethod() throws LoginException, NamingException {
+		// initialize jcr repository
+		rootRoom = waMan.initWorkspace("default");
 	}
 
-	@Test
-	public void test() throws LoginException, NamingException {
-		// *** room service lookup
-		RoomServiceRemote roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
-		AssertJUnit.assertNotNull(roomService);
-
-		// *** getRootRoom
-		WasabiRoomDTO rootRoom = roomService.getRootRoom();
-		AssertJUnit.assertNotNull(rootRoom);
-
-		// *** getRootHome
-		WasabiRoomDTO rootHome = roomService.getRootHome();
-		AssertJUnit.assertNotNull(rootHome);
-
-		// *** create
-		WasabiRoomDTO newRoom = roomService.create("newRoom", rootRoom);
-		AssertJUnit.assertEquals("newRoom", roomService.getName(newRoom));
+	@Test(groups = "create")
+	public void createTest() {
+		WasabiRoomDTO newRoom = roomService.create("room", rootRoom);
+		AssertJUnit.assertEquals("room", roomService.getName(newRoom));
 
 		try {
 			roomService.create(null, rootRoom);
@@ -123,20 +122,40 @@ public class RoomServiceRemoteTest extends Arquillian {
 		}
 
 		try {
-			roomService.create("newRoom", rootRoom);
+			roomService.create("room", rootRoom);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof ObjectAlreadyExistsException;
 		}
+	}
 
-		// *** getEnvironment
+	@Test
+	public void getRootRoomTest() {
+		WasabiRoomDTO rootRoom = roomService.getRootRoom();
+		AssertJUnit.assertNotNull(rootRoom);
+	}
+
+	@Test
+	public void getRootHomeTest() {
+		WasabiRoomDTO rootHome = roomService.getRootHome();
+		AssertJUnit.assertNotNull(rootHome);
+	}
+
+	@Test(groups = "getter", dependsOnGroups = "create")
+	public void getEnvironmentTest() {
+		WasabiRoomDTO newRoom = roomService.create("room", rootRoom);
+
 		WasabiRoomDTO environment = roomService.getEnvironment(newRoom);
 		AssertJUnit.assertEquals(rootRoom, environment);
+	}
 
-		// *** getRoomByName
-		roomService.create("newRoom2", rootRoom);
-		WasabiRoomDTO newRoom2 = roomService.getRoomByName(rootRoom, "newRoom2");
-		AssertJUnit.assertEquals("newRoom2", roomService.getName(newRoom2));
+	@Test(groups = "getter", dependsOnGroups = "create")
+	public void getRoomByNameTest() {
+		roomService.create("room1", rootRoom);
+		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
+
+		WasabiRoomDTO test = roomService.getRoomByName(rootRoom, "room2");
+		AssertJUnit.assertEquals(room2, test);
 
 		try {
 			roomService.getRoomByName(rootRoom, null);
@@ -146,48 +165,73 @@ public class RoomServiceRemoteTest extends Arquillian {
 		}
 
 		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "doesNotExist"));
+	}
 
-		// *** getRooms
+	@Test(groups = "getter", dependsOnGroups = "create")
+	public void getRoomsTest() {
+		WasabiRoomDTO room1 = roomService.create("room1", rootRoom);
+		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
+
 		Vector<WasabiRoomDTO> rooms = roomService.getRooms(rootRoom);
-		AssertJUnit.assertTrue(rooms.contains(newRoom));
-		AssertJUnit.assertTrue(rooms.contains(newRoom2));
+		AssertJUnit.assertTrue(rooms.contains(room1));
+		AssertJUnit.assertTrue(rooms.contains(room2));
+		AssertJUnit.assertEquals(3, rooms.size());
+	}
 
-		// *** rename
+	@Test(dependsOnGroups = { "create", "getter" })
+	public void renameTest() {
+		roomService.create("room1", rootRoom);
+		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
+
 		try {
-			roomService.rename(newRoom2, "newRoom");
+			roomService.rename(room2, "room1");
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof ObjectAlreadyExistsException;
-			AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "newRoom2"));
+			AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "room2"));
 			AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
 		}
 
-		roomService.rename(newRoom2, "room2");
-		AssertJUnit.assertEquals("room2", roomService.getName(newRoom2));
-		AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "room2"));
+		roomService.rename(room2, "room_2");
+		AssertJUnit.assertEquals("room_2", roomService.getName(room2));
+		AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "room_2"));
 		AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
-		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "newRoom2"));
+		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "room2"));
+	}
 
-		// *** move
+	@Test(dependsOnGroups = { "create", "getter" })
+	public void moveTest() {
+		WasabiRoomDTO room1 = roomService.create("room1", rootRoom);
+		WasabiRoomDTO sub = roomService.create("room2", room1);
+		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
+
 		try {
-			roomService.create("newRoom", rootHome);
-			roomService.move(newRoom, rootHome);
+			roomService.move(sub, rootRoom);
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof ObjectAlreadyExistsException;
-			AssertJUnit.assertNotNull(roomService.getRoomByName(rootRoom, "newRoom"));
+			Vector<WasabiRoomDTO> roomsOfRoom1 = roomService.getRooms(room1);
+			AssertJUnit.assertTrue(roomsOfRoom1.contains(sub));
+			AssertJUnit.assertEquals(1, roomsOfRoom1.size());
 			AssertJUnit.assertEquals(3, roomService.getRooms(rootRoom).size());
-			AssertJUnit.assertEquals(1, roomService.getRooms(rootHome).size());
 		}
 
-		roomService.move(newRoom2, rootHome);
-		AssertJUnit.assertNotNull(roomService.getRoomByName(rootHome, "room2"));
-		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "room2"));
-		AssertJUnit.assertEquals(2, roomService.getRooms(rootHome).size());
-		AssertJUnit.assertEquals(2, roomService.getRooms(rootRoom).size());
+		roomService.move(sub, room2);
+		Vector<WasabiRoomDTO> roomsOfRoom1 = roomService.getRooms(room1);
+		AssertJUnit.assertFalse(roomsOfRoom1.contains(sub));
+		AssertJUnit.assertEquals(0, roomsOfRoom1.size());
+		Vector<WasabiRoomDTO> roomsOfRoom2 = roomService.getRooms(room2);
+		AssertJUnit.assertTrue(roomsOfRoom2.contains(sub));
+		AssertJUnit.assertEquals(1, roomsOfRoom2.size());
+	}
 
-		// *** remove
-		roomService.remove(newRoom2);
-		AssertJUnit.assertNull(roomService.getRoomByName(rootHome, "room2"));
-		AssertJUnit.assertEquals(1, roomService.getRooms(rootHome).size());
+	@Test(dependsOnGroups = { "create", "getter" })
+	public void removeTest() {
+		roomService.create("room1", rootRoom);
+		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
+
+		roomService.remove(room2);
+		Vector<WasabiRoomDTO> rooms = roomService.getRooms(rootRoom);
+		AssertJUnit.assertFalse(rooms.contains(room2));
+		AssertJUnit.assertEquals(2, rooms.size());
 	}
 }

@@ -23,7 +23,9 @@ package de.wasabibeans.framework.server.core.manager;
 
 import javax.ejb.Remote;
 
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+
 @Remote
 public interface WasabiManagerRemote {
-	public void initWorkspace(String workspacename);
+	public WasabiRoomDTO initWorkspace(String workspacename);
 }
