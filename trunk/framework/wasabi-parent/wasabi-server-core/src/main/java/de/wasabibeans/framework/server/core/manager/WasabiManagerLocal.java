@@ -23,11 +23,13 @@ package de.wasabibeans.framework.server.core.manager;
 
 import javax.ejb.Local;
 
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+
 @Local
 public interface WasabiManagerLocal {
 	public void initDatabase();
 
 	public void initRepository();
 
-	public void initWorkspace(String workspacename);
+	public WasabiRoomDTO initWorkspace(String workspacename);
 }

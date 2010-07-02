@@ -42,6 +42,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
+import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
@@ -98,7 +99,13 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		}
 	}
 
-	public void initWorkspace(String workspacename) {
+	/**
+	 * Initializes the JCR workspace with the given name.
+	 * 
+	 * @param workspacename name of the JCR workspace 
+	 * @return DTO of the wasabi root room
+	 */
+	public WasabiRoomDTO initWorkspace(String workspacename) {
 		try {
 			InitialContext ctx = new InitialContext();
 			Repository rep = (Repository) ctx.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
@@ -115,10 +122,13 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			}
 
 			Node rootRoomNode = s.getRootNode().addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
+			WasabiRoomDTO rootRoomDTO = new WasabiRoomDTO();
+			rootRoomDTO.setId(rootRoomNode.getIdentifier());
 			rootRoomNode.addNode(WasabiNodeProperty.ROOMS + "/" + WasabiConstants.HOME_ROOM_NAME,
 					WasabiNodeType.WASABI_ROOM);
 			s.save();
 			s.logout();
+			return rootRoomDTO;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
