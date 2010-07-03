@@ -28,6 +28,8 @@ import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the remote access on WasabiObjectDTO objects.
@@ -35,38 +37,38 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 @Remote
 public interface ObjectServiceRemote {
 
-	public boolean exists(WasabiObjectDTO object);
+	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object);
+	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Date getCreatedOn(WasabiObjectDTO object);
+	public Date getCreatedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object);
+	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Date getModifiedOn(WasabiObjectDTO object);
+	public Date getModifiedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public boolean isRightsActive(WasabiObjectDTO object);
+	public boolean isRightsActive(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public String getName(WasabiObjectDTO object);
+	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName);
+	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator);
+	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier);
+	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiObjectDTO> getObjectsByName(String name);
+	public Vector<WasabiObjectDTO> getObjectsByName(String name) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public String getUUID(WasabiObjectDTO object);
+	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user);
+	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setCreatedOn(WasabiObjectDTO object, Date creationTime);
+	public void setCreatedOn(WasabiObjectDTO object, Date creationTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user);
+	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime);
+	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive);
+	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 }

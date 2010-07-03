@@ -23,7 +23,7 @@ package de.wasabibeans.framework.server.core.exception;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 
-public class ObjectDoesNotExistException extends RuntimeException {
+public class ObjectDoesNotExistException extends WasabiException {
 
 	private WasabiObjectDTO dto;
 
@@ -32,8 +32,13 @@ public class ObjectDoesNotExistException extends RuntimeException {
 	 */
 	private static final long serialVersionUID = -2901394653506435785L;
 
-	public ObjectDoesNotExistException(WasabiObjectDTO dto) {
-		super();
+	public ObjectDoesNotExistException(String msg, WasabiObjectDTO dto) {
+		super(msg);
+		this.dto = dto;
+	}
+	
+	public ObjectDoesNotExistException(String msg, WasabiObjectDTO dto, Throwable t) {
+		super(msg, t);
 		this.dto = dto;
 	}
 

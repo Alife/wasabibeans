@@ -29,6 +29,8 @@ import javax.ejb.Remote;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the remote access on WasabiUserDTO objects.
@@ -50,7 +52,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user);
 
-	public String getPassword(WasabiUserDTO user) throws SQLException;
+	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user);
 
@@ -72,7 +74,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public void setDisplayName(WasabiUserDTO user, String displayName);
 
-	public void setPassword(WasabiUserDTO user, String password) throws SQLException;
+	public void setPassword(WasabiUserDTO user, String password) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room);
 

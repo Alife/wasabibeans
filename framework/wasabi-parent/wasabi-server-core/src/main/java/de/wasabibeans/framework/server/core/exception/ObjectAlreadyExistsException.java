@@ -21,7 +21,7 @@
 
 package de.wasabibeans.framework.server.core.exception;
 
-public class ObjectAlreadyExistsException extends RuntimeException {
+public class ObjectAlreadyExistsException extends WasabiException {
 
 	private String nameOfObject;
 
@@ -32,6 +32,11 @@ public class ObjectAlreadyExistsException extends RuntimeException {
 
 	public ObjectAlreadyExistsException(String msg, String nameOfObject) {
 		super(msg);
+		this.nameOfObject = nameOfObject;
+	}
+	
+	public ObjectAlreadyExistsException(String msg, String nameOfObject, Throwable t) {
+		super(msg, t);
 		this.nameOfObject = nameOfObject;
 	}
 

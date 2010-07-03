@@ -21,20 +21,18 @@
 
 package de.wasabibeans.framework.server.core.exception;
 
-public class DestinationNotFoundException extends Exception {
+public class DestinationNotFoundException extends WasabiException {
 
 	/**
 	 * Generated serial version UID
 	 */
 	private static final long serialVersionUID = -8358456200950706434L;
 
-	public DestinationNotFoundException() {
-
-		super();
+	public DestinationNotFoundException(String msg) {
+		super(msg);
 	}
 
-	public DestinationNotFoundException(String s) {
-
-		super(s);
+	public DestinationNotFoundException(String msg, Throwable t) {
+		super(msg, t);
 	}
 }
