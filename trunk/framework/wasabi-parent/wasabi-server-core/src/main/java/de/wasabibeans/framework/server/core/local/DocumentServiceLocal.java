@@ -32,6 +32,10 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the local access on WasabiDocumentDTO objects.
@@ -39,51 +43,69 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 @Local
 public interface DocumentServiceLocal extends ObjectServiceLocal {
 
-	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment);
+	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public Serializable getContent(WasabiDocumentDTO document);
+	public Serializable getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException;
 
-	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name);
+	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Collection<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location);
+	public Collection<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Collection<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate);
+			Date endDate) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth);
+			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator);
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment);
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate);
+			Date endDate) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth);
+			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier);
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment);
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order);
+	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO document);
+	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp);
+	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp);
+	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp);
+	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp);
+	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment);
+	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public void remove(WasabiDocumentDTO document);
+	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public void rename(WasabiDocumentDTO document, String name);
+	public void rename(WasabiDocumentDTO document, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public void setContent(WasabiDocumentDTO document, Serializable content);
+	public void setContent(WasabiDocumentDTO document, Serializable content) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException;
 }

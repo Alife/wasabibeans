@@ -37,6 +37,8 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithm
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
@@ -94,7 +96,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public String getPassword(WasabiUserDTO user) throws SQLException {
+	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
 
 		String wasabiUser = getName(user);
@@ -174,7 +176,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setPassword(WasabiUserDTO user, String password) throws SQLException {
+	public void setPassword(WasabiUserDTO user, String password) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
 
 		String wasabiUser = getName(user);

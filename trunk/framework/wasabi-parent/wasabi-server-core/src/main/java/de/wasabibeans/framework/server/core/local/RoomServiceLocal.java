@@ -28,6 +28,9 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the local access on WasabiRoomDTO objects.
@@ -35,42 +38,55 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 @Local
 public interface RoomServiceLocal extends ObjectServiceLocal {
 
-	public WasabiRoomDTO create(String name, WasabiRoomDTO environment);
+	public WasabiRoomDTO create(String name, WasabiRoomDTO environment) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public WasabiRoomDTO getEnvironment(WasabiRoomDTO room);
+	public WasabiRoomDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name);
+	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO room);
+	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth);
+	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate,
-			int depth);
+			int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator);
+	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator, WasabiRoomDTO environment);
+	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator, WasabiRoomDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate,
-			int depth);
+			int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier);
+	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier, WasabiRoomDTO environment);
+	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier, WasabiRoomDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiRoomDTO getRootHome();
+	public WasabiRoomDTO getRootHome() throws UnexpectedInternalProblemException;
 
-	public WasabiRoomDTO getRootRoom();
+	public WasabiRoomDTO getRootRoom() throws UnexpectedInternalProblemException;
 
-	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment);
+	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public void remove(WasabiRoomDTO room);
+	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void rename(WasabiRoomDTO room, String name);
+	public void rename(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
 }
