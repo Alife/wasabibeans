@@ -58,7 +58,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 	public void initDatabase() {
 
 		/**
-		 * Create user database and entries
+		 * Create user table and entries
 		 */
 		QueryRunner run = new QueryRunner(SqlConnector.connect());
 
@@ -77,6 +77,23 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		try {
 			run.update(insertWasabiRootUser, rootUserName, HashGenerator.generateHash(rootUserPassword,
 					hashAlgorithms.SHA));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		/**
+		 * Create user rights table and entries
+		 */
+		String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
+		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + " `object_uuid` varchar(64) NOT NULL,"
+				+ "`user_id` varchar(64) NOT NULL," + "`p_id` varchar(64) NOT NULL," + "`g_id` varchar(64) NOT NULL,"
+				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
+				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
+				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL," + "`end_time` float NOT NULL,"
+				+ " KEY `user_id` (`user_id`));";
+		try {
+			run.update(dropWasabiRightsTable);
+			run.update(createWasabiRightsTable);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -102,7 +119,8 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 	/**
 	 * Initializes the JCR workspace with the given name.
 	 * 
-	 * @param workspacename name of the JCR workspace 
+	 * @param workspacename
+	 *            name of the JCR workspace
 	 * @return DTO of the wasabi root room
 	 */
 	public WasabiRoomDTO initWorkspace(String workspacename) {
