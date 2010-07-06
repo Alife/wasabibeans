@@ -32,7 +32,7 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
-import de.wasabibeans.framework.server.core.auth.SimpleUsrPwdCallbackHandler;
+import de.wasabibeans.framework.server.core.authentication.SimpleUsrPwdCallbackHandler;
 
 /**
  * Class for remote JAAS authentication and remote EJB lookups. Must be used by tests which run in AS_CLIENT mode. The
