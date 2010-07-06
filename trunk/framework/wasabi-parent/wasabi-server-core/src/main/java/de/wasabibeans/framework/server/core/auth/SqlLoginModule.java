@@ -134,7 +134,7 @@ public class SqlLoginModule implements LoginModule {
 	protected String getUsersPassword(String username) throws LoginException {
 
 		try {
-			QueryRunner run = new QueryRunner(SqlConnector.connect());
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
 

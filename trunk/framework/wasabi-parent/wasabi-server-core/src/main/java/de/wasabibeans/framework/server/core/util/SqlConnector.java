@@ -21,23 +21,28 @@
 
 package de.wasabibeans.framework.server.core.util;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class SqlConnector {
 
-	public static DataSource connect() {
+	private JndiConnector jndi;
+
+	public SqlConnector() {
+		this.jndi = JndiConnector.getJNDIConnector();
+	}
+
+	public DataSource getDataSource() {
+		DataSource dataSource = null;
 		try {
-			Context context = new InitialContext();
-			DataSource dataSource = (DataSource) context.lookup(WasabiConstants.JNDI_SQL_DATASOURCE);
-			return dataSource;
-		} catch (NamingException e) {
-			// TODO: Exception hinzufügen
-			return null;
+			dataSource = (DataSource) jndi.lookup(WasabiConstants.JNDI_SQL_DATASOURCE);
+		} catch (UnexpectedInternalProblemException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return dataSource;
+
 	}
 }
