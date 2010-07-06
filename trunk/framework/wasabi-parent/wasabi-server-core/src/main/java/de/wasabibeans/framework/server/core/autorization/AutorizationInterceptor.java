@@ -19,29 +19,8 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.common;
+package de.wasabibeans.framework.server.core.autorization;
 
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
+public class AutorizationInterceptor {
 
-import de.wasabibeans.framework.server.core.authentication.SimpleUsrPwdCallbackHandler;
-
-public class WasabiAuthenticator {
-
-	public WasabiAuthenticator() {
-
-	}
-
-	public boolean verifyLogin(String username, String password) {
-
-		try {
-			LoginContext loginContext = new LoginContext("wasabi", new SimpleUsrPwdCallbackHandler(username, password));
-			loginContext.login();
-			loginContext.logout();
-		} catch (LoginException e) {
-			return false;
-		}
-
-		return true;
-	}
 }
