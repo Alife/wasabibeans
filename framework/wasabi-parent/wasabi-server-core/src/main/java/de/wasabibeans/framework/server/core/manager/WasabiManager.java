@@ -65,7 +65,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		/**
 		 * Create user table and entries
 		 */
-		QueryRunner run = new QueryRunner(SqlConnector.connect());
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
 		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("

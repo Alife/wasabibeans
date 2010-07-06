@@ -97,7 +97,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@SuppressWarnings("unchecked")
 	@Override
 	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(SqlConnector.connect());
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String wasabiUser = getName(user);
 		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
@@ -177,7 +177,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void setPassword(WasabiUserDTO user, String password) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(SqlConnector.connect());
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String wasabiUser = getName(user);
 		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
