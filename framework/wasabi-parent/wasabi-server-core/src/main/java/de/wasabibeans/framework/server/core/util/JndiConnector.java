@@ -28,16 +28,16 @@ import javax.naming.NamingException;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
-public class JNDIConnector {
+public class JndiConnector {
 
 	private InitialContext jndiContext;
 	private WasabiLogger logger;
 
-	public static JNDIConnector getJNDIConnector() {
-		return new JNDIConnector();
+	public static JndiConnector getJNDIConnector() {
+		return new JndiConnector();
 	}
 
-	public JNDIConnector() {
+	public JndiConnector() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
 	}
 
@@ -91,3 +91,4 @@ public class JNDIConnector {
 		}
 	}
 }
+

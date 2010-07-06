@@ -32,17 +32,17 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
-public class JCRConnector {
+public class JcrConnector {
 
 	private Repository jcrRepository;
-	private JNDIConnector jndi;
+	private JndiConnector jndi;
 
-	public static JCRConnector getJCRConnector() {
-		return new JCRConnector();
+	public static JcrConnector getJCRConnector() {
+		return new JcrConnector();
 	}
 
-	public JCRConnector() {
-		this.jndi = JNDIConnector.getJNDIConnector();
+	public JcrConnector() {
+		this.jndi = JndiConnector.getJNDIConnector();
 	}
 
 	public Repository getJCRRepository() throws UnexpectedInternalProblemException {

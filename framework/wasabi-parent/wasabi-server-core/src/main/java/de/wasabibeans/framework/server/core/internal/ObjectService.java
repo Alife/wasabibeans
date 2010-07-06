@@ -42,7 +42,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
-import de.wasabibeans.framework.server.core.util.JCRConnector;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 /**
@@ -58,12 +58,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	protected WasabiLogger logger;
 
 	protected TransferManager tm;
-	protected JCRConnector jcr;
+	protected JcrConnector jcr;
 
 	public ObjectService() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
 		this.tm = TransferManager.getTransferManager();
-		this.jcr = JCRConnector.getJCRConnector();
+		this.jcr = JcrConnector.getJCRConnector();
 	}
 
 	protected Session getJCRSession() throws UnexpectedInternalProblemException {
