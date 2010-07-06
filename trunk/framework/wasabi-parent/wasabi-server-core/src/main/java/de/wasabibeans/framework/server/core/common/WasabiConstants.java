@@ -65,9 +65,15 @@ public interface WasabiConstants {
 	/* JNDI datasources */
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
 	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
+	public final static String JNDI_JCR_USER2SESSION = "user2JCRSession";
 
 	/* JCR Options */
 	public final static String JCR_NS_PREFIX = "wasabi";
 	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
+	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
+	
+	/* DTO */
+	public final static String DTO_SUFFIX = "DTO";
+	public final static String DTO_PREFIX = "Wasabi";
 
 }

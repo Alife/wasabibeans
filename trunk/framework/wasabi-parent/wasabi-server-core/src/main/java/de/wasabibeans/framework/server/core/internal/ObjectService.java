@@ -21,9 +21,12 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -39,17 +42,45 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
+import de.wasabibeans.framework.server.core.util.JCRConnector;
+import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 /**
  * Class, that implements the internal access on WasabiObject objects.
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
-public class ObjectService extends TransferManager implements ObjectServiceLocal, ObjectServiceRemote {
-	
-	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
+
+	@Resource
+	protected SessionContext ctx;
+
+	protected WasabiLogger logger;
+
+	protected TransferManager tm;
+	protected JCRConnector jcr;
+
+	public ObjectService() {
+		this.logger = WasabiLogger.getLogger(this.getClass());
+		this.tm = TransferManager.getTransferManager();
+		this.jcr = JCRConnector.getJCRConnector();
+	}
+
+	protected Session getJCRSession() throws UnexpectedInternalProblemException {
+		Principal user = ctx.getCallerPrincipal();
+		if (user != null) {
+			Session s = jcr.getJCRSession(user.getName());
+			if (s != null) {
+				return s;
+			}
+		}
+		return jcr.getJCRSession();
+	}
+
+	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node objectNode = convertDTO2Node(object, s);
+		Node objectNode = tm.convertDTO2Node(object, s);
 		if (objectNode == null) {
 			return "";
 		}
@@ -60,9 +91,10 @@ public class ObjectService extends TransferManager implements ObjectServiceLocal
 		}
 	}
 
-	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node objectNode = convertDTO2Node(object, s);
+		Node objectNode = tm.convertDTO2Node(object, s);
 		if (objectNode == null) {
 			return "";
 		}

@@ -44,8 +44,12 @@ public class WasabiExceptionMessages {
 	public final static String TRANSFER_NODE2DTO_REFLECTERROR = "Internal Problem: Could not create corresponding DTO for given JCR node.";
 
 	/* JNDI */
-	public final static String JNDI_NO_CONTEXT = "Internal Problem: Could not initialize JNDI context.";
-
+	public final static String JNDI_FAILED_BIND = "Internal Problem: Could not bind &0 to JNDI context.";
+	public final static String JNDI_FAILED_LOOKUP = "Internal Problem: Could not retrieve &0 from JNDI context.";
+	public final static String JNDI_FAILED_UNBIND = "Internal Problem: Could not unbind &0 from JNDI context.";
+	public final static String JNDI_FAILED_UNBIND_NAME_NOT_BOUND = "Attempted to unbind &0 from JDNI context, although it is not bound";
+	public final static String JNDI_NO_CONTEXT = "Internal Problem: Could not access the JNDI context.";
+	
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Internal Problem: Could not use JCR repository as expected.";
 
