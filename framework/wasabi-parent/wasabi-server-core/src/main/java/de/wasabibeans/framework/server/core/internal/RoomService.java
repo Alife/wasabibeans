@@ -60,12 +60,12 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 		}
 		Session s = getJCRSession();
-		Node environmentNode = convertDTO2Node(environment, s);
+		Node environmentNode = tm.convertDTO2Node(environment, s);
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
 			s.save();
 
-			return convertNode2DTO(roomNode);
+			return tm.convertNode2DTO(roomNode);
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "room", name), name, iee);
@@ -76,11 +76,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public WasabiRoomDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		logger.error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
-			return convertNode2DTO(roomNode.getParent().getParent());
+			return tm.convertNode2DTO(roomNode.getParent().getParent());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -89,13 +88,12 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		if (name == null) {
-			logger.error(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 		}
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
-			return convertNode2DTO(roomNode.getNode(WasabiNodeProperty.ROOMS + "/" + name));
+			return tm.convertNode2DTO(roomNode.getNode(WasabiNodeProperty.ROOMS + "/" + name));
 		} catch (PathNotFoundException e) {
 			return null;
 		} catch (RepositoryException re) {
@@ -106,12 +104,12 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
 			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
 			NodeIterator iter = roomNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
 			while (iter.hasNext()) {
-				rooms.add((WasabiRoomDTO) convertNode2DTO(iter.nextNode()));
+				rooms.add((WasabiRoomDTO) tm.convertNode2DTO(iter.nextNode()));
 			}
 			return rooms;
 		} catch (RepositoryException re) {
@@ -182,7 +180,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			Node roomNode = s.getRootNode().getNode(
 					WasabiConstants.ROOT_ROOM_NAME + "/" + WasabiNodeProperty.ROOMS + "/"
 							+ WasabiConstants.HOME_ROOM_NAME);
-			return convertNode2DTO(roomNode);
+			return tm.convertNode2DTO(roomNode);
 		} catch (PathNotFoundException pnfe) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_HOME_ROOM, pnfe);
 		} catch (RepositoryException re) {
@@ -195,7 +193,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = getJCRSession();
 		try {
 			Node roomNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			return convertNode2DTO(roomNode);
+			return tm.convertNode2DTO(roomNode);
 		} catch (PathNotFoundException pnfe) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_ROOT_ROOM, pnfe);
 		} catch (RepositoryException re) {
@@ -206,8 +204,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment) throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException {
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
-		Node newEnvironmentNode = convertDTO2Node(newEnvironment, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
+		Node newEnvironmentNode = tm.convertDTO2Node(newEnvironment, s);
 		try {
 			s.move(roomNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/"
 					+ roomNode.getName());
@@ -228,7 +226,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
 			roomNode.remove();
 			s.save();
@@ -240,11 +238,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public void rename(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException {
 		if (name == null) {
-			logger.error(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_NAME_NULL);
 		}
 		Session s = getJCRSession();
-		Node roomNode = convertDTO2Node(room, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
 			s.move(roomNode.getPath(), roomNode.getParent().getPath() + "/" + name);
 			s.save();

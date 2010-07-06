@@ -72,8 +72,9 @@ public class RoomServiceRemoteTest extends Arquillian {
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(WasabiManager.class.getPackage()) // manager
-				.addPackage(RoomService.class.getPackage()).addPackage(RoomServiceLocal.class.getPackage()).addPackage(
-						RoomServiceRemote.class.getPackage());
+				.addPackage(RoomService.class.getPackage()) // services impl
+				.addPackage(RoomServiceLocal.class.getPackage()) // services local
+				.addPackage(RoomServiceRemote.class.getPackage()); // services remote
 
 		return testArchive;
 	}
@@ -92,7 +93,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 	}
 
 	@AfterClass
-	public void tearDownAfterAllMethos() throws LoginException, NamingException {
+	public void tearDownAfterAllMethods() throws LoginException, NamingException {
 		// disconnect and logout
 		reWaCon.disconnect();
 	}
@@ -142,7 +143,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 		AssertJUnit.assertNotNull(rootHome);
 	}
 
-	@Test(dependsOnMethods="createTest")
+	@Test(dependsOnMethods = "createTest")
 	public void getEnvironmentTest() throws WasabiException {
 		WasabiRoomDTO newRoom = roomService.create("room", rootRoom);
 
@@ -150,7 +151,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
-	@Test(dependsOnMethods="createTest")
+	@Test(dependsOnMethods = "createTest")
 	public void getRoomByNameTest() throws WasabiException {
 		roomService.create("room1", rootRoom);
 		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);
@@ -168,7 +169,7 @@ public class RoomServiceRemoteTest extends Arquillian {
 		AssertJUnit.assertNull(roomService.getRoomByName(rootRoom, "doesNotExist"));
 	}
 
-	@Test(dependsOnMethods="createTest")
+	@Test(dependsOnMethods = "createTest")
 	public void getRoomsTest() throws WasabiException {
 		WasabiRoomDTO room1 = roomService.create("room1", rootRoom);
 		WasabiRoomDTO room2 = roomService.create("room2", rootRoom);

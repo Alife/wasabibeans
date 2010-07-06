@@ -25,12 +25,8 @@ import java.util.Locale;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -38,40 +34,20 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
-public abstract class TransferManager {
+public class TransferManager {
 
-	private static final String suffix = "DTO";
-	private static final String prefix = "Wasabi";
-
-	protected WasabiLogger logger;
-	private Repository jcrRepository;
+	private WasabiLogger logger;
+	
+	public static TransferManager getTransferManager() {
+		return new TransferManager();
+	}
 
 	public TransferManager() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
 	}
-	
-	protected Repository getJCRRepository() throws UnexpectedInternalProblemException {
-		try {
-			if (this.jcrRepository == null) {
-				InitialContext jndiContext = new InitialContext();
-				this.jcrRepository = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-			}
-			return this.jcrRepository;
-		} catch (NamingException ne) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JNDI_NO_CONTEXT, ne);
-		}
-	}
-
-	protected Session getJCRSession() throws UnexpectedInternalProblemException {
-		try {
-			return getJCRRepository().login(new SimpleCredentials("user", "pwd".toCharArray()));
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
 
 	@SuppressWarnings("unchecked")
-	protected <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
+	public <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
 			throws UnexpectedInternalProblemException {
 		if (wasabiObject == null) {
 			logger.warn(WasabiExceptionMessages.TRANSFER_NODE2DTO_NULLNODE);
@@ -92,7 +68,7 @@ public abstract class TransferManager {
 		return (T) dto;
 	}
 
-	protected Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
+	public Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		if (wasabiObjectDTO != null) {
 			if (s != null) {
@@ -116,6 +92,6 @@ public abstract class TransferManager {
 	private String generateWasabiObjectDTOName(String nodeTypeName) {
 		String[] tmp = nodeTypeName.split(":");
 		String firstLetter = tmp[1].substring(0, 1).toUpperCase(Locale.ENGLISH);
-		return prefix + firstLetter + tmp[1].substring(1) + suffix;
+		return WasabiConstants.DTO_PREFIX + firstLetter + tmp[1].substring(1) + WasabiConstants.DTO_SUFFIX;
 	}
 }
