@@ -41,8 +41,8 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
-import de.wasabibeans.framework.server.core.util.JCRConnector;
-import de.wasabibeans.framework.server.core.util.JNDIConnector;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 @Stateless(name = "WasabiManager")
@@ -51,12 +51,12 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 	public final static String rootUserName = "root";
 	public final static String rootUserPassword = "meerrettich";
 	
-	private JNDIConnector jndi;
-	private JCRConnector jcr;
+	private JndiConnector jndi;
+	private JcrConnector jcr;
 	
 	public WasabiManager() {
-		this.jndi = JNDIConnector.getJNDIConnector();
-		this.jcr = JCRConnector.getJCRConnector();
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector();
 	}
 
 	@Override
