@@ -25,6 +25,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -52,6 +54,9 @@ import de.wasabibeans.framework.server.core.util.WasabiUser;
 @Stateless(name = "UserService")
 public class UserService extends ObjectService implements UserServiceLocal, UserServiceRemote {
 
+	@Resource
+	private SessionContext sessionContext;
+	
 	@Override
 	public WasabiUserDTO create(String name, String password) {
 		// TODO Auto-generated method stub
@@ -66,8 +71,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public String getCurrentUser() {
-		// TODO Auto-generated method stub
-		return null;
+		return sessionContext.getCallerPrincipal().getName();
 	}
 
 	@Override
