@@ -19,24 +19,14 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.annotation;
+package de.wasabibeans.framework.server.core.common;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Documented
-@Target( value = { ElementType.METHOD })
-@Retention(value = RetentionPolicy.RUNTIME)
-public @interface WasabiRight {
-	enum FilterType {
-		VIEW, READ, EXECUTE, COMMENT, INSERT, WRITE, GRANT
-	}
-
-	FilterType p1() default FilterType.VIEW;
-	FilterType p2() default FilterType.VIEW;
-	FilterType p3() default FilterType.VIEW;
-
+public class WasabiPermission {
+	public static final int VIEW = 0;
+	public static final int READ = 1;
+	public static final int EXECUTE = 2;
+	public static final int COMMENT = 3;
+	public static final int INSERT = 4;
+	public static final int WRITE = 5;
+	public static final int GRANT = 6;
 }
