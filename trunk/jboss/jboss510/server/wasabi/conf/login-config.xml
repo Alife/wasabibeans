@@ -33,7 +33,7 @@
 	<application-policy name="wasabi">
 		<authentication>
 			<login-module
-				code="de.wasabibeans.framework.server.core.auth.SqlLoginModule"
+				code="de.wasabibeans.framework.server.core.authentication.SqlLoginModule"
 				flag="required">
 				<module-option name="restore-login-identity">true</module-option>
 			</login-module>
