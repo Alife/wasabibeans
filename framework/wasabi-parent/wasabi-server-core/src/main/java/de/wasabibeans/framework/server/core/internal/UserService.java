@@ -185,7 +185,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		String wasabiUser = getName(user);
 		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE user=?";
+		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE username=?";
 
 		try {
 			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
