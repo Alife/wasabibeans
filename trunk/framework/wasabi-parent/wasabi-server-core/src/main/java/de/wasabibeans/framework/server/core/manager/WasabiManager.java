@@ -69,7 +69,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
 		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
-				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL," + "PRIMARY KEY (username));";
+				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL," + "PRIMARY KEY (username)) ENGINE =  InnoDB ;";
 		try {
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
@@ -95,7 +95,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL," + "`end_time` float NOT NULL,"
-				+ " KEY `user_id` (`user_id`));";
+				+ " KEY `user_id` (`user_id`)) ENGINE =  InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
