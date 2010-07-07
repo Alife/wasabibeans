@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target( value = { ElementType.METHOD })
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface WasabiResultFilter {
+public @interface WasabiRight {
 	enum FilterType {
 		VIEW, READ, EXECUTE, COMMENT, INSERT, WRITE, GRANT
 	}
