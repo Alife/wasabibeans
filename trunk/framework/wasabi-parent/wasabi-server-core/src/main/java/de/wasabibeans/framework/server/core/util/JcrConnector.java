@@ -60,6 +60,13 @@ public class JcrConnector {
 	}
 
 	@SuppressWarnings("unchecked")
+	public void removeJCRSession(String username) throws UnexpectedInternalProblemException {
+		ConcurrentHashMap<String, Session> user2session = (ConcurrentHashMap<String, Session>) jndi
+				.lookup(WasabiConstants.JNDI_JCR_USER2SESSION);
+		user2session.remove(username);
+	}
+
+	@SuppressWarnings("unchecked")
 	public Session getJCRSession(String username) throws UnexpectedInternalProblemException {
 		ConcurrentHashMap<String, Session> user2session = (ConcurrentHashMap<String, Session>) jndi
 				.lookup(WasabiConstants.JNDI_JCR_USER2SESSION);
