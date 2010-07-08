@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
@@ -45,6 +47,8 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
+// no need for transactions during server startup
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @Stateless(name = "WasabiManager")
 public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
@@ -61,7 +65,6 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 	@Override
 	public void initDatabase() {
-
 		/**
 		 * Create user table and entries
 		 */
@@ -74,7 +77,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		String insertWasabiRootUser = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
@@ -83,7 +86,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			run.update(insertWasabiRootUser, rootUserName, HashGenerator.generateHash(rootUserPassword,
 					hashAlgorithms.SHA));
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		/**
@@ -100,7 +103,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 	}
@@ -139,6 +142,13 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			while (ni.hasNext()) {
 				Node aNode = ni.nextNode();
 				if (!aNode.getName().equals("jcr:system")) {
+					
+					System.out.println("Rooms of root");
+					NodeIterator n = aNode.getNode("wasabi:rooms").getNodes();
+					while (n.hasNext()) {
+						System.out.println(n.nextNode().getName());
+					}
+					
 					aNode.remove();
 				}
 			}
