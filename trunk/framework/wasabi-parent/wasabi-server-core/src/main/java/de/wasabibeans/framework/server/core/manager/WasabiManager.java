@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -42,6 +43,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -54,10 +56,10 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 	public final static String rootUserName = "root";
 	public final static String rootUserPassword = "meerrettich";
-	
+
 	private JndiConnector jndi;
 	private JcrConnector jcr;
-	
+
 	public WasabiManager() {
 		this.jndi = JndiConnector.getJNDIConnector();
 		this.jcr = JcrConnector.getJCRConnector();
@@ -72,7 +74,8 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
 		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
-				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL," + "PRIMARY KEY (username)) ENGINE =  InnoDB ;";
+				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL,"
+				+ "PRIMARY KEY (username)) ENGINE =  InnoDB ;";
 		try {
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
@@ -112,7 +115,8 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		try {
 			Session s = jcr.getJCRSession();
 			// register wasabi nodetypes (also registers the wasabi jcr namespace)
-			InputStream in = getClass().getClassLoader().getResourceAsStream(WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
+			InputStream in = getClass().getClassLoader().getResourceAsStream(
+					WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
 			Reader r = new InputStreamReader(in, "utf-8");
 			CndImporter.registerNodeTypes(r, s);
 			s.logout();
@@ -142,29 +146,42 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			while (ni.hasNext()) {
 				Node aNode = ni.nextNode();
 				if (!aNode.getName().equals("jcr:system")) {
-					
-					System.out.println("Rooms of root");
-					NodeIterator n = aNode.getNode("wasabi:rooms").getNodes();
-					while (n.hasNext()) {
-						System.out.println(n.nextNode().getName());
-					}
-					
 					aNode.remove();
 				}
 			}
 
 			// create basic wasabi content
-			Node rootRoomNode = s.getRootNode().addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
+			Node workspaceRoot = s.getRootNode();
+			// wasabi root room + wasabi home room
+			Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
+			Node wasabiHome = createRoom(WasabiConstants.HOME_ROOM_NAME, wasabiRoot);
+			// root node for wasabi users and initial users
+			Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
+					WasabiNodeType.WASABI_USERS);
+			Node rootUser = createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
+			
+			// return DTO of wasabi root room
 			WasabiRoomDTO rootRoomDTO = new WasabiRoomDTO();
-			rootRoomDTO.setId(rootRoomNode.getIdentifier());
-			rootRoomNode.addNode(WasabiNodeProperty.ROOMS + "/" + WasabiConstants.HOME_ROOM_NAME,
-					WasabiNodeType.WASABI_ROOM);
+			rootRoomDTO.setId(wasabiRoot.getIdentifier());
 			s.save();
 			s.logout();
 			return rootRoomDTO;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private Node createRoom(String name, Node environment) throws RepositoryException {
+		return environment.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+	}
+	
+	private Node createUser(String name, Node rootOfUsersNode, Node wasabiHome) throws RepositoryException {
+		Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
+		userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, name);
+		Node homeRoomNode = wasabiHome.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+		userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
+		userNode.setProperty(WasabiNodeProperty.START_ROOM, homeRoomNode);
+		return userNode;
 	}
 
 }

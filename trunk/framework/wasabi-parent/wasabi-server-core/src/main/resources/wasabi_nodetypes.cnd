@@ -29,12 +29,12 @@
 	
 [wasabi:user] > wasabi:identity
 	- wasabi:startRoom (REFERENCE) mandatory < 'wasabi:room'
-	- wasabi:active (BOOLEAN) = 'true' mandatory 
+	- wasabi:active (BOOLEAN) = 'true' autocreated mandatory 
 	+ wasabi:memberships (wasabi:memberships) = 'wasabi:memberships' autocreated 
 
 [wasabi:document] > wasabi:object
 	primaryitem 'wasabi:content'
-	- wasabi:content (UNDEFINED) mandatory 
+	- wasabi:content (BINARY) mandatory 
 	
 [wasabi:link] > wasabi:object
 	- wasabi:destination (REFERENCE) mandatory < 'wasabi:object'
@@ -73,3 +73,9 @@
 	
 [wasabi:memberships] > nt:base
 	- * (REFERENCE) < 'wasabi:group'
+	
+[wasabi:users] > nt:base
+	+ * (wasabi:user)
+	
+[wasabi:groups] > nt:base
+	+ * (wasabi:group)

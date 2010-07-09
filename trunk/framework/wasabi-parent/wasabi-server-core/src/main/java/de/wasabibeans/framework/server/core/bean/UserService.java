@@ -21,31 +21,27 @@
 
 package de.wasabibeans.framework.server.core.bean;
 
-import java.sql.SQLException;
-import java.util.List;
 import java.util.Vector;
 
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
-import de.wasabibeans.framework.server.core.util.HashGenerator;
-import de.wasabibeans.framework.server.core.util.SqlConnector;
-import de.wasabibeans.framework.server.core.util.WasabiUser;
 
 /**
  * Class, that implements the internal access on WasabiUser objects.
@@ -58,19 +54,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	private SessionContext sessionContext;
 
 	@Override
-	public WasabiUserDTO create(String name, String password) throws SQLException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
-
+	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException {
+		Session s = getJCRSession();
 		try {
-			run.update(insertUserQuery, name, passwordCrypt);
-		} catch (SQLException e) {
-			throw new SQLException(e.toString());
+			Node userNode = UserServiceImpl.create(name, password, s);
+			s.save();
+			return tm.convertNode2DTO(userNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
 		}
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -85,9 +80,15 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public String getDisplayName(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			return UserServiceImpl.getDisplayName(userNode);
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -97,9 +98,15 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public WasabiRoomDTO getHomeRoom(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiRoomDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			return tm.convertNode2DTO(UserServiceImpl.getHomeRoom(userNode));
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -108,38 +115,39 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = getName(user);
-		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
 		try {
-			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
-
-			List<WasabiUser> result = run.query(getPasswordQuery, h, wasabiUser);
-
-			if (result.size() > 1)
-				return null;
-			else
-				return result.get(0).getPassword();
-		} catch (SQLException e) {
-			throw new SQLException(e.toString());
+			return UserServiceImpl.getPassword(userNode);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 
 	@Override
-	public WasabiRoomDTO getStartRoom(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiRoomDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			return tm.convertNode2DTO(UserServiceImpl.getStartRoom(userNode));
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
-	public boolean getStatus(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			return UserServiceImpl.getStatus(userNode);
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -173,67 +181,90 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void remove(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+	public void setDisplayName(WasabiUserDTO user, String displayName) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = getName(user);
-		String removeUserQuery = "DELETE FROM wasabi_user WHERE username=?";
-
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
 		try {
-			run.update(removeUserQuery, wasabiUser);
-		} catch (SQLException e) {
-			throw new SQLException(e.toString());
+			UserServiceImpl.setDisplayName(userNode, displayName);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 
 	@Override
-	public void rename(WasabiUserDTO user, String name) throws SQLException, UnexpectedInternalProblemException,
+	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = getName(user);
-		String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
-
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
 		try {
-			run.update(renameUserQuery, name, wasabiUser);
-		} catch (SQLException e) {
-			throw new SQLException(e.toString());
+			UserServiceImpl.setPassword(userNode, password);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 
 	@Override
-	public void setDisplayName(WasabiUserDTO user, String displayName) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setPassword(WasabiUserDTO user, String password) throws SQLException,
-			UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = getName(user);
-		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE username=?";
-
+	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		Node roomNode = tm.convertDTO2Node(room, s);
 		try {
-			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
-		} catch (SQLException e) {
-			throw new SQLException(WasabiExceptionMessages.INTERNAL_NO_USER + ": " + e.toString());
+			UserServiceImpl.setStartRoom(userNode, roomNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 
 	@Override
-	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room) {
-		// TODO Auto-generated method stub
+	public void setStatus(WasabiUserDTO user, boolean active) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			UserServiceImpl.setStatus(userNode, active);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
+		}
 
 	}
 
 	@Override
-	public void setStatus(WasabiUserDTO user, boolean active) {
-		// TODO Auto-generated method stub
-
+	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			UserServiceImpl.remove(userNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
+	@Override
+	public void rename(WasabiUserDTO user, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException {
+		Session s = getJCRSession();
+		Node userNode = tm.convertDTO2Node(user, s);
+		try {
+			UserServiceImpl.rename(userNode, name);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			cleanJCRSession(s);
+		}
+	}
 }
