@@ -21,7 +21,6 @@
 
 package de.wasabibeans.framework.server.core.bean;
 
-import java.security.Principal;
 import java.util.Date;
 import java.util.Vector;
 
@@ -40,6 +39,8 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
@@ -67,27 +68,45 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	}
 
 	protected Session getJCRSession() throws UnexpectedInternalProblemException {
-		Principal user = ctx.getCallerPrincipal();
-		if (user != null) {
-			Session s = jcr.getJCRSession(user.getName());
-			if (s != null) {
-				return s;
-			}
-		}
-		return jcr.getJCRSession();
+		Session s = null;
+//		String username = ctx.getCallerPrincipal().getName();
+//		s = jcr.getJCRSession(username);
+//
+//		if (s != null) {
+//			// The session might have been closed because it was bound to a transaction.
+//			// Due to a yet unknown reason 'isLive()' does not return false in that case but throws an
+//			// IllegalArgumentException.
+//			try {
+//				if (!s.isLive()) {
+//					s = null;
+//				}
+//			} catch (IllegalStateException ise) {
+//				s = null;
+//			}
+//		}
+//
+//		if (s == null) {
+//			s = jcr.getJCRSession();
+//			jcr.storeJCRSession(username, s);
+//		}
+
+//		System.out.println(s.toString());
+		s = jcr.getJCRSession();
+		return s;
+	}
+	
+	protected void cleanJCRSession(Session s) {
+		s.logout();
 	}
 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = getJCRSession();
 		Node objectNode = tm.convertDTO2Node(object, s);
-		if (objectNode == null) {
-			return "";
-		}
 		try {
-			return objectNode.getName();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			return ObjectServiceImpl.getName(objectNode);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 
@@ -95,13 +114,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			ObjectDoesNotExistException {
 		Session s = getJCRSession();
 		Node objectNode = tm.convertDTO2Node(object, s);
-		if (objectNode == null) {
-			return "";
-		}
 		try {
-			return objectNode.getIdentifier();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			return ObjectServiceImpl.getUUID(objectNode);
+		} finally {
+			cleanJCRSession(s);
 		}
 	}
 

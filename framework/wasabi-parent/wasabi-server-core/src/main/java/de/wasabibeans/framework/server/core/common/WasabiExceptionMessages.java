@@ -52,13 +52,16 @@ public class WasabiExceptionMessages {
 	
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Internal Problem: Could not use JCR repository as expected.";
+	
+	/* Database, SQL */
+	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
 
 	/* Internal Services */
 	public final static String INTERNAL_DOCUMENT_CONTENT_LOAD = "An exception occurred while trying to load the content of the given document.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_SAVE = "An exception occurred while trying to save the given content.";
-	public final static String INTERNAL_NAME_NULL = "The given name must not be null.";
 	public final static String INTERNAL_NO_ROOT_ROOM = "Internal Problem: The root room does not exist.";
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
 	public final static String INTERNAL_OBJECT_ALREADY_EXISTS = "The &0 &1 already exists.";
+	public final static String INTERNAL_PARAM_NULL = "The given &0 must not be null.";
 }

@@ -23,23 +23,13 @@ package de.wasabibeans.framework.server.core.common;
 
 public interface WasabiConstants {
 	public final static boolean JMSEnabled = false;
-
-	public final static Long ROOT_ROOM_ID = 1L;
-
 	public final static String HOME_ROOM_NAME = "home";
-
 	public final static String ROOT_ROOM_NAME = "root";
-
 	public final static String ROOT_USER_NAME = "root";
-
 	public final static String ROOT_USER_PASSWORD = "meerrettich";
-
 	public final static String ADMIN_USER_NAME = "admin";
-
 	public final static String ADMIN_USER_PASSWORD = "meerrettich";
-
 	public final static String ADMINS_GROUP_NAME = "admins";
-
 	public final static String WASABI_GROUP_NAME = "wasabi";
 
 	/* Enumerations */
@@ -67,10 +57,12 @@ public interface WasabiConstants {
 	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
 	public final static String JNDI_JCR_USER2SESSION = "user2JCRSession";
 
-	/* JCR Options */
+	/* JCR */
 	public final static String JCR_NS_PREFIX = "wasabi";
 	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
 	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
+	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";
+	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
 	
 	/* DTO */
 	public final static String DTO_SUFFIX = "DTO";
