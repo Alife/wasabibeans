@@ -18,6 +18,7 @@
  *  
  *  Further information are online available at: http://www.wasabibeans.de
  */
+
 package de.wasabibeans.framework.server.core.internal;
 
 import java.util.Date;
