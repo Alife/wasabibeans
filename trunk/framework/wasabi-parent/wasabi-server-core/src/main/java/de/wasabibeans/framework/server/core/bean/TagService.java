@@ -19,7 +19,7 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.internal;
+package de.wasabibeans.framework.server.core.bean;
 
 import java.util.Map;
 import java.util.Vector;
