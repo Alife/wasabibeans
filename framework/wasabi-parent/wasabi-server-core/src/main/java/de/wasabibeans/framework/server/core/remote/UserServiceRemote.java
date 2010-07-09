@@ -38,7 +38,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface UserServiceRemote extends ObjectServiceRemote {
 
-	public WasabiUserDTO create(String name, String password);
+	public WasabiUserDTO create(String name, String password) throws SQLException;
 
 	public Vector<WasabiUserDTO> getAllUsers();
 
@@ -52,7 +52,8 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user);
 
-	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
+	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user);
 
@@ -68,13 +69,16 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public void move(WasabiUserDTO user, WasabiRoomDTO newEnvironment);
 
-	public void remove(WasabiUserDTO user);
+	public void remove(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public void rename(WasabiUserDTO user, String name);
+	public void rename(WasabiUserDTO user, String name) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public void setDisplayName(WasabiUserDTO user, String displayName);
 
-	public void setPassword(WasabiUserDTO user, String password) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
+	public void setPassword(WasabiUserDTO user, String password) throws SQLException,
+			UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room);
 

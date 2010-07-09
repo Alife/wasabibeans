@@ -56,9 +56,19 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Resource
 	private SessionContext sessionContext;
-	
+
 	@Override
-	public WasabiUserDTO create(String name, String password) {
+	public WasabiUserDTO create(String name, String password) throws SQLException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
+		String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
+
+		try {
+			run.update(insertUserQuery, name, passwordCrypt);
+		} catch (SQLException e) {
+			throw new SQLException(e.toString());
+		}
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -100,7 +110,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public String getPassword(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String wasabiUser = getName(user);
@@ -162,15 +173,33 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void remove(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
+	public void remove(WasabiUserDTO user) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		String wasabiUser = getName(user);
+		String removeUserQuery = "DELETE FROM wasabi_user WHERE username=?";
+
+		try {
+			run.update(removeUserQuery, wasabiUser);
+		} catch (SQLException e) {
+			throw new SQLException(e.toString());
+		}
 	}
 
 	@Override
-	public void rename(WasabiUserDTO user, String name) {
-		// TODO Auto-generated method stub
+	public void rename(WasabiUserDTO user, String name) throws SQLException, UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		String wasabiUser = getName(user);
+		String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
+
+		try {
+			run.update(renameUserQuery, name, wasabiUser);
+		} catch (SQLException e) {
+			throw new SQLException(e.toString());
+		}
 	}
 
 	@Override
@@ -180,7 +209,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setPassword(WasabiUserDTO user, String password) throws SQLException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public void setPassword(WasabiUserDTO user, String password) throws SQLException,
+			UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String wasabiUser = getName(user);
@@ -190,7 +220,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			throw new SQLException(WasabiExceptionMessages.INTERNAL_NO_USER + ": " + e.toString());
 		}
 	}
