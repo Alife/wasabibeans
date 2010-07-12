@@ -34,6 +34,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
+// methods might be changed to static ones
 public class TransferManager {
 
 	private WasabiLogger logger;
