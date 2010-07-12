@@ -23,14 +23,25 @@ package de.wasabibeans.framework.server.core.bean;
 
 import java.util.Collection;
 
+import javax.ejb.Stateless;
+import javax.jcr.Node;
+import javax.jcr.Session;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
 
-public class ACLService implements ACLServiceLocal, ACLServiceRemote {
+@SecurityDomain("wasabi")
+@Stateless(name = "ACLService")
+public class ACLService extends WasabiService implements ACLServiceLocal, ACLServiceRemote {
 
 	@Override
 	public void activateInheritance(WasabiObjectDTO wasabiObject) {
@@ -39,30 +50,53 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	}
 
 	@Override
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance) {
-		// TODO Auto-generated method stub
-
+	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission,
-			boolean allowance, long startTime, long endTime) {
-		// TODO Auto-generated method stub
-
+			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance) {
-		// TODO Auto-generated method stub
-
+			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0);
 	}
 
+	@Deprecated
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance, long[] startTime, long[] endTime) {
-		// TODO Auto-generated method stub
-
+			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		for (int i = 0; i < endTime.length; i++) {
+			ACLServiceImpl
+					.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i], endTime[i]);
+		}
 	}
 
 	@Override

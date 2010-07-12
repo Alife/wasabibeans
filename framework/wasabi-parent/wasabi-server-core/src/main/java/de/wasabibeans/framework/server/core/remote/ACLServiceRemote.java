@@ -29,16 +29,20 @@ import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Local
 public interface ACLServiceRemote {
 
 	public void activateInheritance(WasabiObjectDTO wasabiObject);
 
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance);
+	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission,
-			boolean allowance, long startTime, long endTime);
+			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission);
 
@@ -70,10 +74,12 @@ public interface ACLServiceRemote {
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission);
 
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance);
+			boolean[] allowance) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance, long[] startTime, long[] endTime);
+			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
