@@ -34,13 +34,13 @@ public abstract class WasabiService {
 
 	protected TransferManager tm;
 	protected JcrConnector jcr;
-	
+
 	public WasabiService() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
 		this.tm = TransferManager.getTransferManager();
 		this.jcr = JcrConnector.getJCRConnector();
 	}
-	
+
 	protected Session getJCRSession() throws UnexpectedInternalProblemException {
 		Session s = null;
 		// String username = ctx.getCallerPrincipal().getName();

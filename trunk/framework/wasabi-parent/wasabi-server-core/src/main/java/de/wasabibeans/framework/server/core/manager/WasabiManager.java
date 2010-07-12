@@ -43,7 +43,6 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
-import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -96,11 +95,12 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		 * Create user rights table and entries
 		 */
 		String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
-		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + " `object_uuid` varchar(64) NOT NULL,"
-				+ "`user_id` varchar(64) NOT NULL," + "`p_id` varchar(64) NOT NULL," + "`g_id` varchar(64) NOT NULL,"
-				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
-				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
-				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL," + "`end_time` float NOT NULL,"
+		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + " `object_id` varchar(64) NOT NULL,"
+				+ "`user_id` varchar(64) NOT NULL," + "`parent_id` varchar(64) NOT NULL,"
+				+ "`group_id` varchar(64) NOT NULL," + "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL,"
+				+ "`insert` tinyint(2) NOT NULL," + "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL,"
+				+ "`execute` tinyint(2) NOT NULL," + "`grant` tinyint(2) NOT NULL,"
+				+ "`start_time` float NOT NULL DEFAULT '0'," + "`end_time` float NOT NULL DEFAULT '0',"
 				+ " KEY `user_id` (`user_id`)) ENGINE =  InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
@@ -159,7 +159,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 			Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
 					WasabiNodeType.WASABI_USERS);
 			Node rootUser = createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
-			
+
 			// return DTO of wasabi root room
 			WasabiRoomDTO rootRoomDTO = new WasabiRoomDTO();
 			rootRoomDTO.setId(wasabiRoot.getIdentifier());
@@ -174,7 +174,7 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 	private Node createRoom(String name, Node environment) throws RepositoryException {
 		return environment.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
 	}
-	
+
 	private Node createUser(String name, Node rootOfUsersNode, Node wasabiHome) throws RepositoryException {
 		Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
 		userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, name);
