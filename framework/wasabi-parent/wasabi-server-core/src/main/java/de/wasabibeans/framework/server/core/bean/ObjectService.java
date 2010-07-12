@@ -48,52 +48,14 @@ import de.wasabibeans.framework.server.core.util.WasabiLogger;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
-public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
+public class ObjectService extends WasabiService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Resource
 	protected SessionContext ctx;
 
 	protected WasabiLogger logger;
 
-	protected TransferManager tm;
-	protected JcrConnector jcr;
-
 	public ObjectService() {
-		this.logger = WasabiLogger.getLogger(this.getClass());
-		this.tm = TransferManager.getTransferManager();
-		this.jcr = JcrConnector.getJCRConnector();
-	}
-
-	protected Session getJCRSession() throws UnexpectedInternalProblemException {
-		Session s = null;
-		// String username = ctx.getCallerPrincipal().getName();
-		// s = jcr.getJCRSession(username);
-		//
-		// if (s != null) {
-		// // The session might have been closed because it was bound to a transaction.
-		// // Due to a yet unknown reason 'isLive()' does not return false in that case but throws an
-		// // IllegalArgumentException.
-		// try {
-		// if (!s.isLive()) {
-		// s = null;
-		// }
-		// } catch (IllegalStateException ise) {
-		// s = null;
-		// }
-		// }
-		//
-		// if (s == null) {
-		// s = jcr.getJCRSession();
-		// jcr.storeJCRSession(username, s);
-		// }
-
-		// System.out.println(s.toString());
-		s = jcr.getJCRSession();
-		return s;
-	}
-
-	protected void cleanJCRSession(Session s) {
-		s.logout();
 	}
 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
