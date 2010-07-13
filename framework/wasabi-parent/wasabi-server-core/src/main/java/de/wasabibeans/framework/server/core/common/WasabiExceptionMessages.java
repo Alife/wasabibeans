@@ -64,4 +64,5 @@ public class WasabiExceptionMessages {
 	public final static String INTERNAL_NO_USER = "User does not exist.";
 	public final static String INTERNAL_OBJECT_ALREADY_EXISTS = "The &0 &1 already exists.";
 	public final static String INTERNAL_PARAM_NULL = "The given &0 must not be null.";
+	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
 }

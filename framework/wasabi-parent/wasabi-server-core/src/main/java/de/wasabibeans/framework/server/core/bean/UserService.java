@@ -58,7 +58,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			ObjectAlreadyExistsException {
 		Session s = getJCRSession();
 		try {
-			Node userNode = UserServiceImpl.create(name, password, s);
+			Node userNode = UserServiceImpl.create(name, password, s, getCurrentUser());
 			s.save();
 			return tm.convertNode2DTO(userNode);
 		} catch (RepositoryException re) {
