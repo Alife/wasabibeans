@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 
-import javax.ejb.SessionContext;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -40,6 +39,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -51,8 +51,8 @@ import de.wasabibeans.framework.server.core.util.WasabiUser;
 
 public class UserServiceImpl {
 
-	public static Node create(String name, String password, Session s) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static Node create(String name, String password, Session s, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -70,7 +70,7 @@ public class UserServiceImpl {
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s));
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
-			
+			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal,s);
 			// Database
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -78,6 +78,16 @@ public class UserServiceImpl {
 			String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
 
 			run.update(insertUserQuery, name, passwordCrypt);
+
+			// Rights for user and environment
+			int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT,
+					WasabiPermission.WRITE, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
+			boolean[] allow = { true, true, true, true, true, true, true };
+
+			ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0);
+			ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0);
+			if (callerPrincipalNode != userNode)
+				ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0);
 
 			return userNode;
 		} catch (ItemExistsException iee) {
@@ -89,6 +99,8 @@ public class UserServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
 
+		// TODO rights at environment and own user object: view at group Wasabi; all for user; all for callerPrincipial;
+		// deactivate inheritance;
 		// TODO environment
 		// TODO wasabi group
 	}
@@ -96,10 +108,6 @@ public class UserServiceImpl {
 	public static Vector<Node> getAllUsers() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public static String getCurrentUser(SessionContext sessionContext) {
-		return sessionContext.getCallerPrincipal().getName();
 	}
 
 	public static String getDisplayName(Node userNode) throws UnexpectedInternalProblemException {

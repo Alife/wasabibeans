@@ -19,6 +19,11 @@ public class ACLServiceImpl {
 			long startTime, long endTime) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		if (permission.length != allowance.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
+		}
+
 		try {
 			int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 			String wasabiIdentityType = wasabiIdentityNode.getPrimaryNodeType().getName();
@@ -45,25 +50,25 @@ public class ACLServiceImpl {
 				}
 			}
 
-			if (wasabiIdentityType == WasabiNodeType.WASABI_USER) {
+			if (wasabiIdentityType.equals(WasabiNodeType.WASABI_USER)) {
 				try {
-					String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
-							+ "parent_id=?, view=?, read=?, insert=?, write=?, execute=?, comment=?, grant=?"
-							+ " WHERE object_id=? AND user_id=? AND start_time=? AND end_time=?";
-					run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment, grant,
-							objectUUID, identityUUID, startTime, endTime);
-				} catch (SQLException e) {
 					String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-							+ "(object_id, user_id, parent_id, view, read, insert, write, execute, comment, grant, start_time, end_time)"
-							+ " VALUES (?,?)";
+							+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`)"
+							+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read, insert,
+							write, execute, comment, grant, startTime, endTime);
+				} catch (SQLException e) {
+					String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
+						+ "`parent_id`=?, `view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
+						+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=?";
 					try {
-						run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, view, read, insert,
-								write, execute, comment, grant, startTime, endTime);
+						run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment, grant,
+								objectUUID, identityUUID, startTime, endTime);
 					} catch (SQLException ex) {
 						throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, ex);
 					}
 				}
-			} else if (wasabiIdentityType == WasabiNodeType.WASABI_GROUP) {
+			} else if (wasabiIdentityType.equals(WasabiNodeType.WASABI_GROUP)) {
 				try {
 					String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
 							+ "view=?, read=?, insert=?, write=?, execute=?, comment=?, grant=?"
@@ -85,7 +90,6 @@ public class ACLServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-
 	}
 
 	private static int allowanceConverter(boolean allowance) {
