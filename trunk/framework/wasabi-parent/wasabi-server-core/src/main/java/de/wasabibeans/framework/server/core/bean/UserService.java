@@ -151,9 +151,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public WasabiUserDTO getUserByName(String userName) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException {
+		Session s = getJCRSession();
+		try {
+			return tm.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override

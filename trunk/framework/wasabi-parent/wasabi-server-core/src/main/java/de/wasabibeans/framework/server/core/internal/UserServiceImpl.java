@@ -28,6 +28,7 @@ import java.util.Vector;
 import javax.ejb.SessionContext;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -163,9 +164,19 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static Node getUserByName(String userName) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Node getUserByName(String userName, Session s) throws UnexpectedInternalProblemException {
+		if (userName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+		try {
+			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
+			return rootOfUsersNode.getNode(userName);
+		} catch (PathNotFoundException e) {
+			return null;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static Node getUserByName(WasabiRoomDTO room, String userName) {
