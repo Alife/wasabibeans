@@ -28,5 +28,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 @Remote
 public interface WasabiManagerRemote {
 	public WasabiRoomDTO initWorkspace(String workspacename);
+
 	public void initDatabase();
 }
