@@ -34,7 +34,7 @@
 
 [wasabi:document] > wasabi:object
 	primaryitem 'wasabi:content'
-	- wasabi:content (BINARY) mandatory 
+	- wasabi:content (BINARY) 
 	
 [wasabi:link] > wasabi:object
 	- wasabi:destination (REFERENCE) mandatory < 'wasabi:object'
