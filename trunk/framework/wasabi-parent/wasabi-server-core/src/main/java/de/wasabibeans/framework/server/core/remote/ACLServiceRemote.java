@@ -65,6 +65,8 @@ public interface ACLServiceRemote {
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public void deactivateInheritance(WasabiObjectDTO wasabiObject);
+	
+	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
@@ -84,7 +86,6 @@ public interface ACLServiceRemote {
 
 	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
 	
-	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
 	public Collection<WasabiACLEntryDTO> getACLEntries(WasabiObjectDTO wasabiObject);
 
