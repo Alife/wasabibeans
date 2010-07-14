@@ -156,27 +156,29 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission) {
+	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, long startTime,
-			long endTime) {
+			long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission) {
+	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			long[] startTime, long[] endTime) {
+			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		// TODO Auto-generated method stub
 
 	}
@@ -188,9 +190,11 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public void reset(WasabiObjectDTO wasabiObject) {
-		// TODO Auto-generated method stub
-
+	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		ACLServiceImpl.reset(wasabiObjectNode);
 	}
 
 	@Override

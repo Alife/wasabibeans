@@ -86,7 +86,9 @@ public class UserServiceImpl {
 
 			ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0);
 			ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0);
-			if (callerPrincipalNode != userNode)
+			
+			//TODO: deactivate inheritance; check if callerPrincipal is in admin group
+			if (callerPrincipalNode != userNode && !callerPrincipal.equals("root"))
 				ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0);
 
 			return userNode;
@@ -98,9 +100,7 @@ public class UserServiceImpl {
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
-
-		// TODO rights at environment and own user object: view at group Wasabi; all for user; all for callerPrincipial;
-		// deactivate inheritance;
+		
 		// TODO environment
 		// TODO wasabi group
 	}
