@@ -69,8 +69,6 @@ public interface ACLServiceRemote {
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
-
 	public int getPermission(WasabiACLEntryDTO wasabiACLEntry);
 
 	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTO wasabiACLEntry);
@@ -84,6 +82,8 @@ public interface ACLServiceRemote {
 
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission);
 
+	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
+	
 	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
 	public Collection<WasabiACLEntryDTO> getACLEntries(WasabiObjectDTO wasabiObject);
