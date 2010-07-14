@@ -62,7 +62,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			s.save();
 			return tm.convertNode2DTO(documentNode);
 		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::" + re.toString(), re);
 		} finally {
 			cleanJCRSession(s);
 		}

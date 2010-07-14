@@ -45,7 +45,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
-import de.wasabibeans.framework.server.core.util.WasabiUser;
+import de.wasabibeans.framework.server.core.util.WasabiUserEntry;
 
 public class SqlLoginModule implements LoginModule {
 
@@ -136,9 +136,9 @@ public class SqlLoginModule implements LoginModule {
 		try {
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
+			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler(WasabiUserEntry.class);
 
-			List<WasabiUser> result = run.query(WasabiConstants.SQL_LOGIN_MODULE_QUERY, h, username);
+			List<WasabiUserEntry> result = run.query(WasabiConstants.SQL_LOGIN_MODULE_QUERY, h, username);
 
 			if (result.size() > 1)
 				return null;

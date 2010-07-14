@@ -21,11 +21,11 @@
 
 package de.wasabibeans.framework.server.core.util;
 
-public class WasabiUser {
+public class WasabiUserEntry {
 	private String password;
 	private String username;
 
-	public WasabiUser() {
+	public WasabiUserEntry() {
 	}
 
 	public void setPassword(String password) {

@@ -47,7 +47,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
-import de.wasabibeans.framework.server.core.util.WasabiUser;
+import de.wasabibeans.framework.server.core.util.WasabiUserEntry;
 
 public class UserServiceImpl {
 
@@ -143,9 +143,9 @@ public class UserServiceImpl {
 		String wasabiUser = ObjectServiceImpl.getName(userNode);
 		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
 		try {
-			ResultSetHandler<List<WasabiUser>> h = new BeanListHandler(WasabiUser.class);
+			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler(WasabiUserEntry.class);
 
-			List<WasabiUser> result = run.query(getPasswordQuery, h, wasabiUser);
+			List<WasabiUserEntry> result = run.query(getPasswordQuery, h, wasabiUser);
 
 			if (result.size() > 1)
 				return null;
