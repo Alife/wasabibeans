@@ -21,8 +21,6 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
-import java.sql.SQLException;
-import java.util.List;
 import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
@@ -31,23 +29,16 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
-
+import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
+import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
-import de.wasabibeans.framework.server.core.common.WasabiPermission;
-import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
-import de.wasabibeans.framework.server.core.util.HashGenerator;
-import de.wasabibeans.framework.server.core.util.SqlConnector;
-import de.wasabibeans.framework.server.core.util.WasabiUserEntry;
 
 public class UserServiceImpl {
 
@@ -70,26 +61,12 @@ public class UserServiceImpl {
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s));
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal,s);
+			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+
 			// Database
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-			String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
-
-			run.update(insertUserQuery, name, passwordCrypt);
-
-			// Rights for user and environment
-			int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT,
-					WasabiPermission.WRITE, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
-			boolean[] allow = { true, true, true, true, true, true, true };
-
-			ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0);
-			ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0);
-			
-			//TODO: deactivate inheritance; check if callerPrincipal is in admin group
-			if (callerPrincipalNode != userNode && !callerPrincipal.equals("root"))
-				ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0);
+			WasabiUserSQL.SqlQueryForCreate(name, password);
+			// Rights
+			if(WasabiConstants.ACL_ENTRY_ENABLE) WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal);
 
 			return userNode;
 		} catch (ItemExistsException iee) {
@@ -97,10 +74,8 @@ public class UserServiceImpl {
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "user", name), name, iee);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
-		
+
 		// TODO environment
 		// TODO wasabi group
 	}
@@ -136,24 +111,8 @@ public class UserServiceImpl {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static String getPassword(Node userNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
-		try {
-			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler(WasabiUserEntry.class);
-
-			List<WasabiUserEntry> result = run.query(getPasswordQuery, h, wasabiUser);
-
-			if (result.size() > 1)
-				return null;
-			else
-				return result.get(0).getPassword();
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
+		return WasabiUserSQL.SqlQueryForGetPassword(userNode);
 	}
 
 	public static Node getStartRoom(Node userNode) throws UnexpectedInternalProblemException {
@@ -213,16 +172,7 @@ public class UserServiceImpl {
 		ObjectServiceImpl.remove(userNode);
 
 		// Database
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String removeUserQuery = "DELETE FROM wasabi_user WHERE username=?";
-
-		try {
-			run.update(removeUserQuery, wasabiUser);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
+		WasabiUserSQL.SqlQueryForRemove(userNode);
 
 		// TODO Group memberships?
 		// TODO Environment of user?
@@ -234,16 +184,7 @@ public class UserServiceImpl {
 		ObjectServiceImpl.rename(userNode, name);
 
 		// Database
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
-
-		try {
-			run.update(renameUserQuery, name, wasabiUser);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
+		WasabiUserSQL.SqlQueryForRename(userNode, name);
 	}
 
 	public static void setDisplayName(Node userNode, String displayName) throws UnexpectedInternalProblemException {
@@ -259,17 +200,7 @@ public class UserServiceImpl {
 	}
 
 	public static void setPassword(Node userNode, String password) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE username=?";
-
-		try {
-			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_USER, e);
-		}
+		WasabiUserSQL.SqlQueryForSetPassword(userNode, password);
 	}
 
 	public static void setStartRoom(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {

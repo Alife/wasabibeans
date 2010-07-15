@@ -15,6 +15,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
+import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -47,7 +48,7 @@ public class ACLCreateTest extends Arquillian {
 	@Deployment
 	public static JavaArchive deploy() {
 		JavaArchive testArchive = ShrinkWrap.create("wasabibeans-test.jar", JavaArchive.class);
-		testArchive.addPackage(SqlLoginModule.class.getPackage()) // auth
+		testArchive.addPackage(SqlLoginModule.class.getPackage()) // authentication
 				.addPackage(WasabiConstants.class.getPackage()) // common
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
@@ -56,7 +57,8 @@ public class ACLCreateTest extends Arquillian {
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
-				.addPackage(RoomServiceImpl.class.getPackage());
+				.addPackage(WasabiUserACL.class.getPackage()) // autorization
+				.addPackage(RoomServiceImpl.class.getPackage()); // internal
 
 		return testArchive;
 	}
