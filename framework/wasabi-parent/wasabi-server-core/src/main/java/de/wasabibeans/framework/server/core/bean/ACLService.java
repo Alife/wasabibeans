@@ -29,6 +29,7 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
@@ -85,14 +86,19 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0);
 	}
 
-	@Deprecated
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
+		if (startTime.length != endTime.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "startTime", "endTime"));
+		}
+
 		Session s = getJCRSession();
 		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
 		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+
 		for (int i = 0; i < endTime.length; i++) {
 			ACLServiceImpl
 					.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i], endTime[i]);
@@ -158,29 +164,49 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
-
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		perm[0] = permission;
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, long startTime,
 			long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
-
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		perm[0] = permission;
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
-
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
+		if (startTime.length != endTime.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "startTime", "endTime"));
+		}
 
+		Session s = getJCRSession();
+		Node wasabiObjectNode = tm.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = tm.convertDTO2Node(wasabiIdentity, s);
+
+		for (int i = 0; i < endTime.length; i++) {
+			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i]);
+		}
 	}
 
 	@Override
