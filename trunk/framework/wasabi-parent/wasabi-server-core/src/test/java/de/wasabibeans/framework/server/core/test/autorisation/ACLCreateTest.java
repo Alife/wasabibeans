@@ -112,7 +112,9 @@ public class ACLCreateTest extends Arquillian {
 		//documentService.setContent(document, "You should have seen his face, when I told him I was his father...");
 
 		// remove write right
-		//aclService.remove(document, user, WasabiPermission.WRITE);
+		aclService.remove(document, user, WasabiPermission.WRITE);
+		aclService.remove(document, user, WasabiPermission.VIEW);
+		aclService.remove(document, user, WasabiPermission.READ);
 
 		// try to change content of document without rights
 		//documentService.setContent(document, "...dark...light...dark...light...");
