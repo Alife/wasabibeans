@@ -35,6 +35,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -56,11 +57,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node environmentNode = tm.convertDTO2Node(environment, s);
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		try {
 			Node documentNode = DocumentServiceImpl.create(name, environmentNode);
 			s.save();
-			return tm.convertNode2DTO(documentNode);
+			return TransferManager.convertNode2DTO(documentNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::" + re.toString(), re);
 		} finally {
@@ -71,7 +72,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public Serializable getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, DocumentContentException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		try {
 			return DocumentServiceImpl.getContent(documentNode);
 		} finally {
@@ -82,7 +83,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void setContent(WasabiDocumentDTO document, Serializable content) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, DocumentContentException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		try {
 			DocumentServiceImpl.setContent(documentNode, content);
 			s.save();
@@ -96,9 +97,9 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node locationNode = tm.convertDTO2Node(location, s);
+		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		try {
-			return tm.convertNode2DTO(DocumentServiceImpl.getDocumentByName(locationNode, name));
+			return TransferManager.convertNode2DTO(DocumentServiceImpl.getDocumentByName(locationNode, name));
 		} finally {
 			cleanJCRSession(s);
 		}
@@ -107,12 +108,12 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public Vector<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node locationNode = tm.convertDTO2Node(location, s);
+		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		try {
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			NodeIterator ni = DocumentServiceImpl.getDocuments(locationNode);
 			while (ni.hasNext()) {
-				documents.add((WasabiDocumentDTO) tm.convertNode2DTO(ni.nextNode()));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 			}
 			return documents;
 		} finally {
@@ -123,9 +124,9 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		try {
-			return tm.convertNode2DTO(DocumentServiceImpl.getEnvironment(documentNode));
+			return TransferManager.convertNode2DTO(DocumentServiceImpl.getEnvironment(documentNode));
 		} finally {
 			cleanJCRSession(s);
 		}
@@ -134,8 +135,8 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
-		Node newEnvironmentNode = tm.convertDTO2Node(newEnvironment, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
+		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 		try {
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode);
 			s.save();
@@ -149,7 +150,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		try {
 			DocumentServiceImpl.remove(documentNode);
 			s.save();
@@ -163,7 +164,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void rename(WasabiDocumentDTO document, String name) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		Session s = getJCRSession();
-		Node documentNode = tm.convertDTO2Node(document, s);
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		try {
 			DocumentServiceImpl.rename(documentNode, name);
 			s.save();

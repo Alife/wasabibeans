@@ -23,7 +23,6 @@ package de.wasabibeans.framework.server.core.bean;
 
 import javax.jcr.Session;
 
-import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
@@ -32,12 +31,10 @@ public abstract class WasabiService {
 
 	protected WasabiLogger logger;
 
-	protected TransferManager tm;
 	protected JcrConnector jcr;
 
 	public WasabiService() {
 		this.logger = WasabiLogger.getLogger(this.getClass());
-		this.tm = TransferManager.getTransferManager();
 		this.jcr = JcrConnector.getJCRConnector();
 	}
 

@@ -32,6 +32,7 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -59,7 +60,7 @@ public class ObjectService extends WasabiService implements ObjectServiceLocal, 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node objectNode = tm.convertDTO2Node(object, s);
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		try {
 			return ObjectServiceImpl.getName(objectNode);
 		} finally {
@@ -70,7 +71,7 @@ public class ObjectService extends WasabiService implements ObjectServiceLocal, 
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = getJCRSession();
-		Node objectNode = tm.convertDTO2Node(object, s);
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		try {
 			return ObjectServiceImpl.getUUID(objectNode);
 		} finally {
