@@ -34,21 +34,12 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
-// methods might be changed to static ones
 public class TransferManager {
 
-	private WasabiLogger logger;
+	private static WasabiLogger logger = WasabiLogger.getLogger(TransferManager.class);
 	
-	public static TransferManager getTransferManager() {
-		return new TransferManager();
-	}
-
-	public TransferManager() {
-		this.logger = WasabiLogger.getLogger(this.getClass());
-	}
-
 	@SuppressWarnings("unchecked")
-	public <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
+	public static <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
 			throws UnexpectedInternalProblemException {
 		if (wasabiObject == null) {
 			logger.warn(WasabiExceptionMessages.TRANSFER_NODE2DTO_NULLNODE);
@@ -69,7 +60,7 @@ public class TransferManager {
 		return (T) dto;
 	}
 
-	public Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
+	public static Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		if (wasabiObjectDTO != null) {
 			if (s != null) {
@@ -90,7 +81,7 @@ public class TransferManager {
 		}
 	}
 
-	private String generateWasabiObjectDTOName(String nodeTypeName) {
+	private static String generateWasabiObjectDTOName(String nodeTypeName) {
 		String[] tmp = nodeTypeName.split(":");
 		String firstLetter = tmp[1].substring(0, 1).toUpperCase(Locale.ENGLISH);
 		return WasabiConstants.DTO_PREFIX + firstLetter + tmp[1].substring(1) + WasabiConstants.DTO_SUFFIX;

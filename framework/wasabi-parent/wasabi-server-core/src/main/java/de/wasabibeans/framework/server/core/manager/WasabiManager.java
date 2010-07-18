@@ -27,9 +27,6 @@ import java.io.Reader;
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -48,24 +45,12 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
-// no need for transactions during server startup
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-@Stateless(name = "WasabiManager")
-public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
+public class WasabiManager {
 
 	public final static String rootUserName = "root";
 	public final static String rootUserPassword = "meerrettich";
 
-	private JndiConnector jndi;
-	private JcrConnector jcr;
-
-	public WasabiManager() {
-		this.jndi = JndiConnector.getJNDIConnector();
-		this.jcr = JcrConnector.getJCRConnector();
-	}
-
-	@Override
-	public void initDatabase() {
+	public static void initDatabase() {
 		/**
 		 * Create user table and entries
 		 */
@@ -111,11 +96,12 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 
 	}
 
-	public void initRepository() {
+	public static void initRepository() {
 		try {
+			JcrConnector jcr = JcrConnector.getJCRConnector();
 			Session s = jcr.getJCRSession();
 			// register wasabi nodetypes (also registers the wasabi jcr namespace)
-			InputStream in = getClass().getClassLoader().getResourceAsStream(
+			InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(
 					WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
 			Reader r = new InputStreamReader(in, "utf-8");
 			CndImporter.registerNodeTypes(r, s);
@@ -132,8 +118,11 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 	 *            name of the JCR workspace
 	 * @return DTO of the wasabi root room
 	 */
-	public WasabiRoomDTO initWorkspace(String workspacename) {
+	public static WasabiRoomDTO initWorkspace(String workspacename) {
 		try {
+			JcrConnector jcr = JcrConnector.getJCRConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			
 			// init store for user 2 jcr session mapping
 			ConcurrentHashMap<String, Session> user2JCRSession = new ConcurrentHashMap<String, Session>();
 			jndi.unbind(WasabiConstants.JNDI_JCR_USER2SESSION);
@@ -171,11 +160,11 @@ public class WasabiManager implements WasabiManagerLocal, WasabiManagerRemote {
 		}
 	}
 
-	private Node createRoom(String name, Node environment) throws RepositoryException {
+	private static Node createRoom(String name, Node environment) throws RepositoryException {
 		return environment.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
 	}
 
-	private Node createUser(String name, Node rootOfUsersNode, Node wasabiHome) throws RepositoryException {
+	private static Node createUser(String name, Node rootOfUsersNode, Node wasabiHome) throws RepositoryException {
 		Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
 		userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, name);
 		Node homeRoomNode = wasabiHome.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
