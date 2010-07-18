@@ -26,6 +26,7 @@ import javax.ejb.EJBException;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
@@ -37,6 +38,15 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
 public class UserServiceRemoteTest extends WasabiRemoteTest {
+	
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize jcr repository
+		rootRoom = testhelper.initWorkspace("default");
+
+		// initialize database
+		testhelper.initDatabase();
+	}
 
 	@Test
 	public void createTest() throws WasabiException {

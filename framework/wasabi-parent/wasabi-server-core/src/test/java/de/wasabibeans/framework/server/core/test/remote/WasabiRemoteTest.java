@@ -17,6 +17,7 @@ import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
@@ -38,7 +39,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 public class WasabiRemoteTest extends Arquillian {
 
 	private RemoteWasabiConnector reWaCon;
-	private TestDataCreatorRemote testhelper;
+	protected TestDataCreatorRemote testhelper;
 
 	protected WasabiRoomDTO rootRoom;
 
@@ -86,15 +87,6 @@ public class WasabiRemoteTest extends Arquillian {
 	public void tearDownAfterAllMethods() throws LoginException, NamingException {
 		// disconnect and logout
 		reWaCon.disconnect();
-	}
-
-	@BeforeMethod
-	public void setUpBeforeEachMethod() throws LoginException, NamingException {
-		// initialize jcr repository
-		rootRoom = testhelper.initWorkspace("default");
-
-		// initialize database
-		testhelper.initDatabase();
 	}
 
 	public ACLServiceRemote aclService() {

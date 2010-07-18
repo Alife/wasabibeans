@@ -2,6 +2,7 @@ package de.wasabibeans.framework.server.core.test.autorisation;
 
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -13,6 +14,15 @@ import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 
 @Run(RunModeType.AS_CLIENT)
 public class ACLCreateTest extends WasabiRemoteTest {
+	
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize jcr repository
+		rootRoom = testhelper.initWorkspace("default");
+
+		// initialize database
+		testhelper.initDatabase();
+	}
 
 	@Test
 	public void createTest() throws WasabiException {
