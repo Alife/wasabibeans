@@ -13,7 +13,7 @@ import de.wasabibeans.framework.server.core.manager.WasabiManager;
 
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @Stateful
-public class TestDataCreator implements TestDataCreatorRemote {
+public class TestHelper implements TestHelperRemote {
 
 	private Node wasabiRootRoom;
 
@@ -22,6 +22,11 @@ public class TestDataCreator implements TestDataCreatorRemote {
 		WasabiManager.initDatabase();
 
 	}
+	
+	@Override
+	public void initRepository() throws Exception {
+		WasabiManager.initRepository();
+	}
 
 	@Override
 	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception {
@@ -29,6 +34,7 @@ public class TestDataCreator implements TestDataCreatorRemote {
 		return TransferManager.convertNode2DTO(wasabiRootRoom);
 	}
 
+	@Override
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		return TransferManager.convertNode2DTO(wasabiRootRoom.addNode(WasabiNodeProperty.ROOMS + "/" + "room1",
 				WasabiNodeType.WASABI_ROOM));
