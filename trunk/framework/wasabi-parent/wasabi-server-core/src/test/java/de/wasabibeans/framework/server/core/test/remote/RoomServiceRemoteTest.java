@@ -28,19 +28,72 @@ import javax.ejb.EJBException;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceRemoteTest extends WasabiRemoteTest {
+	
+	private WasabiRoomDTO room1;
+	
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize jcr repository
+		rootRoom = testhelper.initWorkspace("default");
+		room1 = testhelper.initRoomServiceTest();
+	}
+	
+	@Test
+	public void getRootRoomTest() throws WasabiException {
+		WasabiRoomDTO rootRoomActual = roomService().getRootRoom();
+		AssertJUnit.assertEquals(rootRoom, rootRoomActual);
+	}
 
 	@Test
+	public void getRootHomeTest() throws WasabiException {
+		WasabiRoomDTO rootHome = roomService().getRootHome();
+		AssertJUnit.assertNotNull(rootHome);
+		AssertJUnit.assertEquals(WasabiConstants.HOME_ROOM_NAME, roomService().getName(rootHome));
+	}
+
+	@Test
+	public void getEnvironmentTest() throws WasabiException {
+		WasabiRoomDTO environment = roomService().getEnvironment(room1);
+		AssertJUnit.assertEquals(rootRoom, environment);
+	}
+
+	@Test
+	public void getRoomByNameTest() throws WasabiException {
+		WasabiRoomDTO test = roomService().getRoomByName(rootRoom, "room1");
+		AssertJUnit.assertEquals(room1, test);
+
+		try {
+			roomService().getRoomByName(rootRoom, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "doesNotExist"));
+	}
+
+	@Test
+	public void getRoomsTest() throws WasabiException {
+		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
+		AssertJUnit.assertTrue(rooms.contains(room1));
+		AssertJUnit.assertEquals(2, rooms.size());
+	}
+
+	@Test(dependsOnMethods = {".*get.*"})
 	public void createTest() throws WasabiException {
-		WasabiRoomDTO newRoom = roomService().create("room", rootRoom);
-		AssertJUnit.assertEquals("room", roomService().getName(newRoom));
+		WasabiRoomDTO newRoom = roomService().create("room2", rootRoom);
+		AssertJUnit.assertNotNull(newRoom);
+		AssertJUnit.assertEquals(newRoom, roomService().getRoomByName(rootRoom, "room2"));
 
 		try {
 			roomService().create(null, rootRoom);
@@ -57,65 +110,15 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			roomService().create("room", rootRoom);
+			roomService().create("room2", rootRoom);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			// passed
 		}
 	}
 
-	@Test
-	public void getRootRoomTest() throws WasabiException {
-		WasabiRoomDTO rootRoom = roomService().getRootRoom();
-		AssertJUnit.assertNotNull(rootRoom);
-	}
-
-	@Test
-	public void getRootHomeTest() throws WasabiException {
-		WasabiRoomDTO rootHome = roomService().getRootHome();
-		AssertJUnit.assertNotNull(rootHome);
-	}
-
-	@Test(dependsOnMethods = "createTest")
-	public void getEnvironmentTest() throws WasabiException {
-		WasabiRoomDTO newRoom = roomService().create("room", rootRoom);
-
-		WasabiRoomDTO environment = roomService().getEnvironment(newRoom);
-		AssertJUnit.assertEquals(rootRoom, environment);
-	}
-
-	@Test(dependsOnMethods = "createTest")
-	public void getRoomByNameTest() throws WasabiException {
-		roomService().create("room1", rootRoom);
-		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
-
-		WasabiRoomDTO test = roomService().getRoomByName(rootRoom, "room2");
-		AssertJUnit.assertEquals(room2, test);
-
-		try {
-			roomService().getRoomByName(rootRoom, null);
-			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
-		}
-
-		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "doesNotExist"));
-	}
-
-	@Test(dependsOnMethods = "createTest")
-	public void getRoomsTest() throws WasabiException {
-		WasabiRoomDTO room1 = roomService().create("room1", rootRoom);
-		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
-
-		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
-		AssertJUnit.assertTrue(rooms.contains(room1));
-		AssertJUnit.assertTrue(rooms.contains(room2));
-		AssertJUnit.assertEquals(3, rooms.size());
-	}
-
-	@Test(dependsOnMethods = ".*get.*")
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void renameTest() throws WasabiException {
-		roomService().create("room1", rootRoom);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		try {
@@ -133,9 +136,8 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
 	}
 
-	@Test(dependsOnMethods = ".*get.*")
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void moveTest() throws WasabiException {
-		WasabiRoomDTO room1 = roomService().create("room1", rootRoom);
 		WasabiRoomDTO sub = roomService().create("room2", room1);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
@@ -157,9 +159,8 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(1, roomsOfRoom2.size());
 	}
 
-	@Test(dependsOnMethods = ".*get.*")
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void removeTest() throws WasabiException {
-		roomService().create("room1", rootRoom);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		roomService().remove(room2);

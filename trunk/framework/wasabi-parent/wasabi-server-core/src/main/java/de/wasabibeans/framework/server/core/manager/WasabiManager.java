@@ -39,7 +39,6 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
-import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -116,13 +115,13 @@ public class WasabiManager {
 	 * 
 	 * @param workspacename
 	 *            name of the JCR workspace
-	 * @return DTO of the wasabi root room
+	 * @return the jcr node which represens the wasabi root room
 	 */
-	public static WasabiRoomDTO initWorkspace(String workspacename) {
+	public static Node initWorkspace(String workspacename) {
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
 			JndiConnector jndi = JndiConnector.getJNDIConnector();
-			
+
 			// init store for user 2 jcr session mapping
 			ConcurrentHashMap<String, Session> user2JCRSession = new ConcurrentHashMap<String, Session>();
 			jndi.unbind(WasabiConstants.JNDI_JCR_USER2SESSION);
@@ -147,14 +146,11 @@ public class WasabiManager {
 			// root node for wasabi users and initial users
 			Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
 					WasabiNodeType.WASABI_USERS);
-			Node rootUser = createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
+			createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
 
-			// return DTO of wasabi root room
-			WasabiRoomDTO rootRoomDTO = new WasabiRoomDTO();
-			rootRoomDTO.setId(wasabiRoot.getIdentifier());
 			s.save();
 			s.logout();
-			return rootRoomDTO;
+			return wasabiRoot;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
