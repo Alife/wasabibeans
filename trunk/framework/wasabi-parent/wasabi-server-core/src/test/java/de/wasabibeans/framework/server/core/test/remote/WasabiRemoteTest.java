@@ -9,7 +9,6 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
@@ -17,7 +16,6 @@ import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
@@ -32,14 +30,14 @@ import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
-import de.wasabibeans.framework.server.core.testhelper.TestDataCreator;
-import de.wasabibeans.framework.server.core.testhelper.TestDataCreatorRemote;
+import de.wasabibeans.framework.server.core.testhelper.TestHelper;
+import de.wasabibeans.framework.server.core.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 public class WasabiRemoteTest extends Arquillian {
 
 	private RemoteWasabiConnector reWaCon;
-	protected TestDataCreatorRemote testhelper;
+	protected TestHelperRemote testhelper;
 
 	protected WasabiRoomDTO rootRoom;
 
@@ -64,7 +62,7 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(WasabiManager.class.getPackage()) // manager
-				.addPackage(TestDataCreator.class.getPackage()) // testhelper
+				.addPackage(TestHelper.class.getPackage()) // testhelper
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
@@ -80,7 +78,7 @@ public class WasabiRemoteTest extends Arquillian {
 		reWaCon.defaultConnectAndLogin();
 
 		// lookup wasabi testhelper
-		testhelper = (TestDataCreatorRemote) reWaCon.lookup("TestDataCreator/remote");
+		testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper/remote");
 	}
 
 	@AfterClass
