@@ -27,6 +27,7 @@ import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -70,9 +71,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public Vector<WasabiUserDTO> getAllUsers() {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
+		Session s = getJCRSession();
+		try {
+			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+			NodeIterator ni = UserServiceImpl.getAllUsers(s);
+			while (ni.hasNext()) {
+				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return users;
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -90,12 +100,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} finally {
 			cleanJCRSession(s);
 		}
-	}
-
-	@Override
-	public WasabiRoomDTO getEnvironment(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -174,9 +178,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException {
+		Session s = getJCRSession();
+		try {
+			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+			NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
+			while (ni.hasNext()) {
+				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return users;
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -271,5 +284,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} finally {
 			cleanJCRSession(s);
 		}
+	}
+
+	@Override
+	public WasabiRoomDTO getEnvironment(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
