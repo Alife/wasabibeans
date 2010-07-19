@@ -21,6 +21,8 @@
 
 package de.wasabibeans.framework.server.core.test.remote;
 
+import java.util.Vector;
+
 import javax.ejb.EJBException;
 
 import org.jboss.arquillian.api.Run;
@@ -79,5 +81,12 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		} catch (ObjectAlreadyExistsException e) {
 			// passed
 		}
+	}
+	
+	@Test
+	public void getUsersByDisplayName() throws WasabiException {
+		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("root");
+		AssertJUnit.assertEquals(1, users.size());
+		AssertJUnit.assertEquals("root", userService().getName(users.get(0)));
 	}
 }

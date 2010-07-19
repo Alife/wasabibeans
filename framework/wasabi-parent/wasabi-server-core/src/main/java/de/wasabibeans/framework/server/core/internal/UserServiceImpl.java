@@ -25,9 +25,16 @@ import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
+import javax.jcr.query.Query;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.Selector;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
@@ -35,7 +42,6 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
-import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -66,7 +72,8 @@ public class UserServiceImpl {
 			// Database
 			WasabiUserSQL.SqlQueryForCreate(name, password);
 			// Rights
-			if(WasabiConstants.ACL_ENTRY_ENABLE) WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal);
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal);
 
 			return userNode;
 		} catch (ItemExistsException iee) {
@@ -80,9 +87,13 @@ public class UserServiceImpl {
 		// TODO wasabi group
 	}
 
-	public static Vector<Node> getAllUsers() {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getAllUsers(Session s) throws UnexpectedInternalProblemException {
+		try {
+			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
+			return rootOfUsersNode.getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static String getDisplayName(Node userNode) throws UnexpectedInternalProblemException {
@@ -93,11 +104,6 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static WasabiRoomDTO getEnvironment(Node user) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public static Node getHomeRoom(Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return userNode.getProperty(WasabiNodeProperty.START_ROOM).getNode();
@@ -106,7 +112,7 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static Vector<WasabiGroupDTO> getMemberships(Node user) {
+	public static NodeIterator getMemberships(Node user) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -156,9 +162,27 @@ public class UserServiceImpl {
 		return null;
 	}
 
-	public static Vector<Node> getUsersByDisplayName(String displayName) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getUsersByDisplayName(String displayName, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(WasabiNodeType.WASABI_USER, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
+			
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+			
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static void move(Node user, WasabiRoomDTO newEnvironment) {
