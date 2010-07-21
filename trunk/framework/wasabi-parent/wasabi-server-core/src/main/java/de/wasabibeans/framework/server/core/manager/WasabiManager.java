@@ -46,9 +46,6 @@ import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 public class WasabiManager {
 
-	public final static String rootUserName = "root";
-	public final static String rootUserPassword = "meerrettich";
-
 	public static void initDatabase() {
 		/**
 		 * Create user table and entries
@@ -69,7 +66,7 @@ public class WasabiManager {
 		String insertWasabiRootUser = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
 
 		try {
-			run.update(insertWasabiRootUser, rootUserName, HashGenerator.generateHash(rootUserPassword,
+			run.update(insertWasabiRootUser, WasabiConstants.ROOT_USER_NAME, HashGenerator.generateHash(WasabiConstants.ROOT_USER_PASSWORD,
 					hashAlgorithms.SHA));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
