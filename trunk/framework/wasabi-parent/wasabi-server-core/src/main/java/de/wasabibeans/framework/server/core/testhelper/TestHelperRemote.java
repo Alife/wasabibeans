@@ -1,5 +1,7 @@
 package de.wasabibeans.framework.server.core.testhelper;
 
+import java.util.Vector;
+
 import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -14,4 +16,8 @@ public interface TestHelperRemote {
 	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception;
 	
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+	
+	public void createManyNodes(int number) throws Exception;
+	public Vector<String> getManyNodesByIdLookup() throws Exception;
+	public Vector<String> getManyNodesByIdFilter() throws Exception;
 }
