@@ -112,9 +112,8 @@ public class WasabiManager {
 	 * 
 	 * @param workspacename
 	 *            name of the JCR workspace
-	 * @return the jcr node which represens the wasabi root room
 	 */
-	public static Node initWorkspace(String workspacename) {
+	public static void initWorkspace(String workspacename) {
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
 			JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -147,7 +146,6 @@ public class WasabiManager {
 
 			s.save();
 			s.logout();
-			return wasabiRoot;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
