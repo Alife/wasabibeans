@@ -79,7 +79,8 @@ public class ACLServiceImpl {
 	public static Vector<WasabiACLEntryDeprecated> getACLEntriesDeprecated(Node wasabiObjectNode, Session s)
 			throws UnexpectedInternalProblemException {
 
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0, id;
+		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+		long id;
 		String wasabiGroupUUID = "", wasabiUserUUID = "";
 		Node wasabiIdentity;
 

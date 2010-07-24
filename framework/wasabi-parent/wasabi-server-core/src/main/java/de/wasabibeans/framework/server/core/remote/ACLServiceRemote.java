@@ -88,9 +88,13 @@ public interface ACLServiceRemote {
 
 	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
 
+	@Deprecated
 	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Collection<WasabiACLEntryDTO> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
 			WasabiIdentityDTO wasabiIdentity);
+
+	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 }

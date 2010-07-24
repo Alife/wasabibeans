@@ -39,13 +39,22 @@ public class WasabiACLEntryDTO implements Serializable {
 	protected Long id;
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
-	protected int permission;
-
-	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected WasabiIdentityDTO wasabiIdentity;
 
-	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
-	protected boolean allowance;
+	private int view = 0;
+	private int read = 0;
+	private int write = 0;
+	private int insert = 0;
+	private int execute = 0;
+	private int comment = 0;
+	private int grant = 0;
+
+	String user = "";
+	String group = "";
+	String parent = "";
+
+	private long startTime;
+	private long endTime;
 
 	protected WasabiACLEntryDTO() {
 
@@ -59,16 +68,100 @@ public class WasabiACLEntryDTO implements Serializable {
 		this.id = id;
 	}
 
-	public int getPermission() {
-		return permission;
+	protected void setView(int view) {
+		this.view = view;
 	}
 
-	public boolean isAllowance() {
-		return allowance;
+	protected void setRead(int read) {
+		this.read = read;
 	}
 
-	public WasabiIdentityDTO getIdentity() {
-		return wasabiIdentity;
+	protected void setWrite(int write) {
+		this.write = write;
+	}
+
+	protected void setInsert(int insert) {
+		this.insert = insert;
+	}
+
+	protected void setExecute(int execute) {
+		this.execute = execute;
+	}
+
+	protected void setComment(int comment) {
+		this.comment = comment;
+	}
+
+	protected void setGrant(int grant) {
+		this.grant = grant;
+	}
+
+	public int getView() {
+		return this.view;
+	}
+
+	public int getRead() {
+		return this.read;
+	}
+
+	public int getInsert() {
+		return this.insert;
+	}
+
+	public int getExecute() {
+		return this.execute;
+	}
+
+	public int getWrite() {
+		return this.write;
+	}
+
+	public int getComment() {
+		return this.comment;
+	}
+
+	public int getGrant() {
+		return this.grant;
+	}
+
+	public String getUserID() {
+		return this.user;
+	}
+
+	protected void setUserID(String user) {
+		this.user = user;
+	}
+
+	protected void setGroupID(String group) {
+		this.group = group;
+	}
+
+	public String getGroupID() {
+		return this.group;
+	}
+
+	protected void setParentID(String parent) {
+		this.parent = parent;
+	}
+
+	public String getParentID() {
+		return this.parent;
+	}
+	
+	protected void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	public long getStartTime() {
+		return this.startTime;
+	}
+	
+	protected void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public long getEndTime() {
+		return this.endTime;
 	}
 
 	@Override

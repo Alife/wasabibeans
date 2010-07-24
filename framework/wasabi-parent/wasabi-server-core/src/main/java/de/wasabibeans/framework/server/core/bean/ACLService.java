@@ -23,12 +23,11 @@ package de.wasabibeans.framework.server.core.bean;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -45,6 +44,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
+import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 
 @SecurityDomain("wasabi")
@@ -140,6 +140,24 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 			WasabiACLEntryDeprecated wasabiACLEntryDeprecated = (WasabiACLEntryDeprecated) iterator.next();
 			wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDeprecated2DTO(wasabiACLEntryDeprecated));
 		}
+		return wasabiACLEntriesDTO;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+
+		Vector<WasabiACLEntryDTO> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTO>();
+		List<WasabiACLEntry> wasabiALCEntries = ACLServiceImpl.getACLEntries(wasabiObjectNode);
+
+		for (Iterator iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntry wasabiACLEntry = (WasabiACLEntry) iterator.next();
+			wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDTO(wasabiACLEntry));
+		}
+
 		return wasabiACLEntriesDTO;
 	}
 
