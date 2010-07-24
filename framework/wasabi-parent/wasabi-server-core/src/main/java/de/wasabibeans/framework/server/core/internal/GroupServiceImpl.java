@@ -19,25 +19,17 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.annotation;
+package de.wasabibeans.framework.server.core.internal;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.jcr.Node;
 
-@Documented
-@Target( value = { ElementType.METHOD })
-@Retention(value = RetentionPolicy.RUNTIME)
-public @interface WasabiRight {
-	enum FilterType {
-		VIEW, READ, EXECUTE, COMMENT, INSERT, WRITE, GRANT
+public class GroupServiceImpl {
+
+	public static Node getGroupByName(String groupName) {
+		return null;
 	}
-
-	FilterType self() default FilterType.VIEW;
-	FilterType param1() default FilterType.VIEW;
-	FilterType param2() default FilterType.VIEW;
-	FilterType param3() default FilterType.VIEW;
-
+	
+	public static boolean isMember(Node groupNode, Node userNode) {
+		return false;
+	}
 }

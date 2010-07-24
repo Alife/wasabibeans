@@ -22,10 +22,12 @@
 package de.wasabibeans.framework.server.core.remote;
 
 import java.util.Collection;
+import java.util.Vector;
 
 import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -65,13 +67,13 @@ public interface ACLServiceRemote {
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public void deactivateInheritance(WasabiObjectDTO wasabiObject);
-	
+
 	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public int getPermission(WasabiACLEntryDTO wasabiACLEntry);
+	public int getPermission(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
 	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTO wasabiACLEntry);
 
@@ -85,9 +87,9 @@ public interface ACLServiceRemote {
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission);
 
 	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
-	
 
-	public Collection<WasabiACLEntryDTO> getACLEntries(WasabiObjectDTO wasabiObject);
+	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Collection<WasabiACLEntryDTO> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
 			WasabiIdentityDTO wasabiIdentity);

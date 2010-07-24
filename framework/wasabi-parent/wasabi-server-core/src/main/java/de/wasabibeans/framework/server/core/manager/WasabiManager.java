@@ -66,8 +66,8 @@ public class WasabiManager {
 		String insertWasabiRootUser = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
 
 		try {
-			run.update(insertWasabiRootUser, WasabiConstants.ROOT_USER_NAME, HashGenerator.generateHash(WasabiConstants.ROOT_USER_PASSWORD,
-					hashAlgorithms.SHA));
+			run.update(insertWasabiRootUser, WasabiConstants.ROOT_USER_NAME, HashGenerator.generateHash(
+					WasabiConstants.ROOT_USER_PASSWORD, hashAlgorithms.SHA));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -76,13 +76,14 @@ public class WasabiManager {
 		 * Create user rights table and entries
 		 */
 		String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
-		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + " `object_id` varchar(64) NOT NULL,"
-				+ "`user_id` varchar(64) NOT NULL," + "`parent_id` varchar(64) NOT NULL,"
-				+ "`group_id` varchar(64) NOT NULL," + "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL,"
-				+ "`insert` tinyint(2) NOT NULL," + "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL,"
-				+ "`execute` tinyint(2) NOT NULL," + "`grant` tinyint(2) NOT NULL,"
-				+ "`start_time` float NOT NULL DEFAULT '0'," + "`end_time` float NOT NULL DEFAULT '0',"
-				+ " KEY `user_id` (`user_id`)) ENGINE =  InnoDB ;";
+		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + "`id` int(11) NOT NULL AUTO_INCREMENT,"
+				+ " `object_id` varchar(64) NOT NULL," + "`user_id` varchar(64) NOT NULL,"
+				+ "`parent_id` varchar(64) NOT NULL," + "`group_id` varchar(64) NOT NULL,"
+				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
+				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
+				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
+				+ "`end_time` float NOT NULL DEFAULT '0',"
+				+ "PRIMARY KEY (`id`,`object_id`,`user_id`,`group_id`,`start_time`,`end_time`)" + ") ENGINE = InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
