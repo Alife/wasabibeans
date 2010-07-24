@@ -94,9 +94,9 @@ public class WasabiACLEntryDTODeprecated implements Serializable {
 			return true;
 		if (obj == null)
 			return false;
-		if (!(obj instanceof WasabiACLEntryDTO))
+		if (!(obj instanceof WasabiACLEntryDTODeprecated))
 			return false;
-		WasabiACLEntryDTO other = (WasabiACLEntryDTO) obj;
+		WasabiACLEntryDTODeprecated other = (WasabiACLEntryDTODeprecated) obj;
 		if (id == null) {
 			if (other.getId() != null)
 				return false;

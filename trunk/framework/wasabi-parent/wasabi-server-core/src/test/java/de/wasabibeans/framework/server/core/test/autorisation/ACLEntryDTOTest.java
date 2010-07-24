@@ -8,6 +8,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -27,6 +28,7 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 		testhelper.initDatabase();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void createTest() throws WasabiException {
 		// Create user
@@ -47,16 +49,33 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 				new boolean[] { true, true, true });
 
 		// getACLEntries (depreciated way)
-		Vector<WasabiACLEntryDTODeprecated> ACLEntriesForDocument1 = new Vector<WasabiACLEntryDTODeprecated>();
-		ACLEntriesForDocument1 = aclService().getACLEntries(document1);
+		Vector<WasabiACLEntryDTODeprecated> ACLEntriesForDocument1Deprecated = new Vector<WasabiACLEntryDTODeprecated>();
+		ACLEntriesForDocument1Deprecated = aclService().getACLEntries(document1);
 
-		System.out.println("---- ACL entries for " + objectService().getUUID(document2) + "----");
+		System.out.println("---- ACL entries (depreciated way) for " + objectService().getUUID(document2) + " ----");
 
-		for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntriesForDocument1) {
+		for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntriesForDocument1Deprecated) {
 			System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
 					+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
 					+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
 					+ wasabiACLEntryDTODeprecated.isAllowance());
 		}
+
+		// getAclEntries (recommend way)
+		Vector<WasabiACLEntryDTO> ACLEntriesForDocument1 = new Vector<WasabiACLEntryDTO>();
+		ACLEntriesForDocument1 = aclService().getAclEntries(document1);
+
+		System.out.println("---- ACL entries (depreciated way) for " + objectService().getUUID(document2) + " ----");
+
+		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForDocument1) {
+			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserID()
+					+ ",group_id=" + wasabiACLEntryDTO.getGrant() + ",parent_id=" + wasabiACLEntryDTO.getParentID()
+					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
+					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
+					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
+					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
+					+ wasabiACLEntryDTO.getEndTime());
+		}
+
 	}
 }
