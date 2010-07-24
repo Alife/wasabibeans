@@ -32,12 +32,13 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class TransferManager {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(TransferManager.class);
-	
+
 	@SuppressWarnings("unchecked")
 	public static <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
 			throws UnexpectedInternalProblemException {
@@ -79,6 +80,15 @@ public class TransferManager {
 		} else {
 			throw new IllegalArgumentException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLDTO);
 		}
+	}
+
+	public static WasabiACLEntryDTODeprecated convertWasabiACLEntryDeprecated2DTO(WasabiACLEntryDeprecated wasabiACLEntryDeprecated) {
+		WasabiACLEntryDTODeprecated dto = new WasabiACLEntryDTODeprecated();
+		dto.setId(wasabiACLEntryDeprecated.getId());
+		dto.setIdentity(wasabiACLEntryDeprecated.getWasabiIdentity());
+		dto.setIsAllowance(wasabiACLEntryDeprecated.getAllowance());
+		dto.setPermission(wasabiACLEntryDeprecated.getPermission());
+		return dto;
 	}
 
 	private static String generateWasabiObjectDTOName(String nodeTypeName) {

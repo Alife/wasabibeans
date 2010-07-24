@@ -23,10 +23,34 @@ package de.wasabibeans.framework.server.core.util;
 
 public class WasabiACLEntry {
 
-	private int view, read, insert, write, comment, execute, grant;
+	private int view, read, insert, write, comment, execute, grant, id;
 	private long start_time, end_time;
+	private String user_id = "";
+	private String group_id = "";
+	private String parent_id = "";
+	private String object_id = "";
 
 	public WasabiACLEntry() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public String getUser_ID() {
+		return this.user_id;
+	}
+
+	public String getGroup_ID() {
+		return this.group_id;
+	}
+
+	public String getParent_ID() {
+		return this.parent_id;
+	}
+
+	public String getObject_ID() {
+		return this.object_id;
 	}
 
 	public int getView() {
@@ -57,12 +81,32 @@ public class WasabiACLEntry {
 		return this.grant;
 	}
 
-	public long getStartTime() {
+	public long getStart_Time() {
 		return this.start_time;
 	}
 
-	public long getEndTime() {
+	public long getEnd_Time() {
 		return this.end_time;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public void setUser_ID(String user_id) {
+		this.user_id = user_id;
+	}
+
+	public void setGroup_ID(String group_id) {
+		this.group_id = group_id;
+	}
+
+	public void setParent_ID(String parent_id) {
+		this.parent_id = parent_id;
+	}
+
+	public void setObject_ID(String object_id) {
+		this.object_id = object_id;
 	}
 
 	public void setView(int view) {
@@ -92,12 +136,12 @@ public class WasabiACLEntry {
 	public void setGrant(int grant) {
 		this.grant = grant;
 	}
-	
-	public void setStartTime(int start_time) {
+
+	public void setStart_Time(int start_time) {
 		this.start_time = start_time;
 	}
-	
-	public void setEndTime(int end_time) {
+
+	public void setEnd_Time(int end_time) {
 		this.end_time = end_time;
 	}
 }

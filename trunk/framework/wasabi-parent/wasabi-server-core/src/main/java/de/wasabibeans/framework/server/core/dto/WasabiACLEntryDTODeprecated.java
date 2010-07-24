@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "WasabiACLEntryDTO", namespace = "de.wasabibeans.framework.server.core.dto")
-public class WasabiACLEntryDTO implements Serializable {
+public class WasabiACLEntryDTODeprecated implements Serializable {
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	private static final long serialVersionUID = -3013164768060621298L;
@@ -47,7 +47,7 @@ public class WasabiACLEntryDTO implements Serializable {
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected boolean allowance;
 
-	protected WasabiACLEntryDTO() {
+	protected WasabiACLEntryDTODeprecated() {
 
 	}
 
@@ -63,12 +63,24 @@ public class WasabiACLEntryDTO implements Serializable {
 		return permission;
 	}
 
+	protected void setPermission(int permission) {
+		this.permission = permission;
+	}
+
 	public boolean isAllowance() {
 		return allowance;
 	}
 
+	protected void setIsAllowance(boolean allowance) {
+		this.allowance = allowance;
+	}
+
 	public WasabiIdentityDTO getIdentity() {
 		return wasabiIdentity;
+	}
+
+	protected void setIdentity(WasabiIdentityDTO wasabiIdentity) {
+		this.wasabiIdentity = wasabiIdentity;
 	}
 
 	@Override

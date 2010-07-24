@@ -21,6 +21,39 @@
 
 package de.wasabibeans.framework.server.core.authorization;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.InvocationContext;
+import javax.jcr.Session;
+
+import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
+
 public class AutorizationInterceptor {
+
+	@Resource
+	private SessionContext sessionContext;
+
+	protected JcrConnector jcr;
+
+	@AroundInvoke
+	public Object filter(InvocationContext invocationContext) throws Exception {
+		String principalName = sessionContext.getCallerPrincipal().getName();
+		Session s = jcr.getJCRSession();
+		Object object = invocationContext.proceed();
+
+		// if user root, admin or user is a member of group admins access granted
+		if (principalName.equals("root")
+				|| principalName.equals("admin")
+				|| GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName("admins"), UserServiceImpl.getUserByName(
+						principalName, s))) {
+
+			return object;
+		}
+		
+		return null;
+	}
 
 }

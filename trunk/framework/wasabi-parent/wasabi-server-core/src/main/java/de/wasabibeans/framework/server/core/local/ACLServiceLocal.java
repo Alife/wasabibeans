@@ -22,10 +22,14 @@
 package de.wasabibeans.framework.server.core.local;
 
 import java.util.Collection;
+import java.util.Vector;
 
 import javax.ejb.Local;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -71,7 +75,7 @@ public interface ACLServiceLocal {
 
 	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
 
-	public int getPermission(WasabiACLEntryDTO wasabiACLEntry);
+	public int getPermission(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
 	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTO wasabiACLEntry);
 
@@ -86,7 +90,8 @@ public interface ACLServiceLocal {
 
 	public boolean isInheritanceAllowed(WasabiObjectDTO object);
 
-	public Collection<WasabiACLEntryDTO> getACLEntries(WasabiObjectDTO wasabiObject);
+	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Collection<WasabiACLEntryDTO> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
 			WasabiIdentityDTO wasabiIdentity);
