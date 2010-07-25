@@ -30,9 +30,9 @@ import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
+import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
+import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
-import de.wasabibeans.framework.server.core.testhelper.TestHelper;
-import de.wasabibeans.framework.server.core.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 public class WasabiRemoteTest extends Arquillian {
@@ -64,11 +64,11 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(WasabiManager.class.getPackage()) // manager
-				.addPackage(TestHelper.class.getPackage()) // testhelper
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
-				.addPackage(RoomServiceImpl.class.getPackage()); // internal
+				.addPackage(RoomServiceImpl.class.getPackage()) // internal
+				.addPackage(TestHelper.class.getPackage()); // testhelper
 
 		return testArchive;
 	}
