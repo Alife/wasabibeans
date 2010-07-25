@@ -18,8 +18,8 @@ public class NodeLookupTest extends WasabiRemoteTest {
 	
 	@Test
 	public void idLookup() throws Exception {
-		testhelper.createManyNodes(10000);
-		Vector<String> result = testhelper.getManyNodesByIdLookup();
+		Vector<String> nodeIds = testhelper.createManyNodes(10000);
+		Vector<String> result = testhelper.getManyNodesByIdLookup(nodeIds);
 		System.out.println(result.size());
 		System.out.println(result.lastElement());
 	
@@ -27,8 +27,8 @@ public class NodeLookupTest extends WasabiRemoteTest {
 	
 	@Test
 	public void idFilter() throws Exception {
-		testhelper.createManyNodes(10000);
-		Vector<String> result = testhelper.getManyNodesByIdFilter();
+		Vector<String> nodeIds = testhelper.createManyNodes(10000);
+		Vector<String> result = testhelper.getManyNodesByIdFilter(nodeIds);
 		System.out.println(result.size());
 		System.out.println(result.lastElement());
 	}

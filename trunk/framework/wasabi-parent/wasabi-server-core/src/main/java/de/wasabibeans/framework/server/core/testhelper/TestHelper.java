@@ -1,8 +1,9 @@
 package de.wasabibeans.framework.server.core.testhelper;
 
 import java.util.Vector;
+import java.util.concurrent.Callable;
 
-import javax.ejb.Stateful;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
@@ -17,9 +18,8 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-@Stateful
-public class TestHelper implements TestHelperRemote {
+@Stateless
+public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	private JcrConnector jcr;
 
@@ -28,17 +28,20 @@ public class TestHelper implements TestHelperRemote {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void initDatabase() {
 		WasabiManager.initDatabase();
 
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void initRepository() throws Exception {
 		WasabiManager.initRepository();
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception {
 		WasabiManager.initWorkspace("default");
 		Session s = jcr.getJCRSession();
@@ -51,6 +54,7 @@ public class TestHelper implements TestHelperRemote {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
@@ -63,11 +67,14 @@ public class TestHelper implements TestHelperRemote {
 			s.logout();
 		}
 	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public <V> V call(Callable<V> callable) throws Exception {
+		return callable.call();
+	}
 
-	Vector<String> nodeIds;
-
-	public void createManyNodes(int number) throws Exception {
-		nodeIds = new Vector<String>();
+	public Vector<String> createManyNodes(int number) throws Exception {
+		Vector<String> nodeIds = new Vector<String>();
 		Session s = jcr.getJCRSession();
 		try {
 			Node testroot = s.getRootNode().addNode("LookupTest");
@@ -79,12 +86,13 @@ public class TestHelper implements TestHelperRemote {
 				}
 			}
 			s.save();
+			return nodeIds;
 		} finally {
 			s.logout();
 		}
 	}
 
-	public Vector<String> getManyNodesByIdLookup() throws Exception {
+	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception {
 		Session s = jcr.getJCRSession();
 		Vector<String> ids = new Vector<String>();
 		try {
@@ -101,7 +109,7 @@ public class TestHelper implements TestHelperRemote {
 		}
 	}
 	
-	public Vector<String> getManyNodesByIdFilter() throws Exception {
+	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception {
 		Session s = jcr.getJCRSession();
 		Vector<String> ids = new Vector<String>();
 		try {
