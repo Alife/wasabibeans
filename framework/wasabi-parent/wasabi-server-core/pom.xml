@@ -71,8 +71,15 @@
 
 		<!-- ************* UNIT TEST DEPENDENCIES ************* -->
 		<dependency>
+			<!--
+				don't use testng version > 5.11 with arquillian version 1.0.0.Alpha2
+				(will lead to problems with IN_CONTAINER tests)
+			-->
 			<groupId>org.testng</groupId>
 			<artifactId>testng</artifactId>
+			<version>5.11</version>
+			<classifier>jdk15</classifier>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
