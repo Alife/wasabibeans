@@ -1,4 +1,4 @@
-package de.wasabibeans.framework.server.core.testhelper;
+package de.wasabibeans.framework.server.core.test.testhelper;
 
 import java.util.Vector;
 import java.util.concurrent.Callable;

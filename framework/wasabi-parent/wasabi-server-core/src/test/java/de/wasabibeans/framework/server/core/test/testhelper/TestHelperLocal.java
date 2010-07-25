@@ -1,13 +1,14 @@
-package de.wasabibeans.framework.server.core.testhelper;
+package de.wasabibeans.framework.server.core.test.testhelper;
 
 import java.util.Vector;
+import java.util.concurrent.Callable;
 
-import javax.ejb.Remote;
+import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 
-@Remote
-public interface TestHelperRemote {
+@Local
+public interface TestHelperLocal {
 	
 	public void initDatabase();
 	
@@ -16,6 +17,8 @@ public interface TestHelperRemote {
 	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception;
 	
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+	
+	public <V> V call(Callable<V> callable) throws Exception;
 	
 	public Vector<String> createManyNodes(int number) throws Exception;
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;
