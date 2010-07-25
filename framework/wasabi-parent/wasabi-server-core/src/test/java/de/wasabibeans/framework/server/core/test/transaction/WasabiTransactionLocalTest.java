@@ -18,10 +18,11 @@
  *
  *  Further information are online available at: http://www.wasabibeans.de
  */
-
 package de.wasabibeans.framework.server.core.test.transaction;
 
-import javax.transaction.UserTransaction;
+import java.util.concurrent.Callable;
+
+import javax.naming.InitialContext;
 
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
@@ -29,7 +30,6 @@ import org.jboss.arquillian.api.RunModeType;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.omg.CosTransactions.Status;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
@@ -40,16 +40,16 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
-import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
-import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
-import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
+import de.wasabibeans.framework.server.core.test.testhelper.TestHelperLocal;
+import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
-@Run(RunModeType.AS_CLIENT)
-public class WasabiTransactionRemoteTest extends Arquillian {
+@Run(RunModeType.IN_CONTAINER)
+public class WasabiTransactionLocalTest extends Arquillian {
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -65,7 +65,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
 				.addPackage(RoomServiceImpl.class.getPackage()) // internal
-				.addPackage(TestHelper.class.getPackage()); // testhelper
+				.addPackage(TestHelper.class.getPackage()) // testhelper
+				.addClass(LocalWasabiConnector.class);
 
 		return testArchive;
 	}
@@ -83,61 +84,74 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		@Override
 		public void run() {
 			try {
-				System.out.println(username + " meldet sich beim Server an");
-				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
-				reCon.connect();
-				reCon.login(username, username);
-
-				UserTransaction utx = (UserTransaction) reCon.lookup("UserTransaction");
-				utx.begin();
-				System.out.println(username + " hat Transaction " + utx.toString());
-
-				System.out.println(username + " liest");
-				RoomServiceRemote roomService = (RoomServiceRemote) reCon.lookup("RoomService/remote");
-				WasabiRoomDTO rootRoom = roomService.getRootRoom();
-				WasabiRoomDTO testRoom = roomService.getRoomByName(rootRoom, "Test");
-
-				if (t != null) {
-					System.out.println(username + " wartet");
-					t.join();
-				} else {
-					System.out.println(username + " schläft");
-					Thread.sleep(1000);
-				}
-
-				System.out.println(username + " schreibt (aktueller Name des Testraums: "
-						+ roomService.getName(testRoom) + ")");
-				System.out.println("Status der laufenen Transaktion (aktiv = " + Status._StatusActive + "): "
-						+ utx.getStatus());
-				roomService.rename(testRoom, username);
-
-				utx.commit();
-
-				reCon.disconnect();
-
+				InitialContext jndi = new InitialContext();
+				TestHelperLocal testhelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
+				
+				Callable<Object> toDo = new LostUpdateCallable(t, username);
+				testhelper.call(toDo);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
+	
+	class LostUpdateCallable implements Callable<Object> {
+		
+		private Thread t;
+		private String username;
+
+		public LostUpdateCallable(Thread t, String username) {
+			this.t = t;
+			this.username = username;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println(username + " meldet sich beim Server an");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			System.out.println(username + " liest");
+			RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
+			WasabiRoomDTO rootRoom = roomService.getRootRoom();
+			WasabiRoomDTO testRoom = roomService.getRoomByName(rootRoom, "Test");
+
+			if (t != null) {
+				System.out.println(username + " wartet");
+				t.join();
+			} else {
+				System.out.println(username + " schläft");
+				Thread.sleep(1000);
+			}
+
+			System.out.println(username + " schreibt (aktueller Name des Testraums: "
+					+ roomService.getName(testRoom) + ")");
+			roomService.rename(testRoom, username);
+
+			loCon.disconnect();
+			return null;
+		}
+		
+	}
 
 	@Test
 	public void lostUpdateTest() throws Exception {
-		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.defaultConnectAndLogin();
 
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper/remote");
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		WasabiRoomDTO rootRoom = testhelper.initWorkspace("default");
 		testhelper.initDatabase();
 
-		RoomServiceRemote roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
-		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService/remote");
+		RoomServiceLocal roomService = (RoomServiceLocal) loWaCon.lookup("RoomService");
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		roomService.create("Test", rootRoom);
 		userService.create("user1", "user1");
 		userService.create("user2", "user2");
 
-		reWaCon.disconnect();
+		loWaCon.disconnect();
 
 		Thread t1 = new TestThread(null, "user1");
 		Thread t2 = new TestThread(t1, "user2");
@@ -148,12 +162,11 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		t2.join();
 		System.out.println("Beide fertig");
 
-		reWaCon.defaultConnectAndLogin();
-		roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
+		loWaCon.defaultConnectAndLogin();
+		roomService = (RoomServiceLocal) loWaCon.lookup("RoomService");
 		for (WasabiRoomDTO aRoom : roomService.getRooms(rootRoom)) {
 			System.out.println(roomService.getName(aRoom));
 		}
-		reWaCon.disconnect();
+		loWaCon.disconnect();
 	}
-
 }
