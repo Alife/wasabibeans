@@ -76,16 +76,21 @@ public class ACLServiceImpl {
 	}
 
 	@Deprecated
-	public static Vector<WasabiACLEntryDeprecated> getACLEntriesDeprecated(Node wasabiObjectNode, Session s)
-			throws UnexpectedInternalProblemException {
+	public static Vector<WasabiACLEntryDeprecated> getACLEntriesDeprecated(Node wasabiObjectNode,
+			Node wasabiIdentityNode, Session s) throws UnexpectedInternalProblemException {
 
 		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 		long id;
 		String wasabiGroupUUID = "", wasabiUserUUID = "";
 		Node wasabiIdentity;
+		List<WasabiACLEntry> wasabiACLEntry;
 
 		Vector<WasabiACLEntryDeprecated> aclEntries = new Vector<WasabiACLEntryDeprecated>();
-		List<WasabiACLEntry> wasabiACLEntry = getACLEntries(wasabiObjectNode);
+		if (wasabiIdentityNode == null) {
+			wasabiACLEntry = getAclEntries(wasabiObjectNode);
+		} else {
+			wasabiACLEntry = getAclEntriesByIdentity(wasabiObjectNode, wasabiIdentityNode);
+		}
 
 		for (int i = 0; i < wasabiACLEntry.size(); i++) {
 
@@ -231,7 +236,7 @@ public class ACLServiceImpl {
 
 	}
 
-	public static List<WasabiACLEntry> getACLEntries(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
+	public static List<WasabiACLEntry> getAclEntries(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
@@ -241,6 +246,26 @@ public class ACLServiceImpl {
 		ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 		try {
 			List<WasabiACLEntry> result = run.query(getACLEntriesQuery, h, objectUUID);
+			return result;
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+	}
+
+	public static List<WasabiACLEntry> getAclEntriesByIdentity(Node wasabiObjectNode, Node wasabiIdentityNode)
+			throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
+		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
+
+		String getACLEntriesByIdentityQuery = "SELECT * FROM wasabi_rights "
+				+ "WHERE object_id=? AND (group_id=? OR user_id=?)";
+
+		ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+		try {
+			List<WasabiACLEntry> result = run.query(getACLEntriesByIdentityQuery, h, objectUUID, identityUUID,
+					identityUUID);
 			return result;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);

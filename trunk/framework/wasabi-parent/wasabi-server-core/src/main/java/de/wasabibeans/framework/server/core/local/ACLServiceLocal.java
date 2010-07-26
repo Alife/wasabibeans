@@ -21,7 +21,6 @@
 
 package de.wasabibeans.framework.server.core.local;
 
-import java.util.Collection;
 import java.util.Vector;
 
 import javax.ejb.Local;
@@ -73,11 +72,14 @@ public interface ACLServiceLocal {
 
 	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
 
+	@Deprecated
 	public int getPermission(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
-	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTO wasabiACLEntry);
+	@Deprecated
+	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
-	public boolean isAllowance(WasabiACLEntryDTO wasabiACLEntry);
+	@Deprecated
+	public boolean isAllowance(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
 	public boolean isExplicitRight(WasabiACLEntryDTO wasabiACLEntry);
 
@@ -93,9 +95,12 @@ public interface ACLServiceLocal {
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	@Deprecated
-	public Collection<WasabiACLEntryDTO> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
-			WasabiIdentityDTO wasabiIdentity);
-	
-	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-	ObjectDoesNotExistException;
+	public Vector<WasabiACLEntryDTODeprecated> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
+			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+
+	public Vector<WasabiACLEntryDTO> getAclEntriesByIdentity(WasabiObjectDTO wasabiObject,
+			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+
+	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 }
