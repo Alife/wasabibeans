@@ -53,8 +53,10 @@ public class WasabiACLEntryDTO implements Serializable {
 	protected String group = "";
 	protected String parent = "";
 
-	protected long startTime=0;
-	protected long endTime=0;
+	protected long startTime = 0;
+	protected long endTime = 0;
+
+	protected boolean inheritance;
 
 	protected WasabiACLEntryDTO() {
 
@@ -147,7 +149,7 @@ public class WasabiACLEntryDTO implements Serializable {
 	public String getParentID() {
 		return this.parent;
 	}
-	
+
 	protected void setStartTime(long startTime) {
 		this.startTime = startTime;
 	}
@@ -155,13 +157,21 @@ public class WasabiACLEntryDTO implements Serializable {
 	public long getStartTime() {
 		return this.startTime;
 	}
-	
+
 	protected void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
 
 	public long getEndTime() {
 		return this.endTime;
+	}
+
+	protected void setInheritance(boolean inheritance) {
+		this.inheritance = inheritance;
+	}
+
+	public boolean getInheritance() {
+		return this.inheritance;
 	}
 
 	@Override

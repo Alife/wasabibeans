@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "WasabiACLEntryDTO", namespace = "de.wasabibeans.framework.server.core.dto")
+@XmlType(name = "WasabiACLEntryDTODeprecated", namespace = "de.wasabibeans.framework.server.core.dto")
 public class WasabiACLEntryDTODeprecated implements Serializable {
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
@@ -46,6 +46,9 @@ public class WasabiACLEntryDTODeprecated implements Serializable {
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected boolean allowance;
+	
+	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
+	protected boolean inheritance;
 
 	protected WasabiACLEntryDTODeprecated() {
 
@@ -81,6 +84,14 @@ public class WasabiACLEntryDTODeprecated implements Serializable {
 
 	protected void setIdentity(WasabiIdentityDTO wasabiIdentity) {
 		this.wasabiIdentity = wasabiIdentity;
+	}
+	
+	protected void setInheritance(boolean inheritance) {
+		this.inheritance = inheritance;
+	}
+
+	public boolean getInheritance() {
+		return this.inheritance;
 	}
 
 	@Override

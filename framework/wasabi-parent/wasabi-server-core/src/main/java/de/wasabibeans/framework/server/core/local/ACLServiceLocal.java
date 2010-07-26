@@ -79,6 +79,9 @@ public interface ACLServiceLocal {
 	@Deprecated
 	public boolean isAllowance(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
+	@Deprecated
+	public boolean isExplicitRight(WasabiACLEntryDTODeprecated wasabiACLEntry);
+	
 	public boolean isExplicitRight(WasabiACLEntryDTO wasabiACLEntry);
 
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission,

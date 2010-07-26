@@ -59,7 +59,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 			System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
 					+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
 					+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
-					+ wasabiACLEntryDTODeprecated.isAllowance());
+					+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
+					+ wasabiACLEntryDTODeprecated.getInheritance());
 		}
 
 		// getAclEntries (recommend way)
@@ -75,7 +76,7 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
 					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
 					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
-					+ wasabiACLEntryDTO.getEndTime());
+					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance());
 		}
 
 		// getACLEntriesByIdentity (depreciated way)
@@ -89,7 +90,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 			System.out.println("[id=" + wasabiACLEntryByIdentityDTODeprecated.getId() + ",identity_id="
 					+ wasabiACLEntryByIdentityDTODeprecated.getIdentity() + ",permission="
 					+ wasabiACLEntryByIdentityDTODeprecated.getPermission() + ",allowance="
-					+ wasabiACLEntryByIdentityDTODeprecated.isAllowance());
+					+ wasabiACLEntryByIdentityDTODeprecated.isAllowance() + ",inheritance="
+					+ wasabiACLEntryByIdentityDTODeprecated.getInheritance());
 		}
 
 		// getAclEntriesByIdentity (recommend way)
@@ -109,7 +111,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 					+ ",comment=" + wasabiACLEntryByIdentityDTO.getComment() + ",grant="
 					+ wasabiACLEntryByIdentityDTO.getGrant() + ",start_time="
 					+ wasabiACLEntryByIdentityDTO.getStartTime() + ",end_time="
-					+ wasabiACLEntryByIdentityDTO.getEndTime());
+					+ wasabiACLEntryByIdentityDTO.getEndTime() + ",inheritance="
+					+ wasabiACLEntryByIdentityDTO.getInheritance());
 		}
 
 	}
