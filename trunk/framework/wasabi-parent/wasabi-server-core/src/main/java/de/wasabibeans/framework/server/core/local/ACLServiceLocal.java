@@ -70,8 +70,6 @@ public interface ACLServiceLocal {
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void showAllACLEntries(WasabiObjectDTO wasabiObject);
-
 	@Deprecated
 	public int getPermission(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
