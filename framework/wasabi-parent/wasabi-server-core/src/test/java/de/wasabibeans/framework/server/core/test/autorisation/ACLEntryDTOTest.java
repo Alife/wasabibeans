@@ -52,7 +52,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 		Vector<WasabiACLEntryDTODeprecated> ACLEntriesForDocument1Deprecated = new Vector<WasabiACLEntryDTODeprecated>();
 		ACLEntriesForDocument1Deprecated = aclService().getACLEntries(document1);
 
-		System.out.println("---- ACL entries (depreciated way) for " + objectService().getUUID(document2) + " ----");
+		System.out.println("---- ACL entries for object " + objectService().getUUID(document1)
+				+ " (depreciated way)----");
 
 		for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntriesForDocument1Deprecated) {
 			System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
@@ -65,7 +66,7 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 		Vector<WasabiACLEntryDTO> ACLEntriesForDocument1 = new Vector<WasabiACLEntryDTO>();
 		ACLEntriesForDocument1 = aclService().getAclEntries(document1);
 
-		System.out.println("---- ACL entries (depreciated way) for " + objectService().getUUID(document2) + " ----");
+		System.out.println("---- ACL entries for object " + objectService().getUUID(document1) + " (future way)----");
 
 		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForDocument1) {
 			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserID()
@@ -75,6 +76,40 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
 					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
 					+ wasabiACLEntryDTO.getEndTime());
+		}
+
+		// getACLEntriesByIdentity (depreciated way)
+		Vector<WasabiACLEntryDTODeprecated> ACLEntriesForDocument1AndUser2Deprecated = new Vector<WasabiACLEntryDTODeprecated>();
+		ACLEntriesForDocument1AndUser2Deprecated = aclService().getACLEntriesByIdentity(document1, user2);
+
+		System.out.println("---- ACL entries by identity " + userService().getUUID(user2) + " for object"
+				+ objectService().getUUID(document1) + " (depreciated way)----");
+
+		for (WasabiACLEntryDTODeprecated wasabiACLEntryByIdentityDTODeprecated : ACLEntriesForDocument1AndUser2Deprecated) {
+			System.out.println("[id=" + wasabiACLEntryByIdentityDTODeprecated.getId() + ",identity_id="
+					+ wasabiACLEntryByIdentityDTODeprecated.getIdentity() + ",permission="
+					+ wasabiACLEntryByIdentityDTODeprecated.getPermission() + ",allowance="
+					+ wasabiACLEntryByIdentityDTODeprecated.isAllowance());
+		}
+
+		// getAclEntriesByIdentity (recommend way)
+		Vector<WasabiACLEntryDTO> ACLEntriesByIdentityForDocument1AndUser2 = new Vector<WasabiACLEntryDTO>();
+		ACLEntriesByIdentityForDocument1AndUser2 = aclService().getAclEntriesByIdentity(document1, user2);
+
+		System.out.println("---- ACL entries by identity " + userService().getUUID(user2) + " for object"
+				+ objectService().getUUID(document1) + " (future way)----");
+
+		for (WasabiACLEntryDTO wasabiACLEntryByIdentityDTO : ACLEntriesByIdentityForDocument1AndUser2) {
+			System.out.println("[id=" + wasabiACLEntryByIdentityDTO.getId() + ",user_id="
+					+ wasabiACLEntryByIdentityDTO.getUserID() + ",group_id=" + wasabiACLEntryByIdentityDTO.getGrant()
+					+ ",parent_id=" + wasabiACLEntryByIdentityDTO.getParentID() + ",view="
+					+ wasabiACLEntryByIdentityDTO.getView() + ",read=" + wasabiACLEntryByIdentityDTO.getRead()
+					+ ",insert=" + wasabiACLEntryByIdentityDTO.getInsert() + ",execute="
+					+ wasabiACLEntryByIdentityDTO.getExecute() + ",write=" + wasabiACLEntryByIdentityDTO.getWrite()
+					+ ",comment=" + wasabiACLEntryByIdentityDTO.getComment() + ",grant="
+					+ wasabiACLEntryByIdentityDTO.getGrant() + ",start_time="
+					+ wasabiACLEntryByIdentityDTO.getStartTime() + ",end_time="
+					+ wasabiACLEntryByIdentityDTO.getEndTime());
 		}
 
 	}

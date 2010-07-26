@@ -36,25 +36,25 @@ public class WasabiACLEntryDTO implements Serializable {
 	private static final long serialVersionUID = -3013164768060621298L;
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
-	protected Long id;
+	protected Long id = 0L;
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected WasabiIdentityDTO wasabiIdentity;
 
-	private int view = 0;
-	private int read = 0;
-	private int write = 0;
-	private int insert = 0;
-	private int execute = 0;
-	private int comment = 0;
-	private int grant = 0;
+	protected int view = 0;
+	protected int read = 0;
+	protected int write = 0;
+	protected int insert = 0;
+	protected int execute = 0;
+	protected int comment = 0;
+	protected int grant = 0;
 
-	String user = "";
-	String group = "";
-	String parent = "";
+	protected String user = "";
+	protected String group = "";
+	protected String parent = "";
 
-	private long startTime;
-	private long endTime;
+	protected long startTime=0;
+	protected long endTime=0;
 
 	protected WasabiACLEntryDTO() {
 
