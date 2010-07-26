@@ -224,12 +224,6 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	public boolean isExplicitRight(WasabiACLEntryDTODeprecated wasabiACLEntry) {
 		return wasabiACLEntry.getInheritance();
 	}
-	
-	@Override
-	public boolean isExplicitRight(WasabiACLEntryDTO wasabiACLEntry) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	@Override
 	public boolean isInheritanceAllowed(WasabiObjectDTO object) {
