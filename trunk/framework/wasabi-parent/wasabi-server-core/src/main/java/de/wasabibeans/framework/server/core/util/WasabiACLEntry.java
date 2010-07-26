@@ -23,13 +23,14 @@ package de.wasabibeans.framework.server.core.util;
 
 public class WasabiACLEntry {
 
-    private long id;
+	private long id;
 	private int view, read, insert, write, comment, execute, grant;
 	private long start_time, end_time;
 	private String user_id = "";
 	private String group_id = "";
 	private String parent_id = "";
 	private String object_id = "";
+	private boolean inheritance;
 
 	public WasabiACLEntry() {
 	}
@@ -90,6 +91,10 @@ public class WasabiACLEntry {
 		return this.end_time;
 	}
 
+	public boolean getInheritance() {
+		return this.inheritance;
+	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
@@ -144,5 +149,9 @@ public class WasabiACLEntry {
 
 	public void setEnd_Time(long end_time) {
 		this.end_time = end_time;
-	}	
+	}
+
+	public void setInheritance(boolean inheritance) {
+		this.inheritance = inheritance;
+	}
 }

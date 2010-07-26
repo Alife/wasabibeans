@@ -219,6 +219,12 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		return wasabiACLEntry.isAllowance();
 	}
 
+	@Deprecated
+	@Override
+	public boolean isExplicitRight(WasabiACLEntryDTODeprecated wasabiACLEntry) {
+		return wasabiACLEntry.getInheritance();
+	}
+	
 	@Override
 	public boolean isExplicitRight(WasabiACLEntryDTO wasabiACLEntry) {
 		// TODO Auto-generated method stub
