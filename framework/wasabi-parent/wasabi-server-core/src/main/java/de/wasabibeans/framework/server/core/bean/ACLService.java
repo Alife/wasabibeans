@@ -292,11 +292,4 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		ACLServiceImpl.reset(wasabiObjectNode);
 	}
-
-	@Override
-	public void showAllACLEntries(WasabiObjectDTO wasabiObject) {
-		// TODO Auto-generated method stub
-
-	}
-
 }
