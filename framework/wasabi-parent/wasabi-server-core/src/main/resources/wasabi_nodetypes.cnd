@@ -6,6 +6,7 @@
 	abstract
 	+ wasabi:attributes (wasabi:attributes) = 'wasabi:attributes' autocreated 
 	+ wasabi:tags (wasabi:tags) = 'wasabi:tags' autocreated
+	- wasabi:inheritance (BOOLEAN) = 'true' autocreated mandatory
 	
 [wasabi:location] > wasabi:object
 	abstract
