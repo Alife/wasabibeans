@@ -47,9 +47,7 @@ import de.wasabibeans.framework.server.core.util.SqlConnector;
 public class WasabiManager {
 
 	public static void initDatabase() {
-		/**
-		 * Create user table and entries
-		 */
+		/* Create user table and entries */
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
@@ -72,12 +70,10 @@ public class WasabiManager {
 			throw new RuntimeException(e);
 		}
 
-		/**
-		 * Create user rights table and entries
-		 */
+		/* Create user rights table and entries */
 		String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
 		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + "`id` int(11) NOT NULL AUTO_INCREMENT,"
-				+ " `object_id` varchar(64) NOT NULL," + "`user_id` varchar(64) NOT NULL,"
+				+ "`object_id` varchar(64) NOT NULL," + "`user_id` varchar(64) NOT NULL,"
 				+ "`parent_id` varchar(64) NOT NULL," + "`group_id` varchar(64) NOT NULL,"
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
@@ -88,6 +84,24 @@ public class WasabiManager {
 		try {
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+
+		/* Create template rights table */
+		String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
+		String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
+				+ "`id` int(11) NOT NULL AUTO_INCREMENT," + "`location_id` varchar(64) NOT NULL,"
+				+ "`wasabi_type` varchar(16) NOT NULL," + "`identity` bit(1) NOT NULL," + "`view` tinyint(2) NOT NULL,"
+				+ "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL," + "`write` tinyint(2) NOT NULL,"
+				+ "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL," + "`grant` tinyint(2) NOT NULL,"
+				+ "`start_time` float NOT NULL DEFAULT '0'," + "`end_time` float NOT NULL DEFAULT '0',"
+				+ "PRIMARY KEY (`id`, `location_id`, `wasabi_type`, `identity`, `start_time`,`end_time`)"
+				+ ") ENGINE = InnoDB ;";
+
+		try {
+			run.update(dropWasabiTemplateRightsTable);
+			run.update(createWasabiTeplateRightsTable);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
