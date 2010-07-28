@@ -36,7 +36,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface ACLServiceRemote {
 
-	public void activateInheritance(WasabiObjectDTO wasabiObject);
+	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
@@ -65,9 +66,11 @@ public interface ACLServiceRemote {
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void deactivateInheritance(WasabiObjectDTO wasabiObject);
+	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public boolean isInheritanceAllowed(WasabiObjectDTO object);
+	public boolean isInheritanceAllowed(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;

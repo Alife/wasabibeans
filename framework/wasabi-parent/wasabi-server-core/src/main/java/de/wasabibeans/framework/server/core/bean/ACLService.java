@@ -51,9 +51,11 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 public class ACLService extends WasabiService implements ACLServiceLocal, ACLServiceRemote {
 
 	@Override
-	public void activateInheritance(WasabiObjectDTO wasabiObject) {
-		// TODO Auto-generated method stub
-
+	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		ACLServiceImpl.setInheritance(wasabiObjectNode, true);
 	}
 
 	@Override
@@ -119,9 +121,11 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public void deactivateInheritance(WasabiObjectDTO wasabiObject) {
-		// TODO Auto-generated method stub
-
+	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		ACLServiceImpl.setInheritance(wasabiObjectNode, false);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -226,9 +230,11 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public boolean isInheritanceAllowed(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isInheritanceAllowed(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		return ACLServiceImpl.getInheritance(wasabiObjectNode);
 	}
 
 	@Override
@@ -292,4 +298,5 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		ACLServiceImpl.reset(wasabiObjectNode);
 	}
+
 }

@@ -34,6 +34,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
@@ -272,6 +273,20 @@ public class ACLServiceImpl {
 		}
 	}
 
+	public static boolean getInheritance(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
+		if (wasabiObjectNode == null)
+			return false;
+
+		try {
+			if (wasabiObjectNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+				return true;
+			else
+				return false;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static void reset(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -293,6 +308,15 @@ public class ACLServiceImpl {
 
 		try {
 			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, false);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void setInheritance(Node wasabiObjectNode, boolean inheritance)
+			throws UnexpectedInternalProblemException {
+		try {
+			wasabiObjectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
