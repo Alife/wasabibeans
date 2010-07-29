@@ -92,12 +92,12 @@ public class WasabiManager {
 		String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
 		String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
 				+ "`id` int(11) NOT NULL AUTO_INCREMENT," + "`location_id` varchar(64) NOT NULL,"
-				+ "`wasabi_type` varchar(16) NOT NULL," + "`identity` bit(1) NOT NULL," + "`view` tinyint(2) NOT NULL,"
-				+ "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL," + "`write` tinyint(2) NOT NULL,"
-				+ "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL," + "`grant` tinyint(2) NOT NULL,"
-				+ "`start_time` float NOT NULL DEFAULT '0'," + "`end_time` float NOT NULL DEFAULT '0',"
-				+ "PRIMARY KEY (`id`, `location_id`, `wasabi_type`, `identity`, `start_time`,`end_time`)"
-				+ ") ENGINE = InnoDB ;";
+				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
+				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
+				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
+				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
+				+ "`end_time` float NOT NULL DEFAULT '0',"
+				+ "PRIMARY KEY (`id`, `location_id`, `wasabi_type`, `start_time`,`end_time`)" + ") ENGINE = InnoDB ;";
 
 		try {
 			run.update(dropWasabiTemplateRightsTable);

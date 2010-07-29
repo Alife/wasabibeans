@@ -25,6 +25,7 @@ import java.util.Vector;
 
 import javax.ejb.Remote;
 
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
@@ -63,6 +64,7 @@ public interface ACLServiceRemote {
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
+	@Deprecated
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
@@ -87,10 +89,18 @@ public interface ACLServiceRemote {
 	@Deprecated
 	public boolean isExplicitRight(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
-	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance);
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission);
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
+
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	@Deprecated
 	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)

@@ -33,6 +33,8 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
@@ -115,6 +117,7 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		}
 	}
 
+	@Deprecated
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
@@ -139,10 +142,46 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance) {
-		// TODO Auto-generated method stub
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		try {
+			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 
+			if (permission.length != allowance.length) {
+				throw new IllegalArgumentException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
+			}
+
+			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, 0, 0);
+		} finally {
+			cleanJCRSession(s);
+		}
+	}
+
+	@Override
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = getJCRSession();
+		try {
+			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+
+			if (!wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)
+					|| !wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)) {
+				throw new IllegalArgumentException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
+			}
+
+			if (permission.length != allowance.length) {
+				throw new IllegalArgumentException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
+			}
+
+			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
+		} finally {
+			cleanJCRSession(s);
+		}
 	}
 
 	@Override
@@ -329,6 +368,7 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 		}
 	}
 
+	@Deprecated
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
@@ -351,7 +391,15 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	}
 
 	@Override
-	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiIdentityDTO wasabiIdentity, int[] permission) {
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		// TODO Auto-generated method stub
 
 	}
@@ -359,6 +407,7 @@ public class ACLService extends WasabiService implements ACLServiceLocal, ACLSer
 	@Override
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
+		// TODO: Reimpl
 		Session s = getJCRSession();
 		try {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
