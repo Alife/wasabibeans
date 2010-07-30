@@ -33,7 +33,7 @@ public class NodeLookupTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize jcr repository
-		testhelper.initWorkspace("default");
+		testhelper.initRepository();
 	}
 	
 	@Test

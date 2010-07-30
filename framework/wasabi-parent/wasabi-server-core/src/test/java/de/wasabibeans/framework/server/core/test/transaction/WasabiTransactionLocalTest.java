@@ -20,8 +20,10 @@
  */
 package de.wasabibeans.framework.server.core.test.transaction;
 
+import java.util.Vector;
 import java.util.concurrent.Callable;
 
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.naming.InitialContext;
 
 import org.jboss.arquillian.api.Deployment;
@@ -30,6 +32,7 @@ import org.jboss.arquillian.api.RunModeType;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
@@ -37,6 +40,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -50,6 +54,9 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.IN_CONTAINER)
 public class WasabiTransactionLocalTest extends Arquillian {
+
+	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3";
+	private static final String TURN = "turn";
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -71,102 +78,498 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		return testArchive;
 	}
 
-	class TestThread extends Thread {
-		private Thread t;
-		private String username;
+	/** BASIC CLASSES NEEDED FOR THE TRANSACTION TESTS **/
+	class UserTestThread extends Thread {
+		private TestCallable userAction;
+		private Vector<Exception> exceptions;
 
-		public TestThread(Thread t, String username) {
-			super();
-			this.t = t;
-			this.username = username;
+		public UserTestThread(Vector<Exception> exceptions) {
+			this.exceptions = exceptions;
+		}
+
+		public void setUserAction(TestCallable userAction) {
+			this.userAction = userAction;
 		}
 
 		@Override
 		public void run() {
 			try {
+				System.out.println(userAction.getUsername() + " hat Client-Thread-Id " + this.getId());
 				InitialContext jndi = new InitialContext();
 				TestHelperLocal testhelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
-				
-				Callable<Object> toDo = new LostUpdateCallable(t, username);
-				testhelper.call(toDo);
+				jndi.close();
+				testhelper.call(userAction);
+				System.out.println(userAction.getUsername() + " has commited");
 			} catch (Exception e) {
-				e.printStackTrace();
+				exceptions.add(e);
 			}
 		}
 	}
-	
-	class LostUpdateCallable implements Callable<Object> {
-		
-		private Thread t;
-		private String username;
 
-		public LostUpdateCallable(Thread t, String username) {
-			this.t = t;
-			this.username = username;
+	abstract class TestCallable implements Callable<Object> {
+
+		protected String username;
+		protected Thread otherUser;
+
+		public String getUsername() {
+			return this.username;
+		}
+
+		protected void waitForMyTurn(LocalWasabiConnector loCon) throws Exception {
+			while (!((String) loCon.lookupGeneral(TURN)).equals(username)) {
+				Thread.sleep(1000);
+			}
+		}
+
+		protected void notify(LocalWasabiConnector loCon) throws Exception {
+			loCon.unbind(TURN);
+			if (username.equals(USER1)) {
+				loCon.bind(TURN, USER2);
+			} else {
+				loCon.bind(TURN, USER1);
+			}
 		}
 
 		@Override
 		public Object call() throws Exception {
+			System.out.println(username + " hat Stateless-Bean-Thread-Id " + Thread.currentThread().getId());
+			return null;
+		}
+	}
+
+	// ** **//
+
+	// ** DIRTY READ **//
+	// Is it possible to read data of other transactions that do not have committed yet?
+	// Jackrabbit: NOT POSSIBLE
+	class DirtyReadPreventedCallable extends TestCallable {
+
+		public DirtyReadPreventedCallable(String username, Thread otherUser) {
+			this.username = username;
+			this.otherUser = otherUser;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==DIRTY READ==");
+			super.call();
+			// authentication
 			System.out.println(username + " meldet sich beim Server an");
 			LocalWasabiConnector loCon = new LocalWasabiConnector();
 			loCon.connect();
 			loCon.login(username, username);
 
-			System.out.println(username + " liest");
-			RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
-			WasabiRoomDTO rootRoom = roomService.getRootRoom();
-			WasabiRoomDTO testRoom = roomService.getRoomByName(rootRoom, "Test");
+			// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
+			waitForMyTurn(loCon);
 
-			if (t != null) {
-				System.out.println(username + " wartet");
-				t.join();
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			if (username.equals(USER1)) {
+				System.out.println(username + " ändert DisplayName");
+				userService.setDisplayName(user3, USER1);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+
+				notify(loCon);
+				otherUser.join(); // wait for commit of other transaction
 			} else {
-				System.out.println(username + " schläft");
-				Thread.sleep(1000);
+				System.out.println(username + " liest DisplayName");
+				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
 			}
-
-			System.out.println(username + " schreibt (aktueller Name des Testraums: "
-					+ roomService.getName(testRoom) + ")");
-			roomService.rename(testRoom, username);
 
 			loCon.disconnect();
 			return null;
 		}
-		
+
 	}
 
 	@Test
-	public void lostUpdateTest() throws Exception {
+	public void dirtyReadPreventedTest() throws Exception {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		WasabiRoomDTO rootRoom = testhelper.initWorkspace("default");
+		testhelper.initRepository();
 		testhelper.initDatabase();
 
-		RoomServiceLocal roomService = (RoomServiceLocal) loWaCon.lookup("RoomService");
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
-		roomService.create("Test", rootRoom);
-		userService.create("user1", "user1");
-		userService.create("user2", "user2");
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
 
+		loWaCon.unbind(TURN);
+		loWaCon.bind(TURN, USER1);
 		loWaCon.disconnect();
 
-		Thread t1 = new TestThread(null, "user1");
-		Thread t2 = new TestThread(t1, "user2");
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserTestThread user1 = new UserTestThread(exceptions);
+		UserTestThread user2 = new UserTestThread(exceptions);
+		DirtyReadPreventedCallable userAction1 = new DirtyReadPreventedCallable(USER1, user2);
+		DirtyReadPreventedCallable userAction2 = new DirtyReadPreventedCallable(USER2, user1);
+		user1.setUserAction(userAction1);
+		user2.setUserAction(userAction2);
 
-		t1.start();
-		t2.start();
+		user1.start();
+		user2.start();
 
-		t2.join();
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
 		System.out.println("Beide fertig");
 
 		loWaCon.defaultConnectAndLogin();
-		roomService = (RoomServiceLocal) loWaCon.lookup("RoomService");
-		for (WasabiRoomDTO aRoom : roomService.getRooms(rootRoom)) {
-			System.out.println(roomService.getName(aRoom));
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		loWaCon.disconnect();
+	}
+
+	// ** **//
+
+	// ** Non-Repeatable Read **//
+	// An unrepeatable read occurs when a transaction reads data from a database, but gets a different result if
+	// it tries to read the same data again within the same transaction.
+	class NonRepeatableReadCallable extends TestCallable {
+
+		public NonRepeatableReadCallable(String username, Thread otherUser) {
+			this.username = username;
+			this.otherUser = otherUser;
 		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==NON REPEATABLE READ==");
+			super.call();
+			// authentication
+			System.out.println(username + " meldet sich beim Server an");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
+			waitForMyTurn(loCon);
+
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			if (username.equals(USER1)) {
+				System.out.println(username + " liest DisplayName");
+				userService.getDisplayName(user3);
+				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+
+				notify(loCon);
+				otherUser.join(); // wait for commit of other transaction
+
+				System.out.println(username + " liest DisplayName erneut");
+				userService.getDisplayName(user3);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+			} else {
+				System.out.println(username + " schreibt DisplayName");
+				userService.setDisplayName(user3, USER2);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+			}
+
+			loCon.disconnect();
+			return null;
+		}
+
+	}
+
+	@Test
+	public void nonRepeatableReadTest() throws Exception {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.defaultConnectAndLogin();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
+
+		loWaCon.unbind(TURN);
+		loWaCon.bind(TURN, USER1);
+		loWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserTestThread user1 = new UserTestThread(exceptions);
+		UserTestThread user2 = new UserTestThread(exceptions);
+		NonRepeatableReadCallable userAction1 = new NonRepeatableReadCallable(USER1, user2);
+		NonRepeatableReadCallable userAction2 = new NonRepeatableReadCallable(USER2, user1);
+		user1.setUserAction(userAction1);
+		user2.setUserAction(userAction2);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		System.out.println("Beide fertig");
+
+		loWaCon.defaultConnectAndLogin();
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		loWaCon.disconnect();
+	}
+
+	// ** **//
+
+	// ** Lost Update **//
+	// Two transactions make data changes based upon a previously read state of the data. The problem is that while
+	// making the data change one transaction is not aware of the data changes the other transaction makes.
+	// Jackrabbit: POSSIBLE, though cases like tx1-write, tx2-write, tx1-commit, tx2-commit lead to a rollback of tx2
+	class LostUpdateRollbackCallable extends TestCallable {
+
+		public LostUpdateRollbackCallable(String username, Thread otherUser) {
+			this.username = username;
+			this.otherUser = otherUser;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==LOST UPDATE ROLLBACK==");
+			super.call();
+			// authentication
+			System.out.println(username + " meldet sich beim Server an");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
+			waitForMyTurn(loCon);
+
+			if (username.equals(USER1)) {
+				System.out.println(username + " schreibt DisplayName");
+				userService.setDisplayName(user3, USER1);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				notify(loCon);
+				waitForMyTurn(loCon);
+			} else {
+				System.out.println(username + " schreibt DisplayName");
+				userService.setDisplayName(user3, USER2);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+
+				notify(loCon);
+				otherUser.join(); // wait for commit of other transaction
+			}
+
+			loCon.disconnect();
+			return null;
+		}
+
+	}
+
+	@Test
+	public void lostUpdateRollbackTest() throws Exception {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.defaultConnectAndLogin();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
+
+		loWaCon.unbind(TURN);
+		loWaCon.bind(TURN, USER1);
+		loWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserTestThread user1 = new UserTestThread(exceptions);
+		UserTestThread user2 = new UserTestThread(exceptions);
+		LostUpdateRollbackCallable userAction1 = new LostUpdateRollbackCallable(USER1, user2);
+		LostUpdateRollbackCallable userAction2 = new LostUpdateRollbackCallable(USER2, user1);
+		user1.setUserAction(userAction1);
+		user2.setUserAction(userAction2);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+
+		boolean rolledBack = false;
+		for (Exception e : exceptions) {
+			if (e instanceof EJBTransactionRolledbackException) {
+				rolledBack = true;
+			} else {
+				throw e;
+			}
+		}
+		AssertJUnit.assertTrue(rolledBack);
+
+		System.out.println("Beide fertig");
+
+		loWaCon.defaultConnectAndLogin();
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		loWaCon.disconnect();
+	}
+
+	class LostUpdateNotPreventedCallable extends TestCallable {
+
+		public LostUpdateNotPreventedCallable(String username, Thread t) {
+			this.otherUser = t;
+			this.username = username;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==LOST UPDATE NOT PREVENTED==");
+			super.call();
+			// authentication
+			System.out.println(username + " meldet sich beim Server an");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			// tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
+			if (username.equals(USER2)) {
+				otherUser.join();
+			}
+
+			if (username.equals(USER1)) {
+				System.out.println(username + " schreibt DisplayName");
+				userService.setDisplayName(user3, USER1);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+			} else {
+				// AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				System.out.println("AAAAAAAaa " + userService.getDisplayName(user3));
+				System.out.println(username + " schreibt DisplayName");
+				userService.setDisplayName(user3, USER2);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				System.out.println("BBBBBB");
+			}
+
+			loCon.disconnect();
+			return null;
+		}
+
+	}
+
+	@Test
+	public void lostUpdateNotPreventedTest() throws Exception {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.defaultConnectAndLogin();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+
+		userService.create(USER1, "user1");
+		userService.create(USER2, "user2");
+		WasabiUserDTO user3 = userService.create(USER3, "user3");
+		//testhelper.registerEventForDisplayName(user3);
+
+		loWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserTestThread user1 = new UserTestThread(exceptions);
+		UserTestThread user2 = new UserTestThread(exceptions);
+		LostUpdateNotPreventedCallable userAction1 = new LostUpdateNotPreventedCallable(USER1, user2);
+		LostUpdateNotPreventedCallable userAction2 = new LostUpdateNotPreventedCallable(USER2, user1);
+		user1.setUserAction(userAction1);
+		user2.setUserAction(userAction2);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		System.out.println("Beide fertig");
+
+		loWaCon.defaultConnectAndLogin();
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		loWaCon.disconnect();
+	}
+
+	// ** **//
+
+	class BlubCallable extends TestCallable {
+
+		public BlubCallable(String username) {
+			this.username = username;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==LOST UPDATE NOT PREVENTED==");
+			super.call();
+			// authentication
+			System.out.println(username + " meldet sich beim Server an");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			System.out.println(username + " schreibt DisplayName");
+			userService.setDisplayName(user3, USER1);
+			AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+
+			loCon.disconnect();
+			return null;
+		}
+
+	}
+
+	@Test
+	public void zTest() throws Exception {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.defaultConnectAndLogin();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+
+		userService.create(USER1, "user1");
+		userService.create(USER2, "user2");
+		WasabiUserDTO user3 = userService.create(USER3, "user3");
+
+		loWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserTestThread user1 = new UserTestThread(exceptions);
+		BlubCallable userAction1 = new BlubCallable(USER1);
+		user1.setUserAction(userAction1);
+
+		user1.start();
+
+		user1.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+
+		loWaCon.defaultConnectAndLogin();
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
 		loWaCon.disconnect();
 	}
 }

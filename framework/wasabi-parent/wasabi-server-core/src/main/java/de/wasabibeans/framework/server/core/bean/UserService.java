@@ -58,7 +58,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		try {
 			Node userNode = UserServiceImpl.create(name, password, s, getCurrentUser());
 			s.save();
@@ -66,13 +66,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		try {
 			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 			NodeIterator ni = UserServiceImpl.getAllUsers(s);
@@ -81,7 +81,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			}
 			return users;
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
@@ -93,24 +93,24 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public String getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			return UserServiceImpl.getDisplayName(userNode);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public WasabiRoomDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			return TransferManager.convertNode2DTO(UserServiceImpl.getHomeRoom(userNode));
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
@@ -123,45 +123,45 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			return UserServiceImpl.getPassword(userNode);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			return TransferManager.convertNode2DTO(UserServiceImpl.getStartRoom(userNode));
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public boolean getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			return UserServiceImpl.getStatus(userNode);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		try {
 			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
@@ -179,7 +179,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		try {
 			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 			NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
@@ -188,7 +188,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			}
 			return users;
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
@@ -201,7 +201,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void setDisplayName(WasabiUserDTO user, String displayName) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			UserServiceImpl.setDisplayName(userNode, displayName);
@@ -209,26 +209,26 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			UserServiceImpl.setPassword(userNode, password);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
 		try {
@@ -237,14 +237,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public void setStatus(WasabiUserDTO user, boolean active) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			UserServiceImpl.setStatus(userNode, active);
@@ -252,14 +252,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 
 	}
 
 	@Override
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			UserServiceImpl.remove(userNode);
@@ -267,14 +267,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public void rename(WasabiUserDTO user, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		try {
 			UserServiceImpl.rename(userNode, name);
@@ -282,7 +282,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 

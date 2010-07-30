@@ -40,42 +40,43 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
-import de.wasabibeans.framework.server.core.util.WasabiLogger;
+import de.wasabibeans.framework.server.core.util.SessionHandler;
 
 /**
  * Class, that implements the internal access on WasabiObject objects.
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
-public class ObjectService extends WasabiService implements ObjectServiceLocal, ObjectServiceRemote {
+public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Resource
 	protected SessionContext ctx;
 
-	protected WasabiLogger logger;
-
+	protected SessionHandler sesHa;
+	
 	public ObjectService() {
+		this.sesHa = new SessionHandler();
 	}
 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		try {
 			return ObjectServiceImpl.getName(objectNode);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = getJCRSession();
+		Session s = sesHa.getSession(ctx);
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		try {
 			return ObjectServiceImpl.getUUID(objectNode);
 		} finally {
-			cleanJCRSession(s);
+			sesHa.releaseSession(ctx);
 		}
 	}
 

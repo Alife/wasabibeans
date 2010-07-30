@@ -26,18 +26,18 @@ import java.util.concurrent.Callable;
 import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 
 @Local
 public interface TestHelperLocal {
 	
 	public void initDatabase();
 	
-	public void initRepository() throws Exception;
-	
-	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception;
+	public WasabiRoomDTO initRepository() throws Exception;
 	
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
 	
+	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception;
 	public <V> V call(Callable<V> callable) throws Exception;
 	
 	public Vector<String> createManyNodes(int number) throws Exception;

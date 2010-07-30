@@ -29,12 +29,16 @@ import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventListener;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 
@@ -56,27 +60,14 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void initRepository() throws Exception {
-		WasabiManager.initRepository();
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception {
-		WasabiManager.initWorkspace("default");
-		Session s = jcr.getJCRSession();
-		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			return TransferManager.convertNode2DTO(wasabiRootNode);
-		} finally {
-			s.logout();
-		}
+	public WasabiRoomDTO initRepository() throws Exception {
+		return TransferManager.convertNode2DTO(WasabiManager.initRepository(null, true));
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
 		try {
 			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node room1Node = wasabiRootNode.addNode(WasabiNodeProperty.ROOMS + "/" + "room1",
@@ -87,15 +78,29 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.logout();
 		}
 	}
-	
+
+	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception {
+		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		try {
+			EventListener listener = new DisplayNameListener();
+			s.getWorkspace().getObservationManager().addEventListener(listener, Event.PROPERTY_CHANGED,
+					userNode.getPath(), false, null, null, false);
+			s.save();
+		} finally {
+			s.logout();
+		}
+	}
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public <V> V call(Callable<V> callable) throws Exception {
+		System.out.println("SESSION-BEAN" + this.toString());
 		return callable.call();
 	}
 
 	public Vector<String> createManyNodes(int number) throws Exception {
 		Vector<String> nodeIds = new Vector<String>();
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
 		try {
 			Node testroot = s.getRootNode().addNode("LookupTest");
 			Node aNode;
@@ -113,7 +118,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	}
 
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
 		Vector<String> ids = new Vector<String>();
 		try {
 			Long startTime = System.currentTimeMillis();
@@ -128,9 +133,9 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.logout();
 		}
 	}
-	
+
 	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
 		Vector<String> ids = new Vector<String>();
 		try {
 			Long startTime = System.currentTimeMillis();

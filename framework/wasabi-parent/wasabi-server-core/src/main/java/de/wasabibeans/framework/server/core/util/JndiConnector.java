@@ -52,7 +52,7 @@ public class JndiConnector {
 		}
 	}
 
-	public Object localLookup(String name) throws UnexpectedInternalProblemException {
+	public Object lookupLocal(String name) throws UnexpectedInternalProblemException {
 		try {
 			return getJNDIContext().lookup(name + "/local");
 		} catch (NamingException ne) {

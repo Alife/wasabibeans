@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.SQLException;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -41,7 +40,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
-import de.wasabibeans.framework.server.core.util.JndiConnector;
+import de.wasabibeans.framework.server.core.util.SessionHandler;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 public class WasabiManager {
@@ -108,63 +107,56 @@ public class WasabiManager {
 
 	}
 
-	public static void initRepository() {
+	public static Node initRepository(String jcrNodeTypesResourcePath, boolean resetContent) {
+		Session baseSession = null;
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
-			Session s = jcr.getJCRSession();
-			// register wasabi nodetypes (also registers the wasabi jcr namespace)
-			InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(
-					WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
-			Reader r = new InputStreamReader(in, "utf-8");
-			CndImporter.registerNodeTypes(r, s);
-			s.logout();
+
+			// create a base JCR session -> a session that stays alive all the time to keep the JCR repository running
+			baseSession = SessionHandler.getBaseSession(jcr);
+
+			// register wasabi nodetypes (also registers the wasabi jcr namespace) in case a path to a .cnd file has
+			// been given
+			if (jcrNodeTypesResourcePath != null) {
+				InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(
+						WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
+				Reader r = new InputStreamReader(in, "utf-8");
+				CndImporter.registerNodeTypes(r, baseSession);
+			}
+
+			if (resetContent) {
+				// clear existing wasabi content
+				NodeIterator ni = baseSession.getRootNode().getNodes();
+				while (ni.hasNext()) {
+					Node aNode = ni.nextNode();
+					if (!aNode.getName().equals("jcr:system")) {
+						aNode.remove();
+					}
+				}
+
+				// create basic wasabi content
+				Node workspaceRoot = baseSession.getRootNode();
+				// wasabi root room + wasabi home room
+				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
+				Node wasabiHome = createRoom(WasabiConstants.HOME_ROOM_NAME, wasabiRoot);
+				// root node for wasabi users and initial users
+				Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
+						WasabiNodeType.WASABI_USERS);
+				createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
+			}
+
+			baseSession.save();
+			return baseSession.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 		} catch (Exception e) {
+			if (baseSession != null && baseSession.isLive()) {
+				baseSession.logout();
+			}
 			throw new RuntimeException(e);
 		}
 	}
 
-	/**
-	 * Initializes the JCR workspace with the given name.
-	 * 
-	 * @param workspacename
-	 *            name of the JCR workspace
-	 */
-	public static void initWorkspace(String workspacename) {
-		try {
-			JcrConnector jcr = JcrConnector.getJCRConnector();
-			JndiConnector jndi = JndiConnector.getJNDIConnector();
-
-			// init store for user 2 jcr session mapping
-			ConcurrentHashMap<String, Session> user2JCRSession = new ConcurrentHashMap<String, Session>();
-			jndi.unbind(WasabiConstants.JNDI_JCR_USER2SESSION);
-			jndi.bind(WasabiConstants.JNDI_JCR_USER2SESSION, user2JCRSession);
-
-			Session s = jcr.getJCRSession();
-
-			// for testing: clear maybe existing wasabi content of workspace
-			NodeIterator ni = s.getRootNode().getNodes();
-			while (ni.hasNext()) {
-				Node aNode = ni.nextNode();
-				if (!aNode.getName().equals("jcr:system")) {
-					aNode.remove();
-				}
-			}
-
-			// create basic wasabi content
-			Node workspaceRoot = s.getRootNode();
-			// wasabi root room + wasabi home room
-			Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
-			Node wasabiHome = createRoom(WasabiConstants.HOME_ROOM_NAME, wasabiRoot);
-			// root node for wasabi users and initial users
-			Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
-					WasabiNodeType.WASABI_USERS);
-			createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
-
-			s.save();
-			s.logout();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	public static void shutDownRepository() {
+		SessionHandler.releaseBaseSession();
 	}
 
 	private static Node createRoom(String name, Node environment) throws RepositoryException {

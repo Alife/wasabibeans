@@ -22,6 +22,7 @@
 package de.wasabibeans.framework.server.core.test.util;
 
 import javax.naming.InitialContext;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
 import javax.security.auth.login.LoginContext;
@@ -95,5 +96,39 @@ public class LocalWasabiConnector {
 			throw new LoginException("Not logged in.");
 		}
 		return initialContext.lookup("test/" + name + "/local");
+	}
+
+	public Object lookupGeneral(String name) throws NamingException, LoginException {
+		if (!connected) {
+			throw new NoInitialContextException("Not connected.");
+		}
+		if (!loggedIn) {
+			throw new LoginException("Not logged in.");
+		}
+		return initialContext.lookup(name);
+	}
+
+	public void bind(String name, Object o) throws LoginException, NamingException {
+		if (!connected) {
+			throw new NoInitialContextException("Not connected.");
+		}
+		if (!loggedIn) {
+			throw new LoginException("Not logged in.");
+		}
+		initialContext.bind(name, o);
+	}
+
+	public void unbind(String name) throws LoginException, NamingException {
+		if (!connected) {
+			throw new NoInitialContextException("Not connected.");
+		}
+		if (!loggedIn) {
+			throw new LoginException("Not logged in.");
+		}
+		try {
+			initialContext.unbind(name);
+		} catch (NameNotFoundException nnfe) {
+
+		}
 	}
 }
