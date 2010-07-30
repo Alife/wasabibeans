@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.init;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServlet;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
@@ -43,8 +44,7 @@ public class Init extends HttpServlet {
 					try {
 						Thread.sleep(sleepTime);
 						WasabiManager.initDatabase();
-						WasabiManager.initRepository();
-						WasabiManager.initWorkspace("default");
+						WasabiManager.initRepository(WasabiConstants.JCR_NODETYPES_RESOURCE_PATH, true);
 						logger.info("Wasabi initialization completed.");
 						break;
 					} catch (Exception e) {

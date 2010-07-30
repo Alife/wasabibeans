@@ -47,7 +47,7 @@ public class WasabiExceptionMessages {
 	public final static String JNDI_FAILED_BIND = "Internal Problem: Could not bind &0 to JNDI context.";
 	public final static String JNDI_FAILED_LOOKUP = "Internal Problem: Could not retrieve &0 from JNDI context.";
 	public final static String JNDI_FAILED_UNBIND = "Internal Problem: Could not unbind &0 from JNDI context.";
-	public final static String JNDI_FAILED_UNBIND_NAME_NOT_BOUND = "Attempted to unbind &0 from JDNI context, although it is not bound";
+	public final static String JNDI_FAILED_UNBIND_NAME_NOT_BOUND = "Attempted to unbind &0 from JNDI context, although it is not bound";
 	public final static String JNDI_NO_CONTEXT = "Internal Problem: Could not access the JNDI context.";
 	
 	/* JCR */

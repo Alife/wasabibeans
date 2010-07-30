@@ -31,9 +31,7 @@ public interface TestHelperRemote {
 	
 	public void initDatabase();
 	
-	public void initRepository() throws Exception;
-	
-	public WasabiRoomDTO initWorkspace(String workspacename) throws Exception;
+	public WasabiRoomDTO initRepository() throws Exception;
 	
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
 	

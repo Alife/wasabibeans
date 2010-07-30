@@ -44,7 +44,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize jcr repository
-		rootRoom = testhelper.initWorkspace("default");
+		rootRoom = testhelper.initRepository();
 		room1 = testhelper.initRoomServiceTest();
 	}
 	

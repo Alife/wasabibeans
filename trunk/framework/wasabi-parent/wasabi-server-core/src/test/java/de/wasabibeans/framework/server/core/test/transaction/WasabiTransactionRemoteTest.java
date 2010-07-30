@@ -127,7 +127,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		reWaCon.defaultConnectAndLogin();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper/remote");
-		WasabiRoomDTO rootRoom = testhelper.initWorkspace("default");
+		WasabiRoomDTO rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
 
 		RoomServiceRemote roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");

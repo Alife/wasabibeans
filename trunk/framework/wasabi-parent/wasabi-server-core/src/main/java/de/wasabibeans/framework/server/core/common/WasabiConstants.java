@@ -60,6 +60,7 @@ public interface WasabiConstants {
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
 	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
 	public final static String JNDI_JCR_USER2SESSION = "user2JCRSession";
+	public final static String JNDI_JCR_BASESESSION = "baseJcrSession";
 
 	/* JCR */
 	public final static String JCR_NS_PREFIX = "wasabi";
