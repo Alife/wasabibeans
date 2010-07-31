@@ -21,6 +21,10 @@
 
 package de.wasabibeans.framework.server.core.test.transaction;
 
+import java.util.Vector;
+
+import javax.ejb.EJBTransactionRolledbackException;
+import javax.transaction.RollbackException;
 import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.api.Deployment;
@@ -29,7 +33,7 @@ import org.jboss.arquillian.api.RunModeType;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.omg.CosTransactions.Status;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
@@ -37,6 +41,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -50,6 +55,10 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
 public class WasabiTransactionRemoteTest extends Arquillian {
+
+	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3";
+
+	private final static Object activeThreadLock = new Object();
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -70,90 +79,456 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		return testArchive;
 	}
 
-	class TestThread extends Thread {
-		private Thread t;
-		private String username;
+	abstract class UserThread extends Thread {
+		protected Thread otherUser;
+		protected String username;
+		protected Vector<Exception> exceptions;
 
-		public TestThread(Thread t, String username) {
+		public UserThread(String username, Vector<Exception> exceptions) {
 			super();
-			this.t = t;
 			this.username = username;
+			this.exceptions = exceptions;
+		}
+
+		public void setOtherUser(Thread otherUser) {
+			this.otherUser = otherUser;
+		}
+
+		protected void waitForMyTurn() throws InterruptedException {
+			synchronized (activeThreadLock) {
+				activeThreadLock.wait();
+			}
+		}
+
+		protected void notifyOther() throws Exception {
+			synchronized (activeThreadLock) {
+				activeThreadLock.notify();
+			}
+		}
+
+		protected void waitForCommitOfOther() throws InterruptedException {
+			otherUser.join();
+		}
+
+		@Override
+		public abstract void run();
+	}
+
+	// --------------------------------------------------------------------------------------------
+
+	// ** DIRTY READ -------------------------------------------------------------------
+	// Is it possible to read data of other transactions that do not have committed yet?
+	// Jackrabbit: NOT POSSIBLE
+	class DirtyReadPreventedThread extends UserThread {
+
+		public DirtyReadPreventedThread(String username, Vector<Exception> exceptions) {
+			super(username, exceptions);
 		}
 
 		@Override
 		public void run() {
 			try {
-				System.out.println(username + " meldet sich beim Server an");
+				System.out.println("==DIRTY READ==");
+				// authentication
+				System.out.println(username + " authenticates");
 				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
 				reCon.connect();
 				reCon.login(username, username);
 
-				UserTransaction utx = (UserTransaction) reCon.lookup("UserTransaction");
+				UserTransaction utx = (UserTransaction) reCon.lookupGeneral("UserTransaction");
 				utx.begin();
-				System.out.println(username + " hat Transaction " + utx.toString());
 
-				System.out.println(username + " liest");
-				RoomServiceRemote roomService = (RoomServiceRemote) reCon.lookup("RoomService/remote");
-				WasabiRoomDTO rootRoom = roomService.getRootRoom();
-				WasabiRoomDTO testRoom = roomService.getRoomByName(rootRoom, "Test");
+				UserServiceRemote userService = (UserServiceRemote) reCon.lookup("UserService");
+				WasabiUserDTO user3 = userService.getUserByName(USER3);
 
-				if (t != null) {
-					System.out.println(username + " wartet");
-					t.join();
-				} else {
-					System.out.println(username + " schläft");
-					Thread.sleep(1000);
+				// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
+				if (username.equals(USER2)) {
+					waitForMyTurn();
 				}
 
-				System.out.println(username + " schreibt (aktueller Name des Testraums: "
-						+ roomService.getName(testRoom) + ")");
-				System.out.println("Status der laufenen Transaktion (aktiv = " + Status._StatusActive + "): "
-						+ utx.getStatus());
-				roomService.rename(testRoom, username);
+				if (username.equals(USER1)) {
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER1);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+
+					notifyOther();
+					waitForCommitOfOther();
+				} else {
+					System.out.println(username + " reads");
+					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+				}
 
 				utx.commit();
-
 				reCon.disconnect();
-
 			} catch (Exception e) {
-				e.printStackTrace();
+				exceptions.add(e);
 			}
 		}
+
 	}
 
 	@Test
-	public void lostUpdateTest() throws Exception {
+	public void dirtyReadPreventedTest() throws Exception {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper/remote");
-		WasabiRoomDTO rootRoom = testhelper.initRepository();
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initRepository();
 		testhelper.initDatabase();
 
-		RoomServiceRemote roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
-		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService/remote");
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
-		roomService.create("Test", rootRoom);
-		userService.create("user1", "user1");
-		userService.create("user2", "user2");
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
 
 		reWaCon.disconnect();
 
-		Thread t1 = new TestThread(null, "user1");
-		Thread t2 = new TestThread(t1, "user2");
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserThread user1 = new DirtyReadPreventedThread(USER1, exceptions);
+		UserThread user2 = new DirtyReadPreventedThread(USER2, exceptions);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
 
-		t1.start();
-		t2.start();
+		user1.start();
+		user2.start();
 
-		t2.join();
-		System.out.println("Beide fertig");
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		System.out.println("Both user transactions have committed.");
 
 		reWaCon.defaultConnectAndLogin();
-		roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
-		for (WasabiRoomDTO aRoom : roomService.getRooms(rootRoom)) {
-			System.out.println(roomService.getName(aRoom));
-		}
+		userService = (UserServiceRemote) reWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
 		reWaCon.disconnect();
 	}
 
+	// --------------------------------------------------------------------------------------------
+
+	// ** Non-Repeatable Read -------------------------------------------------------------------
+	// An non-repeatable read occurs when a transaction reads data from the persistent store, but gets a different
+	// result if it tries to read the same data again within the same transaction.
+	// Jackrabbit: POSSIBLE
+	class NonRepeatableReadThread extends UserThread {
+
+		public NonRepeatableReadThread(String username, Vector<Exception> exceptions) {
+			super(username, exceptions);
+		}
+
+		@Override
+		public void run() {
+			try {
+				System.out.println("==NON REPEATABLE READ==");
+				// authentication
+				System.out.println(username + " authenticates");
+				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
+				reCon.connect();
+				reCon.login(username, username);
+
+				UserTransaction utx = (UserTransaction) reCon.lookupGeneral("UserTransaction");
+				utx.begin();
+
+				UserServiceRemote userService = (UserServiceRemote) reCon.lookup("UserService");
+				WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+				// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
+				if (username.equals(USER2)) {
+					waitForMyTurn();
+				}
+
+				if (username.equals(USER1)) {
+					System.out.println(username + " reads");
+					userService.getDisplayName(user3);
+					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+
+					notifyOther();
+					waitForCommitOfOther();
+
+					System.out.println(username + " reads again");
+					userService.getDisplayName(user3);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				} else {
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER2);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				}
+
+				utx.commit();
+				reCon.disconnect();
+			} catch (Exception e) {
+				exceptions.add(e);
+			}
+		}
+
+	}
+
+	@Test
+	public void nonRepeatableReadTest() throws Exception {
+		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
+		reWaCon.defaultConnectAndLogin();
+
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
+
+		reWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserThread user1 = new NonRepeatableReadThread(USER1, exceptions);
+		UserThread user2 = new NonRepeatableReadThread(USER2, exceptions);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		System.out.println("Both user transactions have committed.");
+
+		reWaCon.defaultConnectAndLogin();
+		userService = (UserServiceRemote) reWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		reWaCon.disconnect();
+	}
+
+	// --------------------------------------------------------------------------------------------
+
+	// ** Lost Update -------------------------------------------------------------------
+	// Two transactions make data changes based upon a previously read state of the data. The problem is that while
+	// making the data change one transaction is not aware of the data changes the other transaction makes.
+	// Jackrabbit: POSSIBLE, though cases like tx1-write, tx2-write, tx1-commit, tx2-commit lead to a rollback of tx2
+	class LostUpdateRollbackThread extends UserThread {
+
+		public LostUpdateRollbackThread(String username, Vector<Exception> exceptions) {
+			super(username, exceptions);
+		}
+
+		@Override
+		public void run() {
+			try {
+				System.out.println("==LOST UPDATE ROLLBACK==");
+				// authentication
+				System.out.println(username + " authenticates");
+				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
+				reCon.connect();
+				reCon.login(username, username);
+
+				UserTransaction utx = (UserTransaction) reCon.lookupGeneral("UserTransaction");
+				utx.begin();
+
+				UserServiceRemote userService = (UserServiceRemote) reCon.lookup("UserService");
+				WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+				// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
+				if (username.equals(USER2)) {
+					waitForMyTurn();
+				}
+
+				if (username.equals(USER1)) {
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER1);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+					notifyOther();
+					waitForMyTurn();
+				} else {
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER2);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+
+					notifyOther();
+					waitForCommitOfOther();
+				}
+
+				utx.commit();
+				reCon.disconnect();
+			} catch (Exception e) {
+				exceptions.add(e);
+			}
+		}
+
+	}
+
+	@Test
+	public void lostUpdateRollbackTest() throws Exception {
+		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
+		reWaCon.defaultConnectAndLogin();
+
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
+
+		reWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserThread user1 = new LostUpdateRollbackThread(USER1, exceptions);
+		UserThread user2 = new LostUpdateRollbackThread(USER2, exceptions);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+
+		boolean rolledBack = false;
+		for (Exception e : exceptions) {
+			if (e instanceof RollbackException) {
+				rolledBack = true;
+			} else {
+				throw e;
+			}
+		}
+		AssertJUnit.assertTrue(rolledBack);
+
+		System.out.println("Both user transactions have committed.");
+
+		reWaCon.defaultConnectAndLogin();
+		userService = (UserServiceRemote) reWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		reWaCon.disconnect();
+	}
+
+	class LostUpdateNotPreventedThread extends UserThread {
+
+		public LostUpdateNotPreventedThread(String username, Vector<Exception> exceptions) {
+			super(username, exceptions);
+		}
+
+		@Override
+		public void run() {
+			try {
+				System.out.println("==LOST UPDATE NOT PREVENTED==");
+				// authentication
+				System.out.println(username + " authenticates");
+				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
+				reCon.connect();
+				reCon.login(username, username);
+
+				UserTransaction utx = (UserTransaction) reCon.lookupGeneral("UserTransaction");
+				utx.begin();
+
+				UserServiceRemote userService = (UserServiceRemote) reCon.lookup("UserService");
+				WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+				// tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
+				if (username.equals(USER2)) {
+					waitForCommitOfOther();
+				}
+
+				if (username.equals(USER1)) {
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER1);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				} else {
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER2);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				}
+
+				utx.commit();
+				reCon.disconnect();
+			} catch (Exception e) {
+				exceptions.add(e);
+			}
+		}
+
+	}
+
+	@Test
+	public void lostUpdateNotPreventedTest() throws Exception {
+		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
+		reWaCon.defaultConnectAndLogin();
+
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+
+		userService.create(USER1, "user1");
+		userService.create(USER2, "user2");
+		WasabiUserDTO user3 = userService.create(USER3, "user3");
+
+		reWaCon.disconnect();
+
+		Vector<Exception> exceptions = new Vector<Exception>();
+		UserThread user1 = new LostUpdateNotPreventedThread(USER1, exceptions);
+		UserThread user2 = new LostUpdateNotPreventedThread(USER2, exceptions);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join();
+		user2.join();
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
+		}
+		System.out.println("Both user transactions have committed.");
+
+		reWaCon.defaultConnectAndLogin();
+		userService = (UserServiceRemote) reWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		reWaCon.disconnect();
+	}
+
+	// --------------------------------------------------------------------------------------------
+
+	// ** Rollback -------------------------------------------------------------------
+	// Successfully create a user within a transaction which rolls back afterwards -> the user must neither exist in the
+	// database nor in the repository
+	@Test
+	public void userCreateRollbackTest() throws Exception {
+		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
+		reWaCon.defaultConnectAndLogin();
+
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+
+		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
+
+		try {
+			utx.begin();
+
+			userService.create(USER1, USER1);
+			userService.create(null, null); // provoke exception and failure of transaction
+
+			utx.commit();
+		} catch (EJBTransactionRolledbackException rb) {
+			utx.rollback();
+		}
+
+		AssertJUnit.assertNull(userService.getUserByName(USER1));
+
+		userService.create(USER1, USER1); // would fail if previous rollback did not happen both in the database and the
+											// repository
+
+		reWaCon.disconnect();
+	}
+	// --------------------------------------------------------------------------------------------
 }

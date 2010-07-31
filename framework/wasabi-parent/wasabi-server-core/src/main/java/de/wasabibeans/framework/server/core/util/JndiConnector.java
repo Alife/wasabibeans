@@ -32,7 +32,6 @@ public class JndiConnector {
 
 	private InitialContext jndiContext;
 	private WasabiLogger logger;
-
 	public static JndiConnector getJNDIConnector() {
 		return new JndiConnector();
 	}

@@ -117,6 +117,16 @@ public class RemoteWasabiConnector {
 		if (!loggedIn) {
 			throw new LoginException("Not logged in.");
 		}
+		return initialContext.lookup(name  + "/remote");
+	}
+	
+	public Object lookupGeneral(String name) throws NamingException, LoginException {
+		if (!connected) {
+			throw new NoInitialContextException("Not connected.");
+		}
+		if (!loggedIn) {
+			throw new LoginException("Not logged in.");
+		}
 		return initialContext.lookup(name);
 	}
 }

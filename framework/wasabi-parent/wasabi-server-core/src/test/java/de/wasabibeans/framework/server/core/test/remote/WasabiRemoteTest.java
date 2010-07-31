@@ -100,7 +100,7 @@ public class WasabiRemoteTest extends Arquillian {
 		reWaCon.defaultConnectAndLogin();
 
 		// lookup wasabi testhelper
-		testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper/remote");
+		testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 	}
 
 	@AfterClass
@@ -112,7 +112,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public ACLServiceRemote aclService() {
 		try {
 			if (aclService == null) {
-				aclService = (ACLServiceRemote) reWaCon.lookup("ACLService/remote");
+				aclService = (ACLServiceRemote) reWaCon.lookup("ACLService");
 			}
 			return aclService;
 		} catch (Exception e) {
@@ -123,7 +123,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public AttributeServiceRemote attributeService() {
 		try {
 			if (attributeService == null) {
-				attributeService = (AttributeServiceRemote) reWaCon.lookup("AttributeService/remote");
+				attributeService = (AttributeServiceRemote) reWaCon.lookup("AttributeService");
 			}
 			return attributeService;
 		} catch (Exception e) {
@@ -134,7 +134,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public AuthorizationServiceRemote authorizationService() {
 		try {
 			if (authorizationService == null) {
-				authorizationService = (AuthorizationServiceRemote) reWaCon.lookup("AuthorizationService/remote");
+				authorizationService = (AuthorizationServiceRemote) reWaCon.lookup("AuthorizationService");
 			}
 			return authorizationService;
 		} catch (Exception e) {
@@ -145,7 +145,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public ContainerServiceRemote containerService() {
 		try {
 			if (containerService == null) {
-				containerService = (ContainerServiceRemote) reWaCon.lookup("ContainerService/remote");
+				containerService = (ContainerServiceRemote) reWaCon.lookup("ContainerService");
 			}
 			return containerService;
 		} catch (Exception e) {
@@ -156,7 +156,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public DocumentServiceRemote documentService() {
 		try {
 			if (documentService == null) {
-				documentService = (DocumentServiceRemote) reWaCon.lookup("DocumentService/remote");
+				documentService = (DocumentServiceRemote) reWaCon.lookup("DocumentService");
 			}
 			return documentService;
 		} catch (Exception e) {
@@ -167,7 +167,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public GroupServiceRemote groupService() {
 		try {
 			if (groupService == null) {
-				groupService = (GroupServiceRemote) reWaCon.lookup("GroupService/remote");
+				groupService = (GroupServiceRemote) reWaCon.lookup("GroupService");
 			}
 			return groupService;
 		} catch (Exception e) {
@@ -178,7 +178,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public LinkServiceRemote linkService() {
 		try {
 			if (linkService == null) {
-				linkService = (LinkServiceRemote) reWaCon.lookup("LinkService/remote");
+				linkService = (LinkServiceRemote) reWaCon.lookup("LinkService");
 			}
 			return linkService;
 		} catch (Exception e) {
@@ -189,7 +189,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public RoomServiceRemote roomService() {
 		try {
 			if (roomService == null) {
-				roomService = (RoomServiceRemote) reWaCon.lookup("RoomService/remote");
+				roomService = (RoomServiceRemote) reWaCon.lookup("RoomService");
 			}
 			return roomService;
 		} catch (Exception e) {
@@ -200,7 +200,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public TagServiceRemote tagService() {
 		try {
 			if (tagService == null) {
-				tagService = (TagServiceRemote) reWaCon.lookup("TagService/remote");
+				tagService = (TagServiceRemote) reWaCon.lookup("TagService");
 			}
 			return tagService;
 		} catch (Exception e) {
@@ -211,7 +211,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public UserServiceRemote userService() {
 		try {
 			if (userService == null) {
-				userService = (UserServiceRemote) reWaCon.lookup("UserService/remote");
+				userService = (UserServiceRemote) reWaCon.lookup("UserService");
 			}
 			return userService;
 		} catch (Exception e) {
@@ -222,7 +222,7 @@ public class WasabiRemoteTest extends Arquillian {
 	public ObjectServiceRemote objectService() {
 		try {
 			if (objectService == null) {
-				objectService = (ObjectServiceRemote) reWaCon.lookup("ObjectService/remote");
+				objectService = (ObjectServiceRemote) reWaCon.lookup("ObjectService");
 			}
 			return objectService;
 		} catch (Exception e) {
