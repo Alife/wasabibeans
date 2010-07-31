@@ -94,7 +94,6 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public <V> V call(Callable<V> callable) throws Exception {
-		System.out.println("SESSION-BEAN" + this.toString());
 		return callable.call();
 	}
 
