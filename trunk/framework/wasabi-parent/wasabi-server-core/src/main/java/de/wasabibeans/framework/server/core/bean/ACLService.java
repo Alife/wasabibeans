@@ -60,6 +60,10 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	SessionContext ctx;
 	
 	private SessionHandler sesHa;
+	
+	public ACLService() {
+		this.sesHa = new SessionHandler();
+	}
 
 	@Override
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
