@@ -71,7 +71,7 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 
 		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForDocument1) {
 			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserID()
-					+ ",group_id=" + wasabiACLEntryDTO.getGrant() + ",parent_id=" + wasabiACLEntryDTO.getParentID()
+					+ ",group_id=" + wasabiACLEntryDTO.getGroupID() + ",parent_id=" + wasabiACLEntryDTO.getParentID()
 					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
 					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
 					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
@@ -103,7 +103,7 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 
 		for (WasabiACLEntryDTO wasabiACLEntryByIdentityDTO : ACLEntriesByIdentityForDocument1AndUser2) {
 			System.out.println("[id=" + wasabiACLEntryByIdentityDTO.getId() + ",user_id="
-					+ wasabiACLEntryByIdentityDTO.getUserID() + ",group_id=" + wasabiACLEntryByIdentityDTO.getGrant()
+					+ wasabiACLEntryByIdentityDTO.getUserID() + ",group_id=" + wasabiACLEntryByIdentityDTO.getGroupID()
 					+ ",parent_id=" + wasabiACLEntryByIdentityDTO.getParentID() + ",view="
 					+ wasabiACLEntryByIdentityDTO.getView() + ",read=" + wasabiACLEntryByIdentityDTO.getRead()
 					+ ",insert=" + wasabiACLEntryByIdentityDTO.getInsert() + ",execute="
