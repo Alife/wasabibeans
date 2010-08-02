@@ -90,7 +90,8 @@ public class WasabiManager {
 		/* Create template rights table */
 		String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
 		String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
-				+ "`id` int(11) NOT NULL AUTO_INCREMENT," + "`location_id` varchar(64) NOT NULL,"
+				+ "`id` int(11) NOT NULL AUTO_INCREMENT,"
+				+ "`location_id` varchar(64) NOT NULL,"
 				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"

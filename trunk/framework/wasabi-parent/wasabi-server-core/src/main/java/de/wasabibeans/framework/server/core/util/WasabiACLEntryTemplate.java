@@ -27,7 +27,8 @@ public class WasabiACLEntryTemplate {
 	private int view, read, insert, write, comment, execute, grant;
 	private long start_time, end_time;
 	private String location_id = "";
-	
+	private String wasabi_type;
+
 	public WasabiACLEntryTemplate() {
 	}
 
@@ -75,12 +76,20 @@ public class WasabiACLEntryTemplate {
 		return this.end_time;
 	}
 
+	public String getWasabi_Type() {
+		return this.wasabi_type;
+	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
 
 	public void setLocation_ID(String object_id) {
 		this.location_id = object_id;
+	}
+
+	public void setWasabi_Type(String wasabi_type) {
+		this.wasabi_type = wasabi_type;
 	}
 
 	public void setView(int view) {
