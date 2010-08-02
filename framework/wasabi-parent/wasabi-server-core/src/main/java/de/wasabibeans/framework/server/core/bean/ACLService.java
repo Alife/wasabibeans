@@ -57,12 +57,12 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 @SecurityDomain("wasabi")
 @Stateless(name = "ACLService")
 public class ACLService implements ACLServiceLocal, ACLServiceRemote {
-	
+
 	@Resource
 	SessionContext ctx;
-	
+
 	private SessionHandler sesHa;
-	
+
 	public ACLService() {
 		this.sesHa = new SessionHandler();
 	}
@@ -404,15 +404,25 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	@Override
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
-
+		Session s = sesHa.getSession(ctx);
+		try {
+			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, 0, 0);
+		} finally {
+			sesHa.releaseSession(ctx);
+		}
 	}
 
 	@Override
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
 			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		// TODO Auto-generated method stub
-
+		Session s = sesHa.getSession(ctx);
+		try {
+			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, startTime, endTime);
+		} finally {
+			sesHa.releaseSession(ctx);
+		}
 	}
 
 	@Override
