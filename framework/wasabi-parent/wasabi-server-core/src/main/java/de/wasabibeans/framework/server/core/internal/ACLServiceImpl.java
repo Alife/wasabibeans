@@ -340,7 +340,6 @@ public class ACLServiceImpl {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	private static void updateDefaultRights(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			int[] allowance, long startTime, long endTime) throws RepositoryException,
 			UnexpectedInternalProblemException {
@@ -348,7 +347,7 @@ public class ACLServiceImpl {
 
 		String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
 
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0, ihtc = 0;
+		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 
 		try {
 			String getDefaultACLEntryQuery = "SELECT * FROM wasabi_template_rights "
@@ -401,7 +400,7 @@ public class ACLServiceImpl {
 				} else {
 					String updateDefaultACLEntryQuery = "UPDATE wasabi_template_rights SET "
 							+ "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
-							+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
+							+ " WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
 					run.update(updateDefaultACLEntryQuery, view, read, insert, write, execute, comment, grant,
 							locationUUID, startTime, endTime, wasabiType.toString());
 				}
@@ -435,7 +434,7 @@ public class ACLServiceImpl {
 
 				if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0 && grant == 0) {
 					String deleteDefaultACLEntryQuery = "DELETE FROM wasabi_template_rights "
-							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
+							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `type`=?";
 					run.update(deleteDefaultACLEntryQuery, locationUUID, startTime, endTime, wasabiType.toString());
 				} else {
 					String insertUserACLEntryQuery = "INSERT INTO wasabi_template_rights "
@@ -662,6 +661,35 @@ public class ACLServiceImpl {
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 			}
+		}
+	}
+
+	public static List<WasabiACLEntryTemplate> getDefaultACLEntries(Node wasabiLocationNode, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_ROOM)
+					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_CONTAINER)) {
+				throw new IllegalArgumentException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
+			}
+
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
+
+			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights WHERE `location_id`=?";
+
+			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
+					WasabiACLEntryTemplate.class);
+			try {
+				List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntriesQuery, h, locationUUID);
+				return result;
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 }

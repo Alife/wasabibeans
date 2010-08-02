@@ -28,6 +28,7 @@ import javax.ejb.Remote;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTODeprecated;
+import de.wasabibeans.framework.server.core.dto.WasabiACLEntryTemplateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -115,4 +116,7 @@ public interface ACLServiceRemote {
 
 	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+	
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
+	throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 }

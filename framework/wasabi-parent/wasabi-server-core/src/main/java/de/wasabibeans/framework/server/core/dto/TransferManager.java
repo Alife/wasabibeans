@@ -34,6 +34,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
+import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class TransferManager {
@@ -81,6 +82,23 @@ public class TransferManager {
 		} else {
 			throw new IllegalArgumentException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLDTO);
 		}
+	}
+
+	public static WasabiACLEntryTemplateDTO convertWasabiACLEntryTemplate2DTO(
+			WasabiACLEntryTemplate wasabiDefaultACLEntry) {
+		WasabiACLEntryTemplateDTO dto = new WasabiACLEntryTemplateDTO();
+		dto.setId(wasabiDefaultACLEntry.getId());
+		dto.setWasabiType(wasabiDefaultACLEntry.getWasabi_Type());
+		dto.setView(wasabiDefaultACLEntry.getView());
+		dto.setRead(wasabiDefaultACLEntry.getRead());
+		dto.setInsert(wasabiDefaultACLEntry.getInsert());
+		dto.setWrite(wasabiDefaultACLEntry.getWrite());
+		dto.setComment(wasabiDefaultACLEntry.getComment());
+		dto.setExecute(wasabiDefaultACLEntry.getExecute());
+		dto.setGrant(wasabiDefaultACLEntry.getGrant());
+		dto.setStartTime(wasabiDefaultACLEntry.getStart_Time());
+		dto.setEndTime(wasabiDefaultACLEntry.getEnd_Time());
+		return dto;
 	}
 
 	public static WasabiACLEntryDTODeprecated convertWasabiACLEntryDeprecated2DTO(
