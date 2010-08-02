@@ -331,6 +331,20 @@ public class ACLServiceImpl {
 		}
 	}
 
+	public static void removeDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission, long startTime,
+			long endTime) throws UnexpectedInternalProblemException {
+		int[] allowance = new int[permission.length];
+
+		for (int i = 0; i < allowance.length; i++)
+			allowance[i] = 0;
+
+		try {
+			updateDefaultRights(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static void setInheritance(Node wasabiObjectNode, boolean inheritance)
 			throws UnexpectedInternalProblemException {
 		try {
@@ -434,7 +448,7 @@ public class ACLServiceImpl {
 
 				if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0 && grant == 0) {
 					String deleteDefaultACLEntryQuery = "DELETE FROM wasabi_template_rights "
-							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `type`=?";
+							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
 					run.update(deleteDefaultACLEntryQuery, locationUUID, startTime, endTime, wasabiType.toString());
 				} else {
 					String insertUserACLEntryQuery = "INSERT INTO wasabi_template_rights "
