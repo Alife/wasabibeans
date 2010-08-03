@@ -444,17 +444,20 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 			WasabiUserDTO user3 = userService.getUserByName(USER3);
-
-			// tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
-			if (username.equals(USER2)) {
-				waitForCommitOfOther();
-			}
-
+			
+			// tx user2 reads, tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
 			if (username.equals(USER1)) {
+				waitForMyTurn();
+				
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER1);
 				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
 			} else {
+				System.out.println(username + " reads");
+				userService.getDisplayName(user3);
+				notifyOther();
+				waitForCommitOfOther();
+				
 				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER2);
@@ -532,6 +535,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 
 			userService.create(USER2, USER2);
+			//WasabiUserDTO user2 = userService.getUserByName(USER2);
+			//userService.getDisplayName(user2);
 			userService.create(null, null); // provoke exception and failure of transaction
 			
 			loCon.disconnect();

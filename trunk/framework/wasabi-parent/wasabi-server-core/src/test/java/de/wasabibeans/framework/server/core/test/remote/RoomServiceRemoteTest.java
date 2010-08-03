@@ -28,6 +28,7 @@ import javax.ejb.EJBException;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -35,6 +36,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
+import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceRemoteTest extends WasabiRemoteTest {
@@ -43,9 +45,21 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
-		// initialize jcr repository
+		// initialize test
+		reWaCon.defaultLogin();
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		rootRoom = testhelper.initRepository();
 		room1 = testhelper.initRoomServiceTest();
+		testhelper.initDatabase();
+		testhelper.initTestUser();
+		reWaCon.logout();
+		
+		reWaCon.login("user", "user");
+	}
+	
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 	
 	@Test
@@ -62,7 +76,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getEnvironmentTest() throws WasabiException {
+	public void getEnvironmentTest() throws Exception {
 		WasabiRoomDTO environment = roomService().getEnvironment(room1);
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}

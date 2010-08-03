@@ -38,6 +38,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.SessionHandler;
@@ -108,6 +109,17 @@ public class WasabiManager {
 
 	}
 
+	/**
+	 * Initializes the JCR repository. Dependent on the given parameters, the wasabi node types are imported and the
+	 * wasabi content of the repository is reset.
+	 * 
+	 * @param jcrNodeTypesResourcePath
+	 *            Resource path to the .cnd file of the wasabi node types. Set to null, if the wasabi node types are
+	 *            already imported.
+	 * @param resetContent
+	 *            Set to true, if the wasabi content of the repository should be reset
+	 * @return the JCR node representing the wasabi root room
+	 */
 	public static Node initRepository(String jcrNodeTypesResourcePath, boolean resetContent) {
 		Session baseSession = null;
 		try {
@@ -149,15 +161,20 @@ public class WasabiManager {
 			baseSession.save();
 			return baseSession.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 		} catch (Exception e) {
-			if (baseSession != null && baseSession.isLive()) {
-				baseSession.logout();
+			if (baseSession != null) {
+				try {
+					baseSession.logout();
+				} catch (IllegalStateException ise) {
+					// baseSession is not active anymore anyway
+				}
 			}
 			throw new RuntimeException(e);
 		}
 	}
 
-	public static void shutDownRepository() {
-		SessionHandler.releaseBaseSession();
+	public static void shutDownRepository() throws UnexpectedInternalProblemException {
+		JcrConnector jcr = JcrConnector.getJCRConnector();
+		SessionHandler.getBaseSession(jcr).logout();
 	}
 
 	private static Node createRoom(String name, Node environment) throws RepositoryException {
@@ -172,5 +189,4 @@ public class WasabiManager {
 		userNode.setProperty(WasabiNodeProperty.START_ROOM, homeRoomNode);
 		return userNode;
 	}
-
 }

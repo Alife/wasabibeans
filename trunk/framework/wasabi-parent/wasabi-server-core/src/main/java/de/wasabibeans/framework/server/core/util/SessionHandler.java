@@ -1,7 +1,5 @@
 package de.wasabibeans.framework.server.core.util;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import javax.ejb.SessionContext;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -12,11 +10,10 @@ public class SessionHandler {
 
 	// logger
 	private static WasabiLogger logger = WasabiLogger.getLogger(SessionHandler.class);
-	
+
 	// class variables
 	private static Session baseSession;
-	private static ConcurrentHashMap<String, Session> sessionStore;
-	
+
 	// instance variables
 	private JndiConnector jndi;
 	private JcrConnector jcr;
@@ -27,49 +24,33 @@ public class SessionHandler {
 		this.jcr = JcrConnector.getJCRConnector(this.jndi);
 	}
 
-	//--- instance methods -----------------------------------------------------------
+	// --- instance methods -----------------------------------------------------------
 	public Session getSession(SessionContext ctx) throws UnexpectedInternalProblemException {
-		if (currentSession == null) {
-			String username = ctx.getCallerPrincipal().getName();
-			logger.debug("A new JCR session will be created for user " + username + ".");
-			currentSession = jcr.getJCRSession(new SimpleCredentials(username, username.toCharArray()));
-		}
+		String username = ctx.getCallerPrincipal().getName();
+		currentSession = jcr.getJCRSession(new SimpleCredentials(username, username.toCharArray()));
 		return currentSession;
 	}
 
 	public void releaseSession(SessionContext ctx) {
-		currentSession.logout();
-		currentSession = null;
+		System.out.println("tuuuuuuuuuuut");
+		// do nothing at the moment -> normally the jca adapter should clean up after a transaction
+		// currentSession.logout();
+		// currentSession = null;
 	}
 
-	public void storeJCRSession(String key, Session session) {
-		sessionStore.put(key, session);
-	}
-
-	public void removeJCRSession(String key) {
-		sessionStore.remove(key);
-	}
-
-	public Session getJCRSession(String key) {
-		return sessionStore.get(key);
-	}
-
-	//--- class methods -----------------------------------------------------------
+	// --- class methods -----------------------------------------------------------
 	public static synchronized Session getBaseSession(JcrConnector jcr) throws UnexpectedInternalProblemException {
 		if (baseSession == null) {
-			logger.debug("A new base session will be created.");
 			baseSession = jcr.getJCRSession(new SimpleCredentials("base", "base".toCharArray()));
+		} else {
+			try {
+				if (!baseSession.isLive()) {
+					baseSession = jcr.getJCRSession(new SimpleCredentials("base", "base".toCharArray()));
+				}
+			} catch (IllegalStateException e) { // 'isLive()' threw error -> session is really not live anymore
+				baseSession = jcr.getJCRSession(new SimpleCredentials("base", "base".toCharArray()));
+			}
 		}
 		return baseSession;
 	}
-	
-	public static synchronized void releaseBaseSession() {
-		if (baseSession != null) {
-			logger.debug("The base session will be logged out.");
-			baseSession.logout();
-			baseSession = null;
-		}
-	}
-	
-	
 }

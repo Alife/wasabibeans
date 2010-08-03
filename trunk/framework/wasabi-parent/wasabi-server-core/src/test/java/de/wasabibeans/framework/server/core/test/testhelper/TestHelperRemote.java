@@ -25,6 +25,7 @@ import java.util.Vector;
 import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Remote
 public interface TestHelperRemote {
@@ -32,8 +33,10 @@ public interface TestHelperRemote {
 	public void initDatabase();
 	
 	public WasabiRoomDTO initRepository() throws Exception;
+	public void shutdownRepository() throws UnexpectedInternalProblemException;
 	
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+	public void initTestUser() throws Exception;
 	
 	public Vector<String> createManyNodes(int number) throws Exception;
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;

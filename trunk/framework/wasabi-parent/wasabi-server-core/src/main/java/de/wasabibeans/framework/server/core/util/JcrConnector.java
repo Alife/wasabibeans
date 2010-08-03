@@ -52,9 +52,9 @@ public class JcrConnector {
 	}
  
 	public Repository getJCRRepository() throws UnexpectedInternalProblemException {
-		if (this.jcrRepository == null) {
+		//if (this.jcrRepository == null) {
 			this.jcrRepository = (Repository) jndi.lookupLocal(WasabiConstants.JNDI_JCR_DATASOURCE);
-		}
+		//}
 		return this.jcrRepository;
 	}
 
