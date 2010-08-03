@@ -34,8 +34,10 @@ import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.debug.DebugInterceptor;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
@@ -57,8 +59,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 public class WasabiRemoteTest extends Arquillian {
 
-	private RemoteWasabiConnector reWaCon;
-	protected TestHelperRemote testhelper;
+	protected RemoteWasabiConnector reWaCon;
 
 	protected WasabiRoomDTO rootRoom;
 
@@ -88,6 +89,7 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
 				.addPackage(RoomServiceImpl.class.getPackage()) // internal
+				.addPackage(DebugInterceptor.class.getPackage()) // debug
 				.addPackage(TestHelper.class.getPackage()); // testhelper
 
 		return testArchive;
@@ -95,17 +97,17 @@ public class WasabiRemoteTest extends Arquillian {
 
 	@BeforeClass
 	public void setUpBeforeAllMethods() throws LoginException, NamingException {
-		// connect and login
+		// connect 
 		reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
-
-		// lookup wasabi testhelper
-		testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		reWaCon.connect();
 	}
 
 	@AfterClass
-	public void tearDownAfterAllMethods() throws LoginException, NamingException {
+	public void tearDownAfterAllMethods() throws LoginException, NamingException, UnexpectedInternalProblemException {
 		// disconnect and logout
+		reWaCon.defaultLogin();
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.shutdownRepository();
 		reWaCon.disconnect();
 	}
 

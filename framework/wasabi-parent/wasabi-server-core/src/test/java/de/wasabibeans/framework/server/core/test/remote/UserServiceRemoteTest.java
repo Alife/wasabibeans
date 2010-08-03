@@ -28,6 +28,7 @@ import javax.ejb.EJBException;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -36,6 +37,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
+import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
@@ -43,11 +45,20 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
-		// initialize jcr repository
+		// initialize test
+		reWaCon.defaultLogin();
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		rootRoom = testhelper.initRepository();
-
-		// initialize database
 		testhelper.initDatabase();
+		testhelper.initTestUser();
+		reWaCon.logout();
+		
+		reWaCon.login("user", "user");
+	}
+	
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 
 	@Test
