@@ -68,45 +68,45 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 
 		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2AfterRemoveGrant = new Vector<WasabiACLEntryTemplateDTO>();
 		ACLEntriesForRoom2AfterRemoveGrant = aclService().getDefaultAclEntries(room2);
-//
-//		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
-//
-//		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveGrant : ACLEntriesForRoom2AfterRemoveGrant) {
-//			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveGrant.getId() + ",location_id="
-//					+ objectService().getUUID(room2) + ",wasabi_type="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWasabiType() + ",view="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getView() + ",read="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getRead() + ",insert="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getInsert() + ",execute="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getExecute() + ",write="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWrite() + ",comment="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getComment() + ",grant="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getGrant() + ",start_time="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getStartTime() + ",end_time="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getEndTime());
-//		}
-//
-//		System.out.println("Removing 'Read' from default ACL entry for WasabiType Link...");
-//		aclService().removeDefault(room2, WasabiType.LINK, new int[] { WasabiPermission.READ });
-//
-//		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2AfterRemoveRead = new Vector<WasabiACLEntryTemplateDTO>();
-//		ACLEntriesForRoom2AfterRemoveRead = aclService().getDefaultAclEntries(room2);
-//
-//		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
-//
-//		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveRead : ACLEntriesForRoom2AfterRemoveRead) {
-//			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveRead.getId() + ",location_id="
-//					+ objectService().getUUID(room2) + ",wasabi_type="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getWasabiType() + ",view="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getView() + ",read="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getRead() + ",insert="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getInsert() + ",execute="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getExecute() + ",write="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getWrite() + ",comment="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getComment() + ",grant="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getGrant() + ",start_time="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getStartTime() + ",end_time="
-//					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getEndTime());
-//		}
+
+		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
+
+		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveGrant : ACLEntriesForRoom2AfterRemoveGrant) {
+			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveGrant.getId() + ",location_id="
+					+ objectService().getUUID(room2) + ",wasabi_type="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWasabiType() + ",view="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getView() + ",read="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getRead() + ",insert="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getInsert() + ",execute="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getExecute() + ",write="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWrite() + ",comment="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getComment() + ",grant="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getGrant() + ",start_time="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getStartTime() + ",end_time="
+					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getEndTime());
+		}
+
+		System.out.println("Removing 'Read' from default ACL entry for WasabiType Link...");
+		aclService().removeDefault(room2, WasabiType.LINK, new int[] { WasabiPermission.READ });
+
+		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2AfterRemoveRead = new Vector<WasabiACLEntryTemplateDTO>();
+		ACLEntriesForRoom2AfterRemoveRead = aclService().getDefaultAclEntries(room2);
+
+		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
+
+		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveRead : ACLEntriesForRoom2AfterRemoveRead) {
+			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveRead.getId() + ",location_id="
+					+ objectService().getUUID(room2) + ",wasabi_type="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getWasabiType() + ",view="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getView() + ",read="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getRead() + ",insert="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getInsert() + ",execute="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getExecute() + ",write="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getWrite() + ",comment="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getComment() + ",grant="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getGrant() + ",start_time="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getStartTime() + ",end_time="
+					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getEndTime());
+		}
 	}
 }

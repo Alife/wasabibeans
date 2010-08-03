@@ -456,7 +456,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			}
 			return wasabiDefaultACLEntriesDTO;
 		} finally {
-			sesHa.getSession(ctx);
+			sesHa.releaseSession(ctx);
 		}
 	}
 
