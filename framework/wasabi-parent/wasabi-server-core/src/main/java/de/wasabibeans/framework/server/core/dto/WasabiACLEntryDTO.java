@@ -52,11 +52,13 @@ public class WasabiACLEntryDTO implements Serializable {
 	protected String user = "";
 	protected String group = "";
 	protected String parent = "";
+	protected String inheritance_id;
 
 	protected long startTime = 0;
 	protected long endTime = 0;
 
 	protected boolean inheritance;
+	
 
 	protected WasabiACLEntryDTO() {
 
@@ -68,6 +70,10 @@ public class WasabiACLEntryDTO implements Serializable {
 
 	protected void setId(Long id) {
 		this.id = id;
+	}
+	
+	protected void setInheritanceId(String inheritance_id) {
+		this.inheritance_id = inheritance_id;
 	}
 
 	protected void setView(int view) {
@@ -126,27 +132,27 @@ public class WasabiACLEntryDTO implements Serializable {
 		return this.grant;
 	}
 
-	public String getUserID() {
+	public String getUserId() {
 		return this.user;
 	}
 
-	protected void setUserID(String user) {
+	protected void setUserId(String user) {
 		this.user = user;
 	}
 
-	protected void setGroupID(String group) {
+	protected void setGroupId(String group) {
 		this.group = group;
 	}
 
-	public String getGroupID() {
+	public String getGroupId() {
 		return this.group;
 	}
 
-	protected void setParentID(String parent) {
+	protected void setParentId(String parent) {
 		this.parent = parent;
 	}
 
-	public String getParentID() {
+	public String getParentId() {
 		return this.parent;
 	}
 
@@ -172,6 +178,10 @@ public class WasabiACLEntryDTO implements Serializable {
 
 	public boolean getInheritance() {
 		return this.inheritance;
+	}
+	
+	public String getInheritanceId() {
+		return this.inheritance_id;
 	}
 
 	@Override

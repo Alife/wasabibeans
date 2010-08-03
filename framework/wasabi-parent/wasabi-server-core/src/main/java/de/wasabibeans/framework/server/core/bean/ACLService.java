@@ -73,7 +73,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Session s = sesHa.getSession(ctx);
 		try {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			ACLServiceImpl.setInheritance(wasabiObjectNode, true);
+			ACLServiceImpl.setInheritance(wasabiObjectNode, true, s);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
@@ -204,7 +204,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Session s = sesHa.getSession(ctx);
 		try {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			ACLServiceImpl.setInheritance(wasabiObjectNode, false);
+			ACLServiceImpl.setInheritance(wasabiObjectNode, false, s);
 		} finally {
 			sesHa.releaseSession(ctx);
 		}

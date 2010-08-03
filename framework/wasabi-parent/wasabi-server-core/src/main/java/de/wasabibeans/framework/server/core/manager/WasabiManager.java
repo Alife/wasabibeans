@@ -78,8 +78,8 @@ public class WasabiManager {
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
-				+ "`end_time` float NOT NULL DEFAULT '0'," + "`inheritance` bit(1) NOT NULL,"
-				+ "PRIMARY KEY (`id`,`object_id`,`user_id`,`group_id`,`start_time`,`end_time`,`inheritance`)"
+				+ "`end_time` float NOT NULL DEFAULT '0'," + "`inheritance_id` varchar(64) NOT NULL,"
+				+ "PRIMARY KEY (`id`,`object_id`,`user_id`,`group_id`,`start_time`,`end_time`,`inheritance_id`)"
 				+ ") ENGINE = InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
