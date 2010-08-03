@@ -108,15 +108,16 @@ public class TransferManager {
 		dto.setIdentity(wasabiACLEntryDeprecated.getWasabiIdentity());
 		dto.setIsAllowance(wasabiACLEntryDeprecated.getAllowance());
 		dto.setPermission(wasabiACLEntryDeprecated.getPermission());
+		dto.setInheritance(wasabiACLEntryDeprecated.getInheritance());
 		return dto;
 	}
 
 	public static WasabiACLEntryDTO convertWasabiACLEntryDTO(WasabiACLEntry wasabiACLEntry) {
 		WasabiACLEntryDTO dto = new WasabiACLEntryDTO();
 		dto.setId(wasabiACLEntry.getId());
-		dto.setUserID(wasabiACLEntry.getUser_ID());
-		dto.setGroupID(wasabiACLEntry.getGroup_ID());
-		dto.setParentID(wasabiACLEntry.getParent_ID());
+		dto.setUserId(wasabiACLEntry.getUser_Id());
+		dto.setGroupId(wasabiACLEntry.getGroup_Id());
+		dto.setParentId(wasabiACLEntry.getParent_Id());
 		dto.setView(wasabiACLEntry.getView());
 		dto.setRead(wasabiACLEntry.getRead());
 		dto.setInsert(wasabiACLEntry.getInsert());
@@ -126,6 +127,11 @@ public class TransferManager {
 		dto.setGrant(wasabiACLEntry.getGrant());
 		dto.setStartTime(wasabiACLEntry.getStart_Time());
 		dto.setEndTime(wasabiACLEntry.getEnd_Time());
+		dto.setInheritanceId(wasabiACLEntry.getInheritance_Id());
+		if(wasabiACLEntry.getInheritance_Id().isEmpty()) 
+			dto.setInheritance(false);
+		else 
+			dto.setInheritance(true);
 		return dto;
 	}
 

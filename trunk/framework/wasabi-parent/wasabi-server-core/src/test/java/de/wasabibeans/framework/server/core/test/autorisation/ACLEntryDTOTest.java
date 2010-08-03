@@ -81,8 +81,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 		System.out.println("---- ACL entries for object " + objectService().getUUID(document1) + " (future way)----");
 
 		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForDocument1) {
-			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserID()
-					+ ",group_id=" + wasabiACLEntryDTO.getGroupID() + ",parent_id=" + wasabiACLEntryDTO.getParentID()
+			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
 					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
 					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
 					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
@@ -114,8 +114,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 
 		for (WasabiACLEntryDTO wasabiACLEntryByIdentityDTO : ACLEntriesByIdentityForDocument1AndUser2) {
 			System.out.println("[id=" + wasabiACLEntryByIdentityDTO.getId() + ",user_id="
-					+ wasabiACLEntryByIdentityDTO.getUserID() + ",group_id=" + wasabiACLEntryByIdentityDTO.getGroupID()
-					+ ",parent_id=" + wasabiACLEntryByIdentityDTO.getParentID() + ",view="
+					+ wasabiACLEntryByIdentityDTO.getUserId() + ",group_id=" + wasabiACLEntryByIdentityDTO.getGroupId()
+					+ ",parent_id=" + wasabiACLEntryByIdentityDTO.getParentId() + ",view="
 					+ wasabiACLEntryByIdentityDTO.getView() + ",read=" + wasabiACLEntryByIdentityDTO.getRead()
 					+ ",insert=" + wasabiACLEntryByIdentityDTO.getInsert() + ",execute="
 					+ wasabiACLEntryByIdentityDTO.getExecute() + ",write=" + wasabiACLEntryByIdentityDTO.getWrite()

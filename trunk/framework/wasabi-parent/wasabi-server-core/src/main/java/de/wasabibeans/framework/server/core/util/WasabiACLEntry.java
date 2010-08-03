@@ -30,7 +30,7 @@ public class WasabiACLEntry {
 	private String group_id = "";
 	private String parent_id = "";
 	private String object_id = "";
-	private boolean inheritance;
+	private String inheritance_id = "";
 
 	public WasabiACLEntry() {
 	}
@@ -39,19 +39,19 @@ public class WasabiACLEntry {
 		return this.id;
 	}
 
-	public String getUser_ID() {
+	public String getUser_Id() {
 		return this.user_id;
 	}
 
-	public String getGroup_ID() {
+	public String getGroup_Id() {
 		return this.group_id;
 	}
 
-	public String getParent_ID() {
+	public String getParent_Id() {
 		return this.parent_id;
 	}
 
-	public String getObject_ID() {
+	public String getObject_Id() {
 		return this.object_id;
 	}
 
@@ -91,27 +91,27 @@ public class WasabiACLEntry {
 		return this.end_time;
 	}
 
-	public boolean getInheritance() {
-		return this.inheritance;
+	public String getInheritance_Id() {
+		return this.inheritance_id;
 	}
 
 	public void setId(long id) {
 		this.id = id;
 	}
 
-	public void setUser_ID(String user_id) {
+	public void setUser_Id(String user_id) {
 		this.user_id = user_id;
 	}
 
-	public void setGroup_ID(String group_id) {
+	public void setGroup_Id(String group_id) {
 		this.group_id = group_id;
 	}
 
-	public void setParent_ID(String parent_id) {
+	public void setParent_Id(String parent_id) {
 		this.parent_id = parent_id;
 	}
 
-	public void setObject_ID(String object_id) {
+	public void setObject_Id(String object_id) {
 		this.object_id = object_id;
 	}
 
@@ -151,7 +151,7 @@ public class WasabiACLEntry {
 		this.end_time = end_time;
 	}
 
-	public void setInheritance(boolean inheritance) {
-		this.inheritance = inheritance;
+	public void setInheritance_Id(String inheritance_id) {
+		this.inheritance_id = inheritance_id;
 	}
 }

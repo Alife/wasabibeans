@@ -29,6 +29,7 @@ public class WasabiACLEntryDeprecated {
 	private int permission;
 	private boolean allowance;
 	private WasabiIdentityDTO wasabiIdentity;
+	private boolean inheritance;
 
 	public WasabiACLEntryDeprecated() {
 	}
@@ -48,6 +49,10 @@ public class WasabiACLEntryDeprecated {
 	public int getPermission() {
 		return this.permission;
 	}
+	
+	public boolean getInheritance() {
+		return this.inheritance;
+	}
 
 	public void setAllowance(boolean allowance) {
 		this.allowance = allowance;
@@ -63,5 +68,9 @@ public class WasabiACLEntryDeprecated {
 
 	public void setPermission(int permission) {
 		this.permission = permission;
+	}
+	
+	public void setInheritance(boolean inheritance) {
+		this.inheritance = inheritance;
 	}
 }
