@@ -34,7 +34,6 @@ import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
-import de.wasabibeans.framework.server.core.debug.DebugInterceptor;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -55,6 +54,7 @@ import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
+import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 public class WasabiRemoteTest extends Arquillian {
