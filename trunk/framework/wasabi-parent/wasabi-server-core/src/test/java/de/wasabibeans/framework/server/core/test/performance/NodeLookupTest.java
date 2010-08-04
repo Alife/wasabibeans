@@ -1,3 +1,4 @@
+package de.wasabibeans.framework.server.core.test.performance;
 /* 
  * Copyright (C) 2010 
  * Jonas Schulte, Dominik Klaholt, Jannis Sauer

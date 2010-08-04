@@ -23,14 +23,19 @@ package de.wasabibeans.framework.server.core.test.testhelper;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventListener;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
@@ -40,8 +45,6 @@ import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
-import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
-import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.SessionHandler;
@@ -50,6 +53,9 @@ import de.wasabibeans.framework.server.core.util.SessionHandler;
 public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	private JcrConnector jcr;
+	
+	@Resource
+	protected SessionContext ctx;
 
 	public TestHelper() {
 		this.jcr = JcrConnector.getJCRConnector();
@@ -168,5 +174,49 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		ids.add("ByIdFilter: " + (System.currentTimeMillis() - startTime) + "ms");
 		return ids;
 	}
+	
+	@SuppressWarnings("deprecation")
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getChildrenByQuery(String parentId) throws Exception {
+		String username = ctx.getCallerPrincipal().getName();
+		Session s = jcr.getJCRSession(new SimpleCredentials(username, username.toCharArray()));
+		Vector<String> result = new Vector<String>();
 
+		// prepare query
+		QueryManager qm = s.getWorkspace().getQueryManager();
+		String xpathQuery = "//*[@jcr:uuid='"+parentId+"']/*/*[@"+WasabiNodeProperty.INHERITANCE+"='true']";
+		result.add("Executed query: " + xpathQuery);
+		Query query = qm.createQuery(xpathQuery, Query.XPATH);
+		
+		// execute and return result
+		Long startTime = System.currentTimeMillis();
+		NodeIterator ni = query.execute().getNodes();
+		Long endTime = System.currentTimeMillis() - startTime;
+		while (ni.hasNext()) {
+			result.add(ni.nextNode().getName());
+		}
+		result.add("ByQuery: " + endTime + "ms");
+		return result;
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getChildrenByFilter(String parentId) throws Exception {
+		String username = ctx.getCallerPrincipal().getName();
+		Session s = jcr.getJCRSession(new SimpleCredentials(username, username.toCharArray()));
+		Vector<String> result = new Vector<String>();
+		
+		Long startTime = System.currentTimeMillis();
+		Node parentNode = s.getNodeByIdentifier(parentId);
+		NodeIterator ni = parentNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
+		while (ni.hasNext()) {
+			Node aNode = ni.nextNode();
+			if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean()) {
+				result.add(aNode.getName());
+			}
+		}
+		Long endTime = System.currentTimeMillis() - startTime;
+		
+		result.add("ByFilter: " + endTime + "ms");
+		return result;
+	}
 }

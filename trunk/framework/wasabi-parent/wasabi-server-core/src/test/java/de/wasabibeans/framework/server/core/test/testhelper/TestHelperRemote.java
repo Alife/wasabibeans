@@ -41,4 +41,7 @@ public interface TestHelperRemote {
 	public Vector<String> createManyNodes(int number) throws Exception;
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;
 	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception;
+	
+	public Vector<String> getChildrenByQuery(String parentId) throws Exception;
+	public Vector<String> getChildrenByFilter(String parentId) throws Exception;
 }
