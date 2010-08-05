@@ -1,6 +1,7 @@
 package de.wasabibeans.framework.server.core.test.testhelper;
 
 import javax.ejb.Stateless;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
@@ -38,5 +39,31 @@ public class JCRTestBean implements JCRTestBeanLocal, JCRTestBeanRemote {
 		while (ni.hasNext()) {
 			System.out.println(ni.nextNode().getName());
 		}
+	}
+	
+	public String createNode(String username) throws Exception {
+		InitialContext jndiContext = new InitialContext();
+		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s1 = rep.login(new SimpleCredentials(username, username.toCharArray()));
+		Node nodeBys1 = s1.getRootNode().addNode("aNode");
+		nodeBys1.setProperty("aProperty", username);
+		s1.save();
+		s1.logout();
+		return nodeBys1.getIdentifier();
+	}
+	
+	public void alterProperty(String id, String newValue, String username) throws Exception {
+		InitialContext jndiContext = new InitialContext();
+		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s2 = rep.login(new SimpleCredentials(username, username.toCharArray()));
+		s2.getNodeByIdentifier(id).setProperty("aProperty", newValue);
+		s2.save();
+	}
+	
+	public String getProperty(String id, String username) throws Exception {
+		InitialContext jndiContext = new InitialContext();
+		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s1 = rep.login(new SimpleCredentials(username, username.toCharArray()));
+		return s1.getNodeByIdentifier(id).getProperty("aProperty").getString();
 	}
 }

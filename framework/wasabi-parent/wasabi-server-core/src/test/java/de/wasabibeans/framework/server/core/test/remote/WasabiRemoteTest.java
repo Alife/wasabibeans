@@ -52,7 +52,6 @@ import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
-import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
@@ -97,7 +96,7 @@ public class WasabiRemoteTest extends Arquillian {
 
 	@BeforeClass
 	public void setUpBeforeAllMethods() throws LoginException, NamingException {
-		// connect 
+		// connect
 		reWaCon = new RemoteWasabiConnector();
 		reWaCon.connect();
 	}
@@ -105,9 +104,6 @@ public class WasabiRemoteTest extends Arquillian {
 	@AfterClass
 	public void tearDownAfterAllMethods() throws LoginException, NamingException, UnexpectedInternalProblemException {
 		// disconnect and logout
-		reWaCon.defaultLogin();
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.shutdownRepository();
 		reWaCon.disconnect();
 	}
 

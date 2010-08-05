@@ -49,7 +49,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
-import de.wasabibeans.framework.server.core.util.SessionHandler;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
@@ -61,16 +61,16 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	@Resource
 	SessionContext ctx;
 
-	private SessionHandler sesHa;
+	private JcrConnector jcr;
 
 	public ACLService() {
-		this.sesHa = new SessionHandler();
+		this.jcr = JcrConnector.getJCRConnector();
 	}
 
 	@Override
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
+		Session s = jcr.getJCRSession(ctx);
 		try {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 			ACLServiceImpl.setInheritance(wasabiObjectNode, true, s);
@@ -78,57 +78,43 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
 					+ re.toString(), re);
-		} finally {
-			sesHa.releaseSession(ctx);
 		}
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			int[] perm = new int[1];
-			boolean[] allow = new boolean[1];
-			perm[0] = permission;
-			allow[0] = allowance;
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0, s);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0, s);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission,
 			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			int[] perm = new int[1];
-			boolean[] allow = new boolean[1];
-			perm[0] = permission;
-			allow[0] = allowance;
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime, s);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime, s);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0, s);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0, s);
 	}
 
 	@Deprecated
@@ -141,116 +127,92 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "startTime", "endTime"));
 		}
 
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
-			for (int i = 0; i < endTime.length; i++) {
-				ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i],
-						endTime[i], s);
-			}
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (int i = 0; i < endTime.length; i++) {
+			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i],
+					endTime[i], s);
 		}
 	}
 
 	@Override
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
 			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 
-			if (permission.length != allowance.length) {
-				throw new IllegalArgumentException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
-			}
-
-			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, 0, 0);
-		} finally {
-			sesHa.releaseSession(ctx);
+		if (permission.length != allowance.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
 		}
+
+		ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, 0, 0);
 	}
 
 	@Override
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
 			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 
-			if (!wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)
-					|| !wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)) {
-				throw new IllegalArgumentException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
-			}
-
-			if (permission.length != allowance.length) {
-				throw new IllegalArgumentException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
-			}
-
-			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
-		} finally {
-			sesHa.releaseSession(ctx);
+		if (!wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)
+				|| !wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)) {
+			throw new IllegalArgumentException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 		}
+
+		if (permission.length != allowance.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
+		}
+
+		ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
 	}
 
 	@Override
 	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			ACLServiceImpl.setInheritance(wasabiObjectNode, false, s);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		ACLServiceImpl.setInheritance(wasabiObjectNode, false, s);
 	}
 
 	@Deprecated
 	@Override
 	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 
-			Vector<WasabiACLEntryDTODeprecated> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTODeprecated>();
-			Vector<WasabiACLEntryDeprecated> wasabiALCEntries = ACLServiceImpl.getACLEntriesDeprecated(
-					wasabiObjectNode, null, s);
+		Vector<WasabiACLEntryDTODeprecated> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTODeprecated>();
+		Vector<WasabiACLEntryDeprecated> wasabiALCEntries = ACLServiceImpl.getACLEntriesDeprecated(wasabiObjectNode,
+				null, s);
 
-			for (Iterator<WasabiACLEntryDeprecated> iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
-				WasabiACLEntryDeprecated wasabiACLEntryDeprecated = (WasabiACLEntryDeprecated) iterator.next();
-				wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDeprecated2DTO(wasabiACLEntryDeprecated));
-			}
-			return wasabiACLEntriesDTO;
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (Iterator<WasabiACLEntryDeprecated> iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntryDeprecated wasabiACLEntryDeprecated = (WasabiACLEntryDeprecated) iterator.next();
+			wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDeprecated2DTO(wasabiACLEntryDeprecated));
 		}
+		return wasabiACLEntriesDTO;
 	}
 
 	@Override
 	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 
-			Vector<WasabiACLEntryDTO> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTO>();
-			List<WasabiACLEntry> wasabiALCEntries = ACLServiceImpl.getAclEntries(wasabiObjectNode);
+		Vector<WasabiACLEntryDTO> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTO>();
+		List<WasabiACLEntry> wasabiALCEntries = ACLServiceImpl.getAclEntries(wasabiObjectNode);
 
-			for (Iterator<WasabiACLEntry> iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
-				WasabiACLEntry wasabiACLEntry = (WasabiACLEntry) iterator.next();
-				wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDTO(wasabiACLEntry));
-			}
-
-			return wasabiACLEntriesDTO;
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (Iterator<WasabiACLEntry> iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntry wasabiACLEntry = (WasabiACLEntry) iterator.next();
+			wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDTO(wasabiACLEntry));
 		}
+
+		return wasabiACLEntriesDTO;
 	}
 
 	@Deprecated
@@ -258,46 +220,38 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	@Override
 	public Vector<WasabiACLEntryDTODeprecated> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
 			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
-			Vector<WasabiACLEntryDTODeprecated> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTODeprecated>();
-			Vector<WasabiACLEntryDeprecated> wasabiALCEntries = ACLServiceImpl.getACLEntriesDeprecated(
-					wasabiObjectNode, wasabiIdentityNode, s);
+		Vector<WasabiACLEntryDTODeprecated> wasabiACLEntriesDTO = new Vector<WasabiACLEntryDTODeprecated>();
+		Vector<WasabiACLEntryDeprecated> wasabiALCEntries = ACLServiceImpl.getACLEntriesDeprecated(wasabiObjectNode,
+				wasabiIdentityNode, s);
 
-			for (Iterator iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
-				WasabiACLEntryDeprecated wasabiACLEntryDeprecated = (WasabiACLEntryDeprecated) iterator.next();
-				wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDeprecated2DTO(wasabiACLEntryDeprecated));
-			}
-			return wasabiACLEntriesDTO;
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (Iterator iterator = wasabiALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntryDeprecated wasabiACLEntryDeprecated = (WasabiACLEntryDeprecated) iterator.next();
+			wasabiACLEntriesDTO.add(TransferManager.convertWasabiACLEntryDeprecated2DTO(wasabiACLEntryDeprecated));
 		}
+		return wasabiACLEntriesDTO;
 	}
 
 	@Override
 	public Vector<WasabiACLEntryDTO> getAclEntriesByIdentity(WasabiObjectDTO wasabiObject,
 			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
-			Vector<WasabiACLEntryDTO> wasabiACLEntriesByIdentityDTO = new Vector<WasabiACLEntryDTO>();
-			List<WasabiACLEntry> wasabiALCEntriesByIdentity = ACLServiceImpl.getAclEntriesByIdentity(wasabiObjectNode,
-					wasabiIdentityNode);
+		Vector<WasabiACLEntryDTO> wasabiACLEntriesByIdentityDTO = new Vector<WasabiACLEntryDTO>();
+		List<WasabiACLEntry> wasabiALCEntriesByIdentity = ACLServiceImpl.getAclEntriesByIdentity(wasabiObjectNode,
+				wasabiIdentityNode);
 
-			for (Iterator<WasabiACLEntry> iterator = wasabiALCEntriesByIdentity.iterator(); iterator.hasNext();) {
-				WasabiACLEntry wasabiACLEntryByIdentity = (WasabiACLEntry) iterator.next();
-				wasabiACLEntriesByIdentityDTO.add(TransferManager.convertWasabiACLEntryDTO(wasabiACLEntryByIdentity));
-			}
-
-			return wasabiACLEntriesByIdentityDTO;
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (Iterator<WasabiACLEntry> iterator = wasabiALCEntriesByIdentity.iterator(); iterator.hasNext();) {
+			WasabiACLEntry wasabiACLEntryByIdentity = (WasabiACLEntry) iterator.next();
+			wasabiACLEntriesByIdentityDTO.add(TransferManager.convertWasabiACLEntryDTO(wasabiACLEntryByIdentity));
 		}
+
+		return wasabiACLEntriesByIdentityDTO;
 	}
 
 	@Deprecated
@@ -327,56 +281,40 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	@Override
 	public boolean isInheritanceAllowed(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			return ACLServiceImpl.getInheritance(wasabiObjectNode);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		return ACLServiceImpl.getInheritance(wasabiObjectNode);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			int[] perm = new int[1];
-			perm[0] = permission;
-			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		perm[0] = permission;
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, long startTime,
 			long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			int[] perm = new int[1];
-			perm[0] = permission;
-			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		int[] perm = new int[1];
+		perm[0] = permission;
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime);
 	}
 
 	@Override
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0);
 	}
 
 	@Deprecated
@@ -388,76 +326,54 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "startTime", "endTime"));
 		}
 
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
-			for (int i = 0; i < endTime.length; i++) {
-				ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i]);
-			}
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (int i = 0; i < endTime.length; i++) {
+			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i]);
 		}
 	}
 
 	@Override
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
-			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, 0, 0);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, 0, 0);
 	}
 
 	@Override
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
 			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
-			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, startTime, endTime);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, startTime, endTime);
 	}
 
 	@Override
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		// TODO: Reimpl
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			ACLServiceImpl.reset(wasabiObjectNode);
-		} finally {
-			sesHa.releaseSession(ctx);
-		}
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		ACLServiceImpl.reset(wasabiObjectNode);
 	}
 
 	@Override
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = sesHa.getSession(ctx);
-		try {
-			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		Session s = jcr.getJCRSession(ctx);
+		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 
-			Vector<WasabiACLEntryTemplateDTO> wasabiDefaultACLEntriesDTO = new Vector<WasabiACLEntryTemplateDTO>();
-			List<WasabiACLEntryTemplate> wasabiDefaultALCEntries = ACLServiceImpl.getDefaultACLEntries(
-					wasabiLocationNode, s);
+		Vector<WasabiACLEntryTemplateDTO> wasabiDefaultACLEntriesDTO = new Vector<WasabiACLEntryTemplateDTO>();
+		List<WasabiACLEntryTemplate> wasabiDefaultALCEntries = ACLServiceImpl.getDefaultACLEntries(wasabiLocationNode,
+				s);
 
-			for (Iterator<WasabiACLEntryTemplate> iterator = wasabiDefaultALCEntries.iterator(); iterator.hasNext();) {
-				WasabiACLEntryTemplate wasabiDefaultACLEntry = (WasabiACLEntryTemplate) iterator.next();
-				wasabiDefaultACLEntriesDTO
-						.add(TransferManager.convertWasabiACLEntryTemplate2DTO(wasabiDefaultACLEntry));
-			}
-			return wasabiDefaultACLEntriesDTO;
-		} finally {
-			sesHa.releaseSession(ctx);
+		for (Iterator<WasabiACLEntryTemplate> iterator = wasabiDefaultALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntryTemplate wasabiDefaultACLEntry = (WasabiACLEntryTemplate) iterator.next();
+			wasabiDefaultACLEntriesDTO.add(TransferManager.convertWasabiACLEntryTemplate2DTO(wasabiDefaultACLEntry));
 		}
+		return wasabiDefaultACLEntriesDTO;
 	}
-
 }

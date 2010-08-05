@@ -21,10 +21,11 @@
 
 package de.wasabibeans.framework.server.core.util;
 
-import javax.jcr.Credentials;
+import javax.ejb.SessionContext;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -58,9 +59,18 @@ public class JcrConnector {
 		return this.jcrRepository;
 	}
 
-	public Session getJCRSession(Credentials credentials) throws UnexpectedInternalProblemException {
+	public Session getJCRSession(SessionContext ctx) throws UnexpectedInternalProblemException {
 		try {
-			return getJCRRepository().login(credentials);
+			String username = ctx.getCallerPrincipal().getName();
+			return getJCRRepository().login(new SimpleCredentials(username, username.toCharArray()));
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+	
+	public Session getJCRSession(String username) throws UnexpectedInternalProblemException {
+		try {
+			return getJCRRepository().login(new SimpleCredentials(username, username.toCharArray()));
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
