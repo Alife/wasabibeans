@@ -94,7 +94,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			boolean[] allow = new boolean[1];
 			perm[0] = permission;
 			allow[0] = allowance;
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0);
+			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0, s);
 		} finally {
 			sesHa.releaseSession(ctx);
 		}
@@ -112,7 +112,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			boolean[] allow = new boolean[1];
 			perm[0] = permission;
 			allow[0] = allowance;
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime);
+			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime, s);
 		} finally {
 			sesHa.releaseSession(ctx);
 		}
@@ -125,7 +125,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		try {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0);
+			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0, s);
 		} finally {
 			sesHa.releaseSession(ctx);
 		}
@@ -148,7 +148,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 			for (int i = 0; i < endTime.length; i++) {
 				ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i],
-						endTime[i]);
+						endTime[i], s);
 			}
 		} finally {
 			sesHa.releaseSession(ctx);
