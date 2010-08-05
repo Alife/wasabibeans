@@ -6,7 +6,7 @@
 	abstract
 	+ wasabi:attributes (wasabi:attributes) = 'wasabi:attributes' autocreated 
 	+ wasabi:tags (wasabi:tags) = 'wasabi:tags' autocreated
-	- wasabi:inheritance (BOOLEAN) = 'false' autocreated mandatory
+	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
 	
 [wasabi:location] > wasabi:object
 	abstract
@@ -22,16 +22,16 @@
 
 [wasabi:identity] > wasabi:object
 	abstract
-	- wasabi:displayName (STRING) mandatory 
-	- wasabi:homeRoom (WEAKREFERENCE) mandatory < 'wasabi:room'
+	- wasabi:displayName (STRING) 
+	- wasabi:homeRoom (WEAKREFERENCE) < 'wasabi:room'
 	
 [wasabi:group] > wasabi:identity
 	+ wasabi:subgroups (wasabi:subgroups) = 'wasabi:subgroups' autocreated 
 	+ wasabi:members (wasabi:members) = 'wasabi:members' autocreated 
 	
 [wasabi:user] > wasabi:identity
-	- wasabi:startRoom (WEAKREFERENCE) mandatory < 'wasabi:room'
-	- wasabi:active (BOOLEAN) = 'true' autocreated mandatory 
+	- wasabi:startRoom (WEAKREFERENCE) < 'wasabi:room'
+	- wasabi:active (BOOLEAN) = 'true' autocreated
 	+ wasabi:memberships (wasabi:memberships) = 'wasabi:memberships' autocreated 
 
 [wasabi:document] > wasabi:object
@@ -39,7 +39,7 @@
 	- wasabi:content (BINARY) 
 	
 [wasabi:link] > wasabi:object
-	- wasabi:destination (WEAKREFERENCE) mandatory < 'wasabi:object'
+	- wasabi:destination (WEAKREFERENCE) < 'wasabi:object'
 	
 [wasabi:attribute] > wasabi:object
 	- * (UNDEFINED)
@@ -51,9 +51,9 @@
 	+ * (wasabi:tag) sns
 	
 [wasabi:tag] > nt:base
-	- wasabi:createdBy (WEAKREFERENCE) mandatory < 'wasabi:user'
-	- wasabi:createdOn (DATE) mandatory 
-	- wasabi:text (STRING) mandatory
+	- wasabi:createdBy (WEAKREFERENCE) < 'wasabi:user'
+	- wasabi:createdOn (DATE)  
+	- wasabi:text (STRING) 
 	
 [wasabi:documents] > nt:base
 	+ * (wasabi:document)

@@ -19,7 +19,7 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.test.remote;
+package de.wasabibeans.framework.server.core.test.jcr;
 
 import java.util.Vector;
 
