@@ -73,7 +73,7 @@ public class UserServiceImpl {
 			WasabiUserSQL.SqlQueryForCreate(name, password);
 			// Rights
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal);
+				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal, s);
 
 			return userNode;
 		} catch (ItemExistsException iee) {

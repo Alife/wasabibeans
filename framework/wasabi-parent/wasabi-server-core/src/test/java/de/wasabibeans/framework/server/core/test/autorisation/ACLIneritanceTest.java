@@ -10,8 +10,11 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
@@ -54,35 +57,44 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 				new boolean[] { true, true });
 		aclService().activateInheritance(room2);
 
-		aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
+		//aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
 
-		// getAclEntries for room2 (recommend way)
-		Vector<WasabiACLEntryDTO> ACLEntriesForRoom2 = new Vector<WasabiACLEntryDTO>();
-		ACLEntriesForRoom2 = aclService().getAclEntries(room2);
-
-		System.out.println("---- ACL entries for object " + objectService().getUUID(room2) + " ----");
-
-		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForRoom2) {
-			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
-					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
-					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
-					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
-					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
-					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
-					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance()
-					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
-		}
+		// getAclEntries for room2
+		displayACLEntry(room2);
 
 		// the same for room3
 		aclService().activateInheritance(room3);
 
-		// getAclEntries for room3 (recommend way)
-		Vector<WasabiACLEntryDTO> ACLEntriesForRoom3 = new Vector<WasabiACLEntryDTO>();
-		ACLEntriesForRoom3 = aclService().getAclEntries(room3);
+		// getAclEntries for room3
+		displayACLEntry(room3);
+		
+		// change rights at room1
+		aclService().create(room1, user, new int[] { WasabiPermission.GRANT },
+				new boolean[] { true });
+		
+		// getAclEntries for room2
+		displayACLEntry(room2);
+		// getAclEntries for room3
+		displayACLEntry(room3);
+		
+		//create explicit right for room2
+		// change rights at room1
+		aclService().create(room2, user, new int[] { WasabiPermission.EXECUTE },
+				new boolean[] { true });
+		
+		// getAclEntries for room2
+		displayACLEntry(room2);
+		// getAclEntries for room3
+		displayACLEntry(room3);
+	}
+	
+	private void displayACLEntry(WasabiObjectDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException{
+		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
+		ACLEntries = aclService().getAclEntries(room);
 
-		System.out.println("---- ACL entries for object " + objectService().getUUID(room3) + " ----");
+		System.out.println("---- ACL entries for object " + objectService().getUUID(room) + " ----");
 
-		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntriesForRoom3) {
+		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
 			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
 					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
 					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
