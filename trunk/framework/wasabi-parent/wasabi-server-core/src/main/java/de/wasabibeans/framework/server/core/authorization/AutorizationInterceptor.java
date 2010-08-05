@@ -26,8 +26,8 @@ import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
@@ -44,7 +44,7 @@ public class AutorizationInterceptor {
 		String principalName = sessionContext.getCallerPrincipal().getName();
 		// TODO Falls dieses Interceptor-Ding jemals für irgendwas produktiv genutzt wird, MUSS das Erfragen einer
 		// JCR-Session anders gestaltet werden
-		Session s = jcr.getJCRSession(new SimpleCredentials("foo", "bar".toCharArray()));
+		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
 		Object object = invocationContext.proceed();
 
 		// if user root, admin or user is a member of group admins access granted

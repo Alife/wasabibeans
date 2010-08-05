@@ -27,23 +27,25 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Local
 public interface TestHelperLocal {
-	
+
 	public void initDatabase();
-	
+
 	public WasabiRoomDTO initRepository() throws Exception;
-	public void shutdownRepository() throws UnexpectedInternalProblemException;
-	
+
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+
 	public void initTestUser() throws Exception;
-	
+
 	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception;
+
 	public <V> V call(Callable<V> callable) throws Exception;
-	
+
 	public Vector<String> createManyNodes(int number) throws Exception;
+
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;
+
 	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception;
 }

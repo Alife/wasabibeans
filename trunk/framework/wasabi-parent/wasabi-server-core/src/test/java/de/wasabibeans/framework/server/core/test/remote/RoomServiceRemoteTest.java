@@ -68,20 +68,20 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(rootRoom, rootRoomActual);
 	}
 
-	//@Test
+	@Test
 	public void getRootHomeTest() throws WasabiException {
 		WasabiRoomDTO rootHome = roomService().getRootHome();
 		AssertJUnit.assertNotNull(rootHome);
 		AssertJUnit.assertEquals(WasabiConstants.HOME_ROOM_NAME, roomService().getName(rootHome));
 	}
 
-	//@Test
+	@Test
 	public void getEnvironmentTest() throws Exception {
 		WasabiRoomDTO environment = roomService().getEnvironment(room1);
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
-	//@Test
+	@Test
 	public void getRoomByNameTest() throws WasabiException {
 		WasabiRoomDTO test = roomService().getRoomByName(rootRoom, "room1");
 		AssertJUnit.assertEquals(room1, test);
@@ -96,14 +96,14 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "doesNotExist"));
 	}
 
-	//@Test
+	@Test
 	public void getRoomsTest() throws WasabiException {
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertTrue(rooms.contains(room1));
 		AssertJUnit.assertEquals(2, rooms.size());
 	}
 
-	//@Test(dependsOnMethods = {".*get.*"})
+	@Test(dependsOnMethods = {".*get.*"})
 	public void createTest() throws WasabiException {
 		WasabiRoomDTO newRoom = roomService().create("room2", rootRoom);
 		AssertJUnit.assertNotNull(newRoom);
@@ -131,7 +131,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		}
 	}
 
-	//@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void renameTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
@@ -150,7 +150,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
 	}
 
-	//@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void moveTest() throws WasabiException {
 		WasabiRoomDTO sub = roomService().create("room2", room1);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
@@ -173,7 +173,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(1, roomsOfRoom2.size());
 	}
 
-	//@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = {".*get.*", "createTest"})
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 

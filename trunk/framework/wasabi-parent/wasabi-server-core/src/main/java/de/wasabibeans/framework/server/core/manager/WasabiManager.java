@@ -38,10 +38,8 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
-import de.wasabibeans.framework.server.core.util.SessionHandler;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 public class WasabiManager {
@@ -124,10 +122,8 @@ public class WasabiManager {
 		Session baseSession = null;
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
-
-			// create a base JCR session -> a session that stays alive all the time to keep the JCR repository running
-			baseSession = SessionHandler.getBaseSession(jcr);
-
+			baseSession = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+			
 			// register wasabi nodetypes (also registers the wasabi jcr namespace) in case a path to a .cnd file has
 			// been given
 			if (jcrNodeTypesResourcePath != null) {
@@ -161,20 +157,10 @@ public class WasabiManager {
 			baseSession.save();
 			return baseSession.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 		} catch (Exception e) {
-			if (baseSession != null) {
-				try {
-					baseSession.logout();
-				} catch (IllegalStateException ise) {
-					// baseSession is not active anymore anyway
-				}
-			}
 			throw new RuntimeException(e);
+		} finally {
+			baseSession.logout();
 		}
-	}
-
-	public static void shutDownRepository() throws UnexpectedInternalProblemException {
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		SessionHandler.getBaseSession(jcr).logout();
 	}
 
 	private static Node createRoom(String name, Node environment) throws RepositoryException {
