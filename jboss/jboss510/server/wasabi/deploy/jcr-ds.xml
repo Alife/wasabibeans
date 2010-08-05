@@ -21,11 +21,20 @@
 		<xa-transaction/>
 		<rar-name>jackrabbit-jca-2.1.0.rar</rar-name>
 		<connection-definition>javax.jcr.Repository</connection-definition>
-		<config-property name="homeDir" type="java.lang.String">/jackrabbit</config-property>
-		<!--
-		<config-property name="configFile" type="java.lang.String">classpath:repository.xml</config-property>
-	-->
-		<config-property name="configFile" type="java.lang.String">/jackrabbit/repository.xml</config-property>
+		<config-property name="homeDir" type="java.lang.String">C:/MADev/jackrabbit</config-property>
+
+		<!-- <config-property name="configFile" type="java.lang.String">C:/MADev/jackrabbit/repository.xml</config-property> -->
+		
+		<!--  Flag indicating whether the session should be bound to the
+		transaction lifecyle. In other words, if this flag is true the handle
+		will be closed when the transaction ends (note: The HANDLE will be closed.
+		The actual session on the other hand will be returned to the JCA connection pool). -->
 		<config-property name="bindSessionToTransaction" type="java.lang.Boolean">true</config-property>
+		
+		<!-- This flag indicates that the parameters supplied by the application (that is, the
+		credentials used for 'repository.login' calls) are used to distinguish connections 
+		(that is, sessions) in the JCA connection pool. Alternatives are <security-domain>MyRealm</security-domain>
+		and even <security-domain-and-application> -->
+		<application-managed-security/>
     </tx-connection-factory>
 </connection-factories>
