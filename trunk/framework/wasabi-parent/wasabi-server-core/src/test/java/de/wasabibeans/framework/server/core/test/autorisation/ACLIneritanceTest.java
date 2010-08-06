@@ -55,44 +55,55 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		// room1 to room2
 		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
 				new boolean[] { true, true });
-		aclService().activateInheritance(room2);
+		// aclService().activateInheritance(room2);
 
-		//aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
+		// aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
 
+		// getAclEntries for room1
+		displayACLEntry(room1, "Raum1");
 		// getAclEntries for room2
-		displayACLEntry(room2);
+		displayACLEntry(room2, "Raum2");
 
 		// the same for room3
-		aclService().activateInheritance(room3);
+		// aclService().activateInheritance(room3);
 
 		// getAclEntries for room3
-		displayACLEntry(room3);
-		
+		displayACLEntry(room3, "Raum3");
+
 		// change rights at room1
-		aclService().create(room1, user, new int[] { WasabiPermission.GRANT },
-				new boolean[] { true });
-		
+		aclService().create(room1, user, new int[] { WasabiPermission.GRANT }, new boolean[] { true });
+
 		// getAclEntries for room2
-		displayACLEntry(room2);
+		displayACLEntry(room2, "Raum2");
 		// getAclEntries for room3
-		displayACLEntry(room3);
-		
-		//create explicit right for room2
+		displayACLEntry(room3, "Raum3");
+
+		// create explicit right for room2
 		// change rights at room1
-		aclService().create(room2, user, new int[] { WasabiPermission.EXECUTE },
-				new boolean[] { true });
-		
+		aclService().create(room2, user, new int[] { WasabiPermission.EXECUTE }, new boolean[] { true });
+
 		// getAclEntries for room2
-		displayACLEntry(room2);
+		displayACLEntry(room2, "Raum2");
 		// getAclEntries for room3
-		displayACLEntry(room3);
+		displayACLEntry(room3, "Raum3");
+
+		// Remove explicit rights of room1
+		aclService().remove(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.GRANT });
+
+		// getAclEntries for room1
+		displayACLEntry(room1, "Raum1");
+		// getAclEntries for room2
+		displayACLEntry(room2, "Raum2");
+		// getAclEntries for room3
+		displayACLEntry(room3, "Raum3");
 	}
-	
-	private void displayACLEntry(WasabiObjectDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException{
+
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
 		ACLEntries = aclService().getAclEntries(room);
 
-		System.out.println("---- ACL entries for object " + objectService().getUUID(room) + " ----");
+		System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
 
 		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
 			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()

@@ -294,7 +294,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 		int[] perm = new int[1];
 		perm[0] = permission;
-		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0);
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0, s);
 	}
 
 	@Override
@@ -305,7 +305,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 		int[] perm = new int[1];
 		perm[0] = permission;
-		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime);
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime, s);
 	}
 
 	@Override
@@ -314,7 +314,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Session s = jcr.getJCRSession(ctx);
 		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0);
+		ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0, s);
 	}
 
 	@Deprecated
@@ -331,7 +331,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
 		for (int i = 0; i < endTime.length; i++) {
-			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i]);
+			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i], s);
 		}
 	}
 

@@ -373,7 +373,7 @@ public class ACLServiceImpl {
 	}
 
 	public static void remove(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, long startTime,
-			long endTime) throws UnexpectedInternalProblemException {
+			long endTime, Session s) throws UnexpectedInternalProblemException {
 		int[] allowance = new int[permission.length];
 
 		for (int i = 0; i < allowance.length; i++)
@@ -381,6 +381,7 @@ public class ACLServiceImpl {
 
 		try {
 			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, "");
+			updateInheritedRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -577,7 +578,92 @@ public class ACLServiceImpl {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 			}
 		} else if (wasabiIdentityType.equals(WasabiNodeType.WASABI_GROUP)) {
+			try {
+				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
+						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+						identityUUID, "");
 
+				if (!result.isEmpty()) {
+					view = result.get(0).getView();
+					read = result.get(0).getRead();
+					insert = result.get(0).getInsert();
+					write = result.get(0).getWrite();
+					execute = result.get(0).getExecute();
+					comment = result.get(0).getComment();
+					grant = result.get(0).getGrant();
+
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+					}
+					if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+							&& grant == 0) {
+						String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+								+ "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+						run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
+					} else {
+						String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
+								+ "`parent_id`=?, `view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
+								+ " WHERE `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+						run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment,
+								grant, identityUUID, startTime, endTime, objectUUID);
+					}
+
+				} else {
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+					}
+					createInheritanceEntries(objectUUID, s, WasabiType.USER, run, identityUUID, objectUUID, view, read,
+							comment, execute, insert, write, grant, startTime, endTime, objectUUID);
+				}
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
 		}
 	}
 
@@ -592,28 +678,50 @@ public class ACLServiceImpl {
 					String objectUUID = node.getIdentifier();
 					if (wasabiType == WasabiType.USER) {
 						// SQL insert query
-						String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-						try {
-							run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
-									insert, write, execute, comment, grant, startTime, endTime, inheritance_id);
-						} catch (SQLException e) {
-							throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+								&& grant == 0) {
+							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+									+ "WHERE `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+							try {
+								run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
+							} catch (SQLException e) {
+								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+							}
+						} else {
+							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
+									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`)"
+									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+							try {
+								run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
+										insert, write, execute, comment, grant, startTime, endTime, inheritance_id);
+							} catch (SQLException e) {
+								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+							}
 						}
 						// next children
 						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parendId, view, read,
 								comment, execute, insert, write, grant, startTime, endTime, inheritance_id);
 					} else if (wasabiType == WasabiType.GROUP) {
 						// SQL insert query
-						String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-						try {
-							run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
-									insert, write, execute, comment, grant, startTime, endTime, inheritance_id);
-						} catch (SQLException e) {
-							throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+								&& grant == 0) {
+							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+									+ "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+							try {
+								run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
+							} catch (SQLException e) {
+								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+							}
+						} else {
+							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
+									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`)"
+									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+							try {
+								run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
+										insert, write, execute, comment, grant, startTime, endTime, inheritance_id);
+							} catch (SQLException e) {
+								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+							}
 						}
 
 						// next children
