@@ -95,20 +95,18 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		userService.create(USER2, USER2);
 		loCon.disconnect();
 
-		InitialContext jndiContext = new InitialContext();
-		String id;
-		Repository rep;
-		UserTransaction utx;
-
 		/**
 		 * The following test-case works, IF step 1 is done without being encapsulated in a transaction (just remove the
-		 * utx-lines in step 1) and add the 's1.logout()'
+		 * utx-lines in step 1 and add the 's1.logout()')
 		 */
-
+		InitialContext jndiContext = new InitialContext();
+		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		UserTransaction utx;
+		String id;
+		
 		// Step 1: user 1 acquires session and writes, then logs out
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
 		Session s1 = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
 		Node nodeBys1 = s1.getRootNode().addNode("aNode");
 		nodeBys1.setProperty("aProperty", USER1);
@@ -120,7 +118,6 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		// Step 2: user 2 acquires session, alters value written by user 1, then logs out
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
 		Session s2 = rep.login(new SimpleCredentials(USER2, USER2.toCharArray()));
 		s2.getNodeByIdentifier(id).setProperty("aProperty", USER2);
 		s2.save();
@@ -130,7 +127,6 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		// value
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
 		Session s = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
 		AssertJUnit.assertEquals(USER2, s.getNodeByIdentifier(id).getProperty("aProperty").getString());
 		utx.commit();
