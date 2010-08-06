@@ -33,6 +33,7 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiDocumentACL;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
@@ -61,6 +62,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			Node documentNode = DocumentServiceImpl.create(name, environmentNode);
 			s.save();
+			WasabiDocumentACL.ACLEntryForCreate(documentNode, s);
 			return TransferManager.convertNode2DTO(documentNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
