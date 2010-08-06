@@ -360,16 +360,79 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void reset(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
+	public static void reset(Node wasabiObjectNode, Session s) throws UnexpectedInternalProblemException {
+		resetChildren(wasabiObjectNode, s);
+	}
+
+	private static void resetChildren(Node wasabiObjectNode, Session s) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
-		String deleteRight = "DELETE FROM wasabi_rights WHERE object_id=?";
-		try {
-			run.update(deleteRight, objectUUID);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		String parentId = ObjectServiceImpl.getUUID(wasabiObjectNode);
+		Vector<Node> Nodes = getChildren(parentId, s);
+
+		if (!Nodes.isEmpty()) {
+			for (Node node : Nodes) {
+				// clean ACLEntries
+				String objectUUID = ObjectServiceImpl.getUUID(node);
+				String deleteRight = "DELETE FROM wasabi_rights WHERE object_id=?";
+				try {
+					run.update(deleteRight, objectUUID);
+				} catch (SQLException e) {
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+				}
+
+				// set inheritance=true
+				setInheritance(node, true, s);
+
+				// next children
+				resetChildren(node, s);
+			}
 		}
+	}
+
+	private static Vector<Node> getChildren(String parentId, Session s) throws UnexpectedInternalProblemException {
+		try {
+
+			Vector<Node> result = new Vector<Node>();
+
+			Node parentNode = s.getNodeByIdentifier(parentId);
+
+			NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS, s);
+			NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS, s);
+			NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS, s);
+			NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS, s);
+			NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES, s);
+
+			while (iteratorRooms != null && iteratorRooms.hasNext()) {
+				Node aNode = iteratorRooms.nextNode();
+				result.add(aNode);
+			}
+
+			while (iteratorContainers != null && iteratorContainers.hasNext()) {
+				Node aNode = iteratorContainers.nextNode();
+				result.add(aNode);
+			}
+
+			while (iteratorLinks != null && iteratorLinks.hasNext()) {
+				Node aNode = iteratorLinks.nextNode();
+				result.add(aNode);
+			}
+
+			while (iteratorDocuments != null && iteratorDocuments.hasNext()) {
+				Node aNode = iteratorDocuments.nextNode();
+				result.add(aNode);
+			}
+
+			while (iteratorAttributes != null && iteratorAttributes.hasNext()) {
+				Node aNode = iteratorAttributes.nextNode();
+				result.add(aNode);
+			}
+
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+
 	}
 
 	public static void remove(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, long startTime,
@@ -667,11 +730,11 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void createInheritanceEntries(String parendId, Session s, WasabiType wasabiType, QueryRunner run,
+	private static void createInheritanceEntries(String parentId, Session s, WasabiType wasabiType, QueryRunner run,
 			String identityUUID, String parentUUID, int view, int read, int comment, int execute, int insert,
 			int write, int grant, long startTime, long endTime, String inheritance_id)
 			throws UnexpectedInternalProblemException {
-		Vector<Node> NodesWithInheritace = getChildrenWithInheritace(parendId, s);
+		Vector<Node> NodesWithInheritace = getChildrenWithInheritace(parentId, s);
 		try {
 			if (!NodesWithInheritace.isEmpty()) {
 				for (Node node : NodesWithInheritace) {
@@ -699,7 +762,7 @@ public class ACLServiceImpl {
 							}
 						}
 						// next children
-						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parendId, view, read,
+						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parentId, view, read,
 								comment, execute, insert, write, grant, startTime, endTime, inheritance_id);
 					} else if (wasabiType == WasabiType.GROUP) {
 						// SQL insert query
@@ -725,7 +788,7 @@ public class ACLServiceImpl {
 						}
 
 						// next children
-						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parendId, view, read,
+						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parentId, view, read,
 								comment, execute, insert, write, grant, startTime, endTime, inheritance_id);
 					}
 				}
@@ -792,7 +855,6 @@ public class ACLServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-
 	}
 
 	private static void updateDefaultRights(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
