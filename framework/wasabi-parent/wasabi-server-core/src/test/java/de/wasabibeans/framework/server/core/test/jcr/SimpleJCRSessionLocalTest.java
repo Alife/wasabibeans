@@ -102,7 +102,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		/**
 		 * The following test-case works, IF step 1 is done without being encapsulated in a transaction (just remove the
-		 * utx-lines in step 1)
+		 * utx-lines in step 1) and add the 's1.logout()'
 		 */
 
 		// Step 1: user 1 acquires session and writes, then logs out
@@ -114,6 +114,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		nodeBys1.setProperty("aProperty", USER1);
 		s1.save();
 		id = nodeBys1.getIdentifier();
+		// s1.logout();
 		utx.commit();
 
 		// Step 2: user 2 acquires session, alters value written by user 1, then logs out
