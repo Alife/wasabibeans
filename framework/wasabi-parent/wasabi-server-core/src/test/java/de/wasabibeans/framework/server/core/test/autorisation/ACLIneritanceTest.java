@@ -88,8 +88,22 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		displayACLEntry(room3, "Raum3");
 
 		// Remove explicit rights of room1
-		aclService().remove(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.GRANT });
+		aclService().remove(room1, user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.GRANT });
 
+		// getAclEntries for room1
+		displayACLEntry(room1, "Raum1");
+		// getAclEntries for room2
+		displayACLEntry(room2, "Raum2");
+		// getAclEntries for room3
+		displayACLEntry(room3, "Raum3");
+		
+		
+		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
+				new boolean[] { true, true });
+		//reset for room1
+		aclService().reset(room1);
+		
 		// getAclEntries for room1
 		displayACLEntry(room1, "Raum1");
 		// getAclEntries for room2

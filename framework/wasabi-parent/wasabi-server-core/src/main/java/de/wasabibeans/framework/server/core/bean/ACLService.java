@@ -354,10 +354,9 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 	@Override
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		// TODO: Reimpl
 		Session s = jcr.getJCRSession(ctx);
 		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		ACLServiceImpl.reset(wasabiObjectNode);
+		ACLServiceImpl.reset(wasabiObjectNode, s);
 	}
 
 	@Override
