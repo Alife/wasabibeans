@@ -24,11 +24,13 @@ package de.wasabibeans.framework.server.core.test.jcr;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
+import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
@@ -75,7 +77,8 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
 				.addPackage(RoomServiceImpl.class.getPackage()) // internal
 				.addPackage(DebugInterceptor.class.getPackage()) // debug
-				.addPackage(TestHelper.class.getPackage()); // testhelper
+				.addPackage(TestHelper.class.getPackage()) // testhelper
+				.addClass(LocalWasabiConnector.class);
 
 		return testArchive;
 	}
@@ -93,29 +96,43 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		loCon.disconnect();
 
 		InitialContext jndiContext = new InitialContext();
-		JCRTestBeanLocal jcrTest;
 		String id;
+		Repository rep;
+		UserTransaction utx;
 
-		jcrTest = (JCRTestBeanLocal) jndiContext.lookup("test/JCRTestBean/local");
-		id = jcrTest.createNode(USER1);
-		// Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-		// Session s1 = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
-		// Node nodeBys1 = s1.getRootNode().addNode("aNode");
-		// nodeBys1.setProperty("aProperty", USER1);
-		// s1.save();
-		// id = nodeBys1.getIdentifier();
-		// s1.logout();
+		/**
+		 * The following test-case works, IF step 1 is done without being encapsulated in a transaction (just remove the
+		 * utx-lines in step 1)
+		 */
 
-		jcrTest = (JCRTestBeanLocal) jndiContext.lookup("test/JCRTestBean/local");
-		jcrTest.alterProperty(id, USER2, USER2);
-		// Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-		// Session s2 = rep.login(new SimpleCredentials(USER2, USER2.toCharArray()));
-		// s2.getNodeByIdentifier(id).setProperty("aProperty", USER2);
-		// s2.save();
-		// s2.logout();
+		// Step 1: user 1 acquires session and writes, then logs out
+		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
+		utx.begin();
+		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s1 = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
+		Node nodeBys1 = s1.getRootNode().addNode("aNode");
+		nodeBys1.setProperty("aProperty", USER1);
+		s1.save();
+		id = nodeBys1.getIdentifier();
+		utx.commit();
 
-		jcrTest = (JCRTestBeanLocal) jndiContext.lookup("test/JCRTestBean/local");
-		AssertJUnit.assertEquals(USER2, jcrTest.getProperty(id, USER1));
+		// Step 2: user 2 acquires session, alters value written by user 1, then logs out
+		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
+		utx.begin();
+		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s2 = rep.login(new SimpleCredentials(USER2, USER2.toCharArray()));
+		s2.getNodeByIdentifier(id).setProperty("aProperty", USER2);
+		s2.save();
+		utx.commit();
+
+		// Step 3: user 1 acquires session again, reads the property altered by user 2... but does not read the correct
+		// value
+		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
+		utx.begin();
+		rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
+		Session s = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
+		AssertJUnit.assertEquals(USER2, s.getNodeByIdentifier(id).getProperty("aProperty").getString());
+		utx.commit();
 	}
 
 	// @Test
