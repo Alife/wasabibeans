@@ -195,12 +195,12 @@ public class UserServiceImpl {
 	}
 
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException {
+		// Database
+		WasabiUserSQL.SqlQueryForRemove(userNode);
+		
 		// JCR
 		ObjectServiceImpl.remove(getHomeRoom(userNode));
 		ObjectServiceImpl.remove(userNode);
-
-		// Database
-		WasabiUserSQL.SqlQueryForRemove(userNode);
 
 		// TODO Group memberships?
 		// TODO Environment of user?
@@ -208,11 +208,11 @@ public class UserServiceImpl {
 
 	public static void rename(Node userNode, String name) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
-		// JCR
-		ObjectServiceImpl.rename(userNode, name);
-
 		// Database
 		WasabiUserSQL.SqlQueryForRename(userNode, name);
+		
+		// JCR
+		ObjectServiceImpl.rename(userNode, name);
 	}
 
 	public static void setDisplayName(Node userNode, String displayName) throws UnexpectedInternalProblemException {
