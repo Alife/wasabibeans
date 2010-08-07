@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 
 import javax.ejb.Local;
 
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 
@@ -36,6 +37,10 @@ public interface TestHelperLocal {
 	public WasabiRoomDTO initRepository() throws Exception;
 
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+	
+	public WasabiDocumentDTO initDocumentServiceTest() throws Exception;
+	
+	public WasabiUserDTO initUserServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 

@@ -41,8 +41,12 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 
@@ -76,10 +80,34 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
 		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-		Node room1Node = wasabiRootNode.addNode(WasabiNodeProperty.ROOMS + "/" + "room1", WasabiNodeType.WASABI_ROOM);
+		Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode);
 		s.save();
 		s.logout();
 		return TransferManager.convertNode2DTO(room1Node);
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiUserDTO initUserServiceTest() throws Exception {
+		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Node user1Node = UserServiceImpl.create("user1", "user1", s, "user");
+		UserServiceImpl.create("user2", "user2", s, "user");
+		s.save();
+		s.logout();
+		return TransferManager.convertNode2DTO(user1Node);
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
+		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode);
+		DocumentServiceImpl.setContent(document1Node, "document1");
+		DocumentServiceImpl.create("document2", wasabiRootNode);
+		s.save();
+		s.logout();
+		return TransferManager.convertNode2DTO(document1Node);
 	}
 
 	@Override

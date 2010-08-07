@@ -40,9 +40,9 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceRemoteTest extends WasabiRemoteTest {
-	
+
 	private WasabiRoomDTO room1;
-	
+
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
@@ -53,15 +53,15 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		testhelper.initDatabase();
 		testhelper.initTestUser();
 		reWaCon.logout();
-		
+
 		reWaCon.login("user", "user");
 	}
-	
+
 	@AfterMethod
 	public void tearDownAfterEachMethod() throws Exception {
 		reWaCon.logout();
 	}
-	
+
 	@Test
 	public void getRootRoomTest() throws WasabiException {
 		WasabiRoomDTO rootRoomActual = roomService().getRootRoom();
@@ -103,7 +103,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(2, rooms.size());
 	}
 
-	@Test(dependsOnMethods = {".*get.*"})
+	@Test(dependsOnMethods = { ".*get.*" })
 	public void createTest() throws WasabiException {
 		WasabiRoomDTO newRoom = roomService().create("room2", rootRoom);
 		AssertJUnit.assertNotNull(newRoom);
@@ -131,7 +131,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		}
 	}
 
-	@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
@@ -150,7 +150,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
 	}
 
-	@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = { "createTest" })
 	public void moveTest() throws WasabiException {
 		WasabiRoomDTO sub = roomService().create("room2", room1);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
@@ -173,7 +173,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(1, roomsOfRoom2.size());
 	}
 
-	@Test(dependsOnMethods = {".*get.*", "createTest"})
+	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
