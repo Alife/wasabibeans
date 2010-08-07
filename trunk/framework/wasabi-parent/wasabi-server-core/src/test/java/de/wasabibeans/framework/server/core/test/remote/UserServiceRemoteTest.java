@@ -42,7 +42,9 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
 public class UserServiceRemoteTest extends WasabiRemoteTest {
-	
+
+	private WasabiUserDTO user1;
+
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
@@ -51,27 +53,82 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
 		testhelper.initTestUser();
+		user1 = testhelper.initUserServiceTest();
 		reWaCon.logout();
-		
+
 		reWaCon.login("user", "user");
 	}
-	
+
 	@AfterMethod
 	public void tearDownAfterEachMethod() throws Exception {
 		reWaCon.logout();
 	}
 
 	@Test
-	public void createTest() throws WasabiException {
-		WasabiUserDTO user = userService().create("user", "pwd");
-		AssertJUnit.assertEquals("user", userService().getDisplayName(user));
-		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user");
+	public void get1AllUsersTest() throws Exception {
+		Vector<WasabiUserDTO> users = userService().getAllUsers();
+		AssertJUnit.assertTrue(users.contains(user1));
+		AssertJUnit.assertEquals(4, users.size());
+	}
+
+	@Test
+	public void get1DisplayNameTest() throws Exception {
+		String displayName = userService().getDisplayName(user1);
+		AssertJUnit.assertEquals("user1", displayName);
+	}
+
+	@Test
+	public void get1HomeRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
 		AssertJUnit.assertNotNull(homeRoom);
-		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user));
-		AssertJUnit.assertEquals(homeRoom, userService().getStartRoom(user));
-		AssertJUnit.assertEquals(HashGenerator.generateHash("pwd",
-					hashAlgorithms.SHA), userService().getPassword(user));
-		
+		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user1));
+	}
+
+	@Test
+	public void get1PasswordTest() throws Exception {
+		String expectedPwd = HashGenerator.generateHash("user1", hashAlgorithms.SHA);
+		AssertJUnit.assertEquals(expectedPwd, userService().getPassword(user1));
+	}
+
+	@Test
+	public void get1StartRoomTest() throws Exception {
+		WasabiRoomDTO startRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
+		AssertJUnit.assertNotNull(startRoom);
+		AssertJUnit.assertEquals(startRoom, userService().getStartRoom(user1));
+	}
+
+	@Test
+	public void get1StatusTest() throws Exception {
+		AssertJUnit.assertTrue(userService().getStatus(user1));
+	}
+
+	@Test
+	public void get1UserByNameTest() throws Exception {
+		WasabiUserDTO test = userService().getUserByName("user1");
+		AssertJUnit.assertEquals(user1, test);
+
+		try {
+			userService().getUserByName(null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
+	}
+
+	@Test(dependsOnMethods = { ".*get1.*" })
+	public void createTest() throws WasabiException {
+		WasabiUserDTO user3 = userService().create("user3", "pwd");
+		AssertJUnit.assertEquals("user3", userService().getDisplayName(user3));
+		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user3");
+		AssertJUnit.assertNotNull(homeRoom);
+		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user3));
+		AssertJUnit.assertEquals(homeRoom, userService().getStartRoom(user3));
+		AssertJUnit.assertEquals(HashGenerator.generateHash("pwd", hashAlgorithms.SHA), userService()
+				.getPassword(user3));
+		AssertJUnit.assertTrue(userService().getStatus(user3));
+
 		try {
 			userService().create(null, "pwd");
 			AssertJUnit.fail();
@@ -87,17 +144,103 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			userService().create("user", "pwd");
+			userService().create("user3", "pwd");
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			// passed
 		}
 	}
-	
-	@Test
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void removeTest() throws Exception {
+		// still todos in remove
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void renameTest() throws Exception {
+		try {
+			userService().rename(user1, "user2");
+			AssertJUnit.fail();
+		} catch (ObjectAlreadyExistsException e) {
+			AssertJUnit.assertNotNull(userService().getUserByName("user1"));
+			AssertJUnit.assertEquals(4, userService().getAllUsers().size());
+		}
+
+		userService().rename(user1, "user_2");
+		AssertJUnit.assertEquals("user_2", userService().getName(user1));
+		AssertJUnit.assertNotNull(userService().getUserByName("user_2"));
+		AssertJUnit.assertEquals(4, userService().getAllUsers().size());
+		AssertJUnit.assertNull(userService().getUserByName("user1"));
+		AssertJUnit.assertEquals(HashGenerator.generateHash("user1", hashAlgorithms.SHA), userService().getPassword(
+				user1));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void setDisplayNameTest() throws Exception {
+		try {
+			userService().setDisplayName(user1, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().setDisplayName(user1, "name");
+		userService().setDisplayName(user2, "name");
+		AssertJUnit.assertEquals("name", userService().getDisplayName(user1));
+		AssertJUnit.assertEquals("name", userService().getDisplayName(user2));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void setPasswordTest() throws Exception {
+		try {
+			userService().setPassword(user1, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		userService().setPassword(user1, "newPwd");
+		AssertJUnit.assertEquals(HashGenerator.generateHash("newPwd", hashAlgorithms.SHA), userService().getPassword(
+				user1));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void setStartRoomTest() throws Exception {
+		try {
+			userService().setStartRoom(user1, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		WasabiRoomDTO newRoom = roomService().create("newRoom", rootRoom);
+		userService().setStartRoom(user1, newRoom);
+		AssertJUnit.assertEquals(newRoom, userService().getStartRoom(user1));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void setStatusTest() throws Exception {
+		userService().setStatus(user1, false);
+		AssertJUnit.assertFalse(userService().getStatus(user1));
+		//TODO any other consequences to test??
+	}
+
+	@Test(dependsOnMethods = { ".*set.*" })
 	public void getUsersByDisplayName() throws WasabiException {
-		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("root");
-		AssertJUnit.assertEquals(1, users.size());
-		AssertJUnit.assertEquals("root", userService().getName(users.get(0)));
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().setDisplayName(user2, "user1");
+		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user1");
+		AssertJUnit.assertTrue(users.contains(user1) && users.contains(user2));
+		AssertJUnit.assertEquals(2, users.size());
+
+		try {
+			userService().getUsersByDisplayName(null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
+		}
+
+		AssertJUnit.assertTrue(userService().getUsersByDisplayName("doesNotExist").isEmpty());
 	}
 }

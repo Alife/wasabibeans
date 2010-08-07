@@ -123,12 +123,11 @@ public class WasabiManager {
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
 			baseSession = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
-			
+
 			// register wasabi nodetypes (also registers the wasabi jcr namespace) in case a path to a .cnd file has
 			// been given
 			if (jcrNodeTypesResourcePath != null) {
-				InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(
-						WasabiConstants.JCR_NODETYPES_RESOURCE_PATH);
+				InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(jcrNodeTypesResourcePath);
 				Reader r = new InputStreamReader(in, "utf-8");
 				CndImporter.registerNodeTypes(r, baseSession);
 			}

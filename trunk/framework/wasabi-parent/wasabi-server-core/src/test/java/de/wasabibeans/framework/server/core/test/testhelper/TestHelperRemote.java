@@ -24,7 +24,9 @@ import java.util.Vector;
 
 import javax.ejb.Remote;
 
+import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 
 @Remote
 public interface TestHelperRemote {
@@ -34,6 +36,10 @@ public interface TestHelperRemote {
 	public WasabiRoomDTO initRepository() throws Exception;
 
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+
+	public WasabiDocumentDTO initDocumentServiceTest() throws Exception;
+
+	public WasabiUserDTO initUserServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 

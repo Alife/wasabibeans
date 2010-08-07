@@ -47,11 +47,8 @@ import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
-import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class DocumentServiceImpl {
-
-	private static WasabiLogger logger = WasabiLogger.getLogger(DocumentServiceImpl.class);
 
 	public static Node create(String name, Node environmentNode) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
@@ -82,24 +79,47 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void setContent(Node documentNode, final Serializable content)
+	private static class ObjectOutputStreamThread extends Thread {
+
+		private ObjectOutputStream objectOut;
+		private Serializable content;
+		@SuppressWarnings("unused")
+		private IOException exception;
+
+		public ObjectOutputStreamThread(ObjectOutputStream objectOut, Serializable content, IOException exception) {
+			this.objectOut = objectOut;
+			this.content = content;
+			this.exception = exception;
+
+		}
+
+		@Override
+		public void run() {
+			try {
+				objectOut.writeObject(content);
+				objectOut.close();
+			} catch (IOException io) {
+				exception = io;
+			}
+		}
+	}
+
+	public static void setContent(Node documentNode, Serializable content)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException {
 		try {
 			PipedInputStream pipedIn = new PipedInputStream();
 			PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
-			final ObjectOutputStream objectOut = new ObjectOutputStream(pipedOut);
-			new Thread(new Runnable() {
-
-				public void run() {
-					try {
-						objectOut.writeObject(content);
-					} catch (IOException io) {
-						logger.error(WasabiExceptionMessages.INTERNAL_DOCUMENT_CONTENT_SAVE, io);
-					}
-				}
-			}).start();
+			ObjectOutputStream objectOut = new ObjectOutputStream(pipedOut);
+			IOException exception = null;
+			
+			ObjectOutputStreamThread oost = new ObjectOutputStreamThread(objectOut, content, exception);
+			oost.start();
 
 			Binary toSave = documentNode.getSession().getValueFactory().createBinary(pipedIn);
+			if (exception != null) {
+				throw exception;
+			}
+			
 			documentNode.setProperty(WasabiNodeProperty.CONTENT, toSave);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

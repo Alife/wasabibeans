@@ -164,6 +164,10 @@ public class UserServiceImpl {
 
 	public static NodeIterator getUsersByDisplayName(String displayName, Session s)
 			throws UnexpectedInternalProblemException {
+		if (displayName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"display-name"));
+		}
 		try {
 			// get the factories
 			ValueFactory vf = s.getValueFactory();
@@ -224,6 +228,10 @@ public class UserServiceImpl {
 	}
 
 	public static void setPassword(Node userNode, String password) throws UnexpectedInternalProblemException {
+		if (password == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"displayname"));
+		}
 		WasabiUserSQL.SqlQueryForSetPassword(userNode, password);
 	}
 
