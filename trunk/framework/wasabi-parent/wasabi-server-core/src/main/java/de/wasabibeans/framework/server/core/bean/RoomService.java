@@ -32,7 +32,6 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import de.wasabibeans.framework.server.core.authorization.WasabiRoomtACL;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -57,9 +56,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSession(ctx);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		try {
-			Node roomNode = RoomServiceImpl.create(name, environmentNode);
+			Node roomNode = RoomServiceImpl.create(name, environmentNode, s);
 			s.save();
-			WasabiRoomtACL.ACLEntryForCreate(roomNode, s);
 			return TransferManager.convertNode2DTO(roomNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

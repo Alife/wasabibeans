@@ -37,7 +37,10 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiDocumentACL;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -50,14 +53,20 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class DocumentServiceImpl {
 
-	public static Node create(String name, Node environmentNode) throws UnexpectedInternalProblemException,
+	public static Node create(String name, Node environmentNode, Session s) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
 		}
 		try {
-			return environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name, WasabiNodeType.WASABI_DOCUMENT);
+			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name, WasabiNodeType.WASABI_DOCUMENT);
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiDocumentACL.ACLEntryForCreate(documentNode, s);
+			/* ACL Environment - End */
+			
+			return documentNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "document", name), name, iee);
