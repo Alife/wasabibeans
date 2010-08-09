@@ -53,19 +53,24 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class DocumentServiceImpl {
 
-	public static Node create(String name, Node environmentNode, Session s) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static Node create(String name, Node environmentNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
 		}
 		try {
-			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name, WasabiNodeType.WASABI_DOCUMENT);
+			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
+					WasabiNodeType.WASABI_DOCUMENT);
+			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+
 			/* ACL Environment - Begin */
-			if (WasabiConstants.ACL_ENTRY_ENABLE)
+			if (WasabiConstants.ACL_ENTRY_ENABLE) {
 				WasabiDocumentACL.ACLEntryForCreate(documentNode, s);
+				WasabiDocumentACL.ACLEntryTemplateForCreate(documentNode, environmentNode, callerPrincipalNode, s);
+			}
 			/* ACL Environment - End */
-			
+
 			return documentNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -113,14 +118,14 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void setContent(Node documentNode, Serializable content)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException {
+	public static void setContent(Node documentNode, Serializable content) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException {
 		try {
 			PipedInputStream pipedIn = new PipedInputStream();
 			PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
 			ObjectOutputStream objectOut = new ObjectOutputStream(pipedOut);
 			IOException exception = null;
-			
+
 			ObjectOutputStreamThread oost = new ObjectOutputStreamThread(objectOut, content, exception);
 			oost.start();
 
@@ -128,7 +133,7 @@ public class DocumentServiceImpl {
 			if (exception != null) {
 				throw exception;
 			}
-			
+
 			documentNode.setProperty(WasabiNodeProperty.CONTENT, toSave);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
