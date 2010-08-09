@@ -9,7 +9,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 
-public class WasabiRoomtACL {
+public class WasabiRoomACL {
 
 	public static void ACLEntryForCreate(Node roomNode, Session s) throws UnexpectedInternalProblemException {
 		try {
@@ -19,4 +19,6 @@ public class WasabiRoomtACL {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+	
+	public static void ACLEntryTemplateForCreate() { }
 }
