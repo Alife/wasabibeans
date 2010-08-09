@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.bean;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -50,13 +52,17 @@ import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 @Stateless(name = "RoomService")
 public class RoomService extends ObjectService implements RoomServiceLocal, RoomServiceRemote {
 
+	@Resource
+	private SessionContext sessionContext;
+
 	@Override
 	public WasabiRoomDTO create(String name, WasabiRoomDTO environment) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException {
 		Session s = jcr.getJCRSession(ctx);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		try {
-			Node roomNode = RoomServiceImpl.create(name, environmentNode, s);
+			Node roomNode = RoomServiceImpl.create(name, environmentNode,
+					sessionContext.getCallerPrincipal().getName(), s);
 			s.save();
 			return TransferManager.convertNode2DTO(roomNode);
 		} catch (RepositoryException re) {

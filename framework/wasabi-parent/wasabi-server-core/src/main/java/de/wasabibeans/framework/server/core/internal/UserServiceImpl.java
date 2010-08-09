@@ -64,7 +64,7 @@ public class UserServiceImpl {
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
 			setDisplayName(userNode, name);
-			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s),s);
+			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), callerPrincipal, s);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
 			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
@@ -178,10 +178,10 @@ public class UserServiceImpl {
 			Selector selector = qomf.selector(WasabiNodeType.WASABI_USER, "s1");
 			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
 					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
-			
+
 			// build the query
 			Query query = qomf.createQuery(selector, constraint, null, null);
-			
+
 			// execute and return result
 			return query.execute().getNodes();
 		} catch (RepositoryException re) {
@@ -197,7 +197,7 @@ public class UserServiceImpl {
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException {
 		// Database
 		WasabiUserSQL.SqlQueryForRemove(userNode);
-		
+
 		// JCR
 		ObjectServiceImpl.remove(getHomeRoom(userNode));
 		ObjectServiceImpl.remove(userNode);
@@ -210,7 +210,7 @@ public class UserServiceImpl {
 			ObjectAlreadyExistsException {
 		// Database
 		WasabiUserSQL.SqlQueryForRename(userNode, name);
-		
+
 		// JCR
 		ObjectServiceImpl.rename(userNode, name);
 	}

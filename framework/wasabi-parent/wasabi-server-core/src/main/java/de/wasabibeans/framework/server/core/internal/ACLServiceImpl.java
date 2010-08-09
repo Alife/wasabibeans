@@ -81,6 +81,21 @@ public class ACLServiceImpl {
 		}
 	}
 
+	public static void create(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, int[] allowance,
+			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException {
+		if (permission.length != allowance.length) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
+		}
+
+		try {
+			updateInheritedRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, s);
+			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, "");
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static void createDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException {
 		try {
@@ -1207,4 +1222,35 @@ public class ACLServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+
+	public static List<WasabiACLEntryTemplate> getDefaultACLEntriesByType(Node wasabiLocationNode,
+			WasabiType wasabiType, Session s) throws UnexpectedInternalProblemException {
+		try {
+			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_ROOM)
+					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_CONTAINER)) {
+				throw new IllegalArgumentException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
+			}
+
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
+
+			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights WHERE `location_id`=? AND `wasabi_type`=?";
+
+			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
+					WasabiACLEntryTemplate.class);
+			try {
+				List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntriesQuery, h, locationUUID, wasabiType
+						.toString());
+				return result;
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 }
