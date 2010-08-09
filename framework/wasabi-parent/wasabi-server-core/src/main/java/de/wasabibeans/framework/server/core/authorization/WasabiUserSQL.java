@@ -66,10 +66,9 @@ public class WasabiUserSQL {
 		}
 	}
 	
-	public static void SqlQueryForRename(Node userNode, String name) throws UnexpectedInternalProblemException {
+	public static void SqlQueryForRename(String wasabiUser, String name) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
 		String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
 
 		try {

@@ -208,11 +208,12 @@ public class UserServiceImpl {
 
 	public static void rename(Node userNode, String name) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
-		// Database
-		WasabiUserSQL.SqlQueryForRename(userNode, name);
-
 		// JCR
 		ObjectServiceImpl.rename(userNode, name);
+		
+		// Database
+		String wasabiUser = ObjectServiceImpl.getName(userNode);
+		WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
 	}
 
 	public static void setDisplayName(Node userNode, String displayName) throws UnexpectedInternalProblemException {
