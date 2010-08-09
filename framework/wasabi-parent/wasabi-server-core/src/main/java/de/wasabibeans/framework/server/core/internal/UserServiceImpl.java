@@ -64,16 +64,16 @@ public class UserServiceImpl {
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
 			setDisplayName(userNode, name);
-			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s));
+			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s),s);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
 			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
-			// Database
+			/* ACL Environment - Begin */
 			WasabiUserSQL.SqlQueryForCreate(name, password);
-			// Rights
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal, s);
+			/* ACL Environment - End */
 
 			return userNode;
 		} catch (ItemExistsException iee) {

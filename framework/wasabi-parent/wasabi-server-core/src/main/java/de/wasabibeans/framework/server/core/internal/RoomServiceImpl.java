@@ -31,6 +31,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiRoomtACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -41,14 +42,21 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class RoomServiceImpl {
 
-	public static Node create(String name, Node environmentNode) throws UnexpectedInternalProblemException,
+	public static Node create(String name, Node environmentNode, Session s) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
 		}
 		try {
-			return environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+			
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiRoomtACL.ACLEntryForCreate(roomNode, s);
+			/* ACL Environment - End */
+			
+			return roomNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "room", name), name, iee);
