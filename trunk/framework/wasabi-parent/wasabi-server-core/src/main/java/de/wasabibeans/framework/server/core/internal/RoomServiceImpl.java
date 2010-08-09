@@ -42,18 +42,21 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class RoomServiceImpl {
 
-	public static Node create(String name, Node environmentNode, Session s) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static Node create(String name, Node environmentNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
 		}
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
 			/* ACL Environment - Begin */
-			if (WasabiConstants.ACL_ENTRY_ENABLE)
+			if (WasabiConstants.ACL_ENTRY_ENABLE) {
 				WasabiRoomACL.ACLEntryForCreate(roomNode, s);
+				WasabiRoomACL.ACLEntryTemplateForCreate(roomNode, environmentNode, callerPrincipalNode, s);
+			}
 			/* ACL Environment - End */
 
 			return roomNode;

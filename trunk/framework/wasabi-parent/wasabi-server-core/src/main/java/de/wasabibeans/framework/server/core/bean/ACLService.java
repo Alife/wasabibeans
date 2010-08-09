@@ -375,4 +375,6 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		}
 		return wasabiDefaultACLEntriesDTO;
 	}
+	
+	//TODO: impl. getDefaultACLEntriesByType
 }
