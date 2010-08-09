@@ -80,7 +80,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
 		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-		Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode);
+		Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, "root", s);
 		s.save();
 		s.logout();
 		return TransferManager.convertNode2DTO(room1Node);
@@ -102,9 +102,9 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
 		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
 		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode);
+		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, "root", s);
 		DocumentServiceImpl.setContent(document1Node, "document1");
-		DocumentServiceImpl.create("document2", wasabiRootNode);
+		DocumentServiceImpl.create("document2", wasabiRootNode, "root", s);
 		s.save();
 		s.logout();
 		return TransferManager.convertNode2DTO(document1Node);
