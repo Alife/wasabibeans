@@ -10,9 +10,14 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
+import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryTemplateDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
@@ -29,10 +34,10 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 		testhelper.initDatabase();
 		testhelper.initTestUser();
 		reWaCon.logout();
-		
+
 		reWaCon.login("user", "user");
 	}
-	
+
 	@AfterMethod
 	public void tearDownAfterEachMethod() throws Exception {
 		reWaCon.logout();
@@ -45,69 +50,38 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 
 		// Create document in users homeRoom and set rights to view, read document
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
+		
 		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
-		WasabiRoomDTO room2 = roomService().create("room2", usersHome);
-		WasabiRoomDTO room3 = roomService().create("room3", usersHome);
+		aclService().deactivateInheritance(room1);
+		WasabiRoomDTO room2 = roomService().create("room2", room1);
+		
+		aclService().create(room1, user, new int[] {WasabiPermission.VIEW}, new boolean[] {true});
+		aclService().activateInheritance(room2);
+		
+		aclService().createDefault(room2, WasabiType.ROOM,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.WRITE }, new boolean[] { true, true });
+		
+		WasabiRoomDTO room3 = roomService().create("room3", room2);
+		
+		displayACLEntry(room3, "Raum3");
+		
+		WasabiRoomDTO room4 = roomService().create("room4", room3);
+		
+		displayACLEntry(room4, "Raum4");
+	}
 
-		aclService().createDefault(room2, WasabiType.DOCUMENT,
-				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT }, new boolean[] { true, true });
-		aclService().createDefault(room2, WasabiType.CONTAINER,
-				new int[] { WasabiPermission.VIEW, WasabiPermission.EXECUTE }, new boolean[] { true, true });
-		aclService().createDefault(room2, WasabiType.CONTAINER, new int[] { WasabiPermission.WRITE },
-				new boolean[] { true });
-		aclService().createDefault(room2, WasabiType.LINK, new int[] { WasabiPermission.GRANT, WasabiPermission.READ },
-				new boolean[] { true, true });
 
-		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2 = new Vector<WasabiACLEntryTemplateDTO>();
-		ACLEntriesForRoom2 = aclService().getDefaultAclEntries(room2);
-
-		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
-
-		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : ACLEntriesForRoom2) {
-			System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-					+ objectService().getUUID(room2) + ",wasabi_type=" + wasabiDefaultACLEntryDTO.getWasabiType()
-					+ ",view=" + wasabiDefaultACLEntryDTO.getView() + ",read=" + wasabiDefaultACLEntryDTO.getRead()
-					+ ",insert=" + wasabiDefaultACLEntryDTO.getInsert() + ",execute="
-					+ wasabiDefaultACLEntryDTO.getExecute() + ",write=" + wasabiDefaultACLEntryDTO.getWrite()
-					+ ",comment=" + wasabiDefaultACLEntryDTO.getComment() + ",grant="
-					+ wasabiDefaultACLEntryDTO.getGrant() + ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime()
-					+ ",end_time=" + wasabiDefaultACLEntryDTO.getEndTime());
-		}
-
-		System.out.println("Removing 'Grant' from default ACL entry for WasabiType Link...");
-		aclService().removeDefault(room2, WasabiType.LINK, new int[] { WasabiPermission.GRANT });
-
-		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2AfterRemoveGrant = new Vector<WasabiACLEntryTemplateDTO>();
-		ACLEntriesForRoom2AfterRemoveGrant = aclService().getDefaultAclEntries(room2);
-
-		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
-
-		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveGrant : ACLEntriesForRoom2AfterRemoveGrant) {
-			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveGrant.getId() + ",location_id="
-					+ objectService().getUUID(room2) + ",wasabi_type="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWasabiType() + ",view="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getView() + ",read="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getRead() + ",insert="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getInsert() + ",execute="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getExecute() + ",write="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getWrite() + ",comment="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getComment() + ",grant="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getGrant() + ",start_time="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getStartTime() + ",end_time="
-					+ wasabiDefaultACLEntryDTOAfterRemoveGrant.getEndTime());
-		}
-
-		System.out.println("Removing 'Read' from default ACL entry for WasabiType Link...");
-		aclService().removeDefault(room2, WasabiType.LINK, new int[] { WasabiPermission.READ });
-
+	private void displayDefaultACLEntry(WasabiLocationDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		Vector<WasabiACLEntryTemplateDTO> ACLEntriesForRoom2AfterRemoveRead = new Vector<WasabiACLEntryTemplateDTO>();
-		ACLEntriesForRoom2AfterRemoveRead = aclService().getDefaultAclEntries(room2);
+		ACLEntriesForRoom2AfterRemoveRead = aclService().getDefaultAclEntries(room);
 
-		System.out.println("---- Default ACL entries for location " + objectService().getUUID(room2) + " ----");
+		System.out.println("---- Default ACL entries for location (" + name + ") " + objectService().getUUID(room)
+				+ " ----");
 
 		for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTOAfterRemoveRead : ACLEntriesForRoom2AfterRemoveRead) {
 			System.out.println("[id=" + wasabiDefaultACLEntryDTOAfterRemoveRead.getId() + ",location_id="
-					+ objectService().getUUID(room2) + ",wasabi_type="
+					+ objectService().getUUID(room) + ",wasabi_type="
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getWasabiType() + ",view="
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getView() + ",read="
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getRead() + ",insert="
@@ -118,6 +92,25 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getGrant() + ",start_time="
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getStartTime() + ",end_time="
 					+ wasabiDefaultACLEntryDTOAfterRemoveRead.getEndTime());
+		}
+	}
+
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
+		ACLEntries = aclService().getAclEntries(room);
+
+		System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+
+		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
+			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
+					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
+					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
+					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
+					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
+					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance()
+					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
 		}
 	}
 }
