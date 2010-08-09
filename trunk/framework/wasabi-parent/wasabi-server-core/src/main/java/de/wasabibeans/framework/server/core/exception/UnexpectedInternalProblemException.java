@@ -1,5 +1,8 @@
 package de.wasabibeans.framework.server.core.exception;
 
+import javax.ejb.ApplicationException;
+
+@ApplicationException(rollback=true)
 public class UnexpectedInternalProblemException extends WasabiException {
 	
 	/**

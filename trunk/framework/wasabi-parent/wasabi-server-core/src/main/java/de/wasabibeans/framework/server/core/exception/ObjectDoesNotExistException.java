@@ -21,8 +21,11 @@
 
 package de.wasabibeans.framework.server.core.exception;
 
+import javax.ejb.ApplicationException;
+
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 
+@ApplicationException(rollback=true)
 public class ObjectDoesNotExistException extends WasabiException {
 
 	private WasabiObjectDTO dto;

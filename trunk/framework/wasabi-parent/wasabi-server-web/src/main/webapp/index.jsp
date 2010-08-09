@@ -1,5 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"
-	import="javax.naming.*,de.wasabibeans.framework.server.core.dto.*,de.wasabibeans.framework.server.core.jcrTest.*,de.wasabibeans.framework.server.core.local.*"%>
+	import="javax.naming.*,de.wasabibeans.framework.server.core.dto.*,de.wasabibeans.framework.server.core.jcrTest.*,de.wasabibeans.framework.server.core.local.*,de.wasabibeans.framework.server.core.common.*"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
    "http://www.w3.org/TR/html4/loose.dtd">
 
@@ -11,11 +11,14 @@
 <body>
 <h1>Hello World!</h1>
 <%
-	String s = "-- "; 
+	String s = "-- ";
 	try {
 		Context context = new InitialContext();
-		ConnectionTestLocal bean = (ConnectionTestLocal) context
-				.lookup("wasabibeans/ConnectionTest/local");
+		WasabiConnection connection = new WasabiConnection();
+		connection.connect("localhost", "1099");
+		connection.login("root", "horst");
+		
+		ConnectionTestLocal bean = (ConnectionTestLocal) context.lookup("wasabibeans/ConnectionTest/local");
 		WasabiRoomDTO root = bean.login();
 
 		DocumentServiceLocal documentService = (DocumentServiceLocal) context
@@ -24,10 +27,10 @@
 		for (WasabiDocumentDTO doc : documentService.getDocuments(root)) {
 			s += documentService.getName(doc) + " -- ";
 		}
-		
+
 		s += "<br/>";
 		s += bean.printNodeTypes();
-		
+
 	} catch (Exception e) {
 		s = e.toString();
 	}
