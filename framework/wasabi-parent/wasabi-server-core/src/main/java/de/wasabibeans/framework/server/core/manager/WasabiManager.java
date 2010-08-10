@@ -91,7 +91,7 @@ public class WasabiManager {
 		String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
 				+ "`id` int(11) NOT NULL AUTO_INCREMENT,"
 				+ "`location_id` varchar(64) NOT NULL,"
-				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
+				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP', 'ALL') NOT NULL,"
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
