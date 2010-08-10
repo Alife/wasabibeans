@@ -22,5 +22,5 @@
 package de.wasabibeans.framework.server.core.common;
 
 public enum WasabiType {
-	ROOM, CONTAINER, DOCUMENT, LINK, ATTRIBUTE, USER, GROUP;
+	ROOM, CONTAINER, DOCUMENT, LINK, ATTRIBUTE, USER, GROUP, ALL;
 }
