@@ -51,33 +51,14 @@ public class WasabiDocumentACL {
 		List<WasabiACLEntryTemplate> ACLEntryTemplateALL = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
 				WasabiType.ALL, s);
 
+		List<WasabiACLEntryTemplate> ACLEntryTemplate = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
+				WasabiType.DOCUMENT, s);
+		
+		ACLEntryTemplateALL.addAll(ACLEntryTemplate);
+
 		if (!ACLEntryTemplateALL.isEmpty()) {
 			int[] allowance = new int[7];
 			for (WasabiACLEntryTemplate wasabiACLEntryTemplate : ACLEntryTemplateALL) {
-				allowance[WasabiPermission.VIEW] = wasabiACLEntryTemplate.getView();
-				allowance[WasabiPermission.READ] = wasabiACLEntryTemplate.getRead();
-				allowance[WasabiPermission.EXECUTE] = wasabiACLEntryTemplate.getExecute();
-				allowance[WasabiPermission.COMMENT] = wasabiACLEntryTemplate.getComment();
-				allowance[WasabiPermission.INSERT] = wasabiACLEntryTemplate.getInsert();
-				allowance[WasabiPermission.WRITE] = wasabiACLEntryTemplate.getWrite();
-				allowance[WasabiPermission.GRANT] = wasabiACLEntryTemplate.getGrant();
-
-				long startTime = wasabiACLEntryTemplate.getStart_Time();
-				long endTime = wasabiACLEntryTemplate.getEnd_Time();
-
-				ACLServiceImpl.create(documentNode, callerPrincipalNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, allowance,
-						startTime, endTime, s);
-			}
-		}
-
-		List<WasabiACLEntryTemplate> ACLEntryTemplate = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
-				WasabiType.DOCUMENT, s);
-
-		if (!ACLEntryTemplate.isEmpty()) {
-			int[] allowance = new int[7];
-			for (WasabiACLEntryTemplate wasabiACLEntryTemplate : ACLEntryTemplate) {
 				allowance[WasabiPermission.VIEW] = wasabiACLEntryTemplate.getView();
 				allowance[WasabiPermission.READ] = wasabiACLEntryTemplate.getRead();
 				allowance[WasabiPermission.EXECUTE] = wasabiACLEntryTemplate.getExecute();
