@@ -62,17 +62,16 @@ public class UserServiceImpl {
 		try {
 			// JCR
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
-			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
+			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
 			setDisplayName(userNode, name);
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), callerPrincipal, s);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
 			/* ACL Environment - Begin */
 			WasabiUserSQL.SqlQueryForCreate(name, password);
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipalNode, callerPrincipal, s);
+				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipal, s);
 			/* ACL Environment - End */
 
 			return userNode;
@@ -175,7 +174,7 @@ public class UserServiceImpl {
 
 			// build the query components: columns, source, constraint, orderings
 			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.WASABI_USER, "s1");
+			Selector selector = qomf.selector(WasabiNodeType.USER, "s1");
 			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
 					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
 
