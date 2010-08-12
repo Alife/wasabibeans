@@ -150,7 +150,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		} catch (EJBException e) {
 			assert e.getCausedByException() instanceof IllegalArgumentException;
 		}
-		
+
 		documentService().setContent(document, null);
 		AssertJUnit.assertNull(documentService().getContent(document));
 	}
@@ -187,6 +187,13 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(documentService().getDocumentByName(rootRoom, "document1"));
 			AssertJUnit.assertEquals(2, documentService().getDocuments(rootRoom).size());
+		}
+
+		try {
+			documentService().rename(document1, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			assert e.getCausedByException() instanceof IllegalArgumentException;
 		}
 
 		documentService().rename(document1, "document_2");

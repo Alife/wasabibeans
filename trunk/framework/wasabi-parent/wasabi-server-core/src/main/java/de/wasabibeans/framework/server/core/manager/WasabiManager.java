@@ -38,6 +38,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
+import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
@@ -144,13 +145,20 @@ public class WasabiManager {
 
 				// create basic wasabi content
 				Node workspaceRoot = baseSession.getRootNode();
-				// wasabi root room + wasabi home room
-				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.WASABI_ROOM);
-				Node wasabiHome = createRoom(WasabiConstants.HOME_ROOM_NAME, wasabiRoot);
+				// initial rooms
+				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
+				Node wasabiHome = wasabiRoot.addNode(WasabiNodeProperty.ROOMS + "/" + WasabiConstants.HOME_ROOM_NAME,
+						WasabiNodeType.ROOM);
+				// root node for wasabi groups and initial groups
+				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.GROUPS);
+				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, baseSession);
+				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, baseSession);
 				// root node for wasabi users and initial users
-				Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME,
-						WasabiNodeType.WASABI_USERS);
-				createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
+				Node wasabiUsers = workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME, WasabiNodeType.USERS);
+				Node rootUser = createUser(WasabiConstants.ROOT_USER_NAME, wasabiUsers, wasabiHome);
+				GroupServiceImpl.addMember(adminGroup, rootUser);
+				
+				// TODO adminUser / create users via UserServiceImpl / crate home room via RoomServiceImpl
 			}
 
 			baseSession.save();
@@ -162,14 +170,10 @@ public class WasabiManager {
 		}
 	}
 
-	private static Node createRoom(String name, Node environment) throws RepositoryException {
-		return environment.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
-	}
-
 	private static Node createUser(String name, Node rootOfUsersNode, Node wasabiHome) throws RepositoryException {
-		Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.WASABI_USER);
+		Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
 		userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, name);
-		Node homeRoomNode = wasabiHome.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.WASABI_ROOM);
+		Node homeRoomNode = wasabiHome.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
 		userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 		userNode.setProperty(WasabiNodeProperty.START_ROOM, homeRoomNode);
 		return userNode;

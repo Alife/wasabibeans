@@ -27,6 +27,9 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the local access on WasabiGroupDTO objects.
@@ -34,42 +37,58 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 @Local
 public interface GroupServiceLocal extends ObjectServiceLocal {
 
-	public void addMember(WasabiGroupDTO group, WasabiUserDTO user);
+	public void addMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup);
+	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
 
-	public String getDisplayName(WasabiGroupDTO group);
+	public String getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public WasabiGroupDTO getGroupByName(String groupName);
+	public WasabiGroupDTO getGroupByName(String groupName) throws UnexpectedInternalProblemException;
 
-	public Vector<WasabiGroupDTO> getGroupsByDisplayName(String displayName);
+	public Vector<WasabiGroupDTO> getGroupsByDisplayName(String displayName) throws UnexpectedInternalProblemException;
 
-	public WasabiUserDTO getMemberByName(WasabiGroupDTO group, String userName);
+	public WasabiUserDTO getMemberByName(WasabiGroupDTO group, String userName) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public Vector<WasabiUserDTO> getMembers(WasabiGroupDTO group);
+	public Vector<WasabiUserDTO> getMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public WasabiGroupDTO getParentGroup(WasabiGroupDTO group);
+	public Vector<WasabiUserDTO> getAllMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name);
+	public WasabiGroupDTO getParentGroup(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group);
+	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public boolean isDirectMember(WasabiGroupDTO group, WasabiUserDTO user);
+	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
+	
+	public boolean isDirectMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user);
+	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup);
+	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public void remove(WasabiGroupDTO group);
+	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
-	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user);
+	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public void rename(WasabiGroupDTO group, String name);
+	public void rename(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
 
-	public void setDisplayName(WasabiGroupDTO group, String displayName);
+	public void setDisplayName(WasabiGroupDTO group, String displayName) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public Vector<WasabiGroupDTO> getAllGroups();
+	public Vector<WasabiGroupDTO> getAllGroups() throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
-	public Vector<WasabiGroupDTO> getTopLevelGroups();
-
+	public Vector<WasabiGroupDTO> getTopLevelGroups() throws UnexpectedInternalProblemException;
 }

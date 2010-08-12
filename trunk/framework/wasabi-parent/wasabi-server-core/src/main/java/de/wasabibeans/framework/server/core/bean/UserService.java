@@ -23,9 +23,8 @@ package de.wasabibeans.framework.server.core.bean;
 
 import java.util.Vector;
 
-import javax.annotation.Resource;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -34,6 +33,7 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -51,9 +51,6 @@ import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 @SecurityDomain("wasabi")
 @Stateless(name = "UserService")
 public class UserService extends ObjectService implements UserServiceLocal, UserServiceRemote {
-
-	@Resource
-	private SessionContext sessionContext;
 
 	@Override
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
@@ -81,7 +78,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public String getCurrentUser() {
-		return sessionContext.getCallerPrincipal().getName();
+		return ctx.getCallerPrincipal().getName();
 	}
 
 	@Override
@@ -101,9 +98,29 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Vector<WasabiGroupDTO> memberships = new Vector<WasabiGroupDTO>();
+			NodeIterator ni = UserServiceImpl.getMemberships(userNode);
+			while (ni.hasNext()) {
+				Node groupRef = ni.nextNode();
+				Node group = null;
+				try {
+					group = groupRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+				} catch (ItemNotFoundException infe) {
+					groupRef.remove();
+				}
+				if (group != null) {
+					memberships.add((WasabiGroupDTO) TransferManager.convertNode2DTO(group));
+				}
+			}
+			return memberships;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	@Override

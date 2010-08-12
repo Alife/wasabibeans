@@ -111,9 +111,22 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static NodeIterator getMemberships(Node user) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
+	 * wasabi:group-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:group-nodes (this is
+	 * due to efficiency reasons).
+	 * 
+	 * @param userNode
+	 *            the node representing a wasabi-user
+	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getMemberships(Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			return userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static String getPassword(Node userNode) throws UnexpectedInternalProblemException {
@@ -201,17 +214,17 @@ public class UserServiceImpl {
 		ObjectServiceImpl.remove(getHomeRoom(userNode));
 		ObjectServiceImpl.remove(userNode);
 
-		// TODO Group memberships?
 		// TODO Environment of user?
+		// TODO memberships of user?
 	}
 
 	public static void rename(Node userNode, String name) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
 		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		
+
 		// JCR
 		ObjectServiceImpl.rename(userNode, name);
-		
+
 		// Database
 		WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
 	}

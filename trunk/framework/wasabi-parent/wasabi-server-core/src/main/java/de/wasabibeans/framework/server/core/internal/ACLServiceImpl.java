@@ -99,8 +99,8 @@ public class ACLServiceImpl {
 	public static void createDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException {
 		try {
-			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_ROOM)
-					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_CONTAINER)) {
+			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
 				throw new IllegalArgumentException(WasabiExceptionMessages
 						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 			}
@@ -568,7 +568,7 @@ public class ACLServiceImpl {
 
 		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 
-		if (wasabiIdentityType.equals(WasabiNodeType.WASABI_USER)) {
+		if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
 			try {
 				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
 						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
@@ -655,7 +655,7 @@ public class ACLServiceImpl {
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 			}
-		} else if (wasabiIdentityType.equals(WasabiNodeType.WASABI_GROUP)) {
+		} else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
 			try {
 				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
 						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
@@ -993,7 +993,7 @@ public class ACLServiceImpl {
 
 		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 
-		if (wasabiIdentityType.equals(WasabiNodeType.WASABI_USER)) {
+		if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
 			try {
 				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
 						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
@@ -1092,7 +1092,7 @@ public class ACLServiceImpl {
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 			}
-		} else if (wasabiIdentityType.equals(WasabiNodeType.WASABI_GROUP)) {
+		} else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
 			try {
 				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
 						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
@@ -1197,8 +1197,8 @@ public class ACLServiceImpl {
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntries(Node wasabiLocationNode, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
-			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_ROOM)
-					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_CONTAINER)) {
+			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
 				throw new IllegalArgumentException(WasabiExceptionMessages
 						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 			}
@@ -1226,8 +1226,8 @@ public class ACLServiceImpl {
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntriesByType(Node wasabiLocationNode,
 			WasabiType wasabiType, Session s) throws UnexpectedInternalProblemException {
 		try {
-			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_ROOM)
-					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.WASABI_CONTAINER)) {
+			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
 				throw new IllegalArgumentException(WasabiExceptionMessages
 						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 			}

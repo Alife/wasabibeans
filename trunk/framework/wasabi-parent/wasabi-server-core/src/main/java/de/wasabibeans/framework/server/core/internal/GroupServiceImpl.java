@@ -21,15 +21,360 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
+import java.util.Vector;
+
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.ValueFactory;
+import javax.jcr.query.Query;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.Selector;
+
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class GroupServiceImpl {
 
-	public static Node getGroupByName(String groupName) {
-		return null;
+	public static void addMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+			Node groupRef = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).addNode(groupNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			groupRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, groupNode);
+		} catch (ItemExistsException iee) {
+			// do nothing, user is already a member of the group
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+
 	}
-	
-	public static boolean isMember(Node groupNode, Node userNode) {
+
+	public static Node create(String name, Node parentGroupNode, Session s) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+		if (getGroupByName(name, s) != null) {
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
+		}
+
+		try {
+			Node newGroup;
+			if (parentGroupNode != null) {
+				newGroup = parentGroupNode.getNode(WasabiNodeProperty.SUBGROUPS).addNode(name, WasabiNodeType.GROUP);
+			} else {
+				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
+				newGroup = rootOfGroupsNode.addNode(name, WasabiNodeType.GROUP);
+			}
+			setDisplayName(newGroup, name);
+
+			return newGroup;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static NodeIterator getAllGroups(Session s) throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
+
+			// build the query
+			Query query = qomf.createQuery(selector, null, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static String getDisplayName(Node groupNode) throws UnexpectedInternalProblemException {
+		try {
+			return groupNode.getProperty(WasabiNodeProperty.DISPLAY_NAME).getString();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getGroupByName(String groupName, Session s) throws UnexpectedInternalProblemException {
+		if (groupName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
+			Constraint constraint = qomf.comparison(qomf.nodeName("s1"),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(groupName)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			NodeIterator ni = query.execute().getNodes();
+			if (ni.hasNext()) {
+				return ni.nextNode();
+			} else {
+				return null;
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static NodeIterator getGroupsByDisplayName(String displayName, Session s)
+			throws UnexpectedInternalProblemException {
+		if (displayName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"display-name"));
+		}
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getMemberByName(Node groupNode, String userName) throws UnexpectedInternalProblemException {
+		if (userName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		try {
+			NodeIterator ni = groupNode.getNode(WasabiNodeProperty.MEMBERS).getNodes();
+			while (ni.hasNext()) {
+				Node aMemberRef = ni.nextNode();
+				Node aMember = null;
+				try {
+					aMember = aMemberRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+				} catch (ItemNotFoundException infe) {
+					aMemberRef.remove();
+				}
+				if (aMember != null && aMember.getName().equals(userName)) {
+					return aMember;
+				}
+			}
+			return null;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
+	 * wasabi:user-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:user-nodes (this is
+	 * due to efficiency reasons).
+	 * 
+	 * @param groupNode
+	 *            the node representing a wasabi-group
+	 * @return {@code NodeIterator} containing nodes of type wasabi:objctref
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getMembers(Node groupNode) throws UnexpectedInternalProblemException {
+		try {
+			return groupNode.getNode(WasabiNodeProperty.MEMBERS).getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns a {@code Vector} that contains a {@code NodeIterator} for the direct members of the group represented by
+	 * the given node and a {@code NodeIterator} for each subgroup of the group represented by the given node.
+	 * 
+	 * @param groupNode
+	 *            the node representing a wasabi-group
+	 * @return {@code Vector} containing {@code NodeIterator}s
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<NodeIterator> getAllMembers(Node groupNode) throws UnexpectedInternalProblemException {
+		Vector<NodeIterator> allMembers = new Vector<NodeIterator>();
+		retrieveAllMembers(allMembers, groupNode);
+		return allMembers;
+	}
+
+	private static Vector<NodeIterator> retrieveAllMembers(Vector<NodeIterator> allMembers, Node groupNode)
+			throws UnexpectedInternalProblemException {
+		allMembers.add(getMembers(groupNode));
+		NodeIterator ni = getSubGroups(groupNode);
+		while (ni.hasNext()) {
+			allMembers.addAll(retrieveAllMembers(allMembers, ni.nextNode()));
+		}
+		return allMembers;
+	}
+
+	public static Node getParentGroup(Node groupNode) throws UnexpectedInternalProblemException {
+		try {
+			Node firstJcrParent = groupNode.getParent();
+			if (firstJcrParent.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUPS)) {
+				return null;
+			}
+			return firstJcrParent.getParent();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getSubGroupByName(Node groupNode, String name) throws UnexpectedInternalProblemException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		try {
+			return groupNode.getNode(WasabiNodeProperty.SUBGROUPS).getNode(name);
+		} catch (PathNotFoundException pnfe) {
+			return null;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static NodeIterator getSubGroups(Node groupNode) throws UnexpectedInternalProblemException {
+		try {
+			return groupNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static NodeIterator getTopLevelGroups(Session s) throws UnexpectedInternalProblemException {
+		try {
+			Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
+			return rootOfGroupsNode.getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			groupNode.getNode(WasabiNodeProperty.MEMBERS).getNode(userNode.getIdentifier());
+			return true;
+		} catch (PathNotFoundException pnfe) {
+			return false;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static boolean isMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+		if (isDirectMember(groupNode, userNode)) {
+			return true;
+		} else {
+			NodeIterator ni = getSubGroups(groupNode);
+			while (ni.hasNext()) {
+				Node aSubgroup = ni.nextNode();
+				if (isMember(aSubgroup, userNode)) {
+					return true;
+				}
+			}
+		}
 		return false;
+	}
+
+	public static void move(Node groupNode, Node newParentGroupNode) throws UnexpectedInternalProblemException {
+		try {
+			if (newParentGroupNode != null) {
+				groupNode.getSession().move(groupNode.getPath(),
+						newParentGroupNode.getPath() + "/" + WasabiNodeProperty.SUBGROUPS + "/" + groupNode.getName());
+			} else {
+				Session s = groupNode.getSession();
+				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
+				s.move(groupNode.getPath(), rootOfGroupsNode.getPath() + "/" + groupNode.getName());
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+
+	}
+
+	public static void remove(Node groupNode) throws UnexpectedInternalProblemException {
+		ObjectServiceImpl.remove(groupNode);
+	}
+
+	public static void removeMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			Node userref = groupNode.getNode(WasabiNodeProperty.MEMBERS).getNode(userNode.getIdentifier());
+			userref.remove();
+			Node groupref = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).getNode(groupNode.getIdentifier());
+			groupref.remove();
+		} catch (PathNotFoundException pnfe) {
+			// do nothing, user to be removed is not a member
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void rename(Node groupNode, String name) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		try {
+			if (getGroupByName(name, groupNode.getSession()) != null) {
+				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
+			}
+
+			groupNode.getSession().move(groupNode.getPath(), groupNode.getParent().getPath() + "/" + name);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void setDisplayName(Node groupNode, String displayName) throws UnexpectedInternalProblemException {
+		if (displayName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"displayname"));
+		}
+
+		try {
+			groupNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, displayName);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 }
