@@ -28,6 +28,7 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -39,7 +40,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface RoomServiceLocal extends ObjectServiceLocal {
 
 	public WasabiRoomDTO create(String name, WasabiRoomDTO environment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException;
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, NoPermissionException;
 
 	public WasabiRoomDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
