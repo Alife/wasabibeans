@@ -71,13 +71,16 @@
 	+ * (wasabi:group)
 	
 [wasabi:members] > nt:base
-	- * (WEAKREFERENCE) < 'wasabi:user' 
+	+ * (wasabi:objectref) 
 	
 [wasabi:presentUsers] > nt:base
-	- * (WEAKREFERENCE) < 'wasabi:user'
+	+ * (wasabi:objectref)
 	
 [wasabi:memberships] > nt:base
-	- * (WEAKREFERENCE) < 'wasabi:group'
+	+ * (wasabi:objectref)
+	
+[wasabi:objectref] > nt:base
+	- wasabi:referencedObject (WEAKREFERENCE) < 'wasabi:object'
 	
 [wasabi:users] > nt:base
 	+ * (wasabi:user)

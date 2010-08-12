@@ -50,7 +50,7 @@ public class AutorizationInterceptor {
 		// if user root, admin or user is a member of group admins access granted
 		if (principalName.equals("root")
 				|| principalName.equals("admin")
-				|| GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName("admins"), UserServiceImpl.getUserByName(
+				|| GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName("admins", s), UserServiceImpl.getUserByName(
 						principalName, s))) {
 
 			return object;

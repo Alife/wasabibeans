@@ -24,11 +24,23 @@ package de.wasabibeans.framework.server.core.bean;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.local.GroupServiceLocal;
 import de.wasabibeans.framework.server.core.remote.GroupServiceRemote;
 
@@ -40,117 +52,266 @@ import de.wasabibeans.framework.server.core.remote.GroupServiceRemote;
 public class GroupService extends ObjectService implements GroupServiceLocal, GroupServiceRemote {
 
 	@Override
-	public void addMember(WasabiGroupDTO group, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
+	public void addMember(WasabiGroupDTO group, WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			GroupServiceImpl.addMember(groupNode, userNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node parentGroupNode = null;
+			if (parentGroup != null) {
+				parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
+			}
+			Node newGroup = GroupServiceImpl.create(name, parentGroupNode, s);
+			s.save();
+			return TransferManager.convertNode2DTO(newGroup);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public Vector<WasabiGroupDTO> getAllGroups() throws UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Vector<WasabiGroupDTO> allGroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getAllGroups(s);
+		while (ni.hasNext()) {
+			allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		}
+		return allGroups;
+	}
+
+	@Override
+	public String getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		return GroupServiceImpl.getDisplayName(groupNode);
+	}
+
+	@Override
+	public WasabiGroupDTO getGroupByName(String groupName) throws UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = GroupServiceImpl.getGroupByName(groupName, s);
+		return TransferManager.convertNode2DTO(groupNode);
+	}
+
+	@Override
+	public Vector<WasabiGroupDTO> getGroupsByDisplayName(String displayName) throws UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Vector<WasabiGroupDTO> groups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getGroupsByDisplayName(displayName, s);
+		while (ni.hasNext()) {
+			groups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		}
+		return groups;
+	}
+
+	@Override
+	public WasabiUserDTO getMemberByName(WasabiGroupDTO group, String userName) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = GroupServiceImpl.getMemberByName(groupNode, userName);
+		return TransferManager.convertNode2DTO(userNode);
+	}
+
+	@Override
+	public Vector<WasabiUserDTO> getMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			Vector<WasabiUserDTO> members = new Vector<WasabiUserDTO>();
+			NodeIterator ni = GroupServiceImpl.getMembers(groupNode);
+			while (ni.hasNext()) {
+				Node userRef = ni.nextNode();
+				Node user = null;
+				try {
+					user = userRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+				} catch (ItemNotFoundException infe) {
+					userRef.remove();
+				}
+				if (user != null) {
+					members.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+				}
+			}
+			return members;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public Vector<WasabiUserDTO> getAllMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			Vector<WasabiUserDTO> allMembers = new Vector<WasabiUserDTO>();
+			for (NodeIterator ni : GroupServiceImpl.getAllMembers(groupNode)) {
+				while (ni.hasNext()) {
+					Node userRef = ni.nextNode();
+					Node user = null;
+					try {
+						user = userRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+					} catch (ItemNotFoundException infe) {
+						userRef.remove();
+					}
+					if (user != null) {
+						WasabiUserDTO userDTO = (WasabiUserDTO) TransferManager.convertNode2DTO(user);
+						if (!allMembers.contains(userDTO)) {
+							allMembers.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+						}
+					}
+				}
+			}
+			return allMembers;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public WasabiGroupDTO getParentGroup(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		return TransferManager.convertNode2DTO(GroupServiceImpl.getParentGroup(groupNode));
+	}
+
+	@Override
+	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name));
+	}
+
+	@Override
+	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Vector<WasabiGroupDTO> subgroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
+		while (ni.hasNext()) {
+			subgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		}
+		return subgroups;
+	}
+
+	@Override
+	public Vector<WasabiGroupDTO> getTopLevelGroups() throws UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Vector<WasabiGroupDTO> topgroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getTopLevelGroups(s);
+		while (ni.hasNext()) {
+			topgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		}
+		return topgroups;
+	}
+
+	@Override
+	public boolean isDirectMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		return GroupServiceImpl.isDirectMember(groupNode, userNode);
+	}
+
+	@Override
+	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		return GroupServiceImpl.isMember(groupNode, userNode);
+	}
+
+	@Override
+	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node newParentGroupNode = null;
+			if (newParentGroup != null) {
+				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
+			}
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			GroupServiceImpl.move(groupNode, newParentGroupNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 
 	}
 
 	@Override
-	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Vector<WasabiGroupDTO> getAllGroups() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getDisplayName(WasabiGroupDTO group) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public WasabiGroupDTO getGroupByName(String groupName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Vector<WasabiGroupDTO> getGroupsByDisplayName(String displayName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public WasabiUserDTO getMemberByName(WasabiGroupDTO group, String userName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Vector<WasabiUserDTO> getMembers(WasabiGroupDTO group) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public WasabiGroupDTO getParentGroup(WasabiGroupDTO group) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Vector<WasabiGroupDTO> getTopLevelGroups() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isDirectMember(WasabiGroupDTO group, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup) {
-		// TODO Auto-generated method stub
+	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			GroupServiceImpl.remove(groupNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 
 	}
 
 	@Override
-	public void remove(WasabiGroupDTO group) {
-		// TODO Auto-generated method stub
+	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			GroupServiceImpl.removeMember(groupNode, userNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 
 	}
 
 	@Override
-	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
+	public void rename(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			GroupServiceImpl.rename(groupNode, name);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 
 	}
 
 	@Override
-	public void rename(WasabiGroupDTO group, String name) {
-		// TODO Auto-generated method stub
-
+	public void setDisplayName(WasabiGroupDTO group, String displayName) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession(ctx);
+		try {
+			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			GroupServiceImpl.setDisplayName(groupNode, displayName);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
-
-	@Override
-	public void setDisplayName(WasabiGroupDTO group, String displayName) {
-		// TODO Auto-generated method stub
-
-	}
-
 }

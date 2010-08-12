@@ -116,6 +116,11 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 
 		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
 	}
+	
+	@Test 
+	public void get1MembershipsTest() throws Exception {
+		// TODO test that user is in wasabi group
+	}
 
 	@Test(dependsOnMethods = { ".*get1.*" })
 	public void createTest() throws WasabiException {

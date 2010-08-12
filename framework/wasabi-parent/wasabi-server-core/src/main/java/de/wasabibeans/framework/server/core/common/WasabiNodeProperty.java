@@ -61,5 +61,7 @@ public class WasabiNodeProperty {
 
 	// properties of wasabi:tag
 	public static final String TEXT = WasabiConstants.JCR_NS_PREFIX + ":text";
-
+	
+	// properties of wasabi:objectref
+	public static final String REFERENCED_OBJECT = WasabiConstants.JCR_NS_PREFIX + ":referencedObject";
 }

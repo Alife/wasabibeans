@@ -24,17 +24,17 @@ package de.wasabibeans.framework.server.core.common;
 public class WasabiNodeType {
 
 	// node types representing wasabi objects
-	public static final String WASABI_ROOM = WasabiConstants.JCR_NS_PREFIX + ":room";
-	public static final String WASABI_CONTAINER = WasabiConstants.JCR_NS_PREFIX + ":container";
-	public static final String WASABI_GROUP = WasabiConstants.JCR_NS_PREFIX + ":group";
-	public static final String WASABI_USER = WasabiConstants.JCR_NS_PREFIX + ":user";
-	public static final String WASABI_DOCUMENT = WasabiConstants.JCR_NS_PREFIX + ":document";
-	public static final String WASABI_LINK = WasabiConstants.JCR_NS_PREFIX + ":link";
-	public static final String WASABI_ATTRIBUTE = WasabiConstants.JCR_NS_PREFIX + ":attribute";
-	public static final String WASABI_TAG = WasabiConstants.JCR_NS_PREFIX + ":tag";
+	public static final String ROOM = WasabiConstants.JCR_NS_PREFIX + ":room";
+	public static final String CONTAINER = WasabiConstants.JCR_NS_PREFIX + ":container";
+	public static final String GROUP = WasabiConstants.JCR_NS_PREFIX + ":group";
+	public static final String USER = WasabiConstants.JCR_NS_PREFIX + ":user";
+	public static final String DOCUMENT = WasabiConstants.JCR_NS_PREFIX + ":document";
+	public static final String LINK = WasabiConstants.JCR_NS_PREFIX + ":link";
+	public static final String ATTRIBUTE = WasabiConstants.JCR_NS_PREFIX + ":attribute";
+	public static final String TAG = WasabiConstants.JCR_NS_PREFIX + ":tag";
 	
 	// node types for structuring
-	public static final String WASABI_USERS = WasabiConstants.JCR_NS_PREFIX + ":users";
-	public static final String WASABI_GROUPS = WasabiConstants.JCR_NS_PREFIX + ":groups";
-
+	public static final String OBJECT_REF = WasabiConstants.JCR_NS_PREFIX + ":objectref";
+	public static final String GROUPS = WasabiConstants.JCR_NS_PREFIX + ":groups";
+	public static final String USERS = WasabiConstants.JCR_NS_PREFIX + ":users";
 }

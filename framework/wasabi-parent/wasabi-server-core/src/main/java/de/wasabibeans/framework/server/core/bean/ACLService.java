@@ -158,8 +158,8 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 		Session s = jcr.getJCRSession(ctx);
 		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 
-		if (!wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)
-				|| !wasabiLocationNode.equals(WasabiNodeType.WASABI_ROOM)) {
+		if (!wasabiLocationNode.equals(WasabiNodeType.ROOM)
+				|| !wasabiLocationNode.equals(WasabiNodeType.ROOM)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages
 					.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 		}
