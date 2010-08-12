@@ -62,12 +62,11 @@ public class DocumentServiceImpl {
 		try {
 			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
 					WasabiNodeType.DOCUMENT);
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
 				WasabiDocumentACL.ACLEntryForCreate(documentNode, s);
-				WasabiDocumentACL.ACLEntryTemplateForCreate(documentNode, environmentNode, callerPrincipalNode, s);
+				WasabiDocumentACL.ACLEntryTemplateForCreate(documentNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 

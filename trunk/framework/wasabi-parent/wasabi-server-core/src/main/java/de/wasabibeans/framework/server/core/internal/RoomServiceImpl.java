@@ -50,12 +50,11 @@ public class RoomServiceImpl {
 		}
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
 				WasabiRoomACL.ACLEntryForCreate(roomNode, s);
-				WasabiRoomACL.ACLEntryTemplateForCreate(roomNode, environmentNode, callerPrincipalNode, s);
+				WasabiRoomACL.ACLEntryTemplateForCreate(roomNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 

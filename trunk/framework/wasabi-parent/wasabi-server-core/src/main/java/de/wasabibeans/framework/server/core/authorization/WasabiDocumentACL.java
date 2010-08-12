@@ -33,6 +33,7 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiDocumentACL {
@@ -46,34 +47,38 @@ public class WasabiDocumentACL {
 		}
 	}
 
-	public static void ACLEntryTemplateForCreate(Node documentNode, Node environmentNode, Node callerPrincipalNode,
+	public static void ACLEntryTemplateForCreate(Node documentNode, Node environmentNode, String callerPrincipal,
 			Session s) throws UnexpectedInternalProblemException {
-		List<WasabiACLEntryTemplate> ACLEntryTemplateALL = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
-				WasabiType.ALL, s);
+		if (!callerPrincipal.equals("root")) {
+			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 
-		List<WasabiACLEntryTemplate> ACLEntryTemplate = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
-				WasabiType.DOCUMENT, s);
-		
-		ACLEntryTemplateALL.addAll(ACLEntryTemplate);
+			List<WasabiACLEntryTemplate> ACLEntryTemplateALL = ACLServiceImpl.getDefaultACLEntriesByType(
+					environmentNode, WasabiType.ALL, s);
 
-		if (!ACLEntryTemplateALL.isEmpty()) {
-			int[] allowance = new int[7];
-			for (WasabiACLEntryTemplate wasabiACLEntryTemplate : ACLEntryTemplateALL) {
-				allowance[WasabiPermission.VIEW] = wasabiACLEntryTemplate.getView();
-				allowance[WasabiPermission.READ] = wasabiACLEntryTemplate.getRead();
-				allowance[WasabiPermission.EXECUTE] = wasabiACLEntryTemplate.getExecute();
-				allowance[WasabiPermission.COMMENT] = wasabiACLEntryTemplate.getComment();
-				allowance[WasabiPermission.INSERT] = wasabiACLEntryTemplate.getInsert();
-				allowance[WasabiPermission.WRITE] = wasabiACLEntryTemplate.getWrite();
-				allowance[WasabiPermission.GRANT] = wasabiACLEntryTemplate.getGrant();
+			List<WasabiACLEntryTemplate> ACLEntryTemplate = ACLServiceImpl.getDefaultACLEntriesByType(environmentNode,
+					WasabiType.DOCUMENT, s);
 
-				long startTime = wasabiACLEntryTemplate.getStart_Time();
-				long endTime = wasabiACLEntryTemplate.getEnd_Time();
+			ACLEntryTemplateALL.addAll(ACLEntryTemplate);
 
-				ACLServiceImpl.create(documentNode, callerPrincipalNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, allowance,
-						startTime, endTime, s);
+			if (!ACLEntryTemplateALL.isEmpty()) {
+				int[] allowance = new int[7];
+				for (WasabiACLEntryTemplate wasabiACLEntryTemplate : ACLEntryTemplateALL) {
+					allowance[WasabiPermission.VIEW] = wasabiACLEntryTemplate.getView();
+					allowance[WasabiPermission.READ] = wasabiACLEntryTemplate.getRead();
+					allowance[WasabiPermission.EXECUTE] = wasabiACLEntryTemplate.getExecute();
+					allowance[WasabiPermission.COMMENT] = wasabiACLEntryTemplate.getComment();
+					allowance[WasabiPermission.INSERT] = wasabiACLEntryTemplate.getInsert();
+					allowance[WasabiPermission.WRITE] = wasabiACLEntryTemplate.getWrite();
+					allowance[WasabiPermission.GRANT] = wasabiACLEntryTemplate.getGrant();
+
+					long startTime = wasabiACLEntryTemplate.getStart_Time();
+					long endTime = wasabiACLEntryTemplate.getEnd_Time();
+
+					ACLServiceImpl.create(documentNode, callerPrincipalNode, new int[] { WasabiPermission.VIEW,
+							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, allowance,
+							startTime, endTime, s);
+				}
 			}
 		}
 	}
