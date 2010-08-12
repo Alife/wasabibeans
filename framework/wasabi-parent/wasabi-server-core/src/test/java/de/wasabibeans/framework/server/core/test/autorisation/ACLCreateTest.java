@@ -1,5 +1,7 @@
 package de.wasabibeans.framework.server.core.test.autorisation;
 
+import java.sql.Timestamp;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.annotations.AfterMethod;

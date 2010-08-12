@@ -34,10 +34,13 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -57,12 +60,19 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public WasabiRoomDTO create(String name, WasabiRoomDTO environment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException {
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, NoPermissionException {
 		Session s = jcr.getJCRSession(ctx);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		String callerPrincipal = sessionContext.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+				WasabiPermission.WRITE }, s))
+			throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+		/* Authorization - End */
+
 		try {
-			Node roomNode = RoomServiceImpl.create(name, environmentNode,
-					sessionContext.getCallerPrincipal().getName(), s);
+			Node roomNode = RoomServiceImpl.create(name, environmentNode, callerPrincipal, s);
 			s.save();
 			return TransferManager.convertNode2DTO(roomNode);
 		} catch (RepositoryException re) {
