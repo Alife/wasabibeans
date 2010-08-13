@@ -26,8 +26,6 @@ import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.Vector;
 
-import javax.ejb.EJBException;
-
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -73,8 +71,8 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().getDocumentByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		AssertJUnit.assertNull(documentService().getDocumentByName(rootRoom, "doesNotExist"));
@@ -108,15 +106,15 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().create(null, rootRoom);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {
 			documentService().create("test", null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {
@@ -147,8 +145,8 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().setContent(null, "Hallo");
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		documentService().setContent(document, null);
@@ -192,8 +190,8 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().rename(document1, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		documentService().rename(document1, "document_2");

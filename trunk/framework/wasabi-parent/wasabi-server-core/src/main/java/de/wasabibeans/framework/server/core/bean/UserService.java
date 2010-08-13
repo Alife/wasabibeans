@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.bean;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -50,30 +52,37 @@ import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "UserService")
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class UserService extends ObjectService implements UserServiceLocal, UserServiceRemote {
 
 	@Override
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException {
-		Session s = jcr.getJCRSession(ctx);
+		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = UserServiceImpl.create(name, password, s, getCurrentUser());
 			s.save();
 			return TransferManager.convertNode2DTO(userNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession(ctx);
-		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
-		NodeIterator ni = UserServiceImpl.getAllUsers(s);
-		while (ni.hasNext()) {
-			users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		Session s = jcr.getJCRSession();
+		try {
+			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+			NodeIterator ni = UserServiceImpl.getAllUsers(s);
+			while (ni.hasNext()) {
+				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return users;
+		} finally {
+			s.logout();
 		}
-		return users;
 	}
 
 	@Override
@@ -84,23 +93,31 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public String getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		return UserServiceImpl.getDisplayName(userNode);
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			return UserServiceImpl.getDisplayName(userNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public WasabiRoomDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		return TransferManager.convertNode2DTO(UserServiceImpl.getHomeRoom(userNode));
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			return TransferManager.convertNode2DTO(UserServiceImpl.getHomeRoom(userNode));
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
+		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Vector<WasabiGroupDTO> memberships = new Vector<WasabiGroupDTO>();
@@ -120,36 +137,54 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			return memberships;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		return UserServiceImpl.getPassword(userNode);
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			return UserServiceImpl.getPassword(userNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public WasabiRoomDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		return TransferManager.convertNode2DTO(UserServiceImpl.getStartRoom(userNode));
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			return TransferManager.convertNode2DTO(UserServiceImpl.getStartRoom(userNode));
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public boolean getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		return UserServiceImpl.getStatus(userNode);
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			return UserServiceImpl.getStatus(userNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession(ctx);
-		return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
+		Session s = jcr.getJCRSession();
+		try {
+			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
@@ -166,13 +201,17 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession(ctx);
-		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
-		NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
-		while (ni.hasNext()) {
-			users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		Session s = jcr.getJCRSession();
+		try {
+			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+			NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
+			while (ni.hasNext()) {
+				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return users;
+		} finally {
+			s.logout();
 		}
-		return users;
 	}
 
 	@Override
@@ -184,73 +223,87 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void setDisplayName(WasabiUserDTO user, String displayName) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Session s = jcr.getJCRSession();
 		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
 			UserServiceImpl.setDisplayName(userNode, displayName);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		UserServiceImpl.setPassword(userNode, password);
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			UserServiceImpl.setPassword(userNode, password);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		Session s = jcr.getJCRSession();
 		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			UserServiceImpl.setStartRoom(userNode, roomNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public void setStatus(WasabiUserDTO user, boolean active) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Session s = jcr.getJCRSession();
 		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
 			UserServiceImpl.setStatus(userNode, active);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Session s = jcr.getJCRSession();
 		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
 			UserServiceImpl.remove(userNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 
 	@Override
 	public void rename(WasabiUserDTO user, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException {
-		Session s = jcr.getJCRSession(ctx);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Session s = jcr.getJCRSession();
 		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
 			UserServiceImpl.rename(userNode, name);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
 		}
 	}
 

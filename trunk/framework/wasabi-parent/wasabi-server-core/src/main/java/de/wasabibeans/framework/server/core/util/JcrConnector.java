@@ -21,11 +21,12 @@
 
 package de.wasabibeans.framework.server.core.util;
 
-import javax.ejb.SessionContext;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+
+import org.apache.jackrabbit.jca.JCASessionHandle;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -39,7 +40,7 @@ public class JcrConnector {
 	public static JcrConnector getJCRConnector() {
 		return new JcrConnector();
 	}
-	
+
 	public static JcrConnector getJCRConnector(JndiConnector jndi) {
 		return new JcrConnector(jndi);
 	}
@@ -47,30 +48,24 @@ public class JcrConnector {
 	public JcrConnector() {
 		this.jndi = JndiConnector.getJNDIConnector();
 	}
-	
+
 	public JcrConnector(JndiConnector jndi) {
 		this.jndi = jndi;
 	}
- 
+
 	public Repository getJCRRepository() throws UnexpectedInternalProblemException {
-		//if (this.jcrRepository == null) {
-			this.jcrRepository = (Repository) jndi.lookupLocal(WasabiConstants.JNDI_JCR_DATASOURCE);
-		//}
+		// if (this.jcrRepository == null) {
+		this.jcrRepository = (Repository) jndi.lookupLocal(WasabiConstants.JNDI_JCR_DATASOURCE);
+		// }
 		return this.jcrRepository;
 	}
 
-	public Session getJCRSession(SessionContext ctx) throws UnexpectedInternalProblemException {
+	public Session getJCRSession() throws UnexpectedInternalProblemException {
 		try {
-			String username = ctx.getCallerPrincipal().getName();
-			return getJCRRepository().login(new SimpleCredentials(username, username.toCharArray()));
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-	
-	public Session getJCRSession(String username) throws UnexpectedInternalProblemException {
-		try {
-			return getJCRRepository().login(new SimpleCredentials(username, username.toCharArray()));
+			Session s = getJCRRepository().login(
+					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+			System.out.println("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
+			return s;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

@@ -23,8 +23,6 @@ package de.wasabibeans.framework.server.core.test.testhelper;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 
-import javax.annotation.Resource;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -57,9 +55,6 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	private JcrConnector jcr;
 
-	@Resource
-	protected SessionContext ctx;
-
 	public TestHelper() {
 		this.jcr = JcrConnector.getJCRConnector();
 	}
@@ -80,7 +75,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, "root", s);
@@ -94,7 +89,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiUserDTO initUserServiceTest() throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node user1Node = UserServiceImpl.create("user1", "user1", s, "user");
 			UserServiceImpl.create("user2", "user2", s, "user");
@@ -108,7 +103,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, "root", s);
@@ -124,7 +119,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiGroupDTO initGroupServiceTest() throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node group1Node = GroupServiceImpl.create("group1", null, s);
 			Node group1_1Node = GroupServiceImpl.create("group1_1", group1Node, s);
@@ -149,7 +144,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		WasabiUserSQL.SqlQueryForCreate(name, name);
 
 		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
@@ -166,8 +161,10 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		}
 	}
 
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			EventListener listener = new DisplayNameListener();
@@ -187,7 +184,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public Vector<String> createManyNodes(int number) throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Vector<String> nodeIds = new Vector<String>();
 			Node testroot = s.getRootNode().addNode("LookupTest");
@@ -208,7 +205,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Vector<String> ids = new Vector<String>();
 			Long startTime = System.currentTimeMillis();
@@ -227,7 +224,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+		Session s = jcr.getJCRSession();
 		try {
 			Vector<String> ids = new Vector<String>();
 			Long startTime = System.currentTimeMillis();
@@ -252,7 +249,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@SuppressWarnings("deprecation")
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public Vector<String> getChildrenByQuery(String parentId) throws Exception {
-		Session s = jcr.getJCRSession(ctx);
+		Session s = jcr.getJCRSession();
 		try {
 			Vector<String> result = new Vector<String>();
 
@@ -278,7 +275,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public Vector<String> getChildrenByFilter(String parentId) throws Exception {
-		Session s = jcr.getJCRSession(ctx);
+		Session s = jcr.getJCRSession();
 		try {
 			Vector<String> result = new Vector<String>();
 

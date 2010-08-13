@@ -23,8 +23,6 @@ package de.wasabibeans.framework.server.core.test.remote;
 
 import java.util.Vector;
 
-import javax.ejb.EJBException;
-
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -89,8 +87,8 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			roomService().getRoomByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "doesNotExist"));
@@ -112,15 +110,15 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			roomService().create(null, rootRoom);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {
 			roomService().create("test", null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {

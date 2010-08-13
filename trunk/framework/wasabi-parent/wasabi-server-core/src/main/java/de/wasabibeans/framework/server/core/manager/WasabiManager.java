@@ -123,7 +123,7 @@ public class WasabiManager {
 		Session baseSession = null;
 		try {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
-			baseSession = jcr.getJCRSession(WasabiConstants.JCR_USER_INDEPENDENT_SESSION);
+			baseSession = jcr.getJCRSession();
 
 			// register wasabi nodetypes (also registers the wasabi jcr namespace) in case a path to a .cnd file has
 			// been given

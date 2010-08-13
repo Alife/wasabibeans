@@ -68,8 +68,7 @@ public interface WasabiConstants {
 	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
 	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";
 	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
-	// a user must not have a username that is equal to this string
-	public final static String JCR_USER_INDEPENDENT_SESSION = "wasabi";
+	public final static String JCR_LOGIN = "wasabi";
 	
 	/* DTO */
 	public final static String DTO_SUFFIX = "DTO";

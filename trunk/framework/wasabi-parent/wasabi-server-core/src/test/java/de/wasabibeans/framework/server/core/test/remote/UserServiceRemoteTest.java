@@ -23,8 +23,6 @@ package de.wasabibeans.framework.server.core.test.remote;
 
 import java.util.Vector;
 
-import javax.ejb.EJBException;
-
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -110,8 +108,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().getUserByName(null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
@@ -137,15 +135,15 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().create(null, "pwd");
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {
 			userService().create("name", null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		try {
@@ -185,8 +183,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().setDisplayName(user1, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		WasabiUserDTO user2 = userService().getUserByName("user2");
@@ -201,8 +199,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().setPassword(user1, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		userService().setPassword(user1, "newPwd");
@@ -215,8 +213,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().setStartRoom(user1, null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed
 		}
 
 		WasabiRoomDTO newRoom = roomService().create("newRoom", rootRoom);
@@ -242,8 +240,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			userService().getUsersByDisplayName(null);
 			AssertJUnit.fail();
-		} catch (EJBException e) {
-			assert e.getCausedByException() instanceof IllegalArgumentException;
+		} catch (IllegalArgumentException e) {
+			// passed 
 		}
 
 		AssertJUnit.assertTrue(userService().getUsersByDisplayName("doesNotExist").isEmpty());

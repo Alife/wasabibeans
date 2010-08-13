@@ -21,17 +21,14 @@
 
 package de.wasabibeans.framework.server.core.test.jcr;
 
-import java.util.Vector;
-import java.util.concurrent.Callable;
-
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
+import org.apache.jackrabbit.jca.JCASessionHandle;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
@@ -49,10 +46,8 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
-import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
-import de.wasabibeans.framework.server.core.test.testhelper.JCRTestBeanLocal;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperLocal;
 import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
@@ -90,9 +85,6 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
 		testhelper.initRepository();
 		testhelper.initDatabase();
-		UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
-		userService.create(USER1, USER1);
-		userService.create(USER2, USER2);
 		loCon.disconnect();
 
 		/**
@@ -103,307 +95,127 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
 		UserTransaction utx;
 		String id;
-		
+
 		// Step 1: user 1 acquires session and writes, then logs out
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		Session s1 = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
+		Session s1 = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
 		Node nodeBys1 = s1.getRootNode().addNode("aNode");
-		nodeBys1.setProperty("aProperty", USER1);
+		nodeBys1.setProperty("aProperty", "user1");
 		s1.save();
 		id = nodeBys1.getIdentifier();
-		// s1.logout();
+		s1.logout();
 		utx.commit();
 
 		// Step 2: user 2 acquires session, alters value written by user 1, then logs out
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		Session s2 = rep.login(new SimpleCredentials(USER2, USER2.toCharArray()));
-		s2.getNodeByIdentifier(id).setProperty("aProperty", USER2);
+		Session s2 = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+		AssertJUnit.assertEquals("user1", s2.getNodeByIdentifier(id).getProperty("aProperty").getString());
+		s2.getNodeByIdentifier(id).setProperty("aProperty", "user2");
 		s2.save();
+		s2.logout();
 		utx.commit();
 
 		// Step 3: user 1 acquires session again, reads the property altered by user 2... but does not read the correct
 		// value
 		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 		utx.begin();
-		Session s = rep.login(new SimpleCredentials(USER1, USER1.toCharArray()));
-		AssertJUnit.assertEquals(USER2, s.getNodeByIdentifier(id).getProperty("aProperty").getString());
+		Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+		AssertJUnit.assertEquals("user2", s.getNodeByIdentifier(id).getProperty("aProperty").getString());
+		s.logout();
 		utx.commit();
 	}
 
-	// @Test
-	public void startAndShutdown() throws Exception {
+	@Test
+	public void concurrentTransactions() throws Throwable {
+		LocalWasabiConnector loCon = new LocalWasabiConnector();
+		loCon.defaultConnectAndLogin();
+		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
+		testhelper.initRepository();
+		testhelper.initDatabase();
+		loCon.disconnect();
+		final Object activeThreadLock = new Object();
+
 		InitialContext jndiContext = new InitialContext();
-		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-
-		// start repository by requesting a session
-		Session s = rep.login(new SimpleCredentials("tester", "tester".toCharArray()));
-		System.out.println(s.toString());
-
-		// try to shutdown repository by logging out the only existing session (does not work due to JCA -> JCA is
-		// pooling)
-		s.logout();
-	}
-
-	// @Test
-	public void startAndShutdownSessionBean() throws Exception {
-		InitialContext jndiContext = new InitialContext();
-		JCRTestBeanLocal jcrTest = (JCRTestBeanLocal) jndiContext.lookup("test/JCRTestBean/local");
+		Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
+		Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+		System.out.println("1: " + ((JCASessionHandle) s).getXAResource().toString());
+		Node node;
 		try {
-			jcrTest.sessionLoginLogout("tester");
+			node = s.getRootNode().getNode("aNode");
+			node.remove();
 		} catch (Exception e) {
 			// ...
 		}
-
-		System.out.println(Thread.currentThread().getId());
-		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-
-		// test the outcome of the container managed transaction
-		Session s = rep.login(new SimpleCredentials("tester", "tester".toCharArray()));
-		NodeIterator ni = s.getRootNode().getNodes();
-		while (ni.hasNext()) {
-			System.out.println(ni.nextNode().getName());
-		}
+		node = s.getRootNode().addNode("aNode");
+		node.setProperty("aProperty", "1");
+		s.save();
 		s.logout();
-	}
 
-	// --------------------- Multi-User-Tests ---------------------------------------------------------
-	private static final String USER1 = "user1", USER2 = "user2";
+		Thread user1 = new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+					InitialContext jndiContext = new InitialContext();
+					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
+					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
+					utx.begin();
+					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+					System.out.println("3: " + ((JCASessionHandle) s).getXAResource().toString());
 
-	private final static Object activeThreadLock = new Object();
+					Node node = s.getRootNode().getNode("aNode");
+					System.out.println(node.getProperty("aProperty").getString());
 
-	abstract class UserThread extends Thread {
-		protected Thread otherUser;
-		protected String username;
-		protected Vector<Exception> exceptions;
-
-		public UserThread(String username, Vector<Exception> exceptions) {
-			super();
-			this.username = username;
-			this.exceptions = exceptions;
-		}
-
-		public void setOtherUser(Thread otherUser) {
-			this.otherUser = otherUser;
-		}
-
-		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
-			}
-		}
-
-		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
-			}
-		}
-
-		protected void waitForCommitOfOther() throws InterruptedException {
-			otherUser.join();
-		}
-
-		@Override
-		public abstract void run();
-	}
-
-	class JCRSessionTester extends UserThread {
-
-		public JCRSessionTester(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
-		}
-
-		@Override
-		public void run() {
-			try {
-				System.out.println(username + " has thread-id: " + Thread.currentThread().getId());
-				InitialContext jndiContext = new InitialContext();
-				JCRTestBeanLocal jcrTest = (JCRTestBeanLocal) jndiContext.lookup("test/JCRTestBean/local");
-
-				if (username.equals(USER1)) {
-					System.out.println(username + " calls sessionLoginLogout");
-					try {
-						jcrTest.sessionLoginLogout(username);
-					} catch (Exception e) {
-						// ...
+					synchronized (activeThreadLock) {
+						activeThreadLock.notify();
+						activeThreadLock.wait();
 					}
 
-					notifyOther();
-					waitForMyTurn();
-
-					// test the outcome of the container managed transaction
-					System.out.println(username + " prints out the subnodes of root");
-					Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-					Session s = rep.login(new SimpleCredentials(username, username.toCharArray()));
-					NodeIterator ni = s.getRootNode().getNodes();
-					while (ni.hasNext()) {
-						System.out.println(ni.nextNode().getName());
-					}
-					s.logout();
-
-					notifyOther();
-				} else {
-					waitForMyTurn();
-
-					System.out.println(username + " calls sessionLoginLogout");
-					try {
-						jcrTest.sessionLoginLogout(username);
-					} catch (Exception e) {
-						// ...
-					}
-
-					notifyOther();
-					waitForMyTurn();
-
-					// test the outcome of the container managed transaction
-					System.out.println(username + " prints out the subnodes of root");
-					Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-					Session s = rep.login(new SimpleCredentials(username, username.toCharArray()));
-					NodeIterator ni = s.getRootNode().getNodes();
-					while (ni.hasNext()) {
-						System.out.println(ni.nextNode().getName());
-					}
-					s.logout();
+					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+					System.out.println("4: " + ((JCASessionHandle) s).getXAResource().toString());
+					node = s.getRootNode().getNode("aNode");
+					System.out.println(node.getProperty("aProperty").getString());
+					s.save();
+					utx.commit();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
-				exceptions.add(e);
 			}
-		}
-	}
+		};
 
-	// @Test
-	public void multiUserSessionTest() throws Exception {
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new JCRSessionTester(USER1, exceptions);
-		UserThread user2 = new JCRSessionTester(USER2, exceptions);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
+		Thread user2 = new Thread() {
+			public void run() {
+				try {
+					InitialContext jndiContext = new InitialContext();
+					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
+					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
+					utx.begin();
+					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+					System.out.println("2: " + ((JCASessionHandle) s).getXAResource().toString());
+					Node node = s.getRootNode().getNode("aNode");
+
+					synchronized (activeThreadLock) {
+						activeThreadLock.wait();
+					}
+
+					node.setProperty("aProperty", "2");
+					s.save();
+					utx.commit();
+
+					synchronized (activeThreadLock) {
+						activeThreadLock.notify();
+					}
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
 
 		user1.start();
 		user2.start();
-
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
-		System.out.println("Both user actions are done.");
 	}
-
-	// --------------------- Parallel Transaction Test -----------------------------------------
-	class ParallelTransactionUserThread extends Thread {
-		private TestCallable userAction;
-		private Vector<Exception> exceptions;
-
-		public ParallelTransactionUserThread(Vector<Exception> exceptions) {
-			this.exceptions = exceptions;
-		}
-
-		public void setUserAction(TestCallable userAction) {
-			this.userAction = userAction;
-		}
-
-		@Override
-		public void run() {
-			try {
-				System.out.println(userAction.getUsername() + " has client-thread-id " + this.getId());
-				InitialContext jndi = new InitialContext();
-				TestHelperLocal testhelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
-				jndi.close();
-				testhelper.call(userAction);
-				System.out.println(userAction.getUsername() + " has committed");
-			} catch (Exception e) {
-				exceptions.add(e);
-			}
-		}
-	}
-
-	abstract class TestCallable implements Callable<Object> {
-
-		protected String username;
-		protected Thread otherUser;
-
-		public TestCallable(String username, Thread otherUser) {
-			this.username = username;
-			this.otherUser = otherUser;
-		}
-
-		public String getUsername() {
-			return this.username;
-		}
-
-		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
-			}
-		}
-
-		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
-			}
-		}
-
-		protected void waitForCommitOfOther() throws InterruptedException {
-			otherUser.join();
-		}
-
-		@Override
-		public Object call() throws Exception {
-			System.out.println(username + " has stateless-bean-thread-id " + Thread.currentThread().getId());
-			return null;
-		}
-	}
-
-	class ParallelTransactionCallable extends TestCallable {
-
-		public ParallelTransactionCallable(String username, Thread otherUser) {
-			super(username, otherUser);
-		}
-
-		@Override
-		public Object call() throws Exception {
-			InitialContext jndiContext = new InitialContext();
-
-			if (username.equals(USER1)) {
-				Thread.sleep(1000);
-				System.out.println(username + " retrieves session");
-				Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-				Session s = rep.login(new SimpleCredentials(username, username.toCharArray()));
-
-				notifyOther();
-				waitForMyTurn();
-			} else {
-				waitForMyTurn();
-				System.out.println(username + " retrieves session");
-				Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-				Session s = rep.login(new SimpleCredentials(username, username.toCharArray()));
-				notifyOther();
-			}
-			return null;
-		}
-	}
-
-	// @Test
-	public void parallelTransactionTest() throws Exception {
-		Vector<Exception> exceptions = new Vector<Exception>();
-		ParallelTransactionUserThread user1 = new ParallelTransactionUserThread(exceptions);
-		ParallelTransactionUserThread user2 = new ParallelTransactionUserThread(exceptions);
-		TestCallable userAction1 = new ParallelTransactionCallable(USER1, user2);
-		TestCallable userAction2 = new ParallelTransactionCallable(USER2, user1);
-		user1.setUserAction(userAction1);
-		user2.setUserAction(userAction2);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
-		System.out.println("Both user transactions have committed.");
-	}
-
 }

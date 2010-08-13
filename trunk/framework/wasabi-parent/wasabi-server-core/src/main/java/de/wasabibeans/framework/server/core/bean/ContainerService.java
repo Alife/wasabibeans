@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -39,6 +41,7 @@ import de.wasabibeans.framework.server.core.remote.ContainerServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "ContainerService")
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ContainerService extends ObjectService implements ContainerServiceLocal, ContainerServiceRemote {
 
 	@Override
