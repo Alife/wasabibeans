@@ -44,13 +44,11 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
-		reWaCon.defaultLogin();
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
 		group1_1 = testhelper.initGroupServiceTest();
-		reWaCon.logout();
 
 		reWaCon.login("user", "user");
 	}
@@ -207,12 +205,12 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		WasabiGroupDTO group2 = groupService().create("group2", null);
 		groupService().addMember(group2, user3);
 		Vector<WasabiGroupDTO> memberships = userService().getMemberships(user3);
-		AssertJUnit.assertEquals(2, memberships.size());
+		AssertJUnit.assertEquals(3, memberships.size());
 		AssertJUnit.assertTrue(memberships.contains(group2));
 		
 		groupService().addMember(group2, user3);
 		AssertJUnit.assertEquals(1, groupService().getMembers(group2).size());
-		AssertJUnit.assertEquals(2, userService().getMemberships(user3).size());
+		AssertJUnit.assertEquals(3, userService().getMemberships(user3).size());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -250,7 +248,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		WasabiUserDTO user1 = userService().getUserByName("user1");
 		groupService().removeMember(group1_1, user1);
 		AssertJUnit.assertEquals(1, groupService().getMembers(group1_1).size());
-		AssertJUnit.assertEquals(0, userService().getMemberships(user1).size());
+		AssertJUnit.assertEquals(1, userService().getMemberships(user1).size());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -341,9 +339,9 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(1, subgroups1.size());
 		AssertJUnit.assertFalse(subgroups1.contains(subgroups1));
 		Vector<WasabiGroupDTO> memberships1 = userService().getMemberships(user1);
-		AssertJUnit.assertEquals(0, memberships1.size());
+		AssertJUnit.assertEquals(1, memberships1.size());
 		Vector<WasabiGroupDTO> memberships3 = userService().getMemberships(user3);
-		AssertJUnit.assertEquals(0, memberships3.size());
+		AssertJUnit.assertEquals(1, memberships3.size());
 	}
 
 	@Test(dependsOnMethods = { ".*set.*" })

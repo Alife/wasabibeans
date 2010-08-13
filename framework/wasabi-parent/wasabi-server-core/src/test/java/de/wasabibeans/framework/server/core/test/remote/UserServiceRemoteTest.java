@@ -30,7 +30,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -46,13 +48,11 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
-		reWaCon.defaultLogin();
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
 		user1 = testhelper.initUserServiceTest();
-		reWaCon.logout();
 
 		reWaCon.login("user", "user");
 	}
@@ -66,7 +66,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	public void get1AllUsersTest() throws Exception {
 		Vector<WasabiUserDTO> users = userService().getAllUsers();
 		AssertJUnit.assertTrue(users.contains(user1));
-		AssertJUnit.assertEquals(4, users.size());
+		AssertJUnit.assertEquals(5, users.size());
 	}
 
 	@Test
@@ -117,7 +117,10 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	
 	@Test 
 	public void get1MembershipsTest() throws Exception {
-		// TODO test that user is in wasabi group
+		Vector<WasabiGroupDTO> memberships = userService().getMemberships(user1);
+		AssertJUnit.assertEquals(1, memberships.size());
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+		AssertJUnit.assertTrue(memberships.contains(wasabiGroup));
 	}
 
 	@Test(dependsOnMethods = { ".*get1.*" })
@@ -131,6 +134,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(HashGenerator.generateHash("pwd", hashAlgorithms.SHA), userService()
 				.getPassword(user3));
 		AssertJUnit.assertTrue(userService().getStatus(user3));
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+		AssertJUnit.assertTrue(groupService().isDirectMember(wasabiGroup, user3));
 
 		try {
 			userService().create(null, "pwd");
@@ -166,13 +171,13 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(userService().getUserByName("user1"));
-			AssertJUnit.assertEquals(4, userService().getAllUsers().size());
+			AssertJUnit.assertEquals(5, userService().getAllUsers().size());
 		}
 
 		userService().rename(user1, "user_2");
 		AssertJUnit.assertEquals("user_2", userService().getName(user1));
 		AssertJUnit.assertNotNull(userService().getUserByName("user_2"));
-		AssertJUnit.assertEquals(4, userService().getAllUsers().size());
+		AssertJUnit.assertEquals(5, userService().getAllUsers().size());
 		AssertJUnit.assertNull(userService().getUserByName("user1"));
 		AssertJUnit.assertEquals(HashGenerator.generateHash("user1", hashAlgorithms.SHA), userService().getPassword(
 				user1));

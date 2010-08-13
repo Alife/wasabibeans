@@ -225,6 +225,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		} finally {
 			s.logout();
 		}
+		
+		// TODO was start-room of a user
 	}
 
 	@Override

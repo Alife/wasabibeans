@@ -34,10 +34,8 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
-import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
@@ -140,21 +138,9 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void initTestUser() throws Exception {
-		String name = "user";
-		WasabiUserSQL.SqlQueryForCreate(name, name);
-
-		JcrConnector jcr = JcrConnector.getJCRConnector();
 		Session s = jcr.getJCRSession();
 		try {
-			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
-			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
-			userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, name);
-			Node wasabiHome = s.getRootNode().getNode(
-					WasabiConstants.ROOT_ROOM_NAME + "/" + WasabiNodeProperty.ROOMS + "/"
-							+ WasabiConstants.HOME_ROOM_NAME);
-			Node homeRoomNode = wasabiHome.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
-			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
-			userNode.setProperty(WasabiNodeProperty.START_ROOM, homeRoomNode);
+			UserServiceImpl.create("user", "user", s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 		} finally {
 			s.logout();

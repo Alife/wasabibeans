@@ -194,8 +194,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
@@ -285,8 +285,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
@@ -374,8 +374,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
@@ -467,8 +467,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
@@ -542,8 +542,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 

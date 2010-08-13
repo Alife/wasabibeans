@@ -44,13 +44,11 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
-		reWaCon.defaultLogin();
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
 		rootRoom = testhelper.initRepository();
 		room1 = testhelper.initRoomServiceTest();
-		testhelper.initDatabase();
 		testhelper.initTestUser();
-		reWaCon.logout();
 
 		reWaCon.login("user", "user");
 	}

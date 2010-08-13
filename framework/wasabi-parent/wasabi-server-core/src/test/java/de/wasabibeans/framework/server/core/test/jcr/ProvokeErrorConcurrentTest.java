@@ -147,8 +147,8 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 		reWaCon.defaultConnectAndLogin();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 

@@ -34,6 +34,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class JcrConnector {
 
+	private static WasabiLogger logger = WasabiLogger.getLogger(JcrConnector.class);
+	
 	private Repository jcrRepository;
 	private JndiConnector jndi;
 
@@ -64,7 +66,7 @@ public class JcrConnector {
 		try {
 			Session s = getJCRRepository().login(
 					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-			System.out.println("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
+			logger.info("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
 			return s;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

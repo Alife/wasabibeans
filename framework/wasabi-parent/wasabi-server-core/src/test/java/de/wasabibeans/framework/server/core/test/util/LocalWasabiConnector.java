@@ -92,18 +92,12 @@ public class LocalWasabiConnector {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");
 		}
-		if (!loggedIn) {
-			throw new LoginException("Not logged in.");
-		}
 		return initialContext.lookup("test/" + name + "/local");
 	}
 
 	public Object lookupGeneral(String name) throws NamingException, LoginException {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");
-		}
-		if (!loggedIn) {
-			throw new LoginException("Not logged in.");
 		}
 		return initialContext.lookup(name);
 	}
@@ -112,18 +106,12 @@ public class LocalWasabiConnector {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");
 		}
-		if (!loggedIn) {
-			throw new LoginException("Not logged in.");
-		}
 		initialContext.bind(name, o);
 	}
 
 	public void unbind(String name) throws LoginException, NamingException {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");
-		}
-		if (!loggedIn) {
-			throw new LoginException("Not logged in.");
 		}
 		try {
 			initialContext.unbind(name);

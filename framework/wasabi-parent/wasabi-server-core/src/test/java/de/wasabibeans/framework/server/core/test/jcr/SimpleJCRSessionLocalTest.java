@@ -81,10 +81,10 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 	@Test
 	public void subsequentWrites() throws Exception {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
-		loCon.defaultConnectAndLogin();
+		loCon.connect();
 		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 		loCon.disconnect();
 
 		/**
@@ -130,10 +130,10 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 	@Test
 	public void concurrentTransactions() throws Throwable {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
-		loCon.defaultConnectAndLogin();
+		loCon.connect();
 		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
-		testhelper.initRepository();
 		testhelper.initDatabase();
+		testhelper.initRepository();
 		loCon.disconnect();
 		final Object activeThreadLock = new Object();
 

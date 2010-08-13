@@ -28,12 +28,10 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test
-		reWaCon.defaultLogin();
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
-		reWaCon.logout();
 
 		reWaCon.login("user", "user");
 	}
