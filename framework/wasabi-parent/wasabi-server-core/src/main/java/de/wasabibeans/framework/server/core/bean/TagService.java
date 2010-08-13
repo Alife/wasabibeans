@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -39,6 +41,7 @@ import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "TagService")
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class TagService extends ObjectService implements TagServiceLocal, TagServiceRemote {
 
 	@Override

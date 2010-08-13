@@ -27,6 +27,8 @@ import java.util.Vector;
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
@@ -47,6 +49,7 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "ObjectService")
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Resource
@@ -60,16 +63,24 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		return ObjectServiceImpl.getName(objectNode);
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			return ObjectServiceImpl.getName(objectNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession(ctx);
-		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		return ObjectServiceImpl.getUUID(objectNode);
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			return ObjectServiceImpl.getUUID(objectNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override

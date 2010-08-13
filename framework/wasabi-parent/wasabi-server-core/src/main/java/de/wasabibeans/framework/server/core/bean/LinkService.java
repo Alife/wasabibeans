@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -42,6 +44,7 @@ import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "LinkService")
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class LinkService extends ObjectService implements LinkServiceLocal, LinkServiceRemote {
 
 	@Override
