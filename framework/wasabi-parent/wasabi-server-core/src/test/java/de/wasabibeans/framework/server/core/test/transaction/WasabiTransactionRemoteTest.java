@@ -82,12 +82,12 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	abstract class UserThread extends Thread {
 		protected Thread otherUser;
 		protected String username;
-		protected Vector<Exception> exceptions;
+		protected Vector<Throwable> throwables;
 
-		public UserThread(String username, Vector<Exception> exceptions) {
+		public UserThread(String username, Vector<Throwable> throwables) {
 			super();
 			this.username = username;
-			this.exceptions = exceptions;
+			this.throwables = throwables;
 		}
 
 		public void setOtherUser(Thread otherUser) {
@@ -121,8 +121,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: NOT POSSIBLE
 	class DirtyReadPreventedThread extends UserThread {
 
-		public DirtyReadPreventedThread(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
+		public DirtyReadPreventedThread(String username, Vector<Throwable> throwables) {
+			super(username, throwables);
 		}
 
 		@Override
@@ -142,10 +142,6 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 				// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
-				if (username.equals(USER2)) {
-					waitForMyTurn();
-				}
-
 				if (username.equals(USER1)) {
 					System.out.println(username + " writes");
 					userService.setDisplayName(user3, USER1);
@@ -154,21 +150,22 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 					notifyOther();
 					waitForCommitOfOther();
 				} else {
+					waitForMyTurn();
 					System.out.println(username + " reads");
 					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
 				}
 
 				utx.commit();
 				reCon.disconnect();
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 
 	}
 
 	@Test
-	public void dirtyReadPreventedTest() throws Exception {
+	public void dirtyReadPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
@@ -184,9 +181,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new DirtyReadPreventedThread(USER1, exceptions);
-		UserThread user2 = new DirtyReadPreventedThread(USER2, exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserThread user1 = new DirtyReadPreventedThread(USER1, throwables);
+		UserThread user2 = new DirtyReadPreventedThread(USER2, throwables);
 		user1.setOtherUser(user2);
 		user2.setOtherUser(user1);
 
@@ -195,8 +192,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 
@@ -214,8 +211,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: POSSIBLE
 	class NonRepeatableReadThread extends UserThread {
 
-		public NonRepeatableReadThread(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
+		public NonRepeatableReadThread(String username, Vector<Throwable> throwables) {
+			super(username, throwables);
 		}
 
 		@Override
@@ -235,10 +232,6 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 				// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
-				if (username.equals(USER2)) {
-					waitForMyTurn();
-				}
-
 				if (username.equals(USER1)) {
 					System.out.println(username + " reads");
 					userService.getDisplayName(user3);
@@ -251,6 +244,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 					userService.getDisplayName(user3);
 					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
 				} else {
+					waitForMyTurn();
 					System.out.println(username + " writes");
 					userService.setDisplayName(user3, USER2);
 					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
@@ -258,15 +252,15 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 				utx.commit();
 				reCon.disconnect();
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 
 	}
 
 	@Test
-	public void nonRepeatableReadTest() throws Exception {
+	public void nonRepeatableReadTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
@@ -282,9 +276,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new NonRepeatableReadThread(USER1, exceptions);
-		UserThread user2 = new NonRepeatableReadThread(USER2, exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserThread user1 = new NonRepeatableReadThread(USER1, throwables);
+		UserThread user2 = new NonRepeatableReadThread(USER2, throwables);
 		user1.setOtherUser(user2);
 		user2.setOtherUser(user1);
 
@@ -293,8 +287,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 
@@ -312,8 +306,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: POSSIBLE, though cases like tx1-write, tx2-write, tx1-commit, tx2-commit lead to a rollback of tx2
 	class LostUpdateRollbackThread extends UserThread {
 
-		public LostUpdateRollbackThread(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
+		public LostUpdateRollbackThread(String username, Vector<Throwable> throwables) {
+			super(username, throwables);
 		}
 
 		@Override
@@ -333,10 +327,6 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 				// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
-				if (username.equals(USER2)) {
-					waitForMyTurn();
-				}
-
 				if (username.equals(USER1)) {
 					System.out.println(username + " writes");
 					userService.setDisplayName(user3, USER1);
@@ -344,6 +334,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 					notifyOther();
 					waitForMyTurn();
 				} else {
+					waitForMyTurn();
 					System.out.println(username + " writes");
 					userService.setDisplayName(user3, USER2);
 					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
@@ -354,15 +345,15 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 				utx.commit();
 				reCon.disconnect();
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 
 	}
 
 	@Test
-	public void lostUpdateRollbackTest() throws Exception {
+	public void lostUpdateRollbackTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
@@ -378,9 +369,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new LostUpdateRollbackThread(USER1, exceptions);
-		UserThread user2 = new LostUpdateRollbackThread(USER2, exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserThread user1 = new LostUpdateRollbackThread(USER1, throwables);
+		UserThread user2 = new LostUpdateRollbackThread(USER2, throwables);
 		user1.setOtherUser(user2);
 		user2.setOtherUser(user1);
 
@@ -391,11 +382,11 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		user2.join();
 
 		boolean rolledBack = false;
-		for (Exception e : exceptions) {
-			if (e instanceof RollbackException) {
+		for (Throwable t : throwables) {
+			if (t instanceof RollbackException) {
 				rolledBack = true;
 			} else {
-				throw e;
+				throw t;
 			}
 		}
 		AssertJUnit.assertTrue(rolledBack);
@@ -410,8 +401,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	class LostUpdateNotPreventedThread extends UserThread {
 
-		public LostUpdateNotPreventedThread(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
+		public LostUpdateNotPreventedThread(String username, Vector<Throwable> throwables) {
+			super(username, throwables);
 		}
 
 		@Override
@@ -451,15 +442,15 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 				utx.commit();
 				reCon.disconnect();
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 
 	}
 
 	@Test
-	public void lostUpdateNotPreventedTest() throws Exception {
+	public void lostUpdateNotPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
@@ -475,9 +466,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new LostUpdateNotPreventedThread(USER1, exceptions);
-		UserThread user2 = new LostUpdateNotPreventedThread(USER2, exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserThread user1 = new LostUpdateNotPreventedThread(USER1, throwables);
+		UserThread user2 = new LostUpdateNotPreventedThread(USER2, throwables);
 		user1.setOtherUser(user2);
 		user2.setOtherUser(user1);
 
@@ -486,8 +477,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 

@@ -82,10 +82,10 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	/** BASIC CLASSES NEEDED FOR THE TRANSACTION TESTS **/
 	class UserTestThread extends Thread {
 		private TestCallable userAction;
-		private Vector<Exception> exceptions;
+		private Vector<Throwable> throwables;
 
-		public UserTestThread(Vector<Exception> exceptions) {
-			this.exceptions = exceptions;
+		public UserTestThread(Vector<Throwable> throwables) {
+			this.throwables = throwables;
 		}
 
 		public void setUserAction(TestCallable userAction) {
@@ -101,8 +101,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				jndi.close();
 				testhelper.call(userAction);
 				System.out.println(userAction.getUsername() + " has committed");
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 	}
@@ -169,10 +169,6 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 			// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
-			if (username.equals(USER2)) {
-				waitForMyTurn();
-			}
-
 			if (username.equals(USER1)) {
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER1);
@@ -181,6 +177,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				notifyOther();
 				waitForCommitOfOther();
 			} else {
+				waitForMyTurn();
 				System.out.println(username + " reads");
 				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
 			}
@@ -192,7 +189,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void dirtyReadPreventedTest() throws Exception {
+	public void dirtyReadPreventedTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
@@ -208,9 +205,9 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserTestThread user1 = new UserTestThread(exceptions);
-		UserTestThread user2 = new UserTestThread(exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserTestThread user1 = new UserTestThread(throwables);
+		UserTestThread user2 = new UserTestThread(throwables);
 		TestCallable userAction1 = new DirtyReadPreventedCallable(USER1, user2);
 		TestCallable userAction2 = new DirtyReadPreventedCallable(USER2, user1);
 		user1.setUserAction(userAction1);
@@ -221,8 +218,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 
@@ -258,10 +255,6 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 			// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
-			if (username.equals(USER2)) {
-				waitForMyTurn();
-			}
-
 			if (username.equals(USER1)) {
 				System.out.println(username + " reads");
 				userService.getDisplayName(user3);
@@ -274,6 +267,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				userService.getDisplayName(user3);
 				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
 			} else {
+				waitForMyTurn();
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER2);
 				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
@@ -286,7 +280,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void nonRepeatableReadTest() throws Exception {
+	public void nonRepeatableReadTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
@@ -302,9 +296,9 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserTestThread user1 = new UserTestThread(exceptions);
-		UserTestThread user2 = new UserTestThread(exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserTestThread user1 = new UserTestThread(throwables);
+		UserTestThread user2 = new UserTestThread(throwables);
 		NonRepeatableReadCallable userAction1 = new NonRepeatableReadCallable(USER1, user2);
 		NonRepeatableReadCallable userAction2 = new NonRepeatableReadCallable(USER2, user1);
 		user1.setUserAction(userAction1);
@@ -315,8 +309,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 
@@ -352,10 +346,6 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			WasabiUserDTO user3 = userService.getUserByName(USER3);
 
 			// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
-			if (username.equals(USER2)) {
-				waitForMyTurn();
-			}
-
 			if (username.equals(USER1)) {
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER1);
@@ -363,6 +353,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				notifyOther();
 				waitForMyTurn();
 			} else {
+				waitForMyTurn();
 				System.out.println(username + " writes");
 				userService.setDisplayName(user3, USER2);
 				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
@@ -378,7 +369,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void lostUpdateRollbackTest() throws Exception {
+	public void lostUpdateRollbackTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
@@ -394,9 +385,9 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserTestThread user1 = new UserTestThread(exceptions);
-		UserTestThread user2 = new UserTestThread(exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserTestThread user1 = new UserTestThread(throwables);
+		UserTestThread user2 = new UserTestThread(throwables);
 		LostUpdateRollbackCallable userAction1 = new LostUpdateRollbackCallable(USER1, user2);
 		LostUpdateRollbackCallable userAction2 = new LostUpdateRollbackCallable(USER2, user1);
 		user1.setUserAction(userAction1);
@@ -409,11 +400,11 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		user2.join();
 
 		boolean rolledBack = false;
-		for (Exception e : exceptions) {
-			if (e instanceof EJBTransactionRolledbackException) {
+		for (Throwable t : throwables) {
+			if (t instanceof EJBTransactionRolledbackException) {
 				rolledBack = true;
 			} else {
-				throw e;
+				throw t;
 			}
 		}
 		AssertJUnit.assertTrue(rolledBack);
@@ -471,7 +462,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void lostUpdateNotPreventedTest() throws Exception {
+	public void lostUpdateNotPreventedTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
@@ -487,9 +478,9 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserTestThread user1 = new UserTestThread(exceptions);
-		UserTestThread user2 = new UserTestThread(exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserTestThread user1 = new UserTestThread(throwables);
+		UserTestThread user2 = new UserTestThread(throwables);
 		LostUpdateNotPreventedCallable userAction1 = new LostUpdateNotPreventedCallable(USER1, user2);
 		LostUpdateNotPreventedCallable userAction2 = new LostUpdateNotPreventedCallable(USER2, user1);
 		user1.setUserAction(userAction1);
@@ -500,8 +491,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		user1.join();
 		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user transactions have committed.");
 
@@ -546,7 +537,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void userCreateRollbackTest() throws Exception {
+	public void userCreateRollbackTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.defaultConnectAndLogin();
 
@@ -560,8 +551,8 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserTestThread user1 = new UserTestThread(exceptions);
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		UserTestThread user1 = new UserTestThread(throwables);
 		TestCallable userAction1 = new UserCreateRollbackCallable(USER1, null);
 		user1.setUserAction(userAction1);
 
@@ -569,11 +560,11 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		user1.join();
 		
 		boolean rolledBack = false;
-		for (Exception e : exceptions) {
-			if (e instanceof EJBTransactionRolledbackException) {
+		for (Throwable t : throwables) {
+			if (t instanceof EJBTransactionRolledbackException) {
 				rolledBack = true;
 			} else {
-				throw e;
+				throw t;
 			}
 		}
 		AssertJUnit.assertTrue(rolledBack);
