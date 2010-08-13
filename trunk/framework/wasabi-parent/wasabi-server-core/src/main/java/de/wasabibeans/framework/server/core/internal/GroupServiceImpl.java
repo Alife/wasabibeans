@@ -146,6 +146,16 @@ public class GroupServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+	
+	public static Node getWasabiGroup(Session s) throws UnexpectedInternalProblemException {
+		try {
+		return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(WasabiConstants.WASABI_GROUP_NAME);
+		} catch (PathNotFoundException pnfe) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_WASABI_GROUP, pnfe);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
 
 	public static NodeIterator getGroupsByDisplayName(String displayName, Session s)
 			throws UnexpectedInternalProblemException {
@@ -289,10 +299,7 @@ public class GroupServiceImpl {
 
 	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
-			groupNode.getNode(WasabiNodeProperty.MEMBERS).getNode(userNode.getIdentifier());
-			return true;
-		} catch (PathNotFoundException pnfe) {
-			return false;
+			return groupNode.getNode(WasabiNodeProperty.MEMBERS).hasNode(userNode.getIdentifier());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

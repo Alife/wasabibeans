@@ -67,6 +67,7 @@ public class UserServiceImpl {
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), callerPrincipal, s);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode);
+			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode);
 
 			/* ACL Environment - Begin */
 			WasabiUserSQL.SqlQueryForCreate(name, password);
@@ -83,7 +84,6 @@ public class UserServiceImpl {
 		}
 
 		// TODO environment
-		// TODO wasabi group
 	}
 
 	public static NodeIterator getAllUsers(Session s) throws UnexpectedInternalProblemException {
