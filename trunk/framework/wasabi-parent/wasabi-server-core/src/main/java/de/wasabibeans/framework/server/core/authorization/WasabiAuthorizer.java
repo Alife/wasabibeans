@@ -23,6 +23,7 @@ package de.wasabibeans.framework.server.core.authorization;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Vector;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -187,8 +188,91 @@ public class WasabiAuthorizer {
 		return result;
 	}
 
-	private static void priorityCheck2() {
+	private static boolean priorityCheck2(String objectUUID, String userUUID, int permission)
+			throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		long time = java.lang.System.currentTimeMillis();
+
+		try {
+			String getACLEntries = "SELECT * FROM wasabi_rights WHERE `object_id`=?";
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID);
+
+			// Filter and check explicit user time rights
+			List<WasabiACLEntry> explicitUserTimeRights = new Vector<WasabiACLEntry>();
+
+			for (WasabiACLEntry wasabiACLEntry : result) {
+				if (wasabiACLEntry.getUser_Id().equals(userUUID) && wasabiACLEntry.getInheritance_Id().equals("")
+						&& wasabiACLEntry.getStart_Time() <= time && wasabiACLEntry.getEnd_Time() >= time) {
+					explicitUserTimeRights.add(wasabiACLEntry);
+				}
+			}
+
+			// Allowance check
+			if (checkUserPriority(explicitUserTimeRights, permission) == -1) {
+				return false;
+			} else if (checkUserPriority(explicitUserTimeRights, permission) == 1) {
+				return true;
+			} else {
+				// Filter inherited user time rights
+				List<WasabiACLEntry> inheritedUserTimeRights = new Vector<WasabiACLEntry>();
+
+				for (WasabiACLEntry wasabiACLEntry : result) {
+					if (wasabiACLEntry.getUser_Id().equals(userUUID) && !wasabiACLEntry.getInheritance_Id().equals("")
+							&& wasabiACLEntry.getStart_Time() <= time && wasabiACLEntry.getEnd_Time() >= time) {
+						inheritedUserTimeRights.add(wasabiACLEntry);
+					}
+				}
+
+				// Allowance check
+				if (checkUserPriority(inheritedUserTimeRights, permission) == -1) {
+					return false;
+				} else if (checkUserPriority(inheritedUserTimeRights, permission) == 1) {
+					return true;
+				} else {
+					// Filter explicit user rights
+					List<WasabiACLEntry> explicitUserRights = new Vector<WasabiACLEntry>();
+
+					for (WasabiACLEntry wasabiACLEntry : result) {
+						if (wasabiACLEntry.getUser_Id().equals(userUUID)
+								&& wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() <= 0
+								&& wasabiACLEntry.getEnd_Time() >= 0) {
+							explicitUserRights.add(wasabiACLEntry);
+						}
+					}
+
+					// Allowance check
+					if (checkUserPriority(explicitUserRights, permission) == -1) {
+						return false;
+					} else if (checkUserPriority(explicitUserRights, permission) == 1) {
+						return true;
+					} else {
+						// Filter inherited user rights
+						List<WasabiACLEntry> inheritedUserRights = new Vector<WasabiACLEntry>();
+
+						for (WasabiACLEntry wasabiACLEntry : result) {
+							if (wasabiACLEntry.getUser_Id().equals(userUUID)
+									&& !wasabiACLEntry.getInheritance_Id().equals("")
+									&& wasabiACLEntry.getStart_Time() <= 0 && wasabiACLEntry.getEnd_Time() >= 0) {
+								explicitUserRights.add(wasabiACLEntry);
+							}
+						}
+
+						if (checkUserPriority(inheritedUserRights, permission) == -1) {
+							return false;
+						} else if (checkUserPriority(inheritedUserRights, permission) == 1) {
+							return true;
+						} else {
+							return false;
+							// TODO: Group check mechanism
+						}
+					}
+				}
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
 	}
 
 	public static boolean authorize(Node objectNode, String callerPrincipal, int[] permission, Session s)
@@ -205,7 +289,7 @@ public class WasabiAuthorizer {
 		try {
 			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 			String userUUID = UserServiceImpl.getUserByName(callerPrincipal, s).getIdentifier();
-			return priorityCheck1(objectUUID, userUUID, permission);
+			return priorityCheck2(objectUUID, userUUID, permission);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
