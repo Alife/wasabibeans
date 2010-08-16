@@ -34,9 +34,14 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -62,10 +67,19 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	}
 
 	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+			/* Authorization - End */
+
 			return ObjectServiceImpl.getName(objectNode);
 		} finally {
 			s.logout();
