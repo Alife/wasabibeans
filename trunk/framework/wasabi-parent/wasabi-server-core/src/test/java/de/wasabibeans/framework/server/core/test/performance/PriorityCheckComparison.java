@@ -1,5 +1,7 @@
 package de.wasabibeans.framework.server.core.test.performance;
 
+import java.util.Vector;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.annotations.AfterMethod;
@@ -35,8 +37,6 @@ public class PriorityCheckComparison extends WasabiRemoteTest {
 	@Test
 	public void createTest() throws WasabiException {
 
-		long start = System.currentTimeMillis();
-
 		// Create user
 		WasabiUserDTO user = userService().create("testUser", "password");
 		WasabiUserDTO loginUser = userService().getUserByName("user");
@@ -45,14 +45,32 @@ public class PriorityCheckComparison extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
 		aclService().create(usersHome, loginUser, WasabiPermission.INSERT, true);
 
+		long start = System.currentTimeMillis();
+		
 		for (int i = 0; i < 200; i++) {
 			roomService().create("room" + i, usersHome);
 			System.out.println("Raum " + i + " erstellt.");
 		}
-
+		
 		long end = System.currentTimeMillis();
-		System.out.println("Start: " + start + ", End: " + end);
-		System.out.println("Runtime: " + (end - start));
+
+		
+		
+		//list nodes
+		long start1 = System.currentTimeMillis();
+		
+		Vector<WasabiRoomDTO> rooms = roomService().getRooms(usersHome);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms) {
+			System.out.println(roomService().getName(wasabiRoomDTO));
+		}
+		
+		long end1 = System.currentTimeMillis();
+		
+		System.out.println("Runtime create: " + (end - start));
+		System.out.println("Runtime getRooms: " + (end1 - start1));
+		
+		
+		
 
 	}
 }

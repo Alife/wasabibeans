@@ -294,4 +294,38 @@ public class WasabiAuthorizer {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+	
+//	public static Vector<String> authorizeVIEW() {
+//		
+//	}
+//	
+//	private static Vector<String> ViewFilter(String parentUUID, String userUUID) throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		long time = java.lang.System.currentTimeMillis();
+//		
+//		Vector<String> results = new Vector<String>();
+//		
+//		try {
+//			// explicit user time rights
+//			String getExplicitUserTimeRights = "SELECT * FROM wasabi_rights "
+//					+ "WHERE `parent_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? AND `inheritance_id`=? AND `view`=?";
+//			
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getExplicitUserTimeRights, h1, parentUUID, userUUID, time, time,
+//					"",1);
+//			
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				if(!results.contains(wasabiACLEntry.getObject_Id()))
+//					results.add(wasabiACLEntry.getObject_Id());
+//			}
+//			
+//			
+//			
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//		
+//		return results;
+//	}
 }
