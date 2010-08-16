@@ -289,7 +289,7 @@ public class WasabiAuthorizer {
 		try {
 			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 			String userUUID = UserServiceImpl.getUserByName(callerPrincipal, s).getIdentifier();
-			return priorityCheck2(objectUUID, userUUID, permission);
+			return priorityCheck1(objectUUID, userUUID, permission);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
