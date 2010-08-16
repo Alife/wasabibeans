@@ -48,26 +48,25 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 
 		// Create document in users homeRoom and set rights to view, read document
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
-		
+
 		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
 		aclService().deactivateInheritance(room1);
 		WasabiRoomDTO room2 = roomService().create("room2", room1);
-		
-		aclService().create(room1, user, new int[] {WasabiPermission.VIEW}, new boolean[] {true});
+
+		aclService().create(room1, user, new int[] { WasabiPermission.VIEW }, new boolean[] { true });
 		aclService().activateInheritance(room2);
-		
+
 		aclService().createDefault(room2, WasabiType.ROOM,
 				new int[] { WasabiPermission.COMMENT, WasabiPermission.WRITE }, new boolean[] { true, true });
-		
+
 		WasabiRoomDTO room3 = roomService().create("room3", room2);
-		
+
 		displayACLEntry(room3, "Raum3");
-		
+
 		WasabiRoomDTO room4 = roomService().create("room4", room3);
-		
+
 		displayACLEntry(room4, "Raum4");
 	}
-
 
 	private void displayDefaultACLEntry(WasabiLocationDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {

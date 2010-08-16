@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
@@ -65,9 +66,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 			/* Authorization - Begin */
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
 			/* Authorization - End */
 
 			Node roomNode = RoomServiceImpl.create(name, environmentNode, callerPrincipal, s);
@@ -225,7 +227,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		} finally {
 			s.logout();
 		}
-		
+
 		// TODO was start-room of a user
 	}
 

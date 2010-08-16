@@ -23,11 +23,9 @@ package de.wasabibeans.framework.server.core.exception;
 
 import javax.ejb.ApplicationException;
 
-import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
-
-@ApplicationException(rollback=true)
+@ApplicationException(rollback = true)
 public class NoPermissionException extends WasabiException {
-	
+
 	/**
 	 * Generated serial version UID
 	 */

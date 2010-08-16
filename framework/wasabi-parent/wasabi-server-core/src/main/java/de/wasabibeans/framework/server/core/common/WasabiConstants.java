@@ -33,7 +33,7 @@ public interface WasabiConstants {
 	public final static String WASABI_GROUP_NAME = "wasabi";
 	
 	/* ACL checks and entries */
-	public final static boolean ACL_CHECK_ENABLE = true;
+	public final static boolean ACL_CHECK_ENABLE = false;
 	public final static boolean ACL_ENTRY_ENABLE = true;
 
 	/* Enumerations */
