@@ -40,14 +40,20 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 
 	@Test
 	public void createTest() throws WasabiException {
-		// Create user
-		WasabiUserDTO user = userService().create("aclInheritanceTestUser", "password");
 
 		// Create document in users homeRoom and set rights to view, read document
+		WasabiUserDTO user= userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
+		
+		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
+				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
+		boolean[] allow = { true, true, true, true, true, true, true };
+		//aclService().create(usersHome, loginUser, rights, allow);
+		
 		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
 		WasabiRoomDTO room2 = roomService().create("room2", room1);
 		WasabiRoomDTO room3 = roomService().create("room3", room2);
+
 
 		aclService().deactivateInheritance(room1);
 		
@@ -55,7 +61,7 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		// room1 to room2
 		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
 				new boolean[] { true, true });
-		// aclService().activateInheritance(room2);
+	    //aclService().activateInheritance(room2);
 
 		// aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
 
@@ -102,7 +108,7 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
 				new boolean[] { true, true });
 		//reset for room1
-		//aclService().reset(room1);
+		aclService().reset(room1);
 		
 		// getAclEntries for room1
 		displayACLEntry(room1, "Raum1");
