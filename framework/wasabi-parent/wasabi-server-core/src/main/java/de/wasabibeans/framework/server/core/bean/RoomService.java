@@ -113,18 +113,22 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
-			NodeIterator ni = RoomServiceImpl.getRooms(roomNode);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			while (ni.hasNext()) {
-				/* Authorization - Begin */
-				if (WasabiConstants.ACL_CHECK_ENABLE) {
-					if (WasabiAuthorizer.authorize(ni.nextNode(), callerPrincipal, WasabiPermission.VIEW, s))
-						rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-				} else {
-					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizeVIEW(roomNode, callerPrincipal, s);
+				for (String string : authorizedRooms) {
+					Node aNode = RoomServiceImpl.getRoomById(string, s);
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(aNode));
 				}
-				/* Authorization - End */
+			} else {
+				NodeIterator ni = RoomServiceImpl.getRooms(roomNode);
+				while (ni.hasNext())
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 			}
+			/* Authorization - End */
+
 			return rooms;
 		} finally {
 			s.logout();
