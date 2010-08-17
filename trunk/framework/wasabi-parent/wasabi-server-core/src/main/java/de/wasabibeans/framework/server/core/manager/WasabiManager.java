@@ -67,6 +67,7 @@ public class WasabiManager {
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
 				+ "`end_time` float NOT NULL DEFAULT '0'," + "`inheritance_id` varchar(64) NOT NULL,"
+				+ "`priority` tinyint(2) NOT NULL,"
 				+ "PRIMARY KEY (`id`,`object_id`,`user_id`,`group_id`,`start_time`,`end_time`,`inheritance_id`)"
 				+ ") ENGINE = InnoDB ;";
 		try {

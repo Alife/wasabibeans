@@ -98,6 +98,14 @@ public class RoomServiceImpl {
 		return null;
 	}
 
+	public static Node getRoomById(String id, Session s) throws UnexpectedInternalProblemException {
+		try {
+			return s.getNodeByIdentifier(id);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static Vector<Node> getRoomsByCreationDate(Node environment, Date startDate, Date endDate) {
 		// TODO Auto-generated method stub
 		return null;
