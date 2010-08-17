@@ -22,8 +22,10 @@
 package de.wasabibeans.framework.server.core.authorization;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
@@ -33,18 +35,24 @@ public class WasabiUserACL {
 
 	public static void ACLEntryForCreate(Node userNode, Node homeRoomNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException {
-		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
-				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
-		boolean[] allow = { true, true, true, true, true, true, true };
+		try {
+			int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT,
+					WasabiPermission.WRITE, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
+			boolean[] allow = { true, true, true, true, true, true, true };
 
-		ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0, s);
-		ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0, s);
+			if (!userNode.getName().equals("root") && !userNode.getName().equals("admin")) {
+				ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0, s);
+				ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0, s);
+			}
 
-		// TODO: deactivate inheritance; check if callerPrincipal is in admin group
-		if (!callerPrincipal.equals("root")) {
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-			if (callerPrincipalNode != userNode)
-				ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0, s);
+			// TODO: deactivate inheritance; check if callerPrincipal is in admin group
+			if (!callerPrincipal.equals("root") && !callerPrincipal.equals("admin")) {
+				Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+				if (callerPrincipalNode != userNode)
+					ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0, s);
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 }
