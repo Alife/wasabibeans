@@ -146,10 +146,11 @@ public class GroupServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
+
 	public static Node getWasabiGroup(Session s) throws UnexpectedInternalProblemException {
 		try {
-		return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(WasabiConstants.WASABI_GROUP_NAME);
+			return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(
+					WasabiConstants.WASABI_GROUP_NAME);
 		} catch (PathNotFoundException pnfe) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_WASABI_GROUP, pnfe);
 		} catch (RepositoryException re) {
@@ -255,11 +256,11 @@ public class GroupServiceImpl {
 
 	public static Node getParentGroup(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
-			Node firstJcrParent = groupNode.getParent();
-			if (firstJcrParent.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUPS)) {
+			Node parent = groupNode.getParent().getParent();
+			if (parent.getName().equals("")) { // only the root node has an empty name (see JSR 283 3.1.3)
 				return null;
 			}
-			return firstJcrParent.getParent();
+			return parent;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

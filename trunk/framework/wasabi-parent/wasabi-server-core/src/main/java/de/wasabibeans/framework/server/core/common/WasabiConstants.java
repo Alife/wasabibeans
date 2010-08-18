@@ -64,6 +64,7 @@ public interface WasabiConstants {
 
 	/* JCR */
 	public final static String JCR_NS_PREFIX = "wasabi";
+	public final static String JCR_NS_PREFIX_STRUCTURE = "wasabiStructure";
 	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
 	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
 	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";

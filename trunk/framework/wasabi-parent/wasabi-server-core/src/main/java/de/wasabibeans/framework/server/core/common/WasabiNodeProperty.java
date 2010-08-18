@@ -60,8 +60,8 @@ public class WasabiNodeProperty {
 	public static final String DESTINATION = WasabiConstants.JCR_NS_PREFIX + ":destination";
 
 	// properties of wasabi:tag
-	public static final String TEXT = WasabiConstants.JCR_NS_PREFIX + ":text";
-	
+	public static final String TEXT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":text";
+
 	// properties of wasabi:objectref
-	public static final String REFERENCED_OBJECT = WasabiConstants.JCR_NS_PREFIX + ":referencedObject";
+	public static final String REFERENCED_OBJECT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":referencedObject";
 }
