@@ -59,14 +59,16 @@ public class WasabiExceptionMessages {
 	/* Internal Services */
 	public final static String INTERNAL_DOCUMENT_CONTENT_LOAD = "An exception occurred while trying to load the content of the given document.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_SAVE = "An exception occurred while trying to save the given content.";
+	public final static String INTERNAL_LOCK_AQUISITION = "Internal Problem: A lock could not be acquired.";
+	public final static String INTERNAL_LOCK_RELEASE = "Internal Problem: A lock could not be released.";
 	public final static String INTERNAL_NO_ROOT_ROOM = "Internal Problem: The root room does not exist.";
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
 	public final static String INTERNAL_NO_WASABI_GROUP = "Internal Problem: The wasabi group does not exist.";
 	public final static String INTERNAL_OBJECT_ALREADY_EXISTS = "The &0 &1 already exists.";
 	public final static String INTERNAL_PARAM_NULL = "The given &0 must not be null.";
-	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
 	public final static String INTERNAL_TYPE_CONFLICT = "Wrong WasabiType.";
+	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
 	
 	/* Authorization */
 	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access.";

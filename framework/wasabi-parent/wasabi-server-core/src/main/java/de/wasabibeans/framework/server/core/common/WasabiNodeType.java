@@ -31,10 +31,11 @@ public class WasabiNodeType {
 	public static final String DOCUMENT = WasabiConstants.JCR_NS_PREFIX + ":document";
 	public static final String LINK = WasabiConstants.JCR_NS_PREFIX + ":link";
 	public static final String ATTRIBUTE = WasabiConstants.JCR_NS_PREFIX + ":attribute";
-	public static final String TAG = WasabiConstants.JCR_NS_PREFIX + ":tag";
-	
+
 	// node types for structuring
-	public static final String OBJECT_REF = WasabiConstants.JCR_NS_PREFIX + ":objectref";
-	public static final String GROUPS = WasabiConstants.JCR_NS_PREFIX + ":groups";
-	public static final String USERS = WasabiConstants.JCR_NS_PREFIX + ":users";
+	public static final String TAG = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tag";
+	public static final String TAGS = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tags";
+	public static final String OBJECT_COLLECTION = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":objectCollection";
+	public static final String REF_COLLECTION = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":refCollection";
+	public static final String OBJECT_REF = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":objectref";
 }
