@@ -31,6 +31,7 @@ public class WasabiNodeProperty {
 	public static final String ATTRIBUTES = WasabiConstants.JCR_NS_PREFIX + ":attributes";
 	public static final String TAGS = WasabiConstants.JCR_NS_PREFIX + ":tags";
 	public static final String INHERITANCE = WasabiConstants.JCR_NS_PREFIX + ":inheritance";
+	public static final String VERSION = WasabiConstants.JCR_NS_PREFIX + ":version";
 
 	// properties of wasabi:location
 	public static final String DOCUMENTS = WasabiConstants.JCR_NS_PREFIX + ":documents";

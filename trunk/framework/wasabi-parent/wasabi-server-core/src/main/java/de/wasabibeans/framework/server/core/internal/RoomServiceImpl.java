@@ -42,14 +42,16 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class RoomServiceImpl {
 
-	public static Node create(String name, Node environmentNode, String callerPrincipal, Session s)
+	public static Node create(String name, Node environmentNode, Session s, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
+			// special case when creating the room of the root user or when creating the wasabi home room
+			if (name.equals(WasabiConstants.ROOT_USER_NAME) || name.equals(WasabiConstants.HOME_ROOM_NAME)) {
+				ObjectServiceImpl.created(roomNode, s, null, true);
+			} else {
+				ObjectServiceImpl.created(roomNode, s, callerPrincipal, true);
+			}
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
@@ -72,10 +74,6 @@ public class RoomServiceImpl {
 	}
 
 	public static Node getRoomByName(Node roomNode, String name) throws UnexpectedInternalProblemException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
 		try {
 			return roomNode.getNode(WasabiNodeProperty.ROOMS + "/" + name);
 		} catch (PathNotFoundException e) {
@@ -168,11 +166,12 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void move(Node roomNode, Node newEnvironmentNode) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static void move(Node roomNode, Node newEnvironmentNode, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			roomNode.getSession().move(roomNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/" + roomNode.getName());
+			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
 		} catch (ItemExistsException iee) {
 			try {
 				String name = roomNode.getName();
@@ -190,8 +189,8 @@ public class RoomServiceImpl {
 		ObjectServiceImpl.remove(roomNode);
 	}
 
-	public static void rename(Node roomNode, String name) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(roomNode, name);
+	public static void rename(Node roomNode, String name, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+		ObjectServiceImpl.rename(roomNode, name, callerPrincipal);
 	}
 }

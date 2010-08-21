@@ -29,6 +29,7 @@ import org.jboss.arquillian.api.RunModeType;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
@@ -76,12 +77,15 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 	abstract class UserThread extends Thread {
 		protected Thread otherUser;
 		protected String username;
-		protected Vector<Exception> exceptions;
+		protected Vector<Throwable> throwables;
 
-		public UserThread(String username, Vector<Exception> exceptions) {
+		public UserThread(String username) {
 			super();
 			this.username = username;
-			this.exceptions = exceptions;
+		}
+		
+		public void setThrowables(Vector<Throwable> throwables) {
+			this.throwables = throwables;
 		}
 
 		public void setOtherUser(Thread otherUser) {
@@ -107,13 +111,33 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 		@Override
 		public abstract void run();
 	}
+	
+	public Vector<Throwable> executeUserThreads(UserThread user1, UserThread user2) throws Throwable {
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		user1.setThrowables(throwables);
+		user2.setThrowables(throwables);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
+		return throwables;
+	}
 
 	// --------------------------------------------------------------------------------------------
 
 	class ProvokeError extends UserThread {
 
-		public ProvokeError(String username, Vector<Exception> exceptions) {
-			super(username, exceptions);
+		public ProvokeError(String username) {
+			super(username);
 		}
 
 		@Override
@@ -134,15 +158,15 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 				}
 
 				reCon.disconnect();
-			} catch (Exception e) {
-				exceptions.add(e);
+			} catch (Throwable t) {
+				throwables.add(t);
 			}
 		}
 
 	}
 
 	@Test
-	public void provokeErrorTest() throws Exception {
+	public void provokeErrorTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.defaultConnectAndLogin();
 
@@ -157,19 +181,11 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Exception> exceptions = new Vector<Exception>();
-		UserThread user1 = new ProvokeError(USER1, exceptions);
-		UserThread user2 = new ProvokeError(USER2, exceptions);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
+		UserThread user1 = new ProvokeError(USER1);
+		UserThread user2 = new ProvokeError(USER2);
+		Vector<Throwable> throwables = executeUserThreads(user1, user2);
+		if (!throwables.isEmpty()) {
+			throw throwables.get(0);
 		}
 		System.out.println("Both user threads are done.");
 	}

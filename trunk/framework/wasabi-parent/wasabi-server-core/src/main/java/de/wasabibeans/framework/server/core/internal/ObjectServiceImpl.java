@@ -21,14 +21,17 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -37,9 +40,6 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public class ObjectServiceImpl {
 
 	public static String getName(Node objectNode) throws UnexpectedInternalProblemException {
-		if (objectNode == null) {
-			return "";
-		}
 		try {
 			return objectNode.getName();
 		} catch (RepositoryException re) {
@@ -48,9 +48,6 @@ public class ObjectServiceImpl {
 	}
 
 	public static String getUUID(Node objectNode) throws UnexpectedInternalProblemException {
-		if (objectNode == null) {
-			return "";
-		}
 		try {
 			return objectNode.getIdentifier();
 		} catch (RepositoryException re) {
@@ -66,14 +63,11 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void rename(Node objectNode, String name) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
+	public static void rename(Node objectNode, String name, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			objectNode.getSession().move(objectNode.getPath(), objectNode.getParent().getPath() + "/" + name);
+			ObjectServiceImpl.modified(objectNode, objectNode.getSession(), callerPrincipal, false);
 		} catch (ItemExistsException iee) {
 			try {
 				String what = objectNode.getPrimaryNodeType().getName();
@@ -100,24 +94,36 @@ public class ObjectServiceImpl {
 		return false;
 	}
 
-	public static WasabiUserDTO getCreatedBy(Node objectNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Node getCreatedBy(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			return objectNode.getProperty(WasabiNodeProperty.CREATED_BY).getNode();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static Date getCreatedOn(Node objectNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Date getCreatedOn(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			return objectNode.getProperty(WasabiNodeProperty.CREATED_ON).getDate().getTime();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static WasabiUserDTO getModifiedBy(Node objectNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Node getModifiedBy(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			return objectNode.getProperty(WasabiNodeProperty.MODIFIED_BY).getNode();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static Date getModifiedOn(Node objectNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Date getModifiedOn(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			return objectNode.getProperty(WasabiNodeProperty.MODIFIED_ON).getDate().getTime();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) {
@@ -145,24 +151,123 @@ public class ObjectServiceImpl {
 		return false;
 	}
 
-	public static void setCreatedBy(Node objectNode, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-
+	public static void setCreatedBy(Node objectNode, Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, userNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static void setCreatedOn(Node objectNode, Date creationTime) {
-		// TODO Auto-generated method stub
-
+	public static void setCreatedOn(Node objectNode, Date creationTime) throws UnexpectedInternalProblemException {
+		if (creationTime == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"creationTime"));
+		}
+		try {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(creationTime);
+			objectNode.setProperty(WasabiNodeProperty.CREATED_ON, cal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static void setModifiedBy(Node objectNode, WasabiUserDTO user) {
-		// TODO Auto-generated method stub
-
+	public static void setModifiedBy(Node objectNode, Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			objectNode.setProperty(WasabiNodeProperty.MODIFIED_BY, userNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static void setModifiedOn(Node objectNode, Date modificationTime) {
-		// TODO Auto-generated method stub
+	public static void setModifiedOn(Node objectNode, Date modificationTime) throws UnexpectedInternalProblemException {
+		if (modificationTime == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"modificationTime"));
+		}
+		try {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(modificationTime);
+			objectNode.setProperty(WasabiNodeProperty.MODIFIED_ON, cal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
 
+	public static long getVersion(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			return objectNode.getProperty(WasabiNodeProperty.VERSION).getLong();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void setVersion(Node objectNode, long version) throws UnexpectedInternalProblemException {
+		try {
+			objectNode.setProperty(WasabiNodeProperty.VERSION, version);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Sets the wasabi:createdOn, wasabi:createdBy, wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:version properties
+	 * for the given {@code objectNode}. If the the given {@code callerPrincipal} is {@code null} and the given {@code
+	 * nullEntryEnabled} is {@code true}, the properties wasabi:createdBy and wasabi:modifiedBy will be set to {@code
+	 * null}. If the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled} is {@code
+	 * false}, none of the properties will be set.
+	 * 
+	 * @param objectNode
+	 * @param s
+	 * @param callerPrincipal
+	 * @param nullEntryEnabled
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static void created(Node objectNode, Session s, String callerPrincipal, boolean nullEntryEnabled)
+			throws UnexpectedInternalProblemException {
+		Node currentUser = null;
+		if (callerPrincipal != null) {
+			currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
+		} else {
+			if (!nullEntryEnabled) {
+				return;
+			}
+		}
+		Date timestamp = Calendar.getInstance().getTime();
+		ObjectServiceImpl.setCreatedOn(objectNode, timestamp);
+		ObjectServiceImpl.setCreatedBy(objectNode, currentUser);
+		ObjectServiceImpl.setModifiedOn(objectNode, timestamp);
+		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
+		ObjectServiceImpl.setVersion(objectNode, 0);
+	}
+
+	/**
+	 * Sets the wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:version properties for the given {@code objectNode}. If
+	 * the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled} is {@code true}, the
+	 * property wasabi:modifiedBy will be set to {@code null}. If the the given {@code callerPrincipal} is {@code null}
+	 * and the given {@code nullEntryEnabled} is {@code false}, none of the properties will be set.
+	 * 
+	 * @param objectNode
+	 * @param s
+	 * @param callerPrincipal
+	 * @param nullEntryEnabled
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static void modified(Node objectNode, Session s, String callerPrincipal, boolean nullEntryEnabled)
+			throws UnexpectedInternalProblemException {
+		Node currentUser = null;
+		if (callerPrincipal != null) {
+			currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
+		} else {
+			if (!nullEntryEnabled) {
+				return;
+			}
+		}
+		ObjectServiceImpl.setModifiedOn(objectNode, Calendar.getInstance().getTime());
+		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
+		long currentVersion = ObjectServiceImpl.getVersion(objectNode);
+		ObjectServiceImpl.setVersion(objectNode, ++currentVersion);
 	}
 
 	public static void setRightsActive(Node objectNode, boolean rightsActive) {

@@ -42,6 +42,7 @@ public class WasabiExceptionMessages {
 	public final static String TRANSFER_DTO2NODE_NULLSESSION = "Internal Problem: Attempted to convert DTO to JCR node without a given JCR session.";
 	public final static String TRANSFER_NODE2DTO_NULLNODE = "Internal Problem: Attempted to convert null to DTO.";
 	public final static String TRANSFER_NODE2DTO_REFLECTERROR = "Internal Problem: Could not create corresponding DTO for given JCR node.";
+	public final static String TRANSFER_VALUE2DTO_NULLVERSION = "Internal Problem: Attempted to convert value to DTO with null version";
 
 	/* JNDI */
 	public final static String JNDI_FAILED_BIND = "Internal Problem: Could not bind &0 to JNDI context.";
@@ -49,18 +50,18 @@ public class WasabiExceptionMessages {
 	public final static String JNDI_FAILED_UNBIND = "Internal Problem: Could not unbind &0 from JNDI context.";
 	public final static String JNDI_FAILED_UNBIND_NAME_NOT_BOUND = "Attempted to unbind &0 from JNDI context, although it is not bound";
 	public final static String JNDI_NO_CONTEXT = "Internal Problem: Could not access the JNDI context.";
-	
+
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Internal Problem: Could not use JCR repository as expected.";
-	
+
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
 
 	/* Internal Services */
+	public final static String INTERNAL_CONCURRENT_MODIFICATION = "Write access to the WasabiObject &0 could not be acquired, because there was a concurrent modification. Please refresh your data and try again.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_LOAD = "An exception occurred while trying to load the content of the given document.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_SAVE = "An exception occurred while trying to save the given content.";
-	public final static String INTERNAL_LOCK_AQUISITION = "Internal Problem: A lock could not be acquired.";
-	public final static String INTERNAL_LOCK_RELEASE = "Internal Problem: A lock could not be released.";
+	public final static String INTERNAL_LOCK_RELEASE = "Internal Problem: A lock on &0 could not be released.";
 	public final static String INTERNAL_NO_ROOT_ROOM = "Internal Problem: The root room does not exist.";
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
@@ -69,7 +70,7 @@ public class WasabiExceptionMessages {
 	public final static String INTERNAL_PARAM_NULL = "The given &0 must not be null.";
 	public final static String INTERNAL_TYPE_CONFLICT = "Wrong WasabiType.";
 	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
-	
+
 	/* Authorization */
 	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access.";
 }

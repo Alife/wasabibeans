@@ -41,6 +41,8 @@ import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -55,7 +57,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 @Run(RunModeType.IN_CONTAINER)
 public class WasabiTransactionLocalTest extends Arquillian {
 
-	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3";
+	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3", USER4 = "user4";
 
 	private final static Object activeThreadLock = new Object();
 
@@ -84,12 +86,16 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		private TestCallable userAction;
 		private Vector<Throwable> throwables;
 
-		public UserTestThread(Vector<Throwable> throwables) {
-			this.throwables = throwables;
+		public UserTestThread() {
+
 		}
 
 		public void setUserAction(TestCallable userAction) {
 			this.userAction = userAction;
+		}
+
+		public void setThrowables(Vector<Throwable> throwables) {
+			this.throwables = throwables;
 		}
 
 		@Override
@@ -105,6 +111,28 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				throwables.add(t);
 			}
 		}
+	}
+
+	public Vector<Throwable> executeUserThreads(UserTestThread user1, UserTestThread user2, TestCallable userAction1,
+			TestCallable userAction2) throws Throwable {
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		user1.setThrowables(throwables);
+		user2.setThrowables(throwables);
+		
+		user1.setUserAction(userAction1);
+		user2.setUserAction(userAction2);
+
+		user1.start();
+		user2.start();
+
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
+		return throwables;
 	}
 
 	abstract class TestCallable implements Callable<Object> {
@@ -171,15 +199,15 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
 			if (username.equals(USER1)) {
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER1);
-				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER1, null);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 
 				notifyOther();
 				waitForCommitOfOther();
 			} else {
 				waitForMyTurn();
 				System.out.println(username + " reads");
-				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 			}
 
 			loCon.disconnect();
@@ -191,12 +219,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	@Test
 	public void dirtyReadPreventedTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.defaultConnectAndLogin();
+		loWaCon.connect();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		loWaCon.defaultLogin();
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -205,19 +234,12 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserTestThread user1 = new UserTestThread(throwables);
-		UserTestThread user2 = new UserTestThread(throwables);
+		UserTestThread user1 = new UserTestThread();
+		UserTestThread user2 = new UserTestThread();
 		TestCallable userAction1 = new DirtyReadPreventedCallable(USER1, user2);
 		TestCallable userAction2 = new DirtyReadPreventedCallable(USER2, user1);
-		user1.setUserAction(userAction1);
-		user2.setUserAction(userAction2);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		
+		Vector<Throwable> throwables = executeUserThreads(user1, user2, userAction1, userAction2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -225,7 +247,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.defaultConnectAndLogin();
 		userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 		loWaCon.disconnect();
 	}
 
@@ -257,20 +279,20 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
 			if (username.equals(USER1)) {
 				System.out.println(username + " reads");
-				userService.getDisplayName(user3);
-				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+				userService.getDisplayName(user3).getValue();
+				AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 
 				notifyOther();
 				waitForCommitOfOther();
 
 				System.out.println(username + " reads again");
-				userService.getDisplayName(user3);
-				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				userService.getDisplayName(user3).getValue();
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 			} else {
 				waitForMyTurn();
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER2);
-				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER2, null);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 			}
 
 			loCon.disconnect();
@@ -282,12 +304,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	@Test
 	public void nonRepeatableReadTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.defaultConnectAndLogin();
+		loWaCon.connect();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		loWaCon.defaultLogin();
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -296,19 +319,12 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserTestThread user1 = new UserTestThread(throwables);
-		UserTestThread user2 = new UserTestThread(throwables);
+		UserTestThread user1 = new UserTestThread();
+		UserTestThread user2 = new UserTestThread();
 		NonRepeatableReadCallable userAction1 = new NonRepeatableReadCallable(USER1, user2);
 		NonRepeatableReadCallable userAction2 = new NonRepeatableReadCallable(USER2, user1);
-		user1.setUserAction(userAction1);
-		user2.setUserAction(userAction2);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		
+		Vector<Throwable> throwables = executeUserThreads(user1, user2, userAction1, userAction2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -316,7 +332,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.defaultConnectAndLogin();
 		userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 		loWaCon.disconnect();
 	}
 
@@ -348,15 +364,17 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
 			if (username.equals(USER1)) {
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER1);
-				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER1, null);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 				notifyOther();
 				waitForMyTurn();
 			} else {
 				waitForMyTurn();
+				// create another user in order to test later on whether transaction really rolls back
+				userService.create(USER4, USER4);
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER2);
-				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER2, null);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 
 				notifyOther();
 				waitForCommitOfOther();
@@ -371,12 +389,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	@Test
 	public void lostUpdateRollbackTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.defaultConnectAndLogin();
+		loWaCon.connect();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		loWaCon.defaultLogin();
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -385,22 +404,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserTestThread user1 = new UserTestThread(throwables);
-		UserTestThread user2 = new UserTestThread(throwables);
+		UserTestThread user1 = new UserTestThread();
+		UserTestThread user2 = new UserTestThread();
 		LostUpdateRollbackCallable userAction1 = new LostUpdateRollbackCallable(USER1, user2);
 		LostUpdateRollbackCallable userAction2 = new LostUpdateRollbackCallable(USER2, user1);
-		user1.setUserAction(userAction1);
-		user2.setUserAction(userAction2);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
 
 		boolean rolledBack = false;
-		for (Throwable t : throwables) {
+		for (Throwable t : executeUserThreads(user1, user2, userAction1, userAction2)) {
 			if (t instanceof EJBTransactionRolledbackException) {
 				rolledBack = true;
 			} else {
@@ -413,9 +423,103 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.defaultConnectAndLogin();
 		userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+		AssertJUnit.assertNull(userService.getUserByName(USER4));
+		userService.create(USER4, USER4); // must work if user exists neither in the repository nor in the database
 		loWaCon.disconnect();
 	}
+
+	// ---------------------------------------------------------------------------------------------------
+
+	class LostUpdateRollbackDueToVersionCallable extends TestCallable {
+
+		public LostUpdateRollbackDueToVersionCallable(String username, Thread otherUser) {
+			super(username, otherUser);
+		}
+
+		@Override
+		public Object call() throws Exception {
+			System.out.println("==LOST UPDATE ROLLBACK DUE TO VERSION==");
+			super.call();
+			// authentication
+			System.out.println(username + " authenticates");
+			LocalWasabiConnector loCon = new LocalWasabiConnector();
+			loCon.connect();
+			loCon.login(username, username);
+
+			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
+			WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+			// tx user2 reads, tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
+			if (username.equals(USER1)) {
+				waitForMyTurn();
+
+				System.out.println(username + " writes");
+				userService.setDisplayName(user3, USER1, null);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+			} else {
+				System.out.println(username + " reads");
+				WasabiValueDTO displayNameDTO = userService.getDisplayName(user3);
+				// create another user in order to test later on whether transaction really rolls back
+				userService.create(USER4, USER4);
+				notifyOther();
+				waitForCommitOfOther();
+
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+				System.out.println(username + " writes");
+				userService.setDisplayName(user3, USER2, displayNameDTO.getVersion());
+			}
+			loCon.disconnect();
+			return null;
+		}
+	}
+
+	@Test
+	public void lostUpdateRollbackDueToVersionTest() throws Throwable {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.connect();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		testhelper.initRepository();
+
+		loWaCon.defaultLogin();
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+
+		userService.create(USER1, "user1");
+		userService.create(USER2, "user2");
+		WasabiUserDTO user3 = userService.create(USER3, "user3");
+
+		loWaCon.disconnect();
+
+		UserTestThread user1 = new UserTestThread();
+		UserTestThread user2 = new UserTestThread();
+		LostUpdateRollbackDueToVersionCallable userAction1 = new LostUpdateRollbackDueToVersionCallable(USER1,
+				user2);
+		LostUpdateRollbackDueToVersionCallable userAction2 = new LostUpdateRollbackDueToVersionCallable(USER2,
+				user1);
+		
+		boolean problemRecognized = false;
+		for (Throwable t : executeUserThreads(user1, user2, userAction1, userAction2)) {
+			if (t instanceof ConcurrentModificationException) {
+				problemRecognized = true;
+			} else {
+				throw t;
+			}
+		}
+		AssertJUnit.assertTrue(problemRecognized);
+		System.out.println("Both user transactions have committed.");
+
+		loWaCon.defaultConnectAndLogin();
+		userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+
+		AssertJUnit.assertNull(userService.getUserByName(USER4));
+		userService.create(USER4, USER4); // must work if user exists neither in the repository nor in the database
+		loWaCon.disconnect();
+	}
+
+	// -------------------------------------------------------------------------------------------------
 
 	class LostUpdateNotPreventedCallable extends TestCallable {
 
@@ -435,24 +539,24 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 			WasabiUserDTO user3 = userService.getUserByName(USER3);
-			
+
 			// tx user2 reads, tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
 			if (username.equals(USER1)) {
 				waitForMyTurn();
-				
+
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER1);
-				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER1, null);
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 			} else {
 				System.out.println(username + " reads");
-				userService.getDisplayName(user3);
+				userService.getDisplayName(user3).getValue();
 				notifyOther();
 				waitForCommitOfOther();
-				
-				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+
+				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER2);
-				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+				userService.setDisplayName(user3, USER2, null);
+				AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 			}
 
 			loCon.disconnect();
@@ -464,12 +568,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	@Test
 	public void lostUpdateNotPreventedTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.defaultConnectAndLogin();
+		loWaCon.connect();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		loWaCon.defaultLogin();
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		userService.create(USER1, "user1");
@@ -478,19 +583,12 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserTestThread user1 = new UserTestThread(throwables);
-		UserTestThread user2 = new UserTestThread(throwables);
+		UserTestThread user1 = new UserTestThread();
+		UserTestThread user2 = new UserTestThread();
 		LostUpdateNotPreventedCallable userAction1 = new LostUpdateNotPreventedCallable(USER1, user2);
 		LostUpdateNotPreventedCallable userAction2 = new LostUpdateNotPreventedCallable(USER2, user1);
-		user1.setUserAction(userAction1);
-		user2.setUserAction(userAction2);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		
+		Vector<Throwable> throwables = executeUserThreads(user1, user2, userAction1, userAction2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -498,12 +596,12 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		loWaCon.defaultConnectAndLogin();
 		userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 		loWaCon.disconnect();
 	}
 
 	// --------------------------------------------------------------------------------------------
-	
+
 	// ** Rollback -------------------------------------------------------------------
 	// Successfully create a user within a transaction which rolls back afterwards -> the user must neither exist in the
 	// database nor in the repository
@@ -526,10 +624,10 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 
 			userService.create(USER2, USER2);
-			//WasabiUserDTO user2 = userService.getUserByName(USER2);
-			//userService.getDisplayName(user2);
+			// WasabiUserDTO user2 = userService.getUserByName(USER2);
+			// userService.getDisplayName(user2);
 			userService.create(null, null); // provoke exception and failure of transaction
-			
+
 			loCon.disconnect();
 			return null;
 		}
@@ -539,12 +637,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	@Test
 	public void userCreateRollbackTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.defaultConnectAndLogin();
+		loWaCon.connect();
 
 		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		loWaCon.defaultLogin();
 		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
 		userService.create(USER1, "user1");
@@ -552,13 +651,14 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.disconnect();
 
 		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserTestThread user1 = new UserTestThread(throwables);
+		UserTestThread user1 = new UserTestThread();
+		user1.setThrowables(throwables);
 		TestCallable userAction1 = new UserCreateRollbackCallable(USER1, null);
 		user1.setUserAction(userAction1);
 
 		user1.start();
 		user1.join();
-		
+
 		boolean rolledBack = false;
 		for (Throwable t : throwables) {
 			if (t instanceof EJBTransactionRolledbackException) {
@@ -572,7 +672,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		loWaCon.defaultConnectAndLogin();
 		AssertJUnit.assertNull(userService.getUserByName(USER2));
 		userService.create(USER2, USER2); // would fail if previous rollback did not happen both in the database and the
-											// repository
+		// repository
 		loWaCon.disconnect();
 	}
 	// --------------------------------------------------------------------------------------------

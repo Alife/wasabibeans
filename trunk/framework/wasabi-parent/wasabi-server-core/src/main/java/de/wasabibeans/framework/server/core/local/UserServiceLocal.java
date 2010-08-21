@@ -28,6 +28,8 @@ import javax.ejb.Local;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -45,13 +47,10 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public String getCurrentUser() throws UnexpectedInternalProblemException;
 
-	public String getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public WasabiRoomDTO getEnvironment(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
-
-	public WasabiRoomDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
@@ -60,10 +59,11 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public WasabiRoomDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public boolean getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+	public WasabiValueDTO getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
 	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException;
 
@@ -75,24 +75,21 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException;
 
-	public void move(WasabiUserDTO user, WasabiRoomDTO newEnvironment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
-
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void rename(WasabiUserDTO user, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException;
+	public void rename(WasabiUserDTO user, String name, Long version) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
-	public void setDisplayName(WasabiUserDTO user, String displayName) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setDisplayName(WasabiUserDTO user, String displayName, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
-	public void setStatus(WasabiUserDTO user, boolean active) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setStatus(WasabiUserDTO user, boolean active, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
 }

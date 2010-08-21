@@ -22,76 +22,25 @@
 package de.wasabibeans.framework.server.core.dto;
 
 import java.io.Serializable;
-import java.util.Date;
 
-public class WasabiValue {
+public class WasabiValueDTO implements Serializable {
 
+	private static final long serialVersionUID = -2463969904673513235L;
+	
 	private Serializable value;
-	private Integer version;
+	private Long version;
 
-	public WasabiValue(Serializable value) {
-		this.value = value;
-		this.version = null;
-	}
-
-	protected WasabiValue(Serializable value, Integer version) {
+	protected WasabiValueDTO(Serializable value, Long version) {
 		this.value = value;
 		this.version = version;
 	}
 
-	protected Integer getVersion() {
+	public Long getVersion() {
 		return version;
 	}
 
-	public void setValue(Serializable value) {
-		this.value = value;
-	}
-
-	public Boolean getBoolean() {
-		return (Boolean) value;
-	}
-
-	public Character getCharacter() {
-		return (Character) value;
-	}
-
-	public String getString() {
-		return (String) value;
-	}
-
-	public Byte getByte() {
-		return (Byte) value;
-	}
-
-	public Short getShort() {
-		return (Short) value;
-	}
-
-	public Integer getInteger() {
-		return (Integer) value;
-	}
-
-	public Long getLong() {
-		return (Long) value;
-	}
-
-	public Float getFloat() {
-		return (Float) value;
-	}
-
-	public Double getDouble() {
-		return (Double) value;
-	}
-
-	public Date getDate() {
-		return (Date) value;
-	}
-
-	public byte[] getByteArray() {
-		return (byte[]) value;
-	}
-
-	public Serializable getValue() {
-		return value;
+	@SuppressWarnings("unchecked")
+	public <T extends Serializable> T getValue() {
+		return (T) value;
 	}
 }

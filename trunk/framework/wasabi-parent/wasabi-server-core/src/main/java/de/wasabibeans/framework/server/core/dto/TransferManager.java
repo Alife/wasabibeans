@@ -21,6 +21,7 @@
 
 package de.wasabibeans.framework.server.core.dto;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 import javax.jcr.ItemNotFoundException;
@@ -84,6 +85,25 @@ public class TransferManager {
 		}
 	}
 
+	public static WasabiValueDTO convertValue2DTO(Node wasabiObject, Long version)
+			throws UnexpectedInternalProblemException {
+		if (version != null) {
+			WasabiObjectDTO objectDTO = convertNode2DTO(wasabiObject);
+			return new WasabiValueDTO(objectDTO, version);
+		} else {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_VALUE2DTO_NULLVERSION);
+		}
+	}
+
+	public static WasabiValueDTO convertValue2DTO(Serializable value, Long version)
+			throws UnexpectedInternalProblemException {
+		if (version != null) {
+			return new WasabiValueDTO(value, version);
+		} else {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_VALUE2DTO_NULLVERSION);
+		}
+	}
+
 	public static WasabiACLEntryTemplateDTO convertWasabiACLEntryTemplate2DTO(
 			WasabiACLEntryTemplate wasabiDefaultACLEntry) {
 		WasabiACLEntryTemplateDTO dto = new WasabiACLEntryTemplateDTO();
@@ -128,9 +148,9 @@ public class TransferManager {
 		dto.setStartTime(wasabiACLEntry.getStart_Time());
 		dto.setEndTime(wasabiACLEntry.getEnd_Time());
 		dto.setInheritanceId(wasabiACLEntry.getInheritance_Id());
-		if(wasabiACLEntry.getInheritance_Id().isEmpty()) 
+		if (wasabiACLEntry.getInheritance_Id().isEmpty())
 			dto.setInheritance(false);
-		else 
+		else
 			dto.setInheritance(true);
 		return dto;
 	}

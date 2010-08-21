@@ -78,13 +78,13 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test
 	public void getContentTest() throws Exception {
-		Serializable content = documentService().getContent(document1);
+		Serializable content = documentService().getContent(document1).getValue();
 		AssertJUnit.assertEquals("document1", content);
 	}
 
 	@Test
 	public void getEnvironmentTest() throws Exception {
-		WasabiLocationDTO environment = documentService().getEnvironment(document1);
+		WasabiLocationDTO environment = documentService().getEnvironment(document1).getValue();
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
@@ -132,23 +132,23 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		FileInputStream in = new FileInputStream(file);
 		in.read(fileBytes);
 		in.close();
-		documentService().setContent(document, fileBytes);
+		documentService().setContent(document, fileBytes, null);
 
-		byte[] loadedBytes = (byte[]) documentService().getContent(document);
+		byte[] loadedBytes = documentService().getContent(document).getValue();
 		AssertJUnit.assertEquals(fileBytes, loadedBytes);
 
-		documentService().setContent(document, "Hallo");
-		AssertJUnit.assertEquals("Hallo", documentService().getContent(document));
+		documentService().setContent(document, "Hallo", null);
+		AssertJUnit.assertEquals("Hallo", documentService().getContent(document).getValue());
 
 		try {
-			documentService().setContent(null, "Hallo");
+			documentService().setContent(null, "Hallo", null);
 			AssertJUnit.fail();
 		} catch (IllegalArgumentException e) {
 			// passed
 		}
 
-		documentService().setContent(document, null);
-		AssertJUnit.assertNull(documentService().getContent(document));
+		documentService().setContent(document, null, null);
+		AssertJUnit.assertNull(documentService().getContent(document).getValue());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -157,7 +157,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		documentService().create("document1", newLocation);
 
 		try {
-			documentService().move(document1, newLocation);
+			documentService().move(document1, newLocation, null);
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiDocumentDTO> documentsOfRoot = documentService().getDocuments(rootRoom);
 			AssertJUnit.assertTrue(documentsOfRoot.contains(document1));
@@ -166,7 +166,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiDocumentDTO document2 = documentService().getDocumentByName(rootRoom, "document2");
-		documentService().move(document2, newLocation);
+		documentService().move(document2, newLocation, null);
 		Vector<WasabiDocumentDTO> documentsOfRoot = documentService().getDocuments(rootRoom);
 		AssertJUnit.assertFalse(documentsOfRoot.contains(document2));
 		AssertJUnit.assertEquals(1, documentsOfRoot.size());
@@ -178,7 +178,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			documentService().rename(document1, "document2");
+			documentService().rename(document1, "document2", null);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(documentService().getDocumentByName(rootRoom, "document1"));
@@ -186,14 +186,14 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			documentService().rename(document1, null);
+			documentService().rename(document1, null, null);
 			AssertJUnit.fail();
 		} catch (IllegalArgumentException e) {
 			// passed
 		}
 
-		documentService().rename(document1, "document_2");
-		AssertJUnit.assertEquals("document_2", documentService().getName(document1));
+		documentService().rename(document1, "document_2", null);
+		AssertJUnit.assertEquals("document_2", documentService().getName(document1).getValue());
 		AssertJUnit.assertNotNull(documentService().getDocumentByName(rootRoom, "document_2"));
 		AssertJUnit.assertEquals(2, documentService().getDocuments(rootRoom).size());
 		AssertJUnit.assertNull(documentService().getDocumentByName(rootRoom, "document1"));

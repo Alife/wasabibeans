@@ -27,6 +27,8 @@ import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -43,7 +45,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
 
-	public String getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+	public WasabiValueDTO getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
 	public WasabiGroupDTO getGroupByName(String groupName) throws UnexpectedInternalProblemException;
@@ -59,7 +61,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 	public Vector<WasabiUserDTO> getAllMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
-	public WasabiGroupDTO getParentGroup(WasabiGroupDTO group) throws ObjectDoesNotExistException,
+	public WasabiValueDTO getParentGroup(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
 	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
@@ -74,21 +76,21 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
-	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long version)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
 	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
-	public void rename(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
+	public void rename(WasabiGroupDTO group, String name, Long version) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
-	public void setDisplayName(WasabiGroupDTO group, String displayName) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+	public void setDisplayName(WasabiGroupDTO group, String displayName, Long version)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public Vector<WasabiGroupDTO> getAllGroups() throws UnexpectedInternalProblemException;
-	
+
 	public Vector<WasabiGroupDTO> getTopLevelGroups() throws UnexpectedInternalProblemException;
 }

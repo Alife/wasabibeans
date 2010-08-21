@@ -43,8 +43,8 @@ public class ChildrenWithInheritance extends WasabiRemoteTest {
 		// initialize test
 		reWaCon.defaultLogin();
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		rootRoom = testhelper.initRepository();
 		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
 		
 		userService().create(USER1, USER1);

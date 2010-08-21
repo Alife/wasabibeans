@@ -75,8 +75,8 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, "root", s);
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_USER_NAME);
+			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(room1Node);
 		} finally {
@@ -103,10 +103,11 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, "root", s);
-			DocumentServiceImpl.setContent(document1Node, "document1");
-			DocumentServiceImpl.create("document2", wasabiRootNode, "root", s);
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_USER_NAME);
+			Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s,
+					WasabiConstants.ROOT_USER_NAME);
+			DocumentServiceImpl.setContent(document1Node, "document1", null);
+			DocumentServiceImpl.create("document2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(document1Node);
 		} finally {
@@ -119,15 +120,15 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiGroupDTO initGroupServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
-			Node group1Node = GroupServiceImpl.create("group1", null, s);
-			Node group1_1Node = GroupServiceImpl.create("group1_1", group1Node, s);
-			Node user1 = UserServiceImpl.create("user1", "user1", s, "root");
-			Node user2 = UserServiceImpl.create("user2", "user2", s, "root");
+			Node group1Node = GroupServiceImpl.create("group1", null, s, WasabiConstants.ROOT_USER_NAME);
+			Node group1_1Node = GroupServiceImpl.create("group1_1", group1Node, s, WasabiConstants.ROOT_USER_NAME);
+			Node user1 = UserServiceImpl.create("user1", "user1", s, WasabiConstants.ROOT_USER_NAME);
+			Node user2 = UserServiceImpl.create("user2", "user2", s, WasabiConstants.ROOT_USER_NAME);
 			GroupServiceImpl.addMember(group1_1Node, user1);
 			GroupServiceImpl.addMember(group1_1Node, user2);
-			GroupServiceImpl.create("group1_2", group1Node, s);
-			GroupServiceImpl.create("group1_1_1", group1_1Node, s);
-			GroupServiceImpl.create("group1_1_2", group1_1Node, s);
+			GroupServiceImpl.create("group1_2", group1Node, s, WasabiConstants.ROOT_USER_NAME);
+			GroupServiceImpl.create("group1_1_1", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
+			GroupServiceImpl.create("group1_1_2", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(group1_1Node);
 		} finally {

@@ -76,7 +76,7 @@ public class PriorityCheckComparison extends WasabiRemoteTest {
 		WasabiUserDTO loginUser = userService().getUserByName("user");
 
 		// Create document in users homeRoom and set rights to view, read document
-		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
 				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
 		boolean[] allow = { true, true, true, true, true, true, true };
