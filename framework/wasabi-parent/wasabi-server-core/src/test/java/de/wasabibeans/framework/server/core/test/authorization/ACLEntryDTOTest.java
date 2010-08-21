@@ -45,8 +45,8 @@ public class ACLEntryDTOTest extends WasabiRemoteTest {
 		WasabiUserDTO user2 = userService().create("aclTestUser2", "password");
 
 		// Create document in users homeRoom and set rights to view, read document
-		WasabiRoomDTO user1Home = userService().getHomeRoom(user1);
-		WasabiRoomDTO user2Home = userService().getHomeRoom(user2);
+		WasabiRoomDTO user1Home = userService().getHomeRoom(user1).getValue();
+		WasabiRoomDTO user2Home = userService().getHomeRoom(user2).getValue();
 		WasabiDocumentDTO document1 = documentService().create("UserTestDocu1", user1Home);
 		WasabiDocumentDTO document2 = documentService().create("UserTestDocu2", user2Home);
 		aclService().create(document1, user1, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },

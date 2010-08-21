@@ -42,6 +42,8 @@ import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -56,7 +58,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 @Run(RunModeType.AS_CLIENT)
 public class WasabiTransactionRemoteTest extends Arquillian {
 
-	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3";
+	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3", USER4 = "user4";
 
 	private final static Object activeThreadLock = new Object();
 
@@ -84,9 +86,12 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		protected String username;
 		protected Vector<Throwable> throwables;
 
-		public UserThread(String username, Vector<Throwable> throwables) {
+		public UserThread(String username) {
 			super();
 			this.username = username;
+		}
+
+		public void setThrowables(Vector<Throwable> throwables) {
 			this.throwables = throwables;
 		}
 
@@ -114,6 +119,26 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		public abstract void run();
 	}
 
+	public Vector<Throwable> executeUserThreads(UserThread user1, UserThread user2) throws Throwable {
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		user1.setThrowables(throwables);
+		user2.setThrowables(throwables);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
+		return throwables;
+	}
+
 	// --------------------------------------------------------------------------------------------
 
 	// ** DIRTY READ -------------------------------------------------------------------
@@ -121,8 +146,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: NOT POSSIBLE
 	class DirtyReadPreventedThread extends UserThread {
 
-		public DirtyReadPreventedThread(String username, Vector<Throwable> throwables) {
-			super(username, throwables);
+		public DirtyReadPreventedThread(String username) {
+			super(username);
 		}
 
 		@Override
@@ -144,15 +169,15 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				// tx user1 writes, tx user2 reads, tx user1 and tx user2 commit
 				if (username.equals(USER1)) {
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER1);
-					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER1, null);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 
 					notifyOther();
 					waitForCommitOfOther();
 				} else {
 					waitForMyTurn();
 					System.out.println(username + " reads");
-					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 				}
 
 				utx.commit();
@@ -167,12 +192,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	@Test
 	public void dirtyReadPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		reWaCon.connect();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		reWaCon.defaultLogin();
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -181,17 +207,10 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserThread user1 = new DirtyReadPreventedThread(USER1, throwables);
-		UserThread user2 = new DirtyReadPreventedThread(USER2, throwables);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
+		UserThread user1 = new DirtyReadPreventedThread(USER1);
+		UserThread user2 = new DirtyReadPreventedThread(USER2);
 
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		Vector<Throwable> throwables = executeUserThreads(user1, user2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -199,7 +218,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.defaultConnectAndLogin();
 		userService = (UserServiceRemote) reWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 		reWaCon.disconnect();
 	}
 
@@ -211,8 +230,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: POSSIBLE
 	class NonRepeatableReadThread extends UserThread {
 
-		public NonRepeatableReadThread(String username, Vector<Throwable> throwables) {
-			super(username, throwables);
+		public NonRepeatableReadThread(String username) {
+			super(username);
 		}
 
 		@Override
@@ -235,19 +254,19 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				if (username.equals(USER1)) {
 					System.out.println(username + " reads");
 					userService.getDisplayName(user3);
-					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3));
+					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 
 					notifyOther();
 					waitForCommitOfOther();
 
 					System.out.println(username + " reads again");
 					userService.getDisplayName(user3);
-					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 				} else {
 					waitForMyTurn();
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER2);
-					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER2, null);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 				}
 
 				utx.commit();
@@ -262,12 +281,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	@Test
 	public void nonRepeatableReadTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		reWaCon.connect();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		reWaCon.defaultLogin();
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -276,17 +296,10 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserThread user1 = new NonRepeatableReadThread(USER1, throwables);
-		UserThread user2 = new NonRepeatableReadThread(USER2, throwables);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
+		UserThread user1 = new NonRepeatableReadThread(USER1);
+		UserThread user2 = new NonRepeatableReadThread(USER2);
 
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		Vector<Throwable> throwables = executeUserThreads(user1, user2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -294,7 +307,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.defaultConnectAndLogin();
 		userService = (UserServiceRemote) reWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 		reWaCon.disconnect();
 	}
 
@@ -306,8 +319,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// Jackrabbit: POSSIBLE, though cases like tx1-write, tx2-write, tx1-commit, tx2-commit lead to a rollback of tx2
 	class LostUpdateRollbackThread extends UserThread {
 
-		public LostUpdateRollbackThread(String username, Vector<Throwable> throwables) {
-			super(username, throwables);
+		public LostUpdateRollbackThread(String username) {
+			super(username);
 		}
 
 		@Override
@@ -329,15 +342,17 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				// tx user1 writes, tx user2 writes, tx user1 commits, tx user2 commits
 				if (username.equals(USER1)) {
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER1);
-					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER1, null);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 					notifyOther();
 					waitForMyTurn();
 				} else {
 					waitForMyTurn();
+					// create another user in order to test later on whether transaction really rolls back
+					userService.create(USER4, USER4);
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER2);
-					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER2, null);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 
 					notifyOther();
 					waitForCommitOfOther();
@@ -355,12 +370,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	@Test
 	public void lostUpdateRollbackTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		reWaCon.connect();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		reWaCon.defaultLogin();
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
 		userService.create(USER1, USER1);
@@ -369,20 +385,11 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserThread user1 = new LostUpdateRollbackThread(USER1, throwables);
-		UserThread user2 = new LostUpdateRollbackThread(USER2, throwables);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
-
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		UserThread user1 = new LostUpdateRollbackThread(USER1);
+		UserThread user2 = new LostUpdateRollbackThread(USER2);
 
 		boolean rolledBack = false;
-		for (Throwable t : throwables) {
+		for (Throwable t : executeUserThreads(user1, user2)) {
 			if (t instanceof RollbackException) {
 				rolledBack = true;
 			} else {
@@ -395,14 +402,118 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.defaultConnectAndLogin();
 		userService = (UserServiceRemote) reWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+		AssertJUnit.assertNull(userService.getUserByName(USER4));
+		userService.create(USER4, USER4); // must work if user exists neither in the repository nor in the database
 		reWaCon.disconnect();
 	}
 
+	// -------------------------------------------------------------------------------------------------
+
+	class LostUpdateRollbackDueToVersionThread extends UserThread {
+
+		public LostUpdateRollbackDueToVersionThread(String username) {
+			super(username);
+		}
+
+		@Override
+		public void run() {
+			UserTransaction utx = null;
+			try {
+				System.out.println("==LOST UPDATE ROLLBACK DUE TO VERSION==");
+				// authentication
+				System.out.println(username + " authenticates");
+				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
+				reCon.connect();
+				reCon.login(username, username);
+
+				utx = (UserTransaction) reCon.lookupGeneral("UserTransaction");
+				utx.begin();
+
+				UserServiceRemote userService = (UserServiceRemote) reCon.lookup("UserService");
+				WasabiUserDTO user3 = userService.getUserByName(USER3);
+
+				// tx user2 reads, tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
+				if (username.equals(USER1)) {
+					waitForMyTurn();
+
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER1, null);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+				} else {
+					System.out.println(username + " reads");
+					WasabiValueDTO displayNameDTO = userService.getDisplayName(user3);
+					// create another user in order to test later on whether transaction really rolls back
+					userService.create(USER4, USER4);
+					notifyOther();
+					waitForCommitOfOther();
+
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+					System.out.println(username + " writes");
+					userService.setDisplayName(user3, USER2, displayNameDTO.getVersion());
+				}
+
+				utx.commit();
+				reCon.disconnect();
+			} catch (Throwable t) {
+				try {
+					utx.rollback();
+				} catch (Exception e) {
+					throwables.add(e);
+				}
+				throwables.add(t);
+			}
+		}
+	}
+
+	@Test
+	public void lostUpdateRollbackDueToVersionTest() throws Throwable {
+		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
+		reWaCon.connect();
+
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		testhelper.initRepository();
+
+		reWaCon.defaultLogin();
+		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+		WasabiUserDTO user3 = userService.create(USER3, USER3);
+
+		reWaCon.disconnect();
+
+		UserThread user1 = new LostUpdateRollbackDueToVersionThread(USER1);
+		UserThread user2 = new LostUpdateRollbackDueToVersionThread(USER2);
+
+		boolean problemRecognized = false;
+		for (Throwable t : executeUserThreads(user1, user2)) {
+			if (t instanceof ConcurrentModificationException) {
+				problemRecognized = true;
+			} else {
+				throw t;
+			}
+		}
+		AssertJUnit.assertTrue(problemRecognized);
+
+		System.out.println("Both user transactions have committed.");
+
+		reWaCon.defaultConnectAndLogin();
+		userService = (UserServiceRemote) reWaCon.lookup("UserService");
+		AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
+
+		AssertJUnit.assertNull(userService.getUserByName(USER4));
+		userService.create(USER4, USER4); // must work if user exists neither in the repository nor in the database
+		reWaCon.disconnect();
+	}
+
+	// -------------------------------------------------------------------------------------------
+
 	class LostUpdateNotPreventedThread extends UserThread {
 
-		public LostUpdateNotPreventedThread(String username, Vector<Throwable> throwables) {
-			super(username, throwables);
+		public LostUpdateNotPreventedThread(String username) {
+			super(username);
 		}
 
 		@Override
@@ -424,20 +535,20 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				// tx user2 reads, tx user1 writes, tx user1 commits, tx user2 writes, tx user2 commits
 				if (username.equals(USER1)) {
 					waitForMyTurn();
-					
+
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER1);
-					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER1, null);
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 				} else {
 					System.out.println(username + " reads");
 					userService.getDisplayName(user3);
 					notifyOther();
 					waitForCommitOfOther();
-					
-					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3));
+
+					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER2);
-					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+					userService.setDisplayName(user3, USER2, null);
+					AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 				}
 
 				utx.commit();
@@ -452,12 +563,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	@Test
 	public void lostUpdateNotPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		reWaCon.connect();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		reWaCon.defaultLogin();
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
 		userService.create(USER1, "user1");
@@ -466,17 +578,10 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		Vector<Throwable> throwables = new Vector<Throwable>();
-		UserThread user1 = new LostUpdateNotPreventedThread(USER1, throwables);
-		UserThread user2 = new LostUpdateNotPreventedThread(USER2, throwables);
-		user1.setOtherUser(user2);
-		user2.setOtherUser(user1);
+		UserThread user1 = new LostUpdateNotPreventedThread(USER1);
+		UserThread user2 = new LostUpdateNotPreventedThread(USER2);
 
-		user1.start();
-		user2.start();
-
-		user1.join();
-		user2.join();
+		Vector<Throwable> throwables = executeUserThreads(user1, user2);
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
@@ -484,7 +589,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.defaultConnectAndLogin();
 		userService = (UserServiceRemote) reWaCon.lookup("UserService");
-		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3));
+		AssertJUnit.assertEquals(USER2, userService.getDisplayName(user3).getValue());
 		reWaCon.disconnect();
 	}
 
@@ -496,12 +601,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	@Test
 	public void userCreateRollbackTest() throws Exception {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		reWaCon.connect();
 
 		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
 
+		reWaCon.defaultLogin();
 		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
@@ -520,7 +626,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		AssertJUnit.assertNull(userService.getUserByName(USER1));
 
 		userService.create(USER1, USER1); // would fail if previous rollback did not happen both in the database and the
-											// repository
+		// repository
 
 		reWaCon.disconnect();
 	}

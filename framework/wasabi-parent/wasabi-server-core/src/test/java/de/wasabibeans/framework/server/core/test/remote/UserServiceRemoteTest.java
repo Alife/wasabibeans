@@ -71,7 +71,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test
 	public void get1DisplayNameTest() throws Exception {
-		String displayName = userService().getDisplayName(user1);
+		String displayName = userService().getDisplayName(user1).getValue();
 		AssertJUnit.assertEquals("user1", displayName);
 	}
 
@@ -79,7 +79,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	public void get1HomeRoomTest() throws Exception {
 		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
 		AssertJUnit.assertNotNull(homeRoom);
-		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user1));
+		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user1).getValue());
 	}
 
 	@Test
@@ -92,12 +92,12 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	public void get1StartRoomTest() throws Exception {
 		WasabiRoomDTO startRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
 		AssertJUnit.assertNotNull(startRoom);
-		AssertJUnit.assertEquals(startRoom, userService().getStartRoom(user1));
+		AssertJUnit.assertEquals(startRoom, userService().getStartRoom(user1).getValue());
 	}
 
 	@Test
 	public void get1StatusTest() throws Exception {
-		AssertJUnit.assertTrue(userService().getStatus(user1));
+		AssertJUnit.assertTrue((Boolean) userService().getStatus(user1).getValue());
 	}
 
 	@Test
@@ -114,8 +114,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 
 		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
 	}
-	
-	@Test 
+
+	@Test
 	public void get1MembershipsTest() throws Exception {
 		Vector<WasabiGroupDTO> memberships = userService().getMemberships(user1);
 		AssertJUnit.assertEquals(1, memberships.size());
@@ -126,14 +126,14 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { ".*get1.*" })
 	public void createTest() throws WasabiException {
 		WasabiUserDTO user3 = userService().create("user3", "pwd");
-		AssertJUnit.assertEquals("user3", userService().getDisplayName(user3));
+		AssertJUnit.assertEquals("user3", userService().getDisplayName(user3).getValue());
 		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user3");
 		AssertJUnit.assertNotNull(homeRoom);
-		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user3));
-		AssertJUnit.assertEquals(homeRoom, userService().getStartRoom(user3));
+		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user3).getValue());
+		AssertJUnit.assertEquals(homeRoom, userService().getStartRoom(user3).getValue());
 		AssertJUnit.assertEquals(HashGenerator.generateHash("pwd", hashAlgorithms.SHA), userService()
 				.getPassword(user3));
-		AssertJUnit.assertTrue(userService().getStatus(user3));
+		AssertJUnit.assertTrue((Boolean) userService().getStatus(user3).getValue());
 		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
 		AssertJUnit.assertTrue(groupService().isDirectMember(wasabiGroup, user3));
 
@@ -167,15 +167,15 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			userService().rename(user1, "user2");
+			userService().rename(user1, "user2", null);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(userService().getUserByName("user1"));
 			AssertJUnit.assertEquals(5, userService().getAllUsers().size());
 		}
 
-		userService().rename(user1, "user_2");
-		AssertJUnit.assertEquals("user_2", userService().getName(user1));
+		userService().rename(user1, "user_2", null);
+		AssertJUnit.assertEquals("user_2", userService().getName(user1).getValue());
 		AssertJUnit.assertNotNull(userService().getUserByName("user_2"));
 		AssertJUnit.assertEquals(5, userService().getAllUsers().size());
 		AssertJUnit.assertNull(userService().getUserByName("user1"));
@@ -186,17 +186,17 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setDisplayNameTest() throws Exception {
 		try {
-			userService().setDisplayName(user1, null);
+			userService().setDisplayName(user1, null, null);
 			AssertJUnit.fail();
 		} catch (IllegalArgumentException e) {
 			// passed
 		}
 
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().setDisplayName(user1, "name");
-		userService().setDisplayName(user2, "name");
-		AssertJUnit.assertEquals("name", userService().getDisplayName(user1));
-		AssertJUnit.assertEquals("name", userService().getDisplayName(user2));
+		userService().setDisplayName(user1, "name", null);
+		userService().setDisplayName(user2, "name", null);
+		AssertJUnit.assertEquals("name", userService().getDisplayName(user1).getValue());
+		AssertJUnit.assertEquals("name", userService().getDisplayName(user2).getValue());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -216,28 +216,28 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setStartRoomTest() throws Exception {
 		try {
-			userService().setStartRoom(user1, null);
+			userService().setStartRoom(user1, null, null);
 			AssertJUnit.fail();
 		} catch (IllegalArgumentException e) {
 			// passed
 		}
 
 		WasabiRoomDTO newRoom = roomService().create("newRoom", rootRoom);
-		userService().setStartRoom(user1, newRoom);
-		AssertJUnit.assertEquals(newRoom, userService().getStartRoom(user1));
+		userService().setStartRoom(user1, newRoom, null);
+		AssertJUnit.assertEquals(newRoom, userService().getStartRoom(user1).getValue());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void setStatusTest() throws Exception {
-		userService().setStatus(user1, false);
-		AssertJUnit.assertFalse(userService().getStatus(user1));
-		//TODO any other consequences to test??
+		userService().setStatus(user1, false, null);
+		AssertJUnit.assertFalse((Boolean) userService().getStatus(user1).getValue());
+		// TODO any other consequences to test??
 	}
 
 	@Test(dependsOnMethods = { ".*set.*" })
 	public void getUsersByDisplayName() throws WasabiException {
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().setDisplayName(user2, "user1");
+		userService().setDisplayName(user2, "user1", null);
 		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user1");
 		AssertJUnit.assertTrue(users.contains(user1) && users.contains(user2));
 		AssertJUnit.assertEquals(2, users.size());
@@ -246,7 +246,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 			userService().getUsersByDisplayName(null);
 			AssertJUnit.fail();
 		} catch (IllegalArgumentException e) {
-			// passed 
+			// passed
 		}
 
 		AssertJUnit.assertTrue(userService().getUsersByDisplayName("doesNotExist").isEmpty());

@@ -53,15 +53,12 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class DocumentServiceImpl {
 
-	public static Node create(String name, Node environmentNode, String callerPrincipal, Session s)
+	public static Node create(String name, Node environmentNode, Session s, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
 		try {
 			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
 					WasabiNodeType.DOCUMENT);
+			ObjectServiceImpl.created(documentNode, s, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
@@ -117,8 +114,8 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void setContent(Node documentNode, Serializable content) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, DocumentContentException {
+	public static void setContent(Node documentNode, Serializable content, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException {
 		try {
 			PipedInputStream pipedIn = new PipedInputStream();
 			PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
@@ -134,6 +131,7 @@ public class DocumentServiceImpl {
 			}
 
 			documentNode.setProperty(WasabiNodeProperty.CONTENT, toSave);
+			ObjectServiceImpl.modified(documentNode, documentNode.getSession(), callerPrincipal, false);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
@@ -142,10 +140,6 @@ public class DocumentServiceImpl {
 	}
 
 	public static Node getDocumentByName(Node locationNode, String name) throws UnexpectedInternalProblemException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
 		try {
 			return locationNode.getNode(WasabiNodeProperty.DOCUMENTS + "/" + name);
 		} catch (PathNotFoundException e) {
@@ -167,11 +161,12 @@ public class DocumentServiceImpl {
 		return ObjectServiceImpl.getEnvironment(documentNode);
 	}
 
-	public static void move(Node documentNode, Node newEnvironmentNode) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static void move(Node documentNode, Node newEnvironmentNode, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			documentNode.getSession().move(documentNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/" + documentNode.getName());
+			ObjectServiceImpl.modified(documentNode, documentNode.getSession(), callerPrincipal, false);
 		} catch (ItemExistsException iee) {
 			try {
 				String name = documentNode.getName();
@@ -189,9 +184,9 @@ public class DocumentServiceImpl {
 		ObjectServiceImpl.remove(documentNode);
 	}
 
-	public static void rename(Node documentNode, String name) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(documentNode, name);
+	public static void rename(Node documentNode, String name, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+		ObjectServiceImpl.rename(documentNode, name, callerPrincipal);
 	}
 
 	public static Vector<Node> getDocumentsByCreationDate(Node environment, Date startDate, Date endDate) {

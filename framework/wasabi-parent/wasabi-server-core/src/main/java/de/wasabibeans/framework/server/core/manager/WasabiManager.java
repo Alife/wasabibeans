@@ -137,12 +137,14 @@ public class WasabiManager {
 				Node workspaceRoot = baseSession.getRootNode();
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
-				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, WasabiConstants.ROOT_USER_NAME,
-						baseSession);
+				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, baseSession,
+						WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi groups and initial groups
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.OBJECT_COLLECTION);
-				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, baseSession);
-				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, baseSession);
+				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, baseSession,
+						WasabiConstants.ROOT_USER_NAME);
+				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, baseSession,
+						WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi users and initial users
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME, WasabiNodeType.OBJECT_COLLECTION);
 				Node rootUser = UserServiceImpl.create(WasabiConstants.ROOT_USER_NAME,
@@ -151,6 +153,7 @@ public class WasabiManager {
 						WasabiConstants.ADMIN_USER_PASSWORD, baseSession, WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.addMember(adminGroup, rootUser);
 				GroupServiceImpl.addMember(adminGroup, adminUser);
+
 			}
 
 			baseSession.save();

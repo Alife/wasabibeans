@@ -43,7 +43,7 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 
 		// Create document in users homeRoom and set rights to view, read document
 		WasabiUserDTO user= userService().getUserByName("user");
-		WasabiRoomDTO usersHome = userService().getHomeRoom(user);
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 		
 		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
 				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };

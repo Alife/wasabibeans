@@ -31,6 +31,8 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -45,7 +47,7 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException;
 
-	public Serializable getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, DocumentContentException;
 
 	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
@@ -81,7 +83,7 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiLocationDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
 	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
@@ -96,16 +98,19 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException;
+	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			ConcurrentModificationException;
 
 	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void rename(WasabiDocumentDTO document, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException;
+	public void rename(WasabiDocumentDTO document, String name, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			ConcurrentModificationException;
 
-	public void setContent(WasabiDocumentDTO document, Serializable content) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, DocumentContentException;
+	public void setContent(WasabiDocumentDTO document, Serializable content, Long version)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
+			ConcurrentModificationException;
 
 }

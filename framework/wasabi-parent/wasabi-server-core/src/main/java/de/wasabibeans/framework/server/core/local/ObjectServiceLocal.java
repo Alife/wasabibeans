@@ -28,6 +28,7 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -56,7 +57,7 @@ public interface ObjectServiceLocal {
 	public boolean isRightsActive(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public String getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName)

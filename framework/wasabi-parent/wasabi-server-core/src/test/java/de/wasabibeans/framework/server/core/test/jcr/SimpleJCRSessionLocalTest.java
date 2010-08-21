@@ -152,13 +152,14 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		Thread user1 = new Thread() {
 			public void run() {
+				Session s = null;
 				try {
 					Thread.sleep(1000);
 					InitialContext jndiContext = new InitialContext();
 					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
 					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 					utx.begin();
-					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
+					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
 							.toCharArray()));
 					System.out.println("3: " + ((JCASessionHandle) s).getXAResource().toString());
 
@@ -178,6 +179,9 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 					s.save();
 					utx.commit();
 				} catch (Exception e) {
+					if (s != null) {
+						s.logout();
+					}
 					e.printStackTrace();
 				}
 			}
@@ -185,12 +189,13 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		Thread user2 = new Thread() {
 			public void run() {
+				Session s = null;
 				try {
 					InitialContext jndiContext = new InitialContext();
 					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
 					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
 					utx.begin();
-					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
+					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
 							.toCharArray()));
 					System.out.println("2: " + ((JCASessionHandle) s).getXAResource().toString());
 					Node node = s.getRootNode().getNode("aNode");
@@ -208,6 +213,9 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 					}
 
 				} catch (Exception e) {
+					if (s != null) {
+						s.logout();
+					}
 					e.printStackTrace();
 				}
 			}
@@ -215,9 +223,15 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		user1.start();
 		user2.start();
-		user1.join();
-		user2.join();
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
 	}
+	
 
 	/**
 	 * Causes an InvalidItemStateException (see console-log of JBoss). Would not cause this exception, if there was no
@@ -249,11 +263,12 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		Thread user1 = new Thread() {
 			public void run() {
+				Session s = null;
 				try {
 					Thread.sleep(1000);
 					InitialContext jndiContext = new InitialContext();
 					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
+					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
 							.toCharArray()));
 
 					// user1 edits sub-node 1 and updates version-number of parent-node
@@ -270,6 +285,9 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 					s.save();
 				} catch (Exception e) {
+					if (s != null) {
+						s.logout();
+					}
 					e.printStackTrace();
 				}
 			}
@@ -277,10 +295,11 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		Thread user2 = new Thread() {
 			public void run() {
+				Session s = null;
 				try {
 					InitialContext jndiContext = new InitialContext();
 					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					Session s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
+					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
 							.toCharArray()));
 
 					// user2 waits for user1 before doing anything
@@ -302,6 +321,9 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 					}
 
 				} catch (Exception e) {
+					if (s != null) {
+						s.logout();
+					}
 					e.printStackTrace();
 				}
 			}
@@ -309,7 +331,12 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		user1.start();
 		user2.start();
-		user1.join();
-		user2.join();
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
 	}
 }

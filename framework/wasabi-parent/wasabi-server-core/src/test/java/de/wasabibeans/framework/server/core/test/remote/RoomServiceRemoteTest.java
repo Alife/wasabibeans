@@ -68,12 +68,12 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	public void getRootHomeTest() throws WasabiException {
 		WasabiRoomDTO rootHome = roomService().getRootHome();
 		AssertJUnit.assertNotNull(rootHome);
-		AssertJUnit.assertEquals(WasabiConstants.HOME_ROOM_NAME, roomService().getName(rootHome));
+		AssertJUnit.assertEquals(WasabiConstants.HOME_ROOM_NAME, roomService().getName(rootHome).getValue());
 	}
 
 	@Test
 	public void getEnvironmentTest() throws Exception {
-		WasabiRoomDTO environment = roomService().getEnvironment(room1);
+		WasabiRoomDTO environment = roomService().getEnvironment(room1).getValue();
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
@@ -132,15 +132,15 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		try {
-			roomService().rename(room2, "room1");
+			roomService().rename(room2, "room1", null);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "room2"));
 			AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		}
 
-		roomService().rename(room2, "room_2");
-		AssertJUnit.assertEquals("room_2", roomService().getName(room2));
+		roomService().rename(room2, "room_2", null);
+		AssertJUnit.assertEquals("room_2", roomService().getName(room2).getValue());
 		AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "room_2"));
 		AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
@@ -152,7 +152,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		try {
-			roomService().move(sub, rootRoom);
+			roomService().move(sub, rootRoom, null);
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiRoomDTO> roomsOfRoom1 = roomService().getRooms(room1);
 			AssertJUnit.assertTrue(roomsOfRoom1.contains(sub));
@@ -160,7 +160,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 			AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		}
 
-		roomService().move(sub, room2);
+		roomService().move(sub, room2, null);
 		Vector<WasabiRoomDTO> roomsOfRoom1 = roomService().getRooms(room1);
 		AssertJUnit.assertFalse(roomsOfRoom1.contains(sub));
 		AssertJUnit.assertEquals(0, roomsOfRoom1.size());
