@@ -72,5 +72,5 @@ public class WasabiExceptionMessages {
 	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
 
 	/* Authorization */
-	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access.";
+	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access: &0 requires &1 permission.";
 }

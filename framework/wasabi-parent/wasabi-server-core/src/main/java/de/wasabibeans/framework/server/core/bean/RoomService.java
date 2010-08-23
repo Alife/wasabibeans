@@ -77,7 +77,9 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
 						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.create()",
+							"INSERT or WRITE"));
 			/* Authorization - End */
 
 			Node roomNode = RoomServiceImpl.create(name, environmentNode, s, callerPrincipal);
