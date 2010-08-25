@@ -19,14 +19,13 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.util;
+package de.wasabibeans.framework.server.core.locking;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -35,6 +34,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -47,13 +47,13 @@ public class LockingHelper implements LockingHelperLocal {
 	}
 
 	@Override
-	public String acquireLock(Node node) throws AccessDeniedException, LockException, PathNotFoundException,
-			InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException,
-			UnexpectedInternalProblemException {
+	public String acquireLock(String nodePath, boolean isDeep) throws AccessDeniedException, LockException,
+			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
+			RepositoryException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
-			String lockToken = lockManager.lock(node.getPath(), false, false, 10, null).getLockToken();
+			String lockToken = lockManager.lock(nodePath, isDeep, false, 10, null).getLockToken();
 			lockManager.removeLockToken(lockToken);
 			return lockToken;
 		} finally {
@@ -62,14 +62,14 @@ public class LockingHelper implements LockingHelperLocal {
 	}
 
 	@Override
-	public void releaseLock(Node node, String lockToken) throws AccessDeniedException, LockException,
+	public void releaseLock(String nodePath, String lockToken) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
-			lockManager.unlock(node.getPath());
+			lockManager.unlock(nodePath);
 		} finally {
 			s.logout();
 		}

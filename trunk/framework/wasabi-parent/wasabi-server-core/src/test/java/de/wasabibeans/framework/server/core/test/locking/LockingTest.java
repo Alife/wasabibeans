@@ -20,6 +20,7 @@
  */
 package de.wasabibeans.framework.server.core.test.locking;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.jcr.Node;
@@ -53,6 +54,8 @@ import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
+import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
@@ -61,15 +64,20 @@ import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
-import de.wasabibeans.framework.server.core.util.LockingHelperLocal;
 
 @Run(RunModeType.IN_CONTAINER)
-public class NodeWriteAccessLockTest extends Arquillian {
+public class LockingTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2";
 	private static final String DOC1 = "document1", CONTENT1 = "content1";
 
-	private final static Object activeThreadLock = new Object();
+	private static HashMap<String, Boolean> tickets;
+
+	static {
+		tickets = new HashMap<String, Boolean>();
+		tickets.put(USER1, false);
+		tickets.put(USER2, false);
+	}
 
 	private String docid;
 
@@ -82,6 +90,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiManager.class.getPackage()) // manager
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
@@ -140,14 +149,24 @@ public class NodeWriteAccessLockTest extends Arquillian {
 		}
 
 		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
+			synchronized (tickets) {
+				while (!tickets.get(username)) {
+					tickets.wait();
+				}
+				tickets.put(username, false);
 			}
 		}
 
 		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
+			String otherUser;
+			if (username.equals(USER1)) {
+				otherUser = USER2;
+			} else {
+				otherUser = USER1;
+			}
+			synchronized (tickets) {
+				tickets.put(otherUser, true);
+				tickets.notify();
 			}
 		}
 
@@ -180,32 +199,38 @@ public class NodeWriteAccessLockTest extends Arquillian {
 	}
 
 	// -------------------------------------------------------------------------------------------
-	// the writeAccess-methods of ObjectService.java to be tested (simplification: no dtos involved)
-	public void writeAccessCheck(Node node, LockingHelperLocal locker, Long version, Session s) throws Throwable {
+	// the lock methods of Locker.java to be tested (simplification: no dtos involved)
+	public static void acquireLock(Node node, Long version, Session s, LockingHelperLocal locker)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String lockToken = locker.acquireLock(node);
-			s.getWorkspace().getLockManager().addLockToken(lockToken);
+			String lockToken = locker.acquireLock(node.getPath(), false);
+			LockManager lockManager = s.getWorkspace().getLockManager();
+			lockManager.addLockToken(lockToken);
 			AssertJUnit.assertTrue(node.isLocked()); // node must be locked before making the version check
 			if (version != null && !version.equals(ObjectServiceImpl.getVersion(node))) {
-				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_CONCURRENT_MODIFICATION);
+				lockManager.removeLockToken(lockToken);
+				locker.releaseLock(node.getPath(), lockToken);
+				AssertJUnit.assertFalse(node.isLocked());
+				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_VERSION);
 			}
 		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_CONCURRENT_MODIFICATION, le);
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public void writeAccessRelease(Node node, LockingHelperLocal locker, Session s) throws Throwable {
+	public static void releaseLock(Node node, Session s, LockingHelperLocal locker)
+			throws UnexpectedInternalProblemException {
 		if (node == null) {
-			// do nothing... something has gone wrong before
+			// do nothing
 			return;
 		}
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			String lockToken = lockManager.getLock(node.getPath()).getLockToken();
 			lockManager.removeLockToken(lockToken);
-			locker.releaseLock(node, lockToken);
+			locker.releaseLock(node.getPath(), lockToken);
 			AssertJUnit.assertFalse(node.isLocked());
 		} catch (LockException e) {
 			// do nothing... there was no lock to unlock
@@ -241,7 +266,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
 					if (username.equals(USER1)) {
@@ -256,7 +281,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 					loWaCon.disconnect();
 
@@ -324,7 +349,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForCommitOfOther();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 					document.setProperty(WasabiNodeProperty.VERSION, ++version);
@@ -333,7 +358,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 					loWaCon.disconnect();
 				}
@@ -388,7 +413,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 					document.setProperty(WasabiNodeProperty.VERSION, ++version);
@@ -401,7 +426,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 					loWaCon.disconnect();
 
@@ -462,9 +487,9 @@ public class NodeWriteAccessLockTest extends Arquillian {
 					if (username.equals(USER2)) {
 						Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 						waitForCommitOfOther();
-						writeAccessCheck(document, locker, version, s);
+						acquireLock(document, version, s, locker);
 					} else {
-						writeAccessCheck(document, locker, null, s);
+						acquireLock(document, null, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
@@ -475,7 +500,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 					loWaCon.disconnect();
 				}
@@ -544,7 +569,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
 					if (username.equals(USER1)) {
@@ -563,7 +588,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 
 					if (error) {
@@ -642,7 +667,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForCommitOfOther();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 					document.setProperty(WasabiNodeProperty.VERSION, ++version);
@@ -655,7 +680,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 
 					if (error) {
@@ -721,7 +746,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					writeAccessCheck(document, locker, null, s);
+					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 					document.setProperty(WasabiNodeProperty.VERSION, ++version);
@@ -738,7 +763,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 
 					if (error) {
@@ -806,9 +831,9 @@ public class NodeWriteAccessLockTest extends Arquillian {
 					if (username.equals(USER2)) {
 						Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
 						waitForCommitOfOther();
-						writeAccessCheck(document, locker, version, s);
+						acquireLock(document, version, s, locker);
 					} else {
-						writeAccessCheck(document, locker, null, s);
+						acquireLock(document, null, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
@@ -819,7 +844,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					writeAccessRelease(document, locker, s);
+					releaseLock(document, s, locker);
 					s.logout();
 					loWaCon.disconnect();
 				}
@@ -872,7 +897,7 @@ public class NodeWriteAccessLockTest extends Arquillian {
 		Session s = jcr.getJCRSession();
 		try {
 			Node document = s.getNodeByIdentifier(docid);
-			writeAccessRelease(document, locker, s);
+			releaseLock(document, s, locker);
 		} finally {
 			s.logout();
 			loWaCon.disconnect();

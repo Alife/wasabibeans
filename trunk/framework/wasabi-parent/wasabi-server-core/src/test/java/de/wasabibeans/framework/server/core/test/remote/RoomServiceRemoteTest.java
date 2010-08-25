@@ -153,6 +153,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 
 		try {
 			roomService().move(sub, rootRoom, null);
+			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiRoomDTO> roomsOfRoom1 = roomService().getRooms(room1);
 			AssertJUnit.assertTrue(roomsOfRoom1.contains(sub));

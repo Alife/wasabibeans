@@ -46,6 +46,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
@@ -66,6 +67,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiManager.class.getPackage()) // manager
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local

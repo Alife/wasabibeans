@@ -31,10 +31,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -46,15 +43,14 @@ import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
-import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
+import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
-import de.wasabibeans.framework.server.core.util.LockingHelperLocal;
 
 /**
  * Class, that implements the internal access on WasabiObject objects.
@@ -66,6 +62,9 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Resource
 	protected SessionContext ctx;
+	
+	@EJB
+	protected LockingHelperLocal locker;
 
 	protected JcrConnector jcr;
 
@@ -193,44 +192,5 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive) {
 		// TODO Auto-generated method stub
 
-	}
-
-	// -------------------- Node Write Access Checks --------------------------------
-	@EJB
-	private LockingHelperLocal locker;
-
-	protected void writeAccessCheck(Node node, WasabiObjectDTO dto, Long version, Session s)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			String lockToken = locker.acquireLock(node);
-			s.getWorkspace().getLockManager().addLockToken(lockToken);
-			if (version != null && !version.equals(ObjectServiceImpl.getVersion(node))) {
-				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_CONCURRENT_MODIFICATION, dto.toString()));
-			}
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_CONCURRENT_MODIFICATION, dto.toString()), le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	protected void writeAccessRelease(Node node, WasabiObjectDTO dto, Session s)
-			throws UnexpectedInternalProblemException {
-		if (node == null) {
-			// do nothing... something has gone wrong before
-			return;
-		}
-		try {
-			LockManager lockManager = s.getWorkspace().getLockManager();
-			String lockToken = lockManager.getLock(node.getPath()).getLockToken();
-			lockManager.removeLockToken(lockToken);
-			locker.releaseLock(node, lockToken);
-		} catch (LockException e) {
-			// do nothing... there was no lock to unlock
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
 	}
 }

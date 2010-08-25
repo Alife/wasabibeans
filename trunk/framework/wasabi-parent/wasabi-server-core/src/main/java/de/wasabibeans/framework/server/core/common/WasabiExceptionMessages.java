@@ -58,10 +58,10 @@ public class WasabiExceptionMessages {
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
 
 	/* Internal Services */
-	public final static String INTERNAL_CONCURRENT_MODIFICATION = "Write access to the WasabiObject &0 could not be acquired, because there was a concurrent modification. Please refresh your data and try again.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_LOAD = "An exception occurred while trying to load the content of the given document.";
 	public final static String INTERNAL_DOCUMENT_CONTENT_SAVE = "An exception occurred while trying to save the given content.";
-	public final static String INTERNAL_LOCK_RELEASE = "Internal Problem: A lock on &0 could not be released.";
+	public final static String INTERNAL_LOCKING_GENERAL = "Exclusive access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification.";
+	public final static String INTERNAL_LOCKING_VERSION = "Write access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification. Please refresh your data and try again.";
 	public final static String INTERNAL_NO_ROOT_ROOM = "Internal Problem: The root room does not exist.";
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
@@ -73,4 +73,7 @@ public class WasabiExceptionMessages {
 
 	/* Authorization */
 	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access: &0 requires &1 permission.";
+
+	/* Versioning */
+	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
 }

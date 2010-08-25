@@ -21,6 +21,7 @@
 
 package de.wasabibeans.framework.server.core.test.transaction;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.ejb.EJBTransactionRolledbackException;
@@ -47,6 +48,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
@@ -60,7 +62,13 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3", USER4 = "user4";
 
-	private final static Object activeThreadLock = new Object();
+	private static HashMap<String, Boolean> tickets;
+
+	static {
+		tickets = new HashMap<String, Boolean>();
+		tickets.put(USER1, false);
+		tickets.put(USER2, false);
+	}
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -71,6 +79,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiManager.class.getPackage()) // manager
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
@@ -100,14 +109,24 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		}
 
 		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
+			synchronized (tickets) {
+				while (!tickets.get(username)) {
+					tickets.wait();
+				}
+				tickets.put(username, false);
 			}
 		}
 
 		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
+			String otherUser;
+			if (username.equals(USER1)) {
+				otherUser = USER2;
+			} else {
+				otherUser = USER1;
+			}
+			synchronized (tickets) {
+				tickets.put(otherUser, true);
+				tickets.notify();
 			}
 		}
 
@@ -138,7 +157,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		}
 		return throwables;
 	}
-
+	
 	// --------------------------------------------------------------------------------------------
 
 	// ** DIRTY READ -------------------------------------------------------------------
@@ -349,6 +368,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				} else {
 					waitForMyTurn();
 					// create another user in order to test later on whether transaction really rolls back
+					System.out.println(username + " makes user4");
 					userService.create(USER4, USER4);
 					System.out.println(username + " writes");
 					userService.setDisplayName(user3, USER2, null);
@@ -361,6 +381,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				utx.commit();
 				reCon.disconnect();
 			} catch (Throwable t) {
+				t.printStackTrace();
 				throwables.add(t);
 			}
 		}

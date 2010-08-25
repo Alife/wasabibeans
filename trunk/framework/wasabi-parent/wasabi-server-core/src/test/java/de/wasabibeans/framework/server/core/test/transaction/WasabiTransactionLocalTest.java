@@ -20,6 +20,7 @@
  */
 package de.wasabibeans.framework.server.core.test.transaction;
 
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 
@@ -47,6 +48,7 @@ import de.wasabibeans.framework.server.core.exception.DestinationNotFoundExcepti
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
@@ -59,7 +61,13 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3", USER4 = "user4";
 
-	private final static Object activeThreadLock = new Object();
+	private static HashMap<String, Boolean> tickets;
+
+	static {
+		tickets = new HashMap<String, Boolean>();
+		tickets.put(USER1, false);
+		tickets.put(USER2, false);
+	}
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -70,6 +78,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiManager.class.getPackage()) // manager
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
@@ -150,14 +159,24 @@ public class WasabiTransactionLocalTest extends Arquillian {
 		}
 
 		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
+			synchronized (tickets) {
+				while (!tickets.get(username)) {
+					tickets.wait();
+				}
+				tickets.put(username, false);
 			}
 		}
 
 		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
+			String otherUser;
+			if (username.equals(USER1)) {
+				otherUser = USER2;
+			} else {
+				otherUser = USER1;
+			}
+			synchronized (tickets) {
+				tickets.put(otherUser, true);
+				tickets.notify();
 			}
 		}
 

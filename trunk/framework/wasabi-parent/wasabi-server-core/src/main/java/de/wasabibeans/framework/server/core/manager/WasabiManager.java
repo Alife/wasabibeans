@@ -29,6 +29,10 @@ import java.sql.SQLException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
+import javax.jcr.version.VersionManager;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
@@ -40,8 +44,11 @@ import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
+import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class WasabiManager {
+
+	private static WasabiLogger logger = WasabiLogger.getLogger(WasabiManager.class);
 
 	public static void initDatabase() {
 		/* Create user table and entries */
@@ -115,7 +122,7 @@ public class WasabiManager {
 			JcrConnector jcr = JcrConnector.getJCRConnector();
 			baseSession = jcr.getJCRSession();
 
-			// register wasabi nodetypes (also registers the wasabi jcr namespace) in case a path to a .cnd file has
+			// register wasabi nodetypes (also registers the wasabi jcr namespaces) in case a path to a .cnd file has
 			// been given
 			if (jcrNodeTypesResourcePath != null) {
 				InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(jcrNodeTypesResourcePath);
@@ -125,13 +132,16 @@ public class WasabiManager {
 
 			if (resetContent) {
 				// clear existing wasabi content
+				logger.info("Resetting wasabi content: Deletion of existing content started.");
 				NodeIterator ni = baseSession.getRootNode().getNodes();
 				while (ni.hasNext()) {
 					Node aNode = ni.nextNode();
 					if (!aNode.getName().equals("jcr:system")) {
-						aNode.remove();
+						removeNodeAndItsVersionHistoryRecursively(aNode,
+								baseSession.getWorkspace().getVersionManager(), baseSession);
 					}
 				}
+				logger.info("Resetting wasabi content: Deletion of existing content finished.");
 
 				// create basic wasabi content
 				Node workspaceRoot = baseSession.getRootNode();
@@ -153,7 +163,7 @@ public class WasabiManager {
 						WasabiConstants.ADMIN_USER_PASSWORD, baseSession, WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.addMember(adminGroup, rootUser);
 				GroupServiceImpl.addMember(adminGroup, adminUser);
-
+				logger.info("Resetting wasabi content: Initial wasabi content created.");
 			}
 
 			baseSession.save();
@@ -162,6 +172,60 @@ public class WasabiManager {
 			throw new RuntimeException(e);
 		} finally {
 			baseSession.logout();
+		}
+	}
+
+	/**
+	 * Removes all nodes and their version histories that belong to the subtree of which the given {@code node} is the
+	 * root.
+	 * 
+	 * @param node
+	 * @param versionManager
+	 * @param s
+	 * @throws Exception
+	 * @see https://issues.apache.org/jira/browse/JCR-134
+	 */
+	private static void removeNodeAndItsVersionHistoryRecursively(Node node, VersionManager versionManager, Session s)
+			throws Exception {
+		String nodePath = node.getPath();
+		String nodeName = node.getName();
+		boolean isVersionable = true;
+		try {
+			// checkout node if versionable -> without checkout child-nodes could not be removed
+			versionManager.checkout(nodePath);
+		} catch (UnsupportedRepositoryOperationException uroe) {
+			isVersionable = false;
+		}
+
+		// deal with child-nodes first, otherwise not all version histories could be cleared
+		for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
+			removeNodeAndItsVersionHistoryRecursively(ni.nextNode(), versionManager, s);
+		}
+
+		if (!isVersionable) {
+			// not versionable: just remove the node
+			node.remove();
+			s.save();
+		} else {
+			// versionable: first remove the node, then clear its version history (see
+			// https://issues.apache.org/jira/browse/JCR-134)
+			VersionHistory versionHistory = versionManager.getVersionHistory(nodePath);
+
+			node.remove();
+			s.save();
+
+			// logger.info("Removing versions of node " + nodeName);
+			for (String versionLabel : versionHistory.getVersionLabels()) {
+				versionHistory.removeVersionLabel(versionLabel);
+			}
+			String rootVersionName = versionHistory.getRootVersion().getName();
+			for (VersionIterator vi = versionHistory.getAllVersions(); vi.hasNext();) {
+				String versionName = vi.nextVersion().getName();
+				if (!versionName.equals(rootVersionName)) {
+					versionHistory.removeVersion(versionName);
+				}
+			}
+			// logger.info("All versions of node " + nodeName + " removed.");
 		}
 	}
 }

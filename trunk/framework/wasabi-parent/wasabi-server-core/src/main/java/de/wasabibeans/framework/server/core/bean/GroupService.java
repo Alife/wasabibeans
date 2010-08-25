@@ -47,6 +47,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.GroupServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.GroupServiceRemote;
 
 /**
@@ -344,13 +345,13 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 			}
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			writeAccessCheck(groupNode, group, version, s);
+			Locker.acquireLock(groupNode, group, version, s, locker);
 			GroupServiceImpl.move(groupNode, newParentGroupNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(groupNode, group, s);
+			Locker.releaseLock(groupNode, s, locker);
 			s.logout();
 		}
 
@@ -400,13 +401,13 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			writeAccessCheck(groupNode, group, version, s);
+			Locker.acquireLock(groupNode, group, version, s, locker);
 			GroupServiceImpl.rename(groupNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(groupNode, group, s);
+			Locker.releaseLock(groupNode, s, locker);
 			s.logout();
 		}
 
@@ -424,13 +425,13 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			writeAccessCheck(groupNode, group, version, s);
+			Locker.acquireLock(groupNode, group, version, s, locker);
 			GroupServiceImpl.setDisplayName(groupNode, displayName, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(groupNode, group, s);
+			Locker.releaseLock(groupNode, s, locker);
 			s.logout();
 		}
 	}

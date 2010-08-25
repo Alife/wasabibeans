@@ -7,64 +7,68 @@
 [wasabiMix:created]
 	mixin
 	- wasabi:createdOn (DATE)
-	- wasabi:createdBy (WEAKREFERENCE) < 'wasabi:user'
+	- wasabi:createdBy (WEAKREFERENCE) 
 	
 [wasabiMix:lastModified]
 	mixin
 	- wasabi:modifiedOn (DATE)
-	- wasabi:modifiedBy (WEAKREFERENCE) < 'wasabi:user'
+	- wasabi:modifiedBy (WEAKREFERENCE) 
+	
+[wasabiMix:versionable] > mix:versionable
+	mixin
+	- wasabi:versionComment (STRING)
 	
 [wasabi:object] > nt:base, mix:referenceable, mix:lockable, wasabiMix:created, wasabiMix:lastModified
 	abstract
-	+ wasabi:attributes (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
+	+ wasabi:attributes (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated
 	+ wasabi:tags (wasabiStructure:tags) = 'wasabiStructure:tags' autocreated
 	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
 	- wasabi:version (LONG) 
 	
-[wasabi:location] > wasabi:object
+[wasabi:location] > wasabi:object, wasabiMix:versionable
 	abstract
-	+ wasabi:documents (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
-	+ wasabi:containers (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
+	+ wasabi:documents (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
+	+ wasabi:containers (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
 	+ wasabi:links (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	
 [wasabi:room] > wasabi:location
-	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated
-	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated
+	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
+	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated IGNORE
 	
 [wasabi:container] > wasabi:location
 
 [wasabi:identity] > wasabi:object
 	abstract
 	- wasabi:displayName (STRING) 
-	- wasabi:homeRoom (WEAKREFERENCE) < 'wasabi:room'
+	- wasabi:homeRoom (WEAKREFERENCE)
 	
 [wasabi:group] > wasabi:identity
 	+ wasabi:subgroups (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	+ wasabi:members (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 	
 [wasabi:user] > wasabi:identity
-	- wasabi:startRoom (WEAKREFERENCE) < 'wasabi:room'
+	- wasabi:startRoom (WEAKREFERENCE) 
 	- wasabi:active (BOOLEAN) = 'true' autocreated
 	+ wasabi:memberships (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 
-[wasabi:document] > wasabi:object
+[wasabi:document] > wasabi:object, wasabiMix:versionable
 	primaryitem 'wasabi:content'
 	- wasabi:content (BINARY) 
 	
 [wasabi:link] > wasabi:object
-	- wasabi:destination (WEAKREFERENCE) < 'wasabi:object'
+	- wasabi:destination (WEAKREFERENCE) 
 	
 [wasabi:attribute] > wasabi:object
 	- wasabi:value (UNDEFINED)
 	
-[wasabiStructure:objectCollection] > nt:base
-	+ * (wasabi:object)
+[wasabiStructure:objectCollection] > nt:base, wasabiMix:versionable
+	+ * (wasabi:object) VERSION
 	
 [wasabiStructure:refCollection] > nt:base
 	+ * (wasabiStructure:objectref)
 	
 [wasabiStructure:objectref] > nt:base
-	- wasabiStructure:referencedObject (WEAKREFERENCE) < 'wasabi:object'
+	- wasabiStructure:referencedObject (WEAKREFERENCE) 
 	
 [wasabiStructure:tags] > nt:base
 	+ * (wasabiStructure:tag) 

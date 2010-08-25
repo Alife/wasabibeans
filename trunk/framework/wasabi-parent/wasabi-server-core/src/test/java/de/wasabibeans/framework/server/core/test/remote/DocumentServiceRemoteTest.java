@@ -158,6 +158,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 
 		try {
 			documentService().move(document1, newLocation, null);
+			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiDocumentDTO> documentsOfRoot = documentService().getDocuments(rootRoom);
 			AssertJUnit.assertTrue(documentsOfRoot.contains(document1));
