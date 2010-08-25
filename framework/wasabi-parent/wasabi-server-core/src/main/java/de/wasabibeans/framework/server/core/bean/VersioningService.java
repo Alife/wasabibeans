@@ -16,7 +16,9 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
@@ -59,14 +61,19 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
-		
+
 		Session s = jcr.getJCRSession();
 		try {
 			Node node = TransferManager.convertDTO2Node(dto, s);
 			VersionHistory versionHistory = s.getWorkspace().getVersionManager().getVersionHistory(node.getPath());
+			String rootVersionName = versionHistory.getRootVersion().getName();
 			Vector<WasabiVersionDTO> versions = new Vector<WasabiVersionDTO>();
 			for (VersionIterator vi = versionHistory.getAllVersions(); vi.hasNext();) {
-				versions.add(TransferManager.convertVersion2DTO(vi.nextVersion(), versionHistory));
+				Version aVersion = vi.nextVersion();
+				// do not expose the JCR root version, it cannot be restored anyway
+				if (!aVersion.getName().equals(rootVersionName)) {
+					versions.add(TransferManager.convertVersion2DTO(aVersion, versionHistory));
+				}
 			}
 			return versions;
 		} catch (RepositoryException re) {
@@ -93,15 +100,16 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
-		
+
 		Node node = null;
 		Session s = jcr.getJCRSession();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
+			// get unique version label
+			String label = getUniqueVersionLabel(s.getRootNode().getNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL),
+					dto, s);
 			// acquire deep lock
 			Locker.acquireLock(node, dto, true, s, locker);
-			// unique version label
-			String label = "1.0"; // TODO get a unique label here... s.th. like smallest unused version number
 			// create versions for entire subtree
 			createVersionRecursively(node, label, comment, s.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
@@ -109,6 +117,33 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		} finally {
 			Locker.releaseLock(node, s, locker);
 			s.logout();
+		}
+	}
+
+	/**
+	 * Returns a version-label that must be unique in the version-history of the node to be versioned and in the
+	 * version-histories of the versionable nodes in the subtree of the node to be versioned.
+	 * 
+	 * @param workspaceRoot
+	 * @param dto
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 * @throws ConcurrentModificationException
+	 */
+	private String getUniqueVersionLabel(Node highestVersionLabelStore, WasabiObjectDTO dto, Session s)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		try {
+			Locker.acquireLock(highestVersionLabelStore, dto, false, s, locker);
+			Long uniqueVersionNumber = highestVersionLabelStore.getProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL)
+					.getLong();
+			highestVersionLabelStore.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, ++uniqueVersionNumber);
+			s.save();
+			return "" + uniqueVersionNumber;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(highestVersionLabelStore, s, locker);
 		}
 	}
 
@@ -140,6 +175,8 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			}
 
 			// create a version
+			node.setProperty(WasabiNodeProperty.VERSION_COMMENT, comment);
+			node.getSession().save();
 			Version version = versionManager.checkin(node.getPath());
 			versionHistory.addVersionLabel(version.getName(), label, false);
 			versionManager.checkout(node.getPath());
@@ -159,14 +196,14 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * @param versionLabel
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ObjectDoesNotExistException
-	 * @throws ConcurrentModificationException 
+	 * @throws ConcurrentModificationException
 	 */
 	public void restoreVersion(WasabiObjectDTO dto, String versionLabel) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
-		
+
 		Node node = null;
 		Session s = jcr.getJCRSession();
 		try {
@@ -210,6 +247,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 
 			// restore the version
 			versionManager.restoreByLabel(node.getPath(), label, true);
+			versionManager.checkout(node.getPath());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

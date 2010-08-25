@@ -30,6 +30,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
@@ -145,6 +146,9 @@ public class WasabiManager {
 
 				// create basic wasabi content
 				Node workspaceRoot = baseSession.getRootNode();
+				Node highestVersionLabel = workspaceRoot.addNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL); 
+				highestVersionLabel.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, 0L);
+				highestVersionLabel.addMixin(NodeType.MIX_LOCKABLE);
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
 				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, baseSession,

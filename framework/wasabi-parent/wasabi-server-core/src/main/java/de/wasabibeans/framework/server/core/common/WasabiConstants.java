@@ -59,17 +59,16 @@ public interface WasabiConstants {
 	/* JNDI datasources */
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
 	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
-	public final static String JNDI_JCR_USER2SESSION = "user2JCRSession";
-	public final static String JNDI_JCR_BASESESSION = "baseJcrSession";
 
 	/* JCR */
 	public final static String JCR_NS_PREFIX = "wasabi";
 	public final static String JCR_NS_PREFIX_STRUCTURE = "wasabiStructure";
-	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/1.0";
+	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/wasabi/1.0";
 	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
 	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";
 	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
 	public final static String JCR_LOGIN = "wasabi";
+	public final static String JCR_HIGHEST_VERSION_LABEL = "versionLabel";
 	
 	/* DTO */
 	public final static String DTO_SUFFIX = "DTO";
