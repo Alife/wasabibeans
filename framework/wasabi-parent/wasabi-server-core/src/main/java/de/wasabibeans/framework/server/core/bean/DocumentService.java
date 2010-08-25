@@ -52,6 +52,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
 /**
@@ -106,13 +107,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
-			writeAccessCheck(documentNode, document, version, s);
+			Locker.acquireLock(documentNode, document, version, s, locker);
 			DocumentServiceImpl.setContent(documentNode, content, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(documentNode, document, s);
+			Locker.releaseLock(documentNode, s, locker);
 			s.logout();
 		}
 	}
@@ -169,13 +170,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			writeAccessCheck(documentNode, document, version, s);
+			Locker.acquireLock(documentNode, document, version, s, locker);
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(documentNode, document, s);
+			Locker.releaseLock(documentNode, s, locker);
 			s.logout();
 		}
 	}
@@ -205,13 +206,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
-			writeAccessCheck(documentNode, document, version, s);
+			Locker.acquireLock(documentNode, document, version, s, locker);
 			DocumentServiceImpl.rename(documentNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(documentNode, document, s);
+			Locker.releaseLock(documentNode, s, locker);
 			s.logout();
 		}
 	}

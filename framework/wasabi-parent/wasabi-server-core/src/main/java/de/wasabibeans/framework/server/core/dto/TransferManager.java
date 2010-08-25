@@ -22,15 +22,19 @@
 package de.wasabibeans.framework.server.core.dto;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
@@ -153,6 +157,18 @@ public class TransferManager {
 		else
 			dto.setInheritance(true);
 		return dto;
+	}
+
+	public static WasabiVersionDTO convertVersion2DTO(Version version, VersionHistory versionHistory)
+			throws UnexpectedInternalProblemException {
+		try {
+			Date creationDate = version.getCreated().getTime();
+			String label = versionHistory.getVersionLabels(version)[0];
+			String comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
+			return new WasabiVersionDTO(label, comment, creationDate);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	private static String generateWasabiObjectDTOName(String nodeTypeName) {

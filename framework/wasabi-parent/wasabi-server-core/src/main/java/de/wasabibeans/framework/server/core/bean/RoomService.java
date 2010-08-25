@@ -50,6 +50,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 
 /**
@@ -236,13 +237,13 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			roomNode = TransferManager.convertDTO2Node(room, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			writeAccessCheck(roomNode, room, version, s);
+			Locker.acquireLock(roomNode, room, version, s, locker);
 			RoomServiceImpl.move(roomNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(roomNode, room, s);
+			Locker.releaseLock(roomNode, s, locker);
 			s.logout();
 		}
 	}
@@ -275,13 +276,13 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSession();
 		try {
 			roomNode = TransferManager.convertDTO2Node(room, s);
-			writeAccessCheck(roomNode, room, version, s);
+			Locker.acquireLock(roomNode, room, version, s, locker);
 			RoomServiceImpl.rename(roomNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(roomNode, room, s);
+			Locker.releaseLock(roomNode, s, locker);
 			s.logout();
 		}
 	}

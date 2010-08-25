@@ -21,6 +21,7 @@
 
 package de.wasabibeans.framework.server.core.test.jcr;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import org.jboss.arquillian.api.Deployment;
@@ -40,6 +41,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
@@ -53,7 +55,13 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2";
 
-	private final static Object activeThreadLock = new Object();
+	private static HashMap<String, Boolean> tickets;
+	
+	static {
+		tickets = new HashMap<String, Boolean>();
+		tickets.put(USER1, false);
+		tickets.put(USER2, false);
+	}
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -64,6 +72,7 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiManager.class.getPackage()) // manager
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
@@ -83,7 +92,7 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 			super();
 			this.username = username;
 		}
-		
+
 		public void setThrowables(Vector<Throwable> throwables) {
 			this.throwables = throwables;
 		}
@@ -93,14 +102,24 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 		}
 
 		protected void waitForMyTurn() throws InterruptedException {
-			synchronized (activeThreadLock) {
-				activeThreadLock.wait();
+			synchronized (tickets) {
+				while (!tickets.get(username)) {
+					tickets.wait();
+				}
+				tickets.put(username, false);
 			}
 		}
 
 		protected void notifyOther() throws Exception {
-			synchronized (activeThreadLock) {
-				activeThreadLock.notify();
+			String otherUser;
+			if (username.equals(USER1)) {
+				otherUser = USER2;
+			} else {
+				otherUser = USER1;
+			}
+			synchronized (tickets) {
+				tickets.put(otherUser, true);
+				tickets.notify();
 			}
 		}
 
@@ -111,7 +130,7 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 		@Override
 		public abstract void run();
 	}
-	
+
 	public Vector<Throwable> executeUserThreads(UserThread user1, UserThread user2) throws Throwable {
 		Vector<Throwable> throwables = new Vector<Throwable>();
 		user1.setThrowables(throwables);

@@ -65,4 +65,7 @@ public class WasabiNodeProperty {
 
 	// properties of wasabi:objectref
 	public static final String REFERENCED_OBJECT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":referencedObject";
+	
+	// properties of versionable wasabi node types
+	public static final String VERSION_COMMENT = WasabiConstants.JCR_NS_PREFIX + ":versionComment";
 }

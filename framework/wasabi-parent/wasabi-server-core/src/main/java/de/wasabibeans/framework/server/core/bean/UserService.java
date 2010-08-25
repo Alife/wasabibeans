@@ -48,6 +48,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
 
 /**
@@ -253,13 +254,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			writeAccessCheck(userNode, user, version, s);
+			Locker.acquireLock(userNode, user, version, s, locker);
 			UserServiceImpl.setDisplayName(userNode, displayName, getCurrentUser());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(userNode, user, s);
+			Locker.releaseLock(userNode, s, locker);
 			s.logout();
 		}
 	}
@@ -289,13 +290,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			writeAccessCheck(userNode, user, version, s);
+			Locker.acquireLock(userNode, user, version, s, locker);
 			UserServiceImpl.setStartRoom(userNode, roomNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(userNode, user, s);
+			Locker.releaseLock(userNode, s, locker);
 			s.logout();
 		}
 	}
@@ -307,13 +308,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			writeAccessCheck(userNode, user, version, s);
+			Locker.acquireLock(userNode, user, version, s, locker);
 			UserServiceImpl.setStatus(userNode, active, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(userNode, user, s);
+			Locker.releaseLock(userNode, s, locker);
 			s.logout();
 		}
 	}
@@ -344,13 +345,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			writeAccessCheck(userNode, user, version, s);
+			Locker.acquireLock(userNode, user, version, s, locker);
 			UserServiceImpl.rename(userNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			writeAccessRelease(userNode, user, s);
+			Locker.releaseLock(userNode, s, locker);
 			s.logout();
 		}
 	}

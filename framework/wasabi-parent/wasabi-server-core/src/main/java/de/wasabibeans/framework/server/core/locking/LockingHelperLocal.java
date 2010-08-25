@@ -1,9 +1,8 @@
-package de.wasabibeans.framework.server.core.util;
+package de.wasabibeans.framework.server.core.locking;
 
 import javax.ejb.Local;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -14,11 +13,11 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Local
 public interface LockingHelperLocal {
 
-	public String acquireLock(Node node) throws AccessDeniedException, LockException, PathNotFoundException,
-			InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException,
-			UnexpectedInternalProblemException;
+	public String acquireLock(String nodePath, boolean isDeep) throws AccessDeniedException, LockException,
+			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
+			RepositoryException, UnexpectedInternalProblemException;
 
-	public void releaseLock(Node node, String lockToken) throws AccessDeniedException, LockException,
+	public void releaseLock(String nodePath, String lockToken) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException;
 }
