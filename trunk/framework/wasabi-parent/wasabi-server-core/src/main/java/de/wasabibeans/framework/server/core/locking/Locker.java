@@ -43,11 +43,11 @@ public class Locker {
 				lockManager.removeLockToken(lockToken);
 				locker.releaseLock(node.getPath(), lockToken);
 				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_LOCKING_VERSION, dto.toString()));
+						WasabiExceptionMessages.INTERNAL_LOCKING_VERSION, (dto != null) ? dto.toString() : ""));
 			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, dto.toString()), le);
+					WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, (dto != null) ? dto.toString() : ""), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -77,7 +77,7 @@ public class Locker {
 			s.getWorkspace().getLockManager().addLockToken(lockToken);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, dto.toString()), le);
+					WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, (dto != null) ? dto.toString() : ""), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

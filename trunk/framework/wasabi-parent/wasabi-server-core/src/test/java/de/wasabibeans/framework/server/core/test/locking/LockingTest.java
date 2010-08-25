@@ -28,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
+import javax.jcr.nodetype.NodeType;
 import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.api.Deployment;
@@ -200,6 +201,7 @@ public class LockingTest extends Arquillian {
 
 	// -------------------------------------------------------------------------------------------
 	// the lock methods of Locker.java to be tested (simplification: no dtos involved)
+	// copied here in order to be able to add assertions (... and leave out the dtos)
 	public static void acquireLock(Node node, Long version, Session s, LockingHelperLocal locker)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
@@ -213,6 +215,18 @@ public class LockingTest extends Arquillian {
 				AssertJUnit.assertFalse(node.isLocked());
 				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_VERSION);
 			}
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void acquireLock(Node node, boolean isDeep, Session s, LockingHelperLocal locker)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		try {
+			String lockToken = locker.acquireLock(node.getPath(), isDeep);
+			s.getWorkspace().getLockManager().addLockToken(lockToken);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
 		} catch (RepositoryException re) {
@@ -316,6 +330,122 @@ public class LockingTest extends Arquillian {
 		Session s = jcr.getJCRSession();
 		try {
 			Node document = s.getNodeByIdentifier(docid);
+			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
+		} finally {
+			s.logout();
+		}
+	}
+
+	// ------------------------------------------------------------------------------------------
+	// tests the case when one user tries to lock a node which should already be locked because of a deep lock on an
+	// ancestor
+	class SetSomethingTest1_1 extends UserThread {
+
+		public SetSomethingTest1_1(String username) {
+			super(username);
+		}
+
+		@Override
+		public void run() {
+			try {
+				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+				loWaCon.connect();
+				loWaCon.login(username, username);
+
+				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
+				JcrConnector jcr = JcrConnector.getJCRConnector();
+
+				Node document = null;
+				Node node1 = null;
+				Session s = jcr.getJCRSession();
+				try {
+					document = s.getNodeByIdentifier(docid);
+
+					if (username.equals(USER2)) {
+						waitForMyTurn();
+						acquireLock(document, null, s, locker);
+					} else {
+						node1 = document.getParent().getParent();
+						acquireLock(node1, true, s, locker);
+					}
+
+					document.setProperty(WasabiNodeProperty.CONTENT, username);
+
+					if (username.equals(USER1)) {
+						notifyOther();
+						waitForMyTurn();
+					}
+
+					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
+					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					s.save();
+
+				} catch (RepositoryException re) {
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+				} finally {
+					releaseLock(node1, s, locker);
+					releaseLock(document, s, locker);
+					s.logout();
+					loWaCon.disconnect();
+
+					if (username.equals(USER2)) {
+						notifyOther();
+					}
+				}
+			} catch (Throwable t) {
+				throwables.add(t);
+			}
+		}
+	}
+
+	@Test
+	public void setSomethingTest1_1() throws Throwable {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.connect();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		testhelper.initRepository();
+
+		loWaCon.defaultLogin();
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+
+		JcrConnector jcr = JcrConnector.getJCRConnector();
+		Session s = jcr.getJCRSession();
+		Node node1 = s.getRootNode().addNode("node1");
+		node1.addMixin(NodeType.MIX_LOCKABLE);
+		Node node2 = node1.addNode("node2");
+		node2.addMixin(NodeType.MIX_LOCKABLE);
+
+		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
+		document.setProperty(WasabiNodeProperty.VERSION, 0);
+		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
+		s.save();
+
+		docid = document.getIdentifier();
+		s.logout();
+
+		loWaCon.disconnect();
+
+		UserThread user1 = new SetSomethingTest1_1(USER1);
+		UserThread user2 = new SetSomethingTest1_1(USER2);
+
+		boolean problemRecognized = false;
+		for (Throwable t : executeUserThreads(user1, user2)) {
+			if (t instanceof ConcurrentModificationException) {
+				if (t.getCause() instanceof LockException) {
+					problemRecognized = true;
+				}
+			} else {
+				throw t;
+			}
+		}
+		AssertJUnit.assertTrue(problemRecognized);
+		s = jcr.getJCRSession();
+		try {
+			document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
 			s.logout();
@@ -630,6 +760,137 @@ public class LockingTest extends Arquillian {
 		Session s = jcr.getJCRSession();
 		try {
 			Node document = s.getNodeByIdentifier(docid);
+			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
+		} finally {
+			s.logout();
+		}
+	}
+
+	// ------------------------------------------------------------------------------------------
+	// tests the case when one user tries to lock a node which should already be locked because of a deep lock on an
+	// ancestor... with transactions
+	class SetSomethingTest1_1WithTransaction extends UserThread {
+
+		public SetSomethingTest1_1WithTransaction(String username) {
+			super(username);
+		}
+
+		@Override
+		public void run() {
+			try {
+				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+				loWaCon.connect();
+				loWaCon.login(username, username);
+
+				UserTransaction utx = (UserTransaction) loWaCon.lookupGeneral("UserTransaction");
+				boolean error = false;
+
+				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
+				JcrConnector jcr = JcrConnector.getJCRConnector();
+
+				Node node1 = null;
+				Node document = null;
+				Session s = jcr.getJCRSession();
+				try {
+					utx.begin();
+					document = s.getNodeByIdentifier(docid);
+
+					if (username.equals(USER2)) {
+						waitForMyTurn();
+						acquireLock(document, null, s, locker);
+					} else {
+						node1 = document.getParent().getParent();
+						acquireLock(node1, true, s, locker);
+					}
+
+					document.setProperty(WasabiNodeProperty.CONTENT, username);
+
+					if (username.equals(USER1)) {
+						notifyOther();
+						waitForMyTurn();
+					}
+
+					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
+					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					s.save();
+
+				} catch (RepositoryException re) {
+					error = true;
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+				} catch (Throwable t) {
+					error = true;
+					throw t;
+				} finally {
+					releaseLock(node1, s, locker);
+					releaseLock(document, s, locker);
+					s.logout();
+
+					if (error) {
+						utx.rollback();
+					} else {
+						utx.commit();
+					}
+
+					loWaCon.disconnect();
+
+					if (username.equals(USER2)) {
+						notifyOther();
+					}
+				}
+			} catch (Throwable t) {
+				throwables.add(t);
+			}
+		}
+	}
+
+	@Test
+	public void setSomethingTest1_1WithTransaction() throws Throwable {
+		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+		loWaCon.connect();
+
+		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		testhelper.initRepository();
+
+		loWaCon.defaultLogin();
+		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+		userService.create(USER1, USER1);
+		userService.create(USER2, USER2);
+
+		JcrConnector jcr = JcrConnector.getJCRConnector();
+		Session s = jcr.getJCRSession();
+		Node node1 = s.getRootNode().addNode("node1");
+		node1.addMixin(NodeType.MIX_LOCKABLE);
+		Node node2 = node1.addNode("node2");
+		node2.addMixin(NodeType.MIX_LOCKABLE);
+
+		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
+		document.setProperty(WasabiNodeProperty.VERSION, 0);
+		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
+		s.save();
+
+		docid = document.getIdentifier();
+		s.logout();
+
+		loWaCon.disconnect();
+
+		UserThread user1 = new SetSomethingTest1_1WithTransaction(USER1);
+		UserThread user2 = new SetSomethingTest1_1WithTransaction(USER2);
+
+		boolean problemRecognized = false;
+		for (Throwable t : executeUserThreads(user1, user2)) {
+			if (t instanceof ConcurrentModificationException) {
+				if (t.getCause() instanceof LockException) {
+					problemRecognized = true;
+				}
+			} else {
+				throw t;
+			}
+		}
+		AssertJUnit.assertTrue(problemRecognized);
+		s = jcr.getJCRSession();
+		try {
+			document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
 			s.logout();
