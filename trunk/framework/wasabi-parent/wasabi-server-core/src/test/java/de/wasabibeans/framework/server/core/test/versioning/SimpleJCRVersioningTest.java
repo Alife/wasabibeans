@@ -104,28 +104,28 @@ public class SimpleJCRVersioningTest extends Arquillian {
 		VersionManager versionManager = s.getWorkspace().getVersionManager();
 
 		Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
-		room.setProperty(WasabiNodeProperty.VERSION, 1);
+		room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		roomId = room.getIdentifier();
 
 		Node room1 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM1, WasabiNodeType.ROOM);
-		room1.setProperty(WasabiNodeProperty.VERSION, 1);
+		room1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		room1Id = room1.getIdentifier();
 		Node room2 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM2, WasabiNodeType.ROOM);
-		room2.setProperty(WasabiNodeProperty.VERSION, 1);
+		room2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		room2Id = room2.getIdentifier();
 
 		Node container1 = room1.getNode(WasabiNodeProperty.CONTAINERS).addNode(CONTAINER1, WasabiNodeType.CONTAINER);
-		container1.setProperty(WasabiNodeProperty.VERSION, 1);
+		container1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		container1Id = container1.getIdentifier();
 		Node container2 = room1.getNode(WasabiNodeProperty.CONTAINERS).addNode(CONTAINER2, WasabiNodeType.CONTAINER);
-		container2.setProperty(WasabiNodeProperty.VERSION, 1);
+		container2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		container2Id = container2.getIdentifier();
 
 		Node document1 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT1, WasabiNodeType.DOCUMENT);
-		document1.setProperty(WasabiNodeProperty.VERSION, 1);
+		document1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		document1Id = document1.getIdentifier();
 		Node document2 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT2, WasabiNodeType.DOCUMENT);
-		document2.setProperty(WasabiNodeProperty.VERSION, 1);
+		document2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 		document2Id = document2.getIdentifier();
 
 		s.save();
@@ -166,7 +166,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			System.out.println("=== Test Tree ===");
 		}
 		prefix += "--";
-		System.out.println(prefix + node.getName() + ": " + node.getProperty(WasabiNodeProperty.VERSION).getLong());
+		System.out.println(prefix + node.getName() + ": " + node.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong());
 		for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
 			Node aNode = ni.nextNode();
 			try {
@@ -200,13 +200,13 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 			Node room = s.getNodeByIdentifier(roomId);
 
-			room.setProperty(WasabiNodeProperty.VERSION, 2);
+			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 2);
 			s.save();
 			Version version = versionManager.checkin(room.getPath());
 			versionManager.getVersionHistory(room.getPath()).addVersionLabel(version.getName(), "hu", false);
 			versionManager.checkout(room.getPath());
 			
-			room.setProperty(WasabiNodeProperty.VERSION, 3);
+			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 3);
 			s.save();
 			version = versionManager.checkin(room.getPath());
 			versionManager.checkout(room.getPath());

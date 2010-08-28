@@ -76,7 +76,7 @@ public interface GroupServiceLocal extends ObjectServiceLocal {
 	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
-	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long version)
+	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
@@ -84,10 +84,10 @@ public interface GroupServiceLocal extends ObjectServiceLocal {
 	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
 
-	public void rename(WasabiGroupDTO group, String name, Long version) throws ObjectDoesNotExistException,
+	public void rename(WasabiGroupDTO group, String name, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
-	public void setDisplayName(WasabiGroupDTO group, String displayName, Long version)
+	public void setDisplayName(WasabiGroupDTO group, String displayName, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public Vector<WasabiGroupDTO> getAllGroups() throws ObjectDoesNotExistException, UnexpectedInternalProblemException;

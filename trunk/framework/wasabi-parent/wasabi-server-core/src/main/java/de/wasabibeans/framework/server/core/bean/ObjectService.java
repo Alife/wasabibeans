@@ -86,8 +86,8 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
 			/* Authorization - End */
 
-			Long version = ObjectServiceImpl.getVersion(objectNode);
-			return TransferManager.convertValue2DTO(ObjectServiceImpl.getName(objectNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
+			return TransferManager.convertValue2DTO(ObjectServiceImpl.getName(objectNode), optLockId);
 		} finally {
 			s.logout();
 		}

@@ -121,7 +121,7 @@ public class LockingTest extends Arquillian {
 		JcrConnector jcr = JcrConnector.getJCRConnector();
 		Session s = jcr.getJCRSession();
 		Node document = s.getRootNode().addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.VERSION, 0);
+		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
 		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
 		s.save();
 
@@ -202,18 +202,18 @@ public class LockingTest extends Arquillian {
 	// -------------------------------------------------------------------------------------------
 	// the lock methods of Locker.java to be tested (simplification: no dtos involved)
 	// copied here in order to be able to add assertions (... and leave out the dtos)
-	public static void acquireLock(Node node, Long version, Session s, LockingHelperLocal locker)
+	public static void acquireLock(Node node, Long optLockId, Session s, LockingHelperLocal locker)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			String lockToken = locker.acquireLock(node.getPath(), false);
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
 			AssertJUnit.assertTrue(node.isLocked()); // node must be locked before making the version check
-			if (version != null && !version.equals(ObjectServiceImpl.getVersion(node))) {
+			if (optLockId != null && !optLockId.equals(ObjectServiceImpl.getOptLockId(node))) {
 				lockManager.removeLockToken(lockToken);
 				locker.releaseLock(node.getPath(), lockToken);
 				AssertJUnit.assertFalse(node.isLocked());
-				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_VERSION);
+				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_OPTLOCK);
 			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
@@ -288,8 +288,8 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -376,8 +376,8 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -420,7 +420,7 @@ public class LockingTest extends Arquillian {
 		node2.addMixin(NodeType.MIX_LOCKABLE);
 
 		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.VERSION, 0);
+		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
 		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
 		s.save();
 
@@ -481,8 +481,8 @@ public class LockingTest extends Arquillian {
 
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -545,8 +545,8 @@ public class LockingTest extends Arquillian {
 
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 
 					if (username.equals(USER1)) {
 						throw new Exception("Simulated problem");
@@ -592,7 +592,7 @@ public class LockingTest extends Arquillian {
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// tests the case when a write attempt should fail because of the version check
+	// tests the case when a write attempt should fail because of the optLockId check
 	class SetSomethingTest4 extends UserThread {
 
 		public SetSomethingTest4(String username) {
@@ -615,16 +615,16 @@ public class LockingTest extends Arquillian {
 					document = s.getNodeByIdentifier(docid);
 
 					if (username.equals(USER2)) {
-						Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
+						Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 						waitForCommitOfOther();
-						acquireLock(document, version, s, locker);
+						acquireLock(document, optLockId, s, locker);
 					} else {
 						acquireLock(document, null, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -707,8 +707,8 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -810,8 +810,8 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -865,7 +865,7 @@ public class LockingTest extends Arquillian {
 		node2.addMixin(NodeType.MIX_LOCKABLE);
 
 		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.VERSION, 0);
+		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
 		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
 		s.save();
 
@@ -930,8 +930,8 @@ public class LockingTest extends Arquillian {
 
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {
@@ -1009,8 +1009,8 @@ public class LockingTest extends Arquillian {
 
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 
 					if (username.equals(USER1)) {
 						throw new Exception("Simulated problem");
@@ -1067,7 +1067,7 @@ public class LockingTest extends Arquillian {
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	// tests the case when a write attempt should fail because of the version check... with transactions
+	// tests the case when a write attempt should fail because of the optLockId check... with transactions
 	class SetSomethingTest4WithTransaction extends UserThread {
 
 		public SetSomethingTest4WithTransaction(String username) {
@@ -1090,16 +1090,16 @@ public class LockingTest extends Arquillian {
 					document = s.getNodeByIdentifier(docid);
 
 					if (username.equals(USER2)) {
-						Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
+						Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 						waitForCommitOfOther();
-						acquireLock(document, version, s, locker);
+						acquireLock(document, optLockId, s, locker);
 					} else {
 						acquireLock(document, null, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
-					Long version = document.getProperty(WasabiNodeProperty.VERSION).getLong();
-					document.setProperty(WasabiNodeProperty.VERSION, ++version);
+					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
 					s.save();
 
 				} catch (RepositoryException re) {

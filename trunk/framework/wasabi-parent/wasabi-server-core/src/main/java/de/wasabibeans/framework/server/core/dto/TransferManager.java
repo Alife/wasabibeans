@@ -89,20 +89,20 @@ public class TransferManager {
 		}
 	}
 
-	public static WasabiValueDTO convertValue2DTO(Node wasabiObject, Long version)
+	public static WasabiValueDTO convertValue2DTO(Node wasabiObject, Long optLockId)
 			throws UnexpectedInternalProblemException {
-		if (version != null) {
+		if (optLockId != null) {
 			WasabiObjectDTO objectDTO = convertNode2DTO(wasabiObject);
-			return new WasabiValueDTO(objectDTO, version);
+			return new WasabiValueDTO(objectDTO, optLockId);
 		} else {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_VALUE2DTO_NULLVERSION);
 		}
 	}
 
-	public static WasabiValueDTO convertValue2DTO(Serializable value, Long version)
+	public static WasabiValueDTO convertValue2DTO(Serializable value, Long optLockId)
 			throws UnexpectedInternalProblemException {
-		if (version != null) {
-			return new WasabiValueDTO(value, version);
+		if (optLockId != null) {
+			return new WasabiValueDTO(value, optLockId);
 		} else {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_VALUE2DTO_NULLVERSION);
 		}

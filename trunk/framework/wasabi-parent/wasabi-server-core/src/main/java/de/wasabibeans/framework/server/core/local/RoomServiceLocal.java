@@ -84,13 +84,13 @@ public interface RoomServiceLocal extends ObjectServiceLocal {
 
 	public WasabiRoomDTO getRootRoom() throws UnexpectedInternalProblemException;
 
-	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long version)
+	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException;
 
 	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void rename(WasabiRoomDTO room, String name, Long version) throws UnexpectedInternalProblemException,
+	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
 }

@@ -23,7 +23,7 @@
 	+ wasabi:attributes (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated
 	+ wasabi:tags (wasabiStructure:tags) = 'wasabiStructure:tags' autocreated
 	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
-	- wasabi:version (LONG) 
+	- wasabi:optLockId (LONG) 
 	
 [wasabi:location] > wasabi:object, wasabiMix:versionable
 	abstract

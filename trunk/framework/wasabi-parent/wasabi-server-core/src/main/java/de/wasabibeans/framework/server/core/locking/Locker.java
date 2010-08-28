@@ -16,15 +16,15 @@ public class Locker {
 
 	/**
 	 * Attempts to acquire a lock on the given {@code node}. If the lock cannot be acquired due to an already existing
-	 * lock or due to the fact that the given {@code version} does not match the actual version of the {@code node}
-	 * (that is the 'wasabi:version' property of the node), a {@code ConcurrentModificationException} is thrown.
+	 * lock or due to the fact that the given {@code optLockId} does not match the actual optLockId of the {@code node}
+	 * (that is the 'wasabi:optLockId' property of the node), a {@code ConcurrentModificationException} is thrown.
 	 * 
 	 * @param node
 	 * @param dto
 	 *            the DTO that belongs to the given {@code node}. Used for more detailed exception messages.
-	 * @param version
-	 *            must match the 'wasabi:version' property of the given {@code node} for a successful execution of this
-	 *            method
+	 * @param optLockId
+	 *            must match the 'wasabi:optLockId' property of the given {@code node} for a successful execution of
+	 *            this method
 	 * @param s
 	 * @param locker
 	 *            instance of {@code LockingHelperLocal}. This instance needs to have been retrieved by dependency
@@ -33,17 +33,17 @@ public class Locker {
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ConcurrentModificationException
 	 */
-	public static void acquireLock(Node node, WasabiObjectDTO dto, Long version, Session s, LockingHelperLocal locker)
+	public static void acquireLock(Node node, WasabiObjectDTO dto, Long optLockId, Session s, LockingHelperLocal locker)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			String lockToken = locker.acquireLock(node.getPath(), false);
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
-			if (version != null && !version.equals(ObjectServiceImpl.getVersion(node))) {
+			if (optLockId != null && !optLockId.equals(ObjectServiceImpl.getOptLockId(node))) {
 				lockManager.removeLockToken(lockToken);
 				locker.releaseLock(node.getPath(), lockToken);
 				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_LOCKING_VERSION, (dto != null) ? dto.toString() : ""));
+						WasabiExceptionMessages.INTERNAL_LOCKING_OPTLOCK, (dto != null) ? dto.toString() : ""));
 			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(

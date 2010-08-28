@@ -28,15 +28,15 @@ public class WasabiValueDTO implements Serializable {
 	private static final long serialVersionUID = -2463969904673513235L;
 	
 	private Serializable value;
-	private Long version;
+	private Long optLockId;
 
-	protected WasabiValueDTO(Serializable value, Long version) {
+	protected WasabiValueDTO(Serializable value, Long optLockId) {
 		this.value = value;
-		this.version = version;
+		this.optLockId = optLockId;
 	}
 
-	public Long getVersion() {
-		return version;
+	public Long getOptLockId() {
+		return optLockId;
 	}
 
 	@SuppressWarnings("unchecked")

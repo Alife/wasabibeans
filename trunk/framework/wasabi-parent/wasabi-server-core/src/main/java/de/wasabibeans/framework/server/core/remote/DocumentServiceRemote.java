@@ -98,18 +98,18 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long version)
+	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException;
 
 	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void rename(WasabiDocumentDTO document, String name, Long version)
+	public void rename(WasabiDocumentDTO document, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException;
 
-	public void setContent(WasabiDocumentDTO document, Serializable content, Long version)
+	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
 			ConcurrentModificationException;
 
