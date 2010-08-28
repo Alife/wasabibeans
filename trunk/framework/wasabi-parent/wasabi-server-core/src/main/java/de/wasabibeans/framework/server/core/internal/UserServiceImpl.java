@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.internal;
 import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -44,6 +45,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class UserServiceImpl {
@@ -99,9 +101,12 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static Node getHomeRoom(Node userNode) throws UnexpectedInternalProblemException {
+	public static Node getHomeRoom(Node userNode) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException {
 		try {
 			return userNode.getProperty(WasabiNodeProperty.START_ROOM).getNode();
+		} catch (ItemNotFoundException infe) {
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -129,9 +134,12 @@ public class UserServiceImpl {
 		return WasabiUserSQL.SqlQueryForGetPassword(userNode);
 	}
 
-	public static Node getStartRoom(Node userNode) throws UnexpectedInternalProblemException {
+	public static Node getStartRoom(Node userNode) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException {
 		try {
 			return userNode.getProperty(WasabiNodeProperty.START_ROOM).getNode();
+		} catch (ItemNotFoundException infe) {
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -194,7 +202,12 @@ public class UserServiceImpl {
 		WasabiUserSQL.SqlQueryForRemove(userNode);
 
 		// JCR
-		ObjectServiceImpl.remove(getHomeRoom(userNode));
+		try {
+			Node homeRoom = getHomeRoom(userNode);
+			ObjectServiceImpl.remove(homeRoom);
+		} catch (TargetDoesNotExistException tdnee) {
+			// nothing to remove if home room does not exist
+		}
 		ObjectServiceImpl.remove(userNode);
 
 		// TODO Environment of user?
