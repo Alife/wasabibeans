@@ -51,7 +51,7 @@ import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
-public class ProvokeErrorConcurrentTest extends Arquillian {
+public class ConcurrentlyAddChildNodesTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2";
 
@@ -152,7 +152,8 @@ public class ProvokeErrorConcurrentTest extends Arquillian {
 	}
 
 	// --------------------------------------------------------------------------------------------
-
+	// Tests wheter there are problems when two users add child nodes concurrently 
+	// seems to work since Jackrabbit version 2.1.1
 	class ProvokeError extends UserThread {
 
 		public ProvokeError(String username) {
