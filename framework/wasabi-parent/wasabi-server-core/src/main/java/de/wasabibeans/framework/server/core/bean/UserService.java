@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
@@ -118,7 +119,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public WasabiValueDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -171,7 +172,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public WasabiValueDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -302,8 +303,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException {
 		Node userNode = null;
 		Session s = jcr.getJCRSession();
 		try {
