@@ -19,7 +19,7 @@
     <tx-connection-factory>
 		<jndi-name>jcr/local</jndi-name> 
 		<xa-transaction/>
-		<rar-name>jackrabbit-jca-2.1.0.rar</rar-name>
+		<rar-name>jackrabbit-jca-2.1.1.rar</rar-name>
 		<connection-definition>javax.jcr.Repository</connection-definition>
 		<config-property name="homeDir" type="java.lang.String">/jackrabbit</config-property>
 
