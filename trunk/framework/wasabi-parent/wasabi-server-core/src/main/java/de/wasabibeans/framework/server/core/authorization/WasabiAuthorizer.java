@@ -35,6 +35,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
+import de.wasabibeans.framework.server.core.common.WasabiACLPriority;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -137,9 +138,10 @@ public class WasabiAuthorizer {
 
 		try {
 			try {
-				String getACLEntries = "SELECT `group_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, MIN(priority) FROM `wasabi_rights` "
-						+ "WHERE `object_id`=? AND `group_id`=? AND (`view`=-1 OR `read`=-1 OR `comment`=-1 OR `execute`=-1 OR `insert`=-1 OR `write`=-1 OR `grant`=-1)"
-						+ " GROUP BY `object_id`";
+				//TODO: Optimierung der Ergebnismenge durch permission filter
+				String getACLEntries = "SELECT `group_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant` FROM `wasabi_rights` "
+						+ "WHERE `object_id`=? AND `group_id`=? AND `start_time`=0 AND `end_time`=0 AND "
+						+ "(`view`=-1 OR `read`=-1 OR `comment`=-1 OR `execute`=-1 OR `insert`=-1 OR `write`=-1 OR `grant`=-1)";
 
 				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 				List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, groupUUID);
@@ -241,6 +243,72 @@ public class WasabiAuthorizer {
 		return true;
 	}
 
+	private static boolean checkParentGroupForTimeRights(String objectUUID, String groupUUID, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		long time = java.lang.System.currentTimeMillis();
+		boolean ret = true;
+
+		try {
+			try {
+				// TODO: Optimierung durch permission filter
+				String getACLEntries = "SELECT `group_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` FROM `wasabi_rights` "
+						+ "WHERE `object_id`=? AND `group_id`=? AND `start_time`<=? AND `end_time`>=? AND `start_time`!=0 AND `end_time`!=0 AND "
+						+ "(`view`=-1 OR `read`=-1 OR `comment`=-1 OR `execute`=-1 OR `insert`=-1 OR `write`=-1 OR `grant`=-1)";
+
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, groupUUID, time, time);
+
+				for (WasabiACLEntry wasabiACLEntry : result) {
+					switch (permission) {
+					case WasabiPermission.VIEW:
+						int view = wasabiACLEntry.getView();
+						if (view == -1)
+							return false;
+					case WasabiPermission.READ:
+						int read = wasabiACLEntry.getRead();
+						if (read == -1)
+							return false;
+					case WasabiPermission.EXECUTE:
+						int execute = wasabiACLEntry.getExecute();
+						if (execute == -1)
+							return false;
+					case WasabiPermission.COMMENT:
+						int comment = wasabiACLEntry.getComment();
+						if (comment == -1)
+							return false;
+					case WasabiPermission.INSERT:
+						int insert = wasabiACLEntry.getInsert();
+						if (insert == -1)
+							return false;
+					case WasabiPermission.WRITE:
+						int write = wasabiACLEntry.getWrite();
+						if (write == -1)
+							return false;
+					case WasabiPermission.GRANT:
+						int grant = wasabiACLEntry.getGrant();
+						if (grant == -1)
+							return false;
+					}
+
+					if (ret) {
+						Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupUUID));
+						if (groupNode == null)
+							return true;
+						else
+							return checkParentGroupForTimeRights(objectUUID, groupNode.getIdentifier(), permission, s);
+					}
+				}
+			} catch (RepositoryException re) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return ret;
+	}
+
 	private static int checkUserPriority(List<WasabiACLEntry> ACLEntries, int permission) {
 		int result = 0;
 
@@ -325,9 +393,16 @@ public class WasabiAuthorizer {
 				}
 
 				SQLdisjunctor = SQLdisjunctor + "`group_id`='placeholderValue' ";
-				// TODO: Überdeckung von Zeitrechten
-				String getACLEntries = "SELECT `object_id`, `group_id`, `view`, MIN(priority) FROM `wasabi_rights` "
-						+ "WHERE `parent_id`=? AND `view`=1 AND (" + SQLdisjunctor + ") GROUP BY `object_id`";
+				String getACLEntries = "SELECT `object_id`, `group_id`, `view`, priority, start_time, end_time FROM `wasabi_rights` "
+					+ "WHERE `parent_id`=? AND "
+					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+					+ "AND `view`=1 AND ("
+					+ SQLdisjunctor
+					+ ") AND object_id NOT IN(SELECT object_id FROM `wasabi_rights` WHERE `parent_id`=? AND "
+					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))"
+					+ " `view`=-1 AND `priority`="
+					+ WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
+					+ ") GROUP BY object_id";
 
 				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 				List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID);
@@ -522,6 +597,11 @@ public class WasabiAuthorizer {
 			Session s) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		String InitGroupID = "";
+		int initPrio = -1;
+		boolean ret = false;
+		long time = java.lang.System.currentTimeMillis();
+
 		try {
 			try {
 				NodeIterator ni = UserServiceImpl.getMemberships(userNode);
@@ -540,85 +620,155 @@ public class WasabiAuthorizer {
 				}
 
 				SQLdisjunctor = SQLdisjunctor + "`group_id`='placeholderValue' ";
-				// TODO: Überdeckung von Zeitrechten
-				String getACLEntries = "SELECT `group_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, MIN(priority) FROM `wasabi_rights` "
-						+ "WHERE `object_id`=? AND (`view`=1 OR `read`=1 OR `comment`=1 OR `execute`=1 OR `insert`=1 OR `write`=1 OR `grant`=1) AND ("
-						+ SQLdisjunctor + ") GROUP BY `object_id`";
+				// TODO: Optimierung in Abhängigkeit vom Recht
+				String getACLEntries = "SELECT `group_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` FROM `wasabi_rights` "
+						+ "WHERE `object_id`=? AND `start_time`<=? AND `end_time`>=? AND ("
+						+ SQLdisjunctor
+						+ ") ORDER BY `priority`, `group_id`";
 
 				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID);
+				List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, time, time);
 
 				for (WasabiACLEntry wasabiACLEntry : result) {
-					switch (permission) {
-					case WasabiPermission.VIEW:
-						int view = wasabiACLEntry.getView();
-						if (view == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
+					String groupID = wasabiACLEntry.getGroup_Id();
+					int prio = wasabiACLEntry.getPriority();
+
+					// Initialize groupID and priority
+					if (InitGroupID == "" && initPrio == -1) {
+						InitGroupID = groupID;
+						initPrio = prio;
+					}
+
+					// If end of rights bundle is reached and all rights at this level are true, check next level.
+					if ((groupID != InitGroupID || initPrio != prio) && ret == true) {
+						Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
+								.getGroup_Id()));
+						if (groupNode == null)
+							return true;
+						else
+							ret = checkParentGroupForTimeRights(objectUUID, groupNode.getIdentifier(), permission, s);
+						if (ret == true)
+							return true;
+						else {
+							InitGroupID = groupID;
+							initPrio = prio;
 						}
-					case WasabiPermission.READ:
-						int read = wasabiACLEntry.getRead();
-						if (read == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
+					}
+
+					// Collecting rights of actual rights bundle (time rights).
+					if (groupID == InitGroupID && initPrio == prio && prio == WasabiACLPriority.GROUP_TIME_RIGHT) {
+						switch (permission) {
+						case WasabiPermission.VIEW:
+							int view = wasabiACLEntry.getView();
+							if (view == -1)
+								return false;
+							if (view == 1)
+								ret = true;
+						case WasabiPermission.READ:
+							int read = wasabiACLEntry.getRead();
+							if (read == -1)
+								return false;
+							if (read == 1)
+								ret = true;
+						case WasabiPermission.EXECUTE:
+							int execute = wasabiACLEntry.getExecute();
+							if (execute == -1)
+								return false;
+							if (execute == 1)
+								ret = true;
+						case WasabiPermission.COMMENT:
+							int comment = wasabiACLEntry.getComment();
+							if (comment == -1)
+								return false;
+							if (comment == 1)
+								ret = true;
+						case WasabiPermission.INSERT:
+							int insert = wasabiACLEntry.getInsert();
+							if (insert == -1)
+								return false;
+							if (insert == 1)
+								ret = true;
+						case WasabiPermission.WRITE:
+							int write = wasabiACLEntry.getWrite();
+							if (write == -1)
+								return false;
+							if (write == 1)
+								ret = true;
+						case WasabiPermission.GRANT:
+							int grant = wasabiACLEntry.getGrant();
+							if (grant == -1)
+								return false;
+							if (grant == 1)
+								ret = true;
 						}
-					case WasabiPermission.EXECUTE:
-						int execute = wasabiACLEntry.getExecute();
-						if (execute == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
-						}
-					case WasabiPermission.COMMENT:
-						int comment = wasabiACLEntry.getComment();
-						if (comment == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
-						}
-					case WasabiPermission.INSERT:
-						int insert = wasabiACLEntry.getInsert();
-						if (insert == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
-						}
-					case WasabiPermission.WRITE:
-						int write = wasabiACLEntry.getWrite();
-						if (write == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
-						}
-					case WasabiPermission.GRANT:
-						int grant = wasabiACLEntry.getGrant();
-						if (grant == 1) {
-							Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(wasabiACLEntry
-									.getGroup_Id()));
-							if (groupNode != null)
-								return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
-							else
-								return true;
+					}
+
+					// Check normal group rights
+					if (prio == WasabiACLPriority.GROUP_RIGHT) {
+						switch (permission) {
+						case WasabiPermission.VIEW:
+							int view = wasabiACLEntry.getView();
+							if (view == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.READ:
+							int read = wasabiACLEntry.getRead();
+							if (read == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.EXECUTE:
+							int execute = wasabiACLEntry.getExecute();
+							if (execute == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.COMMENT:
+							int comment = wasabiACLEntry.getComment();
+							if (comment == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.INSERT:
+							int insert = wasabiACLEntry.getInsert();
+							if (insert == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.WRITE:
+							int write = wasabiACLEntry.getWrite();
+							if (write == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
+						case WasabiPermission.GRANT:
+							int grant = wasabiACLEntry.getGrant();
+							if (grant == 1) {
+								Node groupNode = GroupServiceImpl.getParentGroup(s.getNodeByIdentifier(groupID));
+								if (groupNode != null)
+									return checkParentGroup(objectUUID, groupNode.getIdentifier(), permission, s);
+								else
+									return true;
+							}
 						}
 					}
 				}
@@ -635,56 +785,68 @@ public class WasabiAuthorizer {
 			throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		long time = java.lang.System.currentTimeMillis();
+		boolean ret = false;
+		int priority1 = -1;
+
 		try {
-			// TODO: Überdeckung von Zeitrechten
+			// TODO: Optimierung durch Query in Abhängigkeit vom angeforderten Recht
 			String getACLEntries = "SELECT `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, MIN(priority) FROM `wasabi_rights` "
-					+ "WHERE `object_id`=? AND `user_id`=? GROUP BY `object_id`";
+					+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? GROUP BY `object_id`";
 
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, userUUID);
+			List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, userUUID, time, time);
 
 			for (WasabiACLEntry wasabiACLEntry : result) {
+				int prio = wasabiACLEntry.getPriority();
+
+				if (priority1 != prio) {
+					if (ret)
+						return true;
+					priority1 = prio;
+				}
+
 				switch (permission) {
 				case WasabiPermission.VIEW:
 					int view = wasabiACLEntry.getView();
 					if (view == 1)
-						return true;
+						ret = true;
 					else if (view == -1)
 						return false;
 				case WasabiPermission.READ:
 					int read = wasabiACLEntry.getRead();
 					if (read == 1)
-						return true;
+						ret = true;
 					else if (read == -1)
 						return false;
 				case WasabiPermission.COMMENT:
 					int comment = wasabiACLEntry.getComment();
 					if (comment == 1)
-						return true;
+						ret = true;
 					else if (comment == -1)
 						return false;
 				case WasabiPermission.EXECUTE:
 					int execute = wasabiACLEntry.getExecute();
 					if (execute == 1)
-						return true;
+						ret = true;
 					else if (execute == -1)
 						return false;
 				case WasabiPermission.INSERT:
 					int insert = wasabiACLEntry.getInsert();
 					if (insert == 1)
-						return true;
+						ret = true;
 					else if (insert == -1)
 						return false;
 				case WasabiPermission.WRITE:
 					int write = wasabiACLEntry.getWrite();
 					if (write == 1)
-						return true;
+						ret = true;
 					else if (write == -1)
 						return false;
 				case WasabiPermission.GRANT:
 					int grant = wasabiACLEntry.getGrant();
 					if (grant == 1)
-						return true;
+						ret = true;
 					else if (grant == -1)
 						return false;
 				}
@@ -699,25 +861,35 @@ public class WasabiAuthorizer {
 			throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		Vector<String> results = new Vector<String>();
+		Vector<String> resultsAllow = new Vector<String>();
+		Vector<String> resultsDeny = new Vector<String>();
+
+		long time = java.lang.System.currentTimeMillis();
 
 		try {
-			// TODO: Überdeckung von Zeitrechten
+			// TODO: Fix it
 			String getACLEntries = "SELECT `object_id`,`view`,MIN(priority) FROM `wasabi_rights` "
-					+ "WHERE `parent_id`=? AND `user_id`=? AND (`view`=1 OR `view`=-1) GROUP BY `object_id`";
+					+ "WHERE `parent_id`=? AND `user_id`=? AND (`view`=1 OR `view`=-1) AND `start_time`<=? AND `end_time`>=? GROUP BY `object_id`";
 
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID);
+			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time);
 
 			for (WasabiACLEntry wasabiACLEntry : result) {
-				if (wasabiACLEntry.getView() != -1)
-					results.add(wasabiACLEntry.getObject_Id());
+				if (wasabiACLEntry.getView() == 1)
+					resultsAllow.add(wasabiACLEntry.getObject_Id());
+
+				if (wasabiACLEntry.getView() == -1)
+					resultsDeny.add(wasabiACLEntry.getObject_Id());
+			}
+
+			for (String string : resultsDeny) {
+				resultsAllow.remove(string);
 			}
 
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
 
-		return results;
+		return resultsAllow;
 	}
 }

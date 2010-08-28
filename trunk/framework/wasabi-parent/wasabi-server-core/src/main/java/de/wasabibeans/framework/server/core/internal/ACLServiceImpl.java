@@ -34,6 +34,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
+import de.wasabibeans.framework.server.core.common.WasabiACLPriority;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -139,10 +140,10 @@ public class ACLServiceImpl {
 							try {
 
 								int prio;
-								if (startTime != 0 && endTime != 0)
-									prio = 1;
+								if (startTime != 0 || endTime != 0)
+									prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
 								else
-									prio = 3;
+									prio = WasabiACLPriority.INHERITED_USER_RIGHT;
 
 								run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
 										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
@@ -172,10 +173,10 @@ public class ACLServiceImpl {
 							try {
 
 								int prio;
-								if (startTime != 0 && endTime != 0)
-									prio = 5;
+								if (startTime != 0 || endTime != 0)
+									prio = WasabiACLPriority.GROUP_TIME_RIGHT;
 								else
-									prio = 6;
+									prio = WasabiACLPriority.GROUP_RIGHT;
 
 								run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
 										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
@@ -1173,14 +1174,14 @@ public class ACLServiceImpl {
 								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 						int prio;
-						if (startTime != 0 && endTime != 0)
-							prio = 0;
-						else if (startTime != 0 && endTime != 0 && !inheritance_id.isEmpty())
-							prio = 1;
+						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT;
+						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+							prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
 						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
-							prio = 2;
+							prio = WasabiACLPriority.EXPLICIT_USER_RIGHT;
 						else
-							prio = 3;
+							prio = WasabiACLPriority.INHERITED_USER_RIGHT;
 
 						run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
 								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
@@ -1268,10 +1269,10 @@ public class ACLServiceImpl {
 								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 						int prio;
-						if (startTime != 0 && endTime != 0)
-							prio = 5;
+						if (startTime != 0 || endTime != 0)
+							prio = WasabiACLPriority.GROUP_TIME_RIGHT;
 						else
-							prio = 6;
+							prio = WasabiACLPriority.GROUP_RIGHT;
 
 						run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
 								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
