@@ -93,21 +93,21 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			Long version = ObjectServiceImpl.getVersion(documentNode);
-			return TransferManager.convertValue2DTO(DocumentServiceImpl.getContent(documentNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
+			return TransferManager.convertValue2DTO(DocumentServiceImpl.getContent(documentNode), optLockId);
 		} finally {
 			s.logout();
 		}
 	}
 
-	public void setContent(WasabiDocumentDTO document, Serializable content, Long version)
+	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
 			ConcurrentModificationException {
 		Node documentNode = null;
 		Session s = jcr.getJCRSession();
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
-			Locker.acquireLock(documentNode, document, version, s, locker);
+			Locker.acquireLock(documentNode, document, optLockId, s, locker);
 			DocumentServiceImpl.setContent(documentNode, content, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -155,14 +155,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			Long version = ObjectServiceImpl.getVersion(documentNode);
-			return TransferManager.convertValue2DTO(DocumentServiceImpl.getEnvironment(documentNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
+			return TransferManager.convertValue2DTO(DocumentServiceImpl.getEnvironment(documentNode), optLockId);
 		} finally {
 			s.logout();
 		}
 	}
 
-	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long version)
+	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException {
 		Node documentNode = null;
@@ -170,7 +170,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			Locker.acquireLock(documentNode, document, version, s, locker);
+			Locker.acquireLock(documentNode, document, optLockId, s, locker);
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -195,7 +195,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		}
 	}
 
-	public void rename(WasabiDocumentDTO document, String name, Long version) throws ObjectDoesNotExistException,
+	public void rename(WasabiDocumentDTO document, String name, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -206,7 +206,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			documentNode = TransferManager.convertDTO2Node(document, s);
-			Locker.acquireLock(documentNode, document, version, s, locker);
+			Locker.acquireLock(documentNode, document, optLockId, s, locker);
 			DocumentServiceImpl.rename(documentNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {

@@ -450,15 +450,15 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 	// ---------------------------------------------------------------------------------------------------
 
-	class LostUpdateRollbackDueToVersionCallable extends TestCallable {
+	class LostUpdateRollbackDueToOptLockIdCallable extends TestCallable {
 
-		public LostUpdateRollbackDueToVersionCallable(String username, Thread otherUser) {
+		public LostUpdateRollbackDueToOptLockIdCallable(String username, Thread otherUser) {
 			super(username, otherUser);
 		}
 
 		@Override
 		public Object call() throws Exception {
-			System.out.println("==LOST UPDATE ROLLBACK DUE TO VERSION==");
+			System.out.println("==LOST UPDATE ROLLBACK DUE TO OPTLOCKID==");
 			super.call();
 			// authentication
 			System.out.println(username + " authenticates");
@@ -486,7 +486,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 				AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 				System.out.println(username + " writes");
-				userService.setDisplayName(user3, USER2, displayNameDTO.getVersion());
+				userService.setDisplayName(user3, USER2, displayNameDTO.getOptLockId());
 			}
 			loCon.disconnect();
 			return null;
@@ -494,7 +494,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 	}
 
 	@Test
-	public void lostUpdateRollbackDueToVersionTest() throws Throwable {
+	public void lostUpdateRollbackDueToOptLockIdTest() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 		loWaCon.connect();
 
@@ -513,9 +513,9 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 		UserTestThread user1 = new UserTestThread();
 		UserTestThread user2 = new UserTestThread();
-		LostUpdateRollbackDueToVersionCallable userAction1 = new LostUpdateRollbackDueToVersionCallable(USER1,
+		LostUpdateRollbackDueToOptLockIdCallable userAction1 = new LostUpdateRollbackDueToOptLockIdCallable(USER1,
 				user2);
-		LostUpdateRollbackDueToVersionCallable userAction2 = new LostUpdateRollbackDueToVersionCallable(USER2,
+		LostUpdateRollbackDueToOptLockIdCallable userAction2 = new LostUpdateRollbackDueToOptLockIdCallable(USER2,
 				user1);
 		
 		boolean problemRecognized = false;

@@ -77,18 +77,18 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void rename(WasabiUserDTO user, String name, Long Version) throws UnexpectedInternalProblemException,
+	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
-	public void setDisplayName(WasabiUserDTO user, String displayName, Long Version)
+	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void setPassword(WasabiUserDTO user, String password)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long Version)
+	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
-	public void setStatus(WasabiUserDTO user, boolean active, Long Version)
+	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 }

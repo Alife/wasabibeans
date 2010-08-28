@@ -195,17 +195,17 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static long getVersion(Node objectNode) throws UnexpectedInternalProblemException {
+	public static long getOptLockId(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
-			return objectNode.getProperty(WasabiNodeProperty.VERSION).getLong();
+			return objectNode.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void setVersion(Node objectNode, long version) throws UnexpectedInternalProblemException {
+	public static void setOptLockId(Node objectNode, long optLockId) throws UnexpectedInternalProblemException {
 		try {
-			objectNode.setProperty(WasabiNodeProperty.VERSION, version);
+			objectNode.setProperty(WasabiNodeProperty.OPT_LOCK_ID, optLockId);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -239,7 +239,7 @@ public class ObjectServiceImpl {
 		ObjectServiceImpl.setCreatedBy(objectNode, currentUser);
 		ObjectServiceImpl.setModifiedOn(objectNode, timestamp);
 		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
-		ObjectServiceImpl.setVersion(objectNode, 0);
+		ObjectServiceImpl.setOptLockId(objectNode, 0);
 	}
 
 	/**
@@ -266,8 +266,8 @@ public class ObjectServiceImpl {
 		}
 		ObjectServiceImpl.setModifiedOn(objectNode, Calendar.getInstance().getTime());
 		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
-		long currentVersion = ObjectServiceImpl.getVersion(objectNode);
-		ObjectServiceImpl.setVersion(objectNode, ++currentVersion);
+		long currentVersion = ObjectServiceImpl.getOptLockId(objectNode);
+		ObjectServiceImpl.setOptLockId(objectNode, ++currentVersion);
 	}
 
 	public static void setRightsActive(Node objectNode, boolean rightsActive) {

@@ -431,9 +431,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	// -------------------------------------------------------------------------------------------------
 
-	class LostUpdateRollbackDueToVersionThread extends UserThread {
+	class LostUpdateRollbackDueToOptLockIdThread extends UserThread {
 
-		public LostUpdateRollbackDueToVersionThread(String username) {
+		public LostUpdateRollbackDueToOptLockIdThread(String username) {
 			super(username);
 		}
 
@@ -441,7 +441,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		public void run() {
 			UserTransaction utx = null;
 			try {
-				System.out.println("==LOST UPDATE ROLLBACK DUE TO VERSION==");
+				System.out.println("==LOST UPDATE ROLLBACK DUE TO OPTLOCKID==");
 				// authentication
 				System.out.println(username + " authenticates");
 				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
@@ -471,7 +471,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 					AssertJUnit.assertEquals(USER1, userService.getDisplayName(user3).getValue());
 					System.out.println(username + " writes");
-					userService.setDisplayName(user3, USER2, displayNameDTO.getVersion());
+					userService.setDisplayName(user3, USER2, displayNameDTO.getOptLockId());
 				}
 
 				utx.commit();
@@ -488,7 +488,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	}
 
 	@Test
-	public void lostUpdateRollbackDueToVersionTest() throws Throwable {
+	public void lostUpdateRollbackDueToOptLockIdTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		reWaCon.connect();
 
@@ -505,8 +505,8 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 		reWaCon.disconnect();
 
-		UserThread user1 = new LostUpdateRollbackDueToVersionThread(USER1);
-		UserThread user2 = new LostUpdateRollbackDueToVersionThread(USER2);
+		UserThread user1 = new LostUpdateRollbackDueToOptLockIdThread(USER1);
+		UserThread user2 = new LostUpdateRollbackDueToOptLockIdThread(USER2);
 
 		boolean problemRecognized = false;
 		for (Throwable t : executeUserThreads(user1, user2)) {

@@ -77,19 +77,19 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void rename(WasabiUserDTO user, String name, Long version) throws UnexpectedInternalProblemException,
+	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
-	public void setDisplayName(WasabiUserDTO user, String displayName, Long version)
+	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long version)
+	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
-	public void setStatus(WasabiUserDTO user, boolean active, Long version)
+	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
 }

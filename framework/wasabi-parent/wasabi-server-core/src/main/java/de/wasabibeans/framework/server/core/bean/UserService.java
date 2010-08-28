@@ -109,8 +109,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			long version = ObjectServiceImpl.getVersion(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getDisplayName(userNode), version);
+			long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+			return TransferManager.convertValue2DTO(UserServiceImpl.getDisplayName(userNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -122,8 +122,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long version = ObjectServiceImpl.getVersion(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getHomeRoom(userNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+			return TransferManager.convertValue2DTO(UserServiceImpl.getHomeRoom(userNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -175,8 +175,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long version = ObjectServiceImpl.getVersion(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getStartRoom(userNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+			return TransferManager.convertValue2DTO(UserServiceImpl.getStartRoom(userNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -188,8 +188,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long version = ObjectServiceImpl.getVersion(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getStatus(userNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+			return TransferManager.convertValue2DTO(UserServiceImpl.getStatus(userNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -243,7 +243,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setDisplayName(WasabiUserDTO user, String displayName, Long version)
+	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException {
 		if (displayName == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -254,7 +254,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, version, s, locker);
+			Locker.acquireLock(userNode, user, optLockId, s, locker);
 			UserServiceImpl.setDisplayName(userNode, displayName, getCurrentUser());
 			s.save();
 		} catch (RepositoryException re) {
@@ -283,14 +283,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long version)
+	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException {
 		Node userNode = null;
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.acquireLock(userNode, user, version, s, locker);
+			Locker.acquireLock(userNode, user, optLockId, s, locker);
 			UserServiceImpl.setStartRoom(userNode, roomNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -302,13 +302,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void setStatus(WasabiUserDTO user, boolean active, Long version) throws UnexpectedInternalProblemException,
+	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
 		Node userNode = null;
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, version, s, locker);
+			Locker.acquireLock(userNode, user, optLockId, s, locker);
 			UserServiceImpl.setStatus(userNode, active, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -334,7 +334,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void rename(WasabiUserDTO user, String name, Long version) throws UnexpectedInternalProblemException,
+	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -345,7 +345,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		try {
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, version, s, locker);
+			Locker.acquireLock(userNode, user, optLockId, s, locker);
 			UserServiceImpl.rename(userNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {

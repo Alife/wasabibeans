@@ -99,8 +99,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSession();
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Long version = ObjectServiceImpl.getVersion(roomNode);
-			return TransferManager.convertValue2DTO(RoomServiceImpl.getEnvironment(roomNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
+			return TransferManager.convertValue2DTO(RoomServiceImpl.getEnvironment(roomNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -229,7 +229,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long version)
+	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException {
 		Node roomNode = null;
@@ -237,7 +237,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			roomNode = TransferManager.convertDTO2Node(room, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			Locker.acquireLock(roomNode, room, version, s, locker);
+			Locker.acquireLock(roomNode, room, optLockId, s, locker);
 			RoomServiceImpl.move(roomNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -265,7 +265,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public void rename(WasabiRoomDTO room, String name, Long version) throws UnexpectedInternalProblemException,
+	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -276,7 +276,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSession();
 		try {
 			roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.acquireLock(roomNode, room, version, s, locker);
+			Locker.acquireLock(roomNode, room, optLockId, s, locker);
 			RoomServiceImpl.rename(roomNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {

@@ -124,8 +124,8 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Long version = ObjectServiceImpl.getVersion(groupNode);
-			return TransferManager.convertValue2DTO(GroupServiceImpl.getDisplayName(groupNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
+			return TransferManager.convertValue2DTO(GroupServiceImpl.getDisplayName(groupNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -252,8 +252,8 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 		try {
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Long version = ObjectServiceImpl.getVersion(groupNode);
-			return TransferManager.convertValue2DTO(GroupServiceImpl.getParentGroup(groupNode), version);
+			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
+			return TransferManager.convertValue2DTO(GroupServiceImpl.getParentGroup(groupNode), optLockId);
 		} finally {
 			s.logout();
 		}
@@ -335,7 +335,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	}
 
 	@Override
-	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long version)
+	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException {
 		Node groupNode = null;
 		Session s = jcr.getJCRSession();
@@ -345,7 +345,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 			}
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, version, s, locker);
+			Locker.acquireLock(groupNode, group, optLockId, s, locker);
 			GroupServiceImpl.move(groupNode, newParentGroupNode, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -390,7 +390,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	}
 
 	@Override
-	public void rename(WasabiGroupDTO group, String name, Long version) throws ObjectDoesNotExistException,
+	public void rename(WasabiGroupDTO group, String name, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -401,7 +401,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, version, s, locker);
+			Locker.acquireLock(groupNode, group, optLockId, s, locker);
 			GroupServiceImpl.rename(groupNode, name, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
@@ -414,7 +414,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	}
 
 	@Override
-	public void setDisplayName(WasabiGroupDTO group, String displayName, Long version)
+	public void setDisplayName(WasabiGroupDTO group, String displayName, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException {
 		if (displayName == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
@@ -425,7 +425,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, version, s, locker);
+			Locker.acquireLock(groupNode, group, optLockId, s, locker);
 			GroupServiceImpl.setDisplayName(groupNode, displayName, ctx.getCallerPrincipal().getName());
 			s.save();
 		} catch (RepositoryException re) {
