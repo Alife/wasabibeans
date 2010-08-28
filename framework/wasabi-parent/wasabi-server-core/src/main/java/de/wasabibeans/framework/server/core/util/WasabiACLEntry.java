@@ -23,56 +23,24 @@ package de.wasabibeans.framework.server.core.util;
 
 public class WasabiACLEntry {
 
+	private String group_id = "";
 	private long id;
-	private int view, read, insert, write, comment, execute, grant;
+	private String inheritance_id = "";
+	private String object_id = "";
+	private String parent_id = "";
 	private long start_time, end_time;
 	private String user_id = "";
-	private String group_id = "";
-	private String parent_id = "";
-	private String object_id = "";
-	private String inheritance_id = "";
+	private int view, read, insert, write, comment, execute, grant, priority;
 
 	public WasabiACLEntry() {
 	}
 
-	public long getId() {
-		return this.id;
-	}
-
-	public String getUser_Id() {
-		return this.user_id;
-	}
-
-	public String getGroup_Id() {
-		return this.group_id;
-	}
-
-	public String getParent_Id() {
-		return this.parent_id;
-	}
-
-	public String getObject_Id() {
-		return this.object_id;
-	}
-
-	public int getView() {
-		return this.view;
-	}
-
-	public int getRead() {
-		return this.read;
-	}
-
-	public int getWrite() {
-		return this.write;
-	}
-
-	public int getInsert() {
-		return this.insert;
-	}
-
 	public int getComment() {
 		return this.comment;
+	}
+
+	public long getEnd_Time() {
+		return this.end_time;
 	}
 
 	public int getExecute() {
@@ -83,56 +51,60 @@ public class WasabiACLEntry {
 		return this.grant;
 	}
 
-	public long getStart_Time() {
-		return this.start_time;
+	public String getGroup_Id() {
+		return this.group_id;
 	}
 
-	public long getEnd_Time() {
-		return this.end_time;
+	public long getId() {
+		return this.id;
 	}
 
 	public String getInheritance_Id() {
 		return this.inheritance_id;
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public int getInsert() {
+		return this.insert;
 	}
 
-	public void setUser_Id(String user_id) {
-		this.user_id = user_id;
+	public String getObject_Id() {
+		return this.object_id;
 	}
 
-	public void setGroup_Id(String group_id) {
-		this.group_id = group_id;
+	public String getParent_Id() {
+		return this.parent_id;
 	}
 
-	public void setParent_Id(String parent_id) {
-		this.parent_id = parent_id;
+	public int getPriority() {
+		return this.priority;
 	}
 
-	public void setObject_Id(String object_id) {
-		this.object_id = object_id;
+	public int getRead() {
+		return this.read;
 	}
 
-	public void setView(int view) {
-		this.view = view;
+	public long getStart_Time() {
+		return this.start_time;
 	}
 
-	public void setRead(int read) {
-		this.read = read;
+	public String getUser_Id() {
+		return this.user_id;
 	}
 
-	public void setInsert(int insert) {
-		this.insert = insert;
+	public int getView() {
+		return this.view;
 	}
 
-	public void setWrite(int write) {
-		this.write = write;
+	public int getWrite() {
+		return this.write;
 	}
 
 	public void setComment(int comment) {
 		this.comment = comment;
+	}
+
+	public void setEnd_Time(long end_time) {
+		this.end_time = end_time;
 	}
 
 	public void setExecute(int execute) {
@@ -143,15 +115,51 @@ public class WasabiACLEntry {
 		this.grant = grant;
 	}
 
-	public void setStart_Time(long start_time) {
-		this.start_time = start_time;
+	public void setGroup_Id(String group_id) {
+		this.group_id = group_id;
 	}
 
-	public void setEnd_Time(long end_time) {
-		this.end_time = end_time;
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	public void setInheritance_Id(String inheritance_id) {
 		this.inheritance_id = inheritance_id;
+	}
+
+	public void setInsert(int insert) {
+		this.insert = insert;
+	}
+
+	public void setObject_Id(String object_id) {
+		this.object_id = object_id;
+	}
+
+	public void setParent_Id(String parent_id) {
+		this.parent_id = parent_id;
+	}
+
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
+	public void setRead(int read) {
+		this.read = read;
+	}
+
+	public void setStart_Time(long start_time) {
+		this.start_time = start_time;
+	}
+
+	public void setUser_Id(String user_id) {
+		this.user_id = user_id;
+	}
+
+	public void setView(int view) {
+		this.view = view;
+	}
+
+	public void setWrite(int write) {
+		this.write = write;
 	}
 }
