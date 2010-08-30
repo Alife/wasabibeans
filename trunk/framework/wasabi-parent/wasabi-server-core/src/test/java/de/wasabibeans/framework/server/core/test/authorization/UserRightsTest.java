@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
-import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -42,7 +41,7 @@ import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class GroupRightsTest extends WasabiRemoteTest {
+public class UserRightsTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -61,48 +60,59 @@ public class GroupRightsTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void createTest() throws WasabiException {
-
-		// Create User 'user' and group 'testgroup'. Add user 'user' to group 'testgroup'
+	public void userTimeRightsTest() throws WasabiException {
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
-		WasabiGroupDTO group = groupService().create("testgroup", null);
-		groupService().addMember(group, user);
+		System.out.print("Creating userTimeRightsRoom at usersHome... ");
+		WasabiRoomDTO userTimeRightsRoom = roomService().create("userTimeRightsRoom", usersHome);
+		System.out.println("done.");
 
-		displayACLEntry(usersHome, "usersHome");
-		System.out.println("Create room1 into usersHome.");
-		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
+		displayACLEntry(userTimeRightsRoom, "userTimeRightsRoom");
 
-		System.out.println("Deactivate inheritance for room1.");
-		aclService().deactivateInheritance(room1);
+		System.out.print("Deacticating inheritance for userTimeRightsRoom... ");
+		aclService().deactivateInheritance(userTimeRightsRoom);
+		System.out.println("done.");
 
-		System.out.println("Set INSERT for user 'user' and room1");
-		aclService().create(room1, user, WasabiPermission.INSERT, true);
-		System.out.println("Create room2 into room1.");
-		WasabiRoomDTO room2 = roomService().create("room2", room1);
+		displayACLEntry(userTimeRightsRoom, "userTimeRightsRoom");
 
-		System.out.println("Deactivate inheritance for room2.");
-		aclService().deactivateInheritance(room2);
-		displayACLEntry(room2, "room2");
-
+		System.out.print("Creating userTimeRightsAllowanceRoom at userTimeRightsRoom... ");
 		try {
-			System.out.println("Create room3 into room2.");
-			WasabiRoomDTO room3 = roomService().create("room3", room2);
-		} catch (Exception e) {
-			System.out.println("Can't create room3 - " + e.getMessage());
-		}
-
-		System.out.println("Create group rights for group 'grouptest'");
-		aclService().create(room2, group, WasabiPermission.INSERT, true);
-
-		try {
-			System.out.println("Create room3 into room2.");
-			WasabiRoomDTO room3 = roomService().create("room3", room2);
+			roomService().create("userTimeRightsAllowanceRoom", userTimeRightsRoom);
+			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting INSERT as userTimeRight for userTimeRightsRoom... ");
+		aclService().create(userTimeRightsRoom, user, WasabiPermission.INSERT, true,
+				java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		System.out.println("done.");
+
+		displayACLEntry(userTimeRightsRoom, "userTimeRightsRoom");
+
+		System.out.print("Creating userTimeRightsAllowanceRoom at userTimeRightsRoom... ");
+		try {
+			roomService().create("userTimeRightsAllowanceRoom", userTimeRightsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting INSERT with forbiddance as userTimeRight for userTimeRightsRoom... ");
+		aclService().create(userTimeRightsRoom, user, WasabiPermission.INSERT, false,
+				java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		System.out.println("done.");
+
+		displayACLEntry(userTimeRightsRoom, "userTimeRightsRoom");
+
+		System.out.print("Creating userTimeRightsForbiddanceRoom at userTimeRightsRoom... ");
+		try {
+			roomService().create("userTimeRightsForbiddanceRoom", userTimeRightsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
@@ -123,5 +133,4 @@ public class GroupRightsTest extends WasabiRemoteTest {
 					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
 		}
 	}
-
 }

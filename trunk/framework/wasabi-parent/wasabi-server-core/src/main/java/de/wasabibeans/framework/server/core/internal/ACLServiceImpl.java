@@ -54,9 +54,9 @@ public class ACLServiceImpl {
 		int[] allow = new int[allowance.length];
 
 		for (int i = 0; i < allow.length; i++) {
-			if (allowance[i] = true)
+			if (allowance[i])
 				allow[i] = 1;
-			else if (allowance[i] = false)
+			else if (!allowance[i])
 				allow[i] = -1;
 			else
 				allow[i] = 0;
