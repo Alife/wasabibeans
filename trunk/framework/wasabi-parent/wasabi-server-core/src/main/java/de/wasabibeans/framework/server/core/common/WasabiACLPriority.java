@@ -25,8 +25,8 @@ public class WasabiACLPriority {
 	
 	/* User rights */
 	public static final int EXPLICIT_USER_TIME_RIGHT = 0;
-	public static final int INHERITED_USER_TIME_RIGHT = 1;
-	public static final int EXPLICIT_USER_RIGHT = 2;
+	public static final int EXPLICIT_USER_RIGHT = 1;
+	public static final int INHERITED_USER_TIME_RIGHT = 2;
 	public static final int INHERITED_USER_RIGHT = 3;
 	
 	/* Group rights */
