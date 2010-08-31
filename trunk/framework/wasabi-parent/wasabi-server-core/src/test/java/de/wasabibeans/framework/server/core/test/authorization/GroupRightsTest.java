@@ -61,66 +61,72 @@ public class GroupRightsTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void createTest() throws WasabiException {
+	public void groupRightsTest() throws WasabiException {
+		WasabiGroupDTO g1 = groupService().create("g1", null);
+		WasabiGroupDTO g2 = groupService().create("g2", g1);
+		WasabiGroupDTO g3 = groupService().create("g3", g1);
+		WasabiGroupDTO g4 = groupService().create("g4", g2);
+		WasabiGroupDTO g5 = groupService().create("g5", g2);
+		WasabiGroupDTO g6 = groupService().create("g6", g4);
+		WasabiGroupDTO g7 = groupService().create("g7", g3);
 
-		// Create User 'user' and group 'testgroup'. Add user 'user' to group 'testgroup'
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
-		WasabiGroupDTO group = groupService().create("testgroup", null);
-		groupService().addMember(group, user);
+		groupService().addMember(g5, user);
+		groupService().addMember(g6, user);
+		groupService().addMember(g7, user);
 
-		displayACLEntry(usersHome, "usersHome");
-		System.out.println("Create room1 into usersHome.");
-		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
-
-		System.out.println("Deactivate inheritance for room1.");
-		aclService().deactivateInheritance(room1);
-
-		System.out.println("Set INSERT for user 'user' and room1");
-		aclService().create(room1, user, WasabiPermission.INSERT, true);
-		System.out.println("Create room2 into room1.");
-		WasabiRoomDTO room2 = roomService().create("room2", room1);
-
-		System.out.println("Deactivate inheritance for room2.");
-		aclService().deactivateInheritance(room2);
-		displayACLEntry(room2, "room2");
-
+		System.out.print("Creating groupRightsRoom at usersHome... ");
+		WasabiRoomDTO groupRightsRoom = null;
 		try {
-			System.out.println("Create room3 into room2.");
-			WasabiRoomDTO room3 = roomService().create("room3", room2);
-		} catch (Exception e) {
-			System.out.println("Can't create room3 - " + e.getMessage());
-		}
-
-		System.out.println("Create group rights for group 'grouptest'");
-		aclService().create(room2, group, WasabiPermission.INSERT, true);
-
-		try {
-			System.out.println("Create room3 into room2.");
-			WasabiRoomDTO room3 = roomService().create("room3", room2);
+			groupRightsRoom = roomService().create("groupRightsRoom", usersHome);
+			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Deactivating inheritance for userInheritedTimeRightsRoom... ");
+		aclService().deactivateInheritance(groupRightsRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT with allowance as groupRight at groupRightsRoom... ");
+		aclService().create(groupRightsRoom, g1, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		displayACLEntry(groupRightsRoom, "groupRightsRoom");
+		
+		System.out.print("Creating subRoom1 at groupRightsRoom... ");
+		WasabiRoomDTO subRoom1 = null;
+		try {
+			subRoom1 = roomService().create("subRoom1", groupRightsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		displayACLEntry(subRoom1, "subRoom1");
 	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
-		ACLEntries = aclService().getAclEntries(room);
+		if (room != null) {
+			ACLEntries = aclService().getAclEntries(room);
 
-		System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+			System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
 
-		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
-			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
-					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
-					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
-					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
-					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
-					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
-					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance()
-					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
+			for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+						+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id="
+						+ wasabiACLEntryDTO.getParentId() + ",view=" + wasabiACLEntryDTO.getView() + ",read="
+						+ wasabiACLEntryDTO.getRead() + ",insert=" + wasabiACLEntryDTO.getInsert() + ",execute="
+						+ wasabiACLEntryDTO.getExecute() + ",write=" + wasabiACLEntryDTO.getWrite() + ",comment="
+						+ wasabiACLEntryDTO.getComment() + ",grant=" + wasabiACLEntryDTO.getGrant() + ",start_time="
+						+ wasabiACLEntryDTO.getStartTime() + ",end_time=" + wasabiACLEntryDTO.getEndTime()
+						+ ",inheritance=" + wasabiACLEntryDTO.getInheritance() + ",inheritance_id="
+						+ wasabiACLEntryDTO.getInheritanceId());
+			}
 		}
 	}
 

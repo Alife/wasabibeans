@@ -30,6 +30,8 @@ public class WasabiACLPriority {
 	public static final int INHERITED_USER_RIGHT = 3;
 	
 	/* Group rights */
-	public static final int GROUP_TIME_RIGHT = 4;
-	public static final int GROUP_RIGHT = 5;
+	public static final int EXPLICIT_GROUP_TIME_RIGHT = 4;
+	public static final int EXPLICIT_GROUP_RIGHT = 5;
+	public static final int INHERITED_GROUP_TIME_RIGHT = 6;
+	public static final int INHERITED_GROUP_RIGHT = 7;
 }

@@ -99,7 +99,7 @@ public class UserRightsTest extends WasabiRemoteTest {
 
 		displayACLEntry(userInheritedTimeRightsRoom, "userInheritedTimeRightsRoom");
 
-		System.out.print("Deacticating inheritance for userInheritedTimeRightsRoom... ");
+		System.out.print("Deactivating inheritance for userInheritedTimeRightsRoom... ");
 		aclService().deactivateInheritance(userInheritedTimeRightsRoom);
 		System.out.println("done.");
 
@@ -233,7 +233,7 @@ public class UserRightsTest extends WasabiRemoteTest {
 
 		displayACLEntry(userRightsRoom, "userRightsRoom");
 
-		System.out.print("Deacticating inheritance for userRightsRoom... ");
+		System.out.print("Deactivating inheritance for userRightsRoom... ");
 		aclService().deactivateInheritance(userRightsRoom);
 		System.out.println("done.");
 
