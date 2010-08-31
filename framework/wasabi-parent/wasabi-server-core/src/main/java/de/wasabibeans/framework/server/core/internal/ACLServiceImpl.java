@@ -174,9 +174,9 @@ public class ACLServiceImpl {
 
 								int prio;
 								if (startTime != 0 || endTime != 0)
-									prio = WasabiACLPriority.GROUP_TIME_RIGHT;
+									prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
 								else
-									prio = WasabiACLPriority.GROUP_RIGHT;
+									prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
 
 								run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
 										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
@@ -1048,7 +1048,7 @@ public class ACLServiceImpl {
 							break;
 						}
 					}
-					createInheritanceEntries(objectUUID, s, WasabiType.USER, run, identityUUID, objectUUID, view, read,
+					createInheritanceEntries(objectUUID, s, WasabiType.GROUP, run, identityUUID, objectUUID, view, read,
 							comment, execute, insert, write, grant, startTime, endTime, objectUUID);
 				}
 			} catch (SQLException e) {
@@ -1269,10 +1269,14 @@ public class ACLServiceImpl {
 								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 						int prio;
-						if (startTime != 0 || endTime != 0)
-							prio = WasabiACLPriority.GROUP_TIME_RIGHT;
+						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT;
+						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+							prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
+						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_GROUP_RIGHT;
 						else
-							prio = WasabiACLPriority.GROUP_RIGHT;
+							prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
 
 						run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
 								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
