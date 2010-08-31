@@ -130,11 +130,11 @@ public class WasabiAuthorizer {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
 			Vector<String> UserFilter = UserViewFilter(objectUUID, userUUID);
-			Vector<String> GroupFilter = GroupViewFilter(objectUUID, userUUID, userNode, s);
-			for (String string : GroupFilter) {
-				if (!UserFilter.contains(string))
-					UserFilter.add(string);
-			}
+//			Vector<String> GroupFilter = GroupViewFilter(objectUUID, userUUID, userNode, s);
+//			for (String string : GroupFilter) {
+//				if (!UserFilter.contains(string))
+//					UserFilter.add(string);
+//			}
 			return UserFilter;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -1280,35 +1280,34 @@ public class WasabiAuthorizer {
 			throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		Vector<String> resultsAllow = new Vector<String>();
-		Vector<String> resultsDeny = new Vector<String>();
-
+		Vector<String> results = new Vector<String>();
 		long time = java.lang.System.currentTimeMillis();
 
 		try {
-			// TODO: Fix it
-			String getACLEntries = "SELECT `object_id`,`view`,MIN(priority) FROM `wasabi_rights` "
-					+ "WHERE `parent_id`=? AND `user_id`=? AND (`view`=1 OR `view`=-1) AND `start_time`<=? AND `end_time`>=? GROUP BY `object_id`";
+			String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` " + "WHERE "
+					+ "(`parent_id`=? AND`user_id`=? AND`view`=1 AND `priority`=3 AND `object_id` "
+					+ "NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3) "
+					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
+					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND `priority`=2 AND "
+					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2) "
+					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
+					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND " + "(`priority`=1 OR `priority`=0) AND "
+					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+					+ "WHERE `view`=-1 AND `priority`=0 "
+					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))";
 
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time);
+			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time, parentUUID,
+					userUUID, time, time, parentUUID, userUUID, time, time);
 
 			for (WasabiACLEntry wasabiACLEntry : result) {
-				if (wasabiACLEntry.getView() == 1)
-					resultsAllow.add(wasabiACLEntry.getObject_Id());
-
-				if (wasabiACLEntry.getView() == -1)
-					resultsDeny.add(wasabiACLEntry.getObject_Id());
+				results.add(wasabiACLEntry.getObject_Id());
 			}
-
-			for (String string : resultsDeny) {
-				resultsAllow.remove(string);
-			}
-
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
-
-		return resultsAllow;
+		return results;
 	}
 }

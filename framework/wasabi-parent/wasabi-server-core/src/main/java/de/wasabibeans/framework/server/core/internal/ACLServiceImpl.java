@@ -507,6 +507,7 @@ public class ACLServiceImpl {
 			Vector<Node> result = new Vector<Node>();
 
 			Node parentNode = s.getNodeByIdentifier(parentId);
+			String name = parentNode.getName();
 
 			NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS, s);
 			NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS, s);
@@ -929,9 +930,9 @@ public class ACLServiceImpl {
 						run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
 					} else {
 						String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
-								+ "`parent_id`=?, `view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
+								+ "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
 								+ " WHERE `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-						run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment,
+						run.update(updateUserACLEntryQuery, view, read, insert, write, execute, comment,
 								grant, identityUUID, startTime, endTime, objectUUID);
 					}
 
