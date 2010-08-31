@@ -10,6 +10,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
@@ -37,22 +38,43 @@ public class PriorityCheckComparison extends WasabiRemoteTest {
 
 	@Test
 	public void createTest() throws WasabiException, SQLException, ClassNotFoundException {
-		// Create user
-		WasabiUserDTO user = userService().create("testUser", "password");
-		WasabiUserDTO loginUser = userService().getUserByName("user");
+		WasabiGroupDTO g1 = groupService().create("g1", null);
+		WasabiGroupDTO g2 = groupService().create("g2", g1);
+		WasabiGroupDTO g3 = groupService().create("g3", g1);
+		WasabiGroupDTO g4 = groupService().create("g4", g2);
+		WasabiGroupDTO g5 = groupService().create("g5", g2);
+		WasabiGroupDTO g6 = groupService().create("g6", g4);
+		WasabiGroupDTO g7 = groupService().create("g7", g3);
 
-		// Create document in users homeRoom and set rights to view, read document
+		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
-				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
-		boolean[] allow = { true, true, true, true, true, true, true };
-		aclService().create(usersHome, loginUser, rights, allow);
+
+		groupService().addMember(g5, user);
+		groupService().addMember(g6, user);
+		groupService().addMember(g7, user);
+		
+		System.out.print("Creating performance at usersHome... ");
+		WasabiRoomDTO performance = null;
+		try {
+			performance = roomService().create("performance", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for performance... ");
+		aclService().deactivateInheritance(performance);
+		System.out.println("done.");
+		
+		System.out.print("Setting INSERT with allowance as groupRight at groupRightsRoom... ");
+		aclService().create(usersHome, g1, WasabiPermission.INSERT, true);
+		System.out.println("done.");
 
 		long start = System.currentTimeMillis();
 
-		for (int i = 0; i < 1000; i++) {
-			roomService().create("room" + i, usersHome);
-			// System.out.println("Raum " + i + " erstellt.");
+		for (int i = 0; i < 100; i++) {
+			roomService().create("room" + i, performance);
+			//System.out.println("Raum " + i + " erstellt.");
 		}
 
 		long end = System.currentTimeMillis();
@@ -60,7 +82,7 @@ public class PriorityCheckComparison extends WasabiRemoteTest {
 		// list nodes
 		long start1 = System.currentTimeMillis();
 
-		Vector<WasabiRoomDTO> rooms = roomService().getRooms(usersHome);
+		//Vector<WasabiRoomDTO> rooms = roomService().getRooms(usersHome);
 		// for (WasabiRoomDTO wasabiRoomDTO : rooms) {
 		// roomService().getName(wasabiRoomDTO);
 		// }

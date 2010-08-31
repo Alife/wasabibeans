@@ -66,7 +66,7 @@ public class JcrConnector {
 		try {
 			Session s = getJCRRepository().login(
 					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-			logger.info("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
+//			logger.info("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
 			return s;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
