@@ -105,7 +105,63 @@ public class GroupRightsTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 		
+		System.out.print("Setting INSERT with forbiddance as groupRight at groupRightsRoom... ");
+		aclService().create(groupRightsRoom, g6, WasabiPermission.INSERT, false);
+		System.out.println("done.");
+		
 		displayACLEntry(subRoom1, "subRoom1");
+		
+		System.out.print("Creating subSubRoom1 at subRoom1... ");
+		WasabiRoomDTO subSubRoom1 = null;
+		try {
+			subSubRoom1 = roomService().create("subRoom1", subRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting INSERT with allowance as groupTimeRight at groupRightsRoom... ");
+		aclService().create(groupRightsRoom, g4, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		System.out.println("done.");
+		
+		displayACLEntry(subSubRoom1, "subRoom1");
+		
+		System.out.print("Creating subSubRoom1 at subRoom1... ");
+		try {
+			subSubRoom1 = roomService().create("subSubRoom1", subRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		displayACLEntry(subSubRoom1, "subSubRoom1");
+		
+		System.out.print("Setting INSERT with forbiddance as groupRight at subSubRoom1... ");
+		aclService().create(subSubRoom1, g3, WasabiPermission.INSERT, false);
+		System.out.println("done.");
+		
+		System.out.print("Creating someRoom at subSubRoom1... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", subSubRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting INSERT with allowance as groupTimeRight at subSubRoom1... ");
+		aclService().create(subSubRoom1, g1, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		System.out.println("done.");
+		
+		System.out.print("Creating someRoom1 at subSubRoom1... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", subSubRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
 	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
