@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -68,8 +69,20 @@ public class RoomServiceTest extends WasabiRemoteTest {
 	@Test
 	public void getRoomsTest() throws WasabiException {
 		System.out.println("=== getRoomsTest() ===");
+		WasabiGroupDTO g1 = groupService().create("g1", null);
+		WasabiGroupDTO g2 = groupService().create("g2", g1);
+		WasabiGroupDTO g3 = groupService().create("g3", g1);
+		WasabiGroupDTO g4 = groupService().create("g4", g2);
+		WasabiGroupDTO g5 = groupService().create("g5", g2);
+		WasabiGroupDTO g6 = groupService().create("g6", g4);
+		WasabiGroupDTO g7 = groupService().create("g7", g3);
+
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		groupService().addMember(g5, user);
+		groupService().addMember(g6, user);
+		groupService().addMember(g7, user);
 
 		System.out.print("Creating getRoomsTestRoom at usersHome... ");
 		WasabiRoomDTO getRoomsTestRoom = null;
@@ -150,6 +163,93 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		System.out.println("Display names of Rooms with View... ");
 		Vector<WasabiRoomDTO> rooms3 = roomService().getRooms(getRoomsTestRoom);
 		for (WasabiRoomDTO wasabiRoomDTO : rooms3) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Removing all VIEWs for getRoomsTestRoom und subrooms... ");
+		aclService().remove(room1, user, WasabiPermission.VIEW);
+		aclService().remove(getRoomsTestRoom, user, WasabiPermission.VIEW);
+		System.out.println("done.");
+
+		displayACLEntry(getRoomsTestRoom, "getRoomsTestRoom");
+		displayACLEntry(room1, "room1");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms4 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms4) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as group right for room2... ");
+		aclService().create(room2, g7, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		displayACLEntry(room2, "room2");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms5 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms5) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as group right for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, g2, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms6 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms6) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW with fobidddance as group right for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, g4, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms7 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms7) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW with fobidddance as group time right for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, g1, WasabiPermission.VIEW, false, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 123425));
+		System.out.println("done.");
+
+		displayACLEntry(room2, "room2");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms8 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms8) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW with fobidddance as group time right for room2... ");
+		aclService().create(room2, g3, WasabiPermission.VIEW, false, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 123425));
+		System.out.println("done.");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms9 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms9) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as user right for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Display names of Rooms with View... ");
+		Vector<WasabiRoomDTO> rooms10 = roomService().getRooms(getRoomsTestRoom);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms10) {
 			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
 		}
 		System.out.println("done.");
