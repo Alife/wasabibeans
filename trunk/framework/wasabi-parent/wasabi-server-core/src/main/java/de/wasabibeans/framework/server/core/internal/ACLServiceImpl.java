@@ -932,8 +932,8 @@ public class ACLServiceImpl {
 						String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
 								+ "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
 								+ " WHERE `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-						run.update(updateUserACLEntryQuery, view, read, insert, write, execute, comment,
-								grant, identityUUID, startTime, endTime, objectUUID);
+						run.update(updateUserACLEntryQuery, view, read, insert, write, execute, comment, grant,
+								identityUUID, startTime, endTime, objectUUID);
 					}
 
 				} else {
@@ -1049,8 +1049,8 @@ public class ACLServiceImpl {
 							break;
 						}
 					}
-					createInheritanceEntries(objectUUID, s, WasabiType.GROUP, run, identityUUID, objectUUID, view, read,
-							comment, execute, insert, write, grant, startTime, endTime, objectUUID);
+					createInheritanceEntries(objectUUID, s, WasabiType.GROUP, run, identityUUID, objectUUID, view,
+							read, comment, execute, insert, write, grant, startTime, endTime, objectUUID);
 				}
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
@@ -1060,6 +1060,355 @@ public class ACLServiceImpl {
 
 	private static void updateRights(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, int[] allowance,
 			long startTime, long endTime, String inheritance_id) throws RepositoryException,
+			UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
+		String wasabiIdentityType = wasabiIdentityNode.getPrimaryNodeType().getName();
+		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
+		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(wasabiObjectNode));
+
+		int view, read, insert, write, execute, comment, grant;
+
+		if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
+			try {
+				String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
+						+ "FROM wasabi_rights "
+						+ "WHERE `object_id`=? "
+						+ "AND `start_time`=? "
+						+ "AND `end_time`=? "
+						+ "AND `user_id`=? " + "AND `inheritance_id`=?";
+
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+						identityUUID, inheritance_id);
+
+				if (result.isEmpty()) {
+					view = 0;
+					read = 0;
+					insert = 0;
+					write = 0;
+					execute = 0;
+					comment = 0;
+					grant = 0;
+
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+					}
+
+					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
+							|| grant != 0) {
+						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
+								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+						int prio;
+						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT;
+						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+							prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
+						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_USER_RIGHT;
+						else
+							prio = WasabiACLPriority.INHERITED_USER_RIGHT;
+
+						run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
+								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
+					}
+				} else {
+					view = result.get(0).getView();
+					read = result.get(0).getRead();
+					insert = result.get(0).getInsert();
+					write = result.get(0).getWrite();
+					execute = result.get(0).getExecute();
+					comment = result.get(0).getComment();
+					grant = result.get(0).getGrant();
+
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+
+						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+								&& grant == 0) {
+							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+									+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+							run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
+									inheritance_id);
+						} else {
+							for (int j = 0; j < permission.length; j++) {
+								switch (permission[j]) {
+								case WasabiPermission.VIEW:
+									String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `view`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
+											startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.READ:
+									String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `read`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
+											startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.INSERT:
+									String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `insert`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.WRITE:
+									String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `write`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.EXECUTE:
+									String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `execute`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.COMMENT:
+									String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `comment`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.GRANT:
+									String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `grant`=?"
+											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								}
+							}
+						}
+					}
+				}
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+		} else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
+			try {
+				String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
+						+ "FROM wasabi_rights "
+						+ "WHERE `object_id`=? "
+						+ "AND `start_time`=? "
+						+ "AND `end_time`=? "
+						+ "AND `user_id`=? " + "AND `inheritance_id`=?";
+
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+						identityUUID, inheritance_id);
+
+				if (result.isEmpty()) {
+					view = 0;
+					read = 0;
+					insert = 0;
+					write = 0;
+					execute = 0;
+					comment = 0;
+					grant = 0;
+
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+					}
+
+					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
+							|| grant != 0) {
+						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
+								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+						int prio;
+						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT;
+						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+							prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
+						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
+							prio = WasabiACLPriority.EXPLICIT_GROUP_RIGHT;
+						else
+							prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
+
+						run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
+								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
+					}
+				} else {
+					view = result.get(0).getView();
+					read = result.get(0).getRead();
+					insert = result.get(0).getInsert();
+					write = result.get(0).getWrite();
+					execute = result.get(0).getExecute();
+					comment = result.get(0).getComment();
+					grant = result.get(0).getGrant();
+
+					for (int i = 0; i < permission.length; i++) {
+						switch (permission[i]) {
+						case WasabiPermission.VIEW:
+							view = allowance[i];
+							break;
+						case WasabiPermission.READ:
+							read = allowance[i];
+							break;
+						case WasabiPermission.INSERT:
+							insert = allowance[i];
+							break;
+						case WasabiPermission.WRITE:
+							write = allowance[i];
+							break;
+						case WasabiPermission.EXECUTE:
+							execute = allowance[i];
+							break;
+						case WasabiPermission.COMMENT:
+							comment = allowance[i];
+							break;
+						case WasabiPermission.GRANT:
+							grant = allowance[i];
+							break;
+						}
+
+						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+								&& grant == 0) {
+							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+									+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+							run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
+									inheritance_id);
+						} else {
+							for (int j = 0; j < permission.length; j++) {
+								switch (permission[j]) {
+								case WasabiPermission.VIEW:
+									String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `view`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
+											startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.READ:
+									String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `read`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
+											startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.INSERT:
+									String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `insert`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.WRITE:
+									String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `write`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.EXECUTE:
+									String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `execute`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.COMMENT:
+									String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `comment`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								case WasabiPermission.GRANT:
+									String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
+											+ "`parent_id`=?, `grant`=?"
+											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+									run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
+											identityUUID, startTime, endTime, inheritance_id);
+									break;
+								}
+							}
+						}
+					}
+				}
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+		}
+	}
+
+	private static void updateRights1(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission,
+			int[] allowance, long startTime, long endTime, String inheritance_id) throws RepositoryException,
 			UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -1108,8 +1457,7 @@ public class ACLServiceImpl {
 					if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
 							&& grant == 0) {
 						String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-								+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=? AND "
-								+ "`view`=0 AND `read`=0 AND `comment`=0 AND `execute`=0 AND `insert`=0 AND `write`=0 AND `grant`=0";
+								+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
 						run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID, inheritance_id);
 					} else {
 						for (int i = 0; i < permission.length; i++) {
@@ -1204,8 +1552,7 @@ public class ACLServiceImpl {
 					if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
 							&& grant == 0) {
 						String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-								+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=? AND "
-								+ "`view`=0 AND `read`=0 AND `comment`=0 AND `execute`=0 AND `insert`=0 AND `write`=0 AND `grant`=0";
+								+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
 						run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID, inheritance_id);
 					} else {
 						for (int i = 0; i < permission.length; i++) {

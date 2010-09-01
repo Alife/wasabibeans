@@ -44,20 +44,26 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class GroupRightsTest extends WasabiRemoteTest {
 
-	@BeforeMethod
-	public void setUpBeforeEachMethod() throws Exception {
-		// initialize test
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		rootRoom = testhelper.initRepository();
-		testhelper.initTestUser();
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
+		if (room != null) {
+			ACLEntries = aclService().getAclEntries(room);
 
-		reWaCon.login("user", "user");
-	}
+			System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
 
-	@AfterMethod
-	public void tearDownAfterEachMethod() throws Exception {
-		reWaCon.logout();
+			for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+						+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id="
+						+ wasabiACLEntryDTO.getParentId() + ",view=" + wasabiACLEntryDTO.getView() + ",read="
+						+ wasabiACLEntryDTO.getRead() + ",insert=" + wasabiACLEntryDTO.getInsert() + ",execute="
+						+ wasabiACLEntryDTO.getExecute() + ",write=" + wasabiACLEntryDTO.getWrite() + ",comment="
+						+ wasabiACLEntryDTO.getComment() + ",grant=" + wasabiACLEntryDTO.getGrant() + ",start_time="
+						+ wasabiACLEntryDTO.getStartTime() + ",end_time=" + wasabiACLEntryDTO.getEndTime()
+						+ ",inheritance=" + wasabiACLEntryDTO.getInheritance() + ",inheritance_id="
+						+ wasabiACLEntryDTO.getInheritanceId());
+			}
+		}
 	}
 
 	@Test
@@ -95,7 +101,7 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		System.out.println("done.");
 
 		displayACLEntry(groupRightsRoom, "groupRightsRoom");
-		
+
 		System.out.print("Creating subRoom1 at groupRightsRoom... ");
 		WasabiRoomDTO subRoom1 = null;
 		try {
@@ -104,13 +110,13 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting INSERT with forbiddance as groupRight at groupRightsRoom... ");
 		aclService().create(groupRightsRoom, g6, WasabiPermission.INSERT, false);
 		System.out.println("done.");
-		
+
 		displayACLEntry(subRoom1, "subRoom1");
-		
+
 		System.out.print("Creating subSubRoom1 at subRoom1... ");
 		WasabiRoomDTO subSubRoom1 = null;
 		try {
@@ -119,13 +125,14 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting INSERT with allowance as groupTimeRight at groupRightsRoom... ");
-		aclService().create(groupRightsRoom, g4, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		aclService().create(groupRightsRoom, g4, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 123456));
 		System.out.println("done.");
-		
+
 		displayACLEntry(subSubRoom1, "subRoom1");
-		
+
 		System.out.print("Creating subSubRoom1 at subRoom1... ");
 		try {
 			subSubRoom1 = roomService().create("subSubRoom1", subRoom1);
@@ -133,13 +140,13 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		displayACLEntry(subSubRoom1, "subSubRoom1");
-		
+
 		System.out.print("Setting INSERT with forbiddance as groupRight at subSubRoom1... ");
 		aclService().create(subSubRoom1, g3, WasabiPermission.INSERT, false);
 		System.out.println("done.");
-		
+
 		System.out.print("Creating someRoom at subSubRoom1... ");
 		WasabiRoomDTO someRoom = null;
 		try {
@@ -148,11 +155,12 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting INSERT with allowance as groupTimeRight at subSubRoom1... ");
-		aclService().create(subSubRoom1, g1, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(), (java.lang.System.currentTimeMillis() + 123456));
+		aclService().create(subSubRoom1, g1, WasabiPermission.INSERT, true, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 123456));
 		System.out.println("done.");
-		
+
 		System.out.print("Creating someRoom1 at subSubRoom1... ");
 		WasabiRoomDTO someRoom1 = null;
 		try {
@@ -161,29 +169,23 @@ public class GroupRightsTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 	}
 
-	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
-		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
-		if (room != null) {
-			ACLEntries = aclService().getAclEntries(room);
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize test
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
+		testhelper.initTestUser();
 
-			System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+		reWaCon.login("user", "user");
+	}
 
-			for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
-				System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
-						+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id="
-						+ wasabiACLEntryDTO.getParentId() + ",view=" + wasabiACLEntryDTO.getView() + ",read="
-						+ wasabiACLEntryDTO.getRead() + ",insert=" + wasabiACLEntryDTO.getInsert() + ",execute="
-						+ wasabiACLEntryDTO.getExecute() + ",write=" + wasabiACLEntryDTO.getWrite() + ",comment="
-						+ wasabiACLEntryDTO.getComment() + ",grant=" + wasabiACLEntryDTO.getGrant() + ",start_time="
-						+ wasabiACLEntryDTO.getStartTime() + ",end_time=" + wasabiACLEntryDTO.getEndTime()
-						+ ",inheritance=" + wasabiACLEntryDTO.getInheritance() + ",inheritance_id="
-						+ wasabiACLEntryDTO.getInheritanceId());
-			}
-		}
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 
 }
