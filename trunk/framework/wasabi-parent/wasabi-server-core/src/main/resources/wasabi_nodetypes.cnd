@@ -60,6 +60,7 @@
 	
 [wasabi:attribute] > wasabi:object
 	- wasabi:value (UNDEFINED)
+	- wasabi:type (STRING)
 	
 [wasabiStructure:objectCollection] > nt:base, wasabiMix:versionable
 	+ * (wasabi:object) VERSION

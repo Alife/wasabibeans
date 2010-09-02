@@ -25,8 +25,6 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Vector;
 
-import javax.annotation.Resource;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -63,9 +61,6 @@ import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class DocumentService extends ObjectService implements DocumentServiceLocal, DocumentServiceRemote {
 
-	@Resource
-	private SessionContext sessionContext;
-
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException {
 		if (name == null) {
@@ -76,13 +71,12 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, sessionContext
-					.getCallerPrincipal().getName());
+			Node documentNode = DocumentServiceImpl
+					.create(name, environmentNode, s, ctx.getCallerPrincipal().getName());
 			s.save();
 			return TransferManager.convertNode2DTO(documentNode);
 		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
-					+ re.toString(), re);
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			s.logout();
 		}

@@ -28,6 +28,13 @@ import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.AttributeValueException;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the remote access on WasabiAttributeDTO objects.
@@ -35,30 +42,48 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 @Remote
 public interface AttributeServiceRemote extends ObjectServiceRemote {
 
-	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation);
+	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			AttributeValueException;
 
-	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation);
+	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			AttributeValueException;
 
-	public WasabiObjectDTO getAffiliation(WasabiAttributeDTO attribute);
+	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name);
+	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object);
+	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public String getAttributeType(WasabiAttributeDTO attribute);
+	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public <T extends Serializable> T getValue(Class<T> type, WasabiAttributeDTO attribute);
+	public <T extends Serializable> WasabiValueDTO getValue(Class<T> type, WasabiAttributeDTO attribute)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException;
 
-	public WasabiObjectDTO getWasabiValue(WasabiAttributeDTO attribute);
+	public WasabiValueDTO getWasabiValue(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException;
 
-	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation);
+	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException;
 
-	public void remove(WasabiAttributeDTO attribute);
+	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public void rename(WasabiAttributeDTO attribute, String name);
+	public void rename(WasabiAttributeDTO attribute, String name, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectAlreadyExistsException,
+			ObjectDoesNotExistException;
 
-	public void setValue(WasabiAttributeDTO attribute, Serializable value);
+	public void setValue(WasabiAttributeDTO attribute, Serializable value, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
+			ObjectDoesNotExistException;
 
-	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value);
+	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value, Long optLockId)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
 
 }
