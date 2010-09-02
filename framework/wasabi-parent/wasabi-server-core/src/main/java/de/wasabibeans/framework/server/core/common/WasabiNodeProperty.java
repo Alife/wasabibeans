@@ -53,6 +53,10 @@ public class WasabiNodeProperty {
 	public static final String START_ROOM = WasabiConstants.JCR_NS_PREFIX + ":startRoom";
 	public static final String ACTIVE = WasabiConstants.JCR_NS_PREFIX + ":active";
 	public static final String MEMBERSHIPS = WasabiConstants.JCR_NS_PREFIX + ":memberships";
+	
+	// properties of wasabi:attribute
+	public static final String VALUE = WasabiConstants.JCR_NS_PREFIX + ":value";
+	public static final String TYPE = WasabiConstants.JCR_NS_PREFIX + ":type";
 
 	// properties of wasabi:document
 	public static final String CONTENT = WasabiConstants.JCR_NS_PREFIX + ":content";

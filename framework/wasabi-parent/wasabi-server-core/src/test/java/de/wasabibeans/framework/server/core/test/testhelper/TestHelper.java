@@ -37,10 +37,12 @@ import javax.jcr.query.QueryManager;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
+import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.internal.AttributeServiceImpl;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
@@ -75,7 +77,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_USER_NAME);
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(room1Node);
@@ -103,7 +105,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_USER_NAME);
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s,
 					WasabiConstants.ROOT_USER_NAME);
 			DocumentServiceImpl.setContent(document1Node, "document1", null);
@@ -131,6 +133,22 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			GroupServiceImpl.create("group1_1_2", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(group1_1Node);
+		} finally {
+			s.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiAttributeDTO initAttributeServiceTest() throws Exception {
+		Session s = jcr.getJCRSession();
+		try {
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+			Node attribute1Node = AttributeServiceImpl.create("attribute1", "attribute1", wasabiRootNode, s,
+					WasabiConstants.ROOT_USER_NAME);
+			AttributeServiceImpl.create("attribute2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+			s.save();
+			return TransferManager.convertNode2DTO(attribute1Node);
 		} finally {
 			s.logout();
 		}

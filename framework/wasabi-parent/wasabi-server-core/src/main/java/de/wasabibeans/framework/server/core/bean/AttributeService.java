@@ -27,12 +27,28 @@ import java.util.Vector;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.AttributeValueException;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.AttributeServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.AttributeServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
 
 /**
@@ -44,81 +60,239 @@ import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
 public class AttributeService extends ObjectService implements AttributeServiceLocal, AttributeServiceRemote {
 
 	@Override
-	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			AttributeValueException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, ctx.getCallerPrincipal()
+					.getName());
+			s.save();
+			return TransferManager.convertNode2DTO(attributeNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException,
+			ObjectDoesNotExistException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+			Node valueNode = TransferManager.convertDTO2Node(value, s);
+			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, ctx
+					.getCallerPrincipal().getName());
+			s.save();
+			return TransferManager.convertNode2DTO(attributeNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiObjectDTO getAffiliation(WasabiAttributeDTO attribute) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+			return TransferManager.convertValue2DTO(AttributeServiceImpl.getAffiliation(attributeNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name));
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public String getAttributeType(WasabiAttributeDTO attribute) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			return AttributeServiceImpl.getAttributeType(attributeNode);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Vector<WasabiAttributeDTO> attributes = new Vector<WasabiAttributeDTO>();
+			NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
+			while (ni.hasNext()) {
+				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return attributes;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public <T extends Serializable> T getValue(Class<T> type, WasabiAttributeDTO attribute) {
-		// TODO Auto-generated method stub
-		return null;
+	public <T extends Serializable> WasabiValueDTO getValue(Class<T> type, WasabiAttributeDTO attribute)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException {
+		if (type == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"type"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+			return TransferManager.convertValue2DTO(AttributeServiceImpl.getValue(type, attributeNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiObjectDTO getWasabiValue(WasabiAttributeDTO attribute) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getWasabiValue(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+			return TransferManager.convertValue2DTO(AttributeServiceImpl.getWasabiValue(attributeNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation) {
-		// TODO Auto-generated method stub
-
+	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
+		Node attributeNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
+			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
+			AttributeServiceImpl.move(attributeNode, newAffiliationNode, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(attributeNode, s, locker);
+			s.logout();
+		}
 	}
 
 	@Override
-	public void remove(WasabiAttributeDTO attribute) {
-		// TODO Auto-generated method stub
-
+	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			AttributeServiceImpl.remove(attributeNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public void rename(WasabiAttributeDTO attribute, String name) {
-		// TODO Auto-generated method stub
+	public void rename(WasabiAttributeDTO attribute, String name, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectAlreadyExistsException,
+			ObjectDoesNotExistException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
 
+		Node attributeNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
+			AttributeServiceImpl.rename(attributeNode, name, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(attributeNode, s, locker);
+			s.logout();
+		}
 	}
 
 	@Override
-	public void setValue(WasabiAttributeDTO attribute, Serializable value) {
-		// TODO Auto-generated method stub
-
+	public void setValue(WasabiAttributeDTO attribute, Serializable value, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
+			ObjectDoesNotExistException {
+		Node attributeNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
+			AttributeServiceImpl.setValue(attributeNode, value, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(attributeNode, s, locker);
+			s.logout();
+		}
 	}
 
 	@Override
-	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value) {
-		// TODO Auto-generated method stub
-
+	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value, Long optLockId)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException {
+		Node attributeNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node valueNode = null;
+			if (value != null) {
+				valueNode = TransferManager.convertDTO2Node(value, s);
+			}
+			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
+			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(attributeNode, s, locker);
+			s.logout();
+		}
 	}
-
 }
