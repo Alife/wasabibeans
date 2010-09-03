@@ -29,6 +29,7 @@ import javax.ejb.Remote;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -75,19 +76,18 @@ public interface ObjectServiceRemote {
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
-	public void setCreatedOn(WasabiObjectDTO object, Date creationTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setCreatedOn(WasabiObjectDTO object, Date creationTime, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
 
-	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
 
-	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
 
 	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
-
 }

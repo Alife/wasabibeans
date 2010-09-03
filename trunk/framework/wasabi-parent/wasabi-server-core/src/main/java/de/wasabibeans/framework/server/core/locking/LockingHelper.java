@@ -47,13 +47,13 @@ public class LockingHelper implements LockingHelperLocal {
 	}
 
 	@Override
-	public String acquireLock(String nodePath, boolean isDeep) throws AccessDeniedException, LockException,
+	public String acquireLock(String nodeId, boolean isDeep) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
-			String lockToken = lockManager.lock(nodePath, isDeep, false, 10, null).getLockToken();
+			String lockToken = lockManager.lock(s.getNodeByIdentifier(nodeId).getPath(), isDeep, false, 10, null).getLockToken();
 			lockManager.removeLockToken(lockToken);
 			return lockToken;
 		} finally {
@@ -62,14 +62,14 @@ public class LockingHelper implements LockingHelperLocal {
 	}
 
 	@Override
-	public void releaseLock(String nodePath, String lockToken) throws AccessDeniedException, LockException,
+	public void releaseLock(String nodeId, String lockToken) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
-			lockManager.unlock(nodePath);
+			lockManager.unlock(s.getNodeByIdentifier(nodeId).getPath());
 		} finally {
 			s.logout();
 		}
