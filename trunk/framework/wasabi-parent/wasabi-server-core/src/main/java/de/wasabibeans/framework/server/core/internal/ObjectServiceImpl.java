@@ -27,11 +27,21 @@ import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
+import javax.jcr.query.Query;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.Selector;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -89,11 +99,6 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static boolean exists(Node objectNode) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	public static Node getCreatedBy(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.CREATED_BY).getNode();
@@ -144,6 +149,463 @@ public class ObjectServiceImpl {
 	public static Vector<WasabiObjectDTO> getObjectsByName(String name) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	/**
+	 * Returns all JCR nodes of the given {@code nodeType}.
+	 * 
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.CONTAINER
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodesByType(String nodeType, Session s) throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+
+			// build the query
+			Query query = qomf.createQuery(selector, null, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes that have the given {@code nodeType} and the given {@code name}:
+	 * 
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.CONTAINER
+	 * @param name
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodeByTypeAndName(String nodeType, String name, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.comparison(qomf.nodeName("s1"),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(name)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes of the given {@code nodeType} of which the given {@code String-property} has the given
+	 * {@code value}.
+	 * 
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.CONTAINER
+	 * @param property
+	 *            e.g. WasabiNodeProperty.DISPLAY_NAME
+	 * @param value
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodeByPropertyStringValue(String nodeType, String property, String value, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", property),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(value)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
+	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) Their creation-date is not
+	 * before the given {@code startDate} and not after the given {@code endDate}.
+	 * 
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByCreationDate(Node parentNode, String whichChildren, Date startDate,
+			Date endDate) throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
+				Node node = ni.nextNode();
+				Date creationDate = ObjectServiceImpl.getCreatedOn(node);
+				if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
+					result.add(node);
+				}
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true ordered by their creation-date: 1) They are
+	 * child-nodes of the given {@code parentNode}. 2) They belong to the given child-node category {@code
+	 * whichChildren}.
+	 * 
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @param order
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodesOrderedByCreationDate(Node parentNode, String whichChildren, SortType order)
+			throws UnexpectedInternalProblemException {
+		try {
+			Node childrenCategoryParent = parentNode.getNode(whichChildren);
+			String nodeType = whichChildren.substring(0, whichChildren.length() - 1);
+
+			// get the factories
+			Session s = parentNode.getSession();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.childNode("s1", childrenCategoryParent.getPath());
+			Ordering ordering = null;
+			if (order == SortType.ASCENDING) {
+				ordering = qomf.ascending(qomf.propertyValue("s1", WasabiNodeProperty.CREATED_ON));
+			} else {
+				ordering = qomf.descending(qomf.propertyValue("s1", WasabiNodeProperty.CREATED_ON));
+			}
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, new Ordering[] { ordering }, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are direct or indirect (up to the
+	 * given {@code depth}) child-nodes of the given {@code parentNode}. 2) They belong to the given child-node category
+	 * {@code whichChildren}. 3) Their creation-date is not before the given {@code startDate} and not after the given
+	 * {@code endDate}.
+	 * 
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @param startDate
+	 * @param endDate
+	 * @param depth
+	 *            {@code depth = 0} -> only direct child-nodes; {@code depth < 0} -> all direct and indirect child-nodes
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByCreationDate(Node parentNode, String whichChildren, Date startDate,
+			Date endDate, int depth) throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> allNodesByCreationDate = new Vector<Node>();
+			allNodesByCreationDate.addAll(getNodesByCreationDate(parentNode, whichChildren, startDate, endDate));
+
+			if (parentNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
+				for (NodeIterator ni = RoomServiceImpl.getRooms(parentNode); ni.hasNext();) {
+					makeRecursiveCallForGetNodesByCreationDate(allNodesByCreationDate, ni.nextNode(), whichChildren,
+							startDate, endDate, depth);
+				}
+			}
+			for (NodeIterator ni = ContainerServiceImpl.getContainers(parentNode); ni.hasNext();) {
+				makeRecursiveCallForGetNodesByCreationDate(allNodesByCreationDate, ni.nextNode(), whichChildren,
+						startDate, endDate, depth);
+			}
+			return allNodesByCreationDate;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	// helper method for getNodesByCreationDate(Node parentNode, String whichChildren, Date startDate,
+	// Date endDate, int depth)
+	private static void makeRecursiveCallForGetNodesByCreationDate(Vector<Node> allNodesByCreationDate,
+			Node parentNode, String whichChildren, Date startDate, Date endDate, int depth)
+			throws UnexpectedInternalProblemException {
+		if (depth > 0) {
+			allNodesByCreationDate.addAll(getNodesByCreationDate(parentNode, whichChildren, startDate, endDate,
+					depth - 1));
+		} else if (depth < 0) {
+			allNodesByCreationDate.addAll(getNodesByCreationDate(parentNode, whichChildren, startDate, endDate, depth));
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
+	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) Their modification-date is
+	 * not before the given {@code startDate} and not after the given {@code endDate}.
+	 * 
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByModificationDate(Node parentNode, String whichChildren, Date startDate,
+			Date endDate) throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
+				Node node = ni.nextNode();
+				Date creationDate = ObjectServiceImpl.getModifiedOn(node);
+				if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
+					result.add(node);
+				}
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are direct or indirect (up to the
+	 * given {@code depth}) child-nodes of the given {@code parentNode}. 2) They belong to the given child-node category
+	 * {@code whichChildren}. 3) Their modification-date is not before the given {@code startDate} and not after the
+	 * given {@code endDate}.
+	 * 
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @param startDate
+	 * @param endDate
+	 * @param depth
+	 *            {@code depth = 0} -> only direct child-nodes; {@code depth < 0} -> all direct and indirect child-nodes
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByModificationDate(Node parentNode, String whichChildren, Date startDate,
+			Date endDate, int depth) throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> allNodesByCreationDate = new Vector<Node>();
+			allNodesByCreationDate.addAll(getNodesByModificationDate(parentNode, whichChildren, startDate, endDate));
+
+			if (parentNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
+				for (NodeIterator ni = RoomServiceImpl.getRooms(parentNode); ni.hasNext();) {
+					makeRecursiveCallForGetNodesByModificationDate(allNodesByCreationDate, ni.nextNode(),
+							whichChildren, startDate, endDate, depth);
+				}
+			}
+			for (NodeIterator ni = ContainerServiceImpl.getContainers(parentNode); ni.hasNext();) {
+				makeRecursiveCallForGetNodesByModificationDate(allNodesByCreationDate, ni.nextNode(), whichChildren,
+						startDate, endDate, depth);
+			}
+			return allNodesByCreationDate;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	// helper method for getNodesByModificationDate(Node parentNode, String whichChildren, Date startDate,
+	// Date endDate, int depth)
+	private static void makeRecursiveCallForGetNodesByModificationDate(Vector<Node> allNodesByCreationDate,
+			Node parentNode, String whichChildren, Date startDate, Date endDate, int depth)
+			throws UnexpectedInternalProblemException {
+		if (depth > 0) {
+			allNodesByCreationDate.addAll(getNodesByModificationDate(parentNode, whichChildren, startDate, endDate,
+					depth - 1));
+		} else if (depth < 0) {
+			allNodesByCreationDate.addAll(getNodesByModificationDate(parentNode, whichChildren, startDate, endDate,
+					depth));
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes of the given {@code nodeType} that have been created by the wasabi-user represented by the
+	 * given {@code creatorNode}.
+	 * 
+	 * @param creatorNode
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.CONTAINER
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodesByCreator(Node creatorNode, String nodeType)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			Session s = creatorNode.getSession();
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.CREATED_BY),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(creatorNode)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
+	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) They have been created by
+	 * the wasabi-user represented by the given {@code creatorNode}.
+	 * 
+	 * @param creatorNode
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByCreator(Node creatorNode, Node parentNode, String whichChildren)
+			throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
+				Node node = ni.nextNode();
+				if (creatorNode.getIdentifier().equals(ObjectServiceImpl.getCreatedBy(node).getIdentifier())) {
+					result.add(node);
+				}
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes of the given {@code nodeType} that have been modified by the wasabi-user represented by the
+	 * given {@code creatorNode}.
+	 * 
+	 * @param modifierNode
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.CONTAINER
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodesByModifier(Node modifierNode, String nodeType)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			Session s = modifierNode.getSession();
+			ValueFactory vf = s.getValueFactory();
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.MODIFIED_BY),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(modifierNode)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
+	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) They have been modified by
+	 * the wasabi-user represented by the given {@code creatorNode}.
+	 * 
+	 * @param modifierNode
+	 * @param parentNode
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByModifier(Node modifierNode, Node parentNode, String whichChildren)
+			throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
+				Node node = ni.nextNode();
+				if (modifierNode.getIdentifier().equals(ObjectServiceImpl.getModifiedBy(node).getIdentifier())) {
+					result.add(node);
+				}
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
+	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) Their names match the
+	 * given regular expression {@code regex}.
+	 * 
+	 * @param parentNode
+	 * @param regex
+	 *            see http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html#sum
+	 * @param whichChildren
+	 *            e.g. WasabiNodeProperty.CONTAINERS
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<Node> getNodesByNamePattern(Node parentNode, String regex, String whichChildren)
+			throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
+				Node node = ni.nextNode();
+				if (ObjectServiceImpl.getName(node).matches(regex)) {
+					result.add(node);
+				}
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static boolean isRightsActive(Node objectNode) {

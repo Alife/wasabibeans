@@ -30,12 +30,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
-import javax.jcr.query.Query;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.qom.Selector;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
@@ -176,25 +170,8 @@ public class UserServiceImpl {
 
 	public static NodeIterator getUsersByDisplayName(String displayName, Session s)
 			throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			ValueFactory vf = s.getValueFactory();
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.USER, "s1");
-			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
-					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
-
-			// build the query
-			Query query = qomf.createQuery(selector, constraint, null, null);
-
-			// execute and return result
-			return query.execute().getNodes();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodeByPropertyStringValue(WasabiNodeType.USER, WasabiNodeProperty.DISPLAY_NAME,
+				displayName, s);
 	}
 
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException {

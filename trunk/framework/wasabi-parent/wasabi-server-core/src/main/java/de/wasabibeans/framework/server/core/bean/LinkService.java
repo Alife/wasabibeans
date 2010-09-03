@@ -27,16 +27,30 @@ import java.util.Vector;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.LinkServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.LinkServiceLocal;
+import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
 
 /**
@@ -48,113 +62,310 @@ import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
 public class LinkService extends ObjectService implements LinkServiceLocal, LinkServiceRemote {
 
 	@Override
-	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment)
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, ctx.getCallerPrincipal()
+					.getName());
+			s.save();
+			return TransferManager.convertNode2DTO(linkNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiObjectDTO getDestination(WasabiLinkDTO link) throws DestinationNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
+			return TransferManager.convertValue2DTO(LinkServiceImpl.getDestination(linkNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiLocationDTO getEnvironment(WasabiLinkDTO link) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getEnvironment(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
+			return TransferManager.convertValue2DTO(LinkServiceImpl.getEnvironment(linkNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node locationNode = TransferManager.convertDTO2Node(location, s);
+			return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name));
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node locationNode = TransferManager.convertDTO2Node(location, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate,
-			int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode)) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node locationNode = TransferManager.convertDTO2Node(location, s);
+			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
+			for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return links;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment) {
-		// TODO Auto-generated method stub
+	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment, Long optLockId)
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
+		Node linkNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			linkNode = TransferManager.convertDTO2Node(link, s);
+			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+			Locker.acquireLock(linkNode, link, optLockId, s, locker);
+			LinkServiceImpl.move(linkNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(linkNode, s, locker);
+			s.logout();
+		}
+	}
+
+	@Override
+	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
+			LinkServiceImpl.remove(linkNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
+	}
+
+	@Override
+	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Node linkNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			linkNode = TransferManager.convertDTO2Node(link, s);
+			Locker.acquireLock(linkNode, link, optLockId, s, locker);
+			LinkServiceImpl.rename(linkNode, name, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(linkNode, s, locker);
+			s.logout();
+		}
 
 	}
 
 	@Override
-	public void remove(WasabiLinkDTO link) {
-		// TODO Auto-generated method stub
-
+	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
+		Node linkNode = null;
+		Session s = jcr.getJCRSession();
+		try {
+			linkNode = TransferManager.convertDTO2Node(link, s);
+			Node objectNode = null;
+			if (object != null) {
+				objectNode = TransferManager.convertDTO2Node(object, s);
+			}
+			Locker.acquireLock(linkNode, link, optLockId, s, locker);
+			LinkServiceImpl.setDestination(linkNode, objectNode, ctx.getCallerPrincipal().getName());
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			Locker.releaseLock(linkNode, s, locker);
+			s.logout();
+		}
 	}
-
-	@Override
-	public void rename(WasabiLinkDTO link, String name) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-
-	}
-
 }

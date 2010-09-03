@@ -28,6 +28,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 
@@ -49,6 +50,8 @@ public interface TestHelperRemote {
 	public WasabiAttributeDTO initAttributeServiceTest() throws Exception;
 	
 	public WasabiContainerDTO initContainerServiceTest() throws Exception;
+	
+	public WasabiLinkDTO initLinkServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 
