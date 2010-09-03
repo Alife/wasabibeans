@@ -35,8 +35,8 @@ import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
@@ -83,7 +83,7 @@ public class WasabiRemoteTest extends Arquillian {
 		testArchive.addPackage(SqlLoginModule.class.getPackage()) // authentication
 				.addPackage(WasabiUserACL.class.getPackage()) // authorization
 				.addPackage(WasabiConstants.class.getPackage()) // common
-				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
+				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(Locker.class.getPackage()) // locking

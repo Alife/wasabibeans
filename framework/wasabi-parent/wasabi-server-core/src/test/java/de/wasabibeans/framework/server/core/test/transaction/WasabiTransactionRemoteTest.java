@@ -45,7 +45,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
@@ -76,7 +76,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		testArchive.addPackage(SqlLoginModule.class.getPackage()) // authentication
 				.addPackage(WasabiUserACL.class.getPackage()) // authorization
 				.addPackage(WasabiConstants.class.getPackage()) // common
-				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
+				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(Locker.class.getPackage()) // locking
