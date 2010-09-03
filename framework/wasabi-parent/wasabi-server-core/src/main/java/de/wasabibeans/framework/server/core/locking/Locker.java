@@ -36,12 +36,12 @@ public class Locker {
 	public static void acquireLock(Node node, WasabiObjectDTO dto, Long optLockId, Session s, LockingHelperLocal locker)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String lockToken = locker.acquireLock(node.getPath(), false);
+			String lockToken = locker.acquireLock(node.getIdentifier(), false);
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
 			if (optLockId != null && !optLockId.equals(ObjectServiceImpl.getOptLockId(node))) {
 				lockManager.removeLockToken(lockToken);
-				locker.releaseLock(node.getPath(), lockToken);
+				locker.releaseLock(node.getIdentifier(), lockToken);
 				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.INTERNAL_LOCKING_OPTLOCK, (dto != null) ? dto.toString() : ""));
 			}
@@ -73,7 +73,7 @@ public class Locker {
 	public static void acquireLock(Node node, WasabiObjectDTO dto, boolean isDeep, Session s, LockingHelperLocal locker)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String lockToken = locker.acquireLock(node.getPath(), isDeep);
+			String lockToken = locker.acquireLock(node.getIdentifier(), isDeep);
 			s.getWorkspace().getLockManager().addLockToken(lockToken);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
@@ -104,7 +104,7 @@ public class Locker {
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			String lockToken = lockManager.getLock(node.getPath()).getLockToken();
 			lockManager.removeLockToken(lockToken);
-			locker.releaseLock(node.getPath(), lockToken);
+			locker.releaseLock(node.getIdentifier(), lockToken);
 		} catch (LockException e) {
 			// do nothing... there was no lock to unlock
 		} catch (RepositoryException re) {
