@@ -1,3 +1,24 @@
+/* 
+ * Copyright (C) 2010 
+ * Jonas Schulte, Dominik Klaholt, Jannis Sauer
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU GENERAL PUBLIC LICENSE as published by
+ *  the Free Software Foundation; either version 3 of the license, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU GENERAL PUBLIC LICENSE (GPL) for more details.
+ *
+ *  You should have received a copy of the GNU GENERAL PUBLIC LICENSE version 3
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ *  Further information are online available at: http://www.wasabibeans.de
+ */
+
 package de.wasabibeans.framework.server.core.internal;
 
 import java.util.Date;
@@ -9,12 +30,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
-import javax.jcr.query.Query;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.qom.Selector;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -71,15 +86,8 @@ public class ContainerServiceImpl {
 	 */
 	public static Vector<Node> getContainersByCreationDate(Node environmentNode, Date startDate, Date endDate)
 			throws UnexpectedInternalProblemException {
-		Vector<Node> result = new Vector<Node>();
-		for (NodeIterator ni = getContainers(environmentNode); ni.hasNext();) {
-			Node container = ni.nextNode();
-			Date creationDate = ObjectServiceImpl.getCreatedOn(container);
-			if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
-				result.add(container);
-			}
-		}
-		return result;
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.CONTAINERS, startDate,
+				endDate);
 	}
 
 	/**
@@ -99,74 +107,17 @@ public class ContainerServiceImpl {
 	 */
 	public static Vector<Node> getContainersByCreationDate(Node environmentNode, Date startDate, Date endDate, int depth)
 			throws UnexpectedInternalProblemException {
-		try {
-			Vector<Node> allContainersByCreationDate = new Vector<Node>();
-			allContainersByCreationDate.addAll(getContainersByCreationDate(environmentNode, startDate, endDate));
-
-			if (environmentNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
-				for (NodeIterator ni = RoomServiceImpl.getRooms(environmentNode); ni.hasNext();) {
-					makeRecursiveCallForGetContainersByCreationDate(allContainersByCreationDate, ni.nextNode(),
-							startDate, endDate, depth);
-				}
-			}
-			for (NodeIterator ni = getContainers(environmentNode); ni.hasNext();) {
-				makeRecursiveCallForGetContainersByCreationDate(allContainersByCreationDate, ni.nextNode(), startDate,
-						endDate, depth);
-			}
-			return allContainersByCreationDate;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	// helper method for getContainersByCreationDate(Node environmentNode, Date startDate, Date endDate, int depth)
-	private static void makeRecursiveCallForGetContainersByCreationDate(Vector<Node> allContainersByCreationDate,
-			Node environmentNode, Date startDate, Date endDate, int depth) throws UnexpectedInternalProblemException {
-		if (depth > 0) {
-			allContainersByCreationDate.addAll(getContainersByCreationDate(environmentNode, startDate, endDate,
-					depth - 1));
-		} else if (depth < 0) {
-			allContainersByCreationDate.addAll(getContainersByCreationDate(environmentNode, startDate, endDate, depth));
-		}
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.CONTAINERS, startDate,
+				endDate, depth);
 	}
 
 	public static NodeIterator getContainersByCreator(Node creatorNode) throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			Session s = creatorNode.getSession();
-			ValueFactory vf = s.getValueFactory();
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.CONTAINER, "s1");
-			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.CREATED_BY),
-					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(creatorNode)));
-
-			// build the query
-			Query query = qomf.createQuery(selector, constraint, null, null);
-
-			// execute and return result
-			return query.execute().getNodes();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, WasabiNodeType.CONTAINER);
 	}
 
 	public static Vector<Node> getContainersByCreator(Node creatorNode, Node environmentNode)
 			throws UnexpectedInternalProblemException {
-		try {
-			Vector<Node> result = new Vector<Node>();
-			for (NodeIterator ni = ContainerServiceImpl.getContainers(environmentNode); ni.hasNext();) {
-				Node container = ni.nextNode();
-				if (creatorNode.getIdentifier().equals(ObjectServiceImpl.getCreatedBy(container).getIdentifier())) {
-					result.add(container);
-				}
-			}
-			return result;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, environmentNode, WasabiNodeProperty.CONTAINERS);
 	}
 
 	/**
@@ -183,15 +134,8 @@ public class ContainerServiceImpl {
 	 */
 	public static Vector<Node> getContainersByModificationDate(Node environmentNode, Date startDate, Date endDate)
 			throws UnexpectedInternalProblemException {
-		Vector<Node> result = new Vector<Node>();
-		for (NodeIterator ni = getContainers(environmentNode); ni.hasNext();) {
-			Node container = ni.nextNode();
-			Date creationDate = ObjectServiceImpl.getModifiedOn(container);
-			if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
-				result.add(container);
-			}
-		}
-		return result;
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.CONTAINERS, startDate,
+				endDate);
 	}
 
 	/**
@@ -211,75 +155,17 @@ public class ContainerServiceImpl {
 	 */
 	public static Vector<Node> getContainersByModificationDate(Node environmentNode, Date startDate, Date endDate,
 			int depth) throws UnexpectedInternalProblemException {
-		try {
-			Vector<Node> allContainersByCreationDate = new Vector<Node>();
-			allContainersByCreationDate.addAll(getContainersByModificationDate(environmentNode, startDate, endDate));
-
-			if (environmentNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
-				for (NodeIterator ni = RoomServiceImpl.getRooms(environmentNode); ni.hasNext();) {
-					makeRecursiveCallForGetContainersByModificationDate(allContainersByCreationDate, ni.nextNode(),
-							startDate, endDate, depth);
-				}
-			}
-			for (NodeIterator ni = getContainers(environmentNode); ni.hasNext();) {
-				makeRecursiveCallForGetContainersByModificationDate(allContainersByCreationDate, ni.nextNode(),
-						startDate, endDate, depth);
-			}
-			return allContainersByCreationDate;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	// helper method for getContainersByModificationDate(Node environmentNode, Date startDate, Date endDate, int depth)
-	private static void makeRecursiveCallForGetContainersByModificationDate(Vector<Node> allContainersByCreationDate,
-			Node environmentNode, Date startDate, Date endDate, int depth) throws UnexpectedInternalProblemException {
-		if (depth > 0) {
-			allContainersByCreationDate.addAll(getContainersByModificationDate(environmentNode, startDate, endDate,
-					depth - 1));
-		} else if (depth < 0) {
-			allContainersByCreationDate.addAll(getContainersByModificationDate(environmentNode, startDate, endDate,
-					depth));
-		}
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.CONTAINERS, startDate,
+				endDate, depth);
 	}
 
 	public static NodeIterator getContainersByModifier(Node modifierNode) throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			Session s = modifierNode.getSession();
-			ValueFactory vf = s.getValueFactory();
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.CONTAINER, "s1");
-			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.MODIFIED_BY),
-					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(modifierNode)));
-
-			// build the query
-			Query query = qomf.createQuery(selector, constraint, null, null);
-
-			// execute and return result
-			return query.execute().getNodes();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, WasabiNodeType.CONTAINER);
 	}
 
 	public static Vector<Node> getContainersByModifier(Node modifierNode, Node environmentNode)
 			throws UnexpectedInternalProblemException {
-		try {
-			Vector<Node> result = new Vector<Node>();
-			for (NodeIterator ni = ContainerServiceImpl.getContainers(environmentNode); ni.hasNext();) {
-				Node container = ni.nextNode();
-				if (modifierNode.getIdentifier().equals(ObjectServiceImpl.getModifiedBy(container).getIdentifier())) {
-					result.add(container);
-				}
-			}
-			return result;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, environmentNode, WasabiNodeProperty.CONTAINERS);
 	}
 
 	/**
@@ -295,14 +181,7 @@ public class ContainerServiceImpl {
 	 */
 	public static Vector<Node> getContainersByNamePattern(Node environmentNode, String regex)
 			throws UnexpectedInternalProblemException {
-		Vector<Node> result = new Vector<Node>();
-		for (NodeIterator ni = ContainerServiceImpl.getContainers(environmentNode); ni.hasNext();) {
-			Node container = ni.nextNode();
-			if (ObjectServiceImpl.getName(container).matches(regex)) {
-				result.add(container);
-			}
-		}
-		return result;
+		return ObjectServiceImpl.getNodesByNamePattern(environmentNode, regex, WasabiNodeProperty.CONTAINERS);
 	}
 
 	public static Node getEnvironment(Node containerNode) throws UnexpectedInternalProblemException {

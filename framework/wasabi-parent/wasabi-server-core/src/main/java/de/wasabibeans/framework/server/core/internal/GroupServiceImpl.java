@@ -30,12 +30,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFactory;
-import javax.jcr.query.Query;
-import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.qom.Selector;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -88,22 +82,7 @@ public class GroupServiceImpl {
 	}
 
 	public static NodeIterator getAllGroups(Session s) throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
-
-			// build the query
-			Query query = qomf.createQuery(selector, null, null, null);
-
-			// execute and return result
-			return query.execute().getNodes();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodesByType(WasabiNodeType.GROUP, s);
 	}
 
 	public static String getDisplayName(Node groupNode) throws UnexpectedInternalProblemException {
@@ -115,29 +94,11 @@ public class GroupServiceImpl {
 	}
 
 	public static Node getGroupByName(String groupName, Session s) throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			ValueFactory vf = s.getValueFactory();
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
-			Constraint constraint = qomf.comparison(qomf.nodeName("s1"),
-					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(groupName)));
-
-			// build the query
-			Query query = qomf.createQuery(selector, constraint, null, null);
-
-			// execute and return result
-			NodeIterator ni = query.execute().getNodes();
-			if (ni.hasNext()) {
-				return ni.nextNode();
-			} else {
-				return null;
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		NodeIterator ni = ObjectServiceImpl.getNodeByTypeAndName(WasabiNodeType.GROUP, groupName, s);
+		if (ni.hasNext()) {
+			return ni.nextNode();
+		} else {
+			return null;
 		}
 	}
 
@@ -154,25 +115,8 @@ public class GroupServiceImpl {
 
 	public static NodeIterator getGroupsByDisplayName(String displayName, Session s)
 			throws UnexpectedInternalProblemException {
-		try {
-			// get the factories
-			ValueFactory vf = s.getValueFactory();
-			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
-
-			// build the query components: columns, source, constraint, orderings
-			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
-			Selector selector = qomf.selector(WasabiNodeType.GROUP, "s1");
-			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", WasabiNodeProperty.DISPLAY_NAME),
-					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(displayName)));
-
-			// build the query
-			Query query = qomf.createQuery(selector, constraint, null, null);
-
-			// execute and return result
-			return query.execute().getNodes();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		return ObjectServiceImpl.getNodeByPropertyStringValue(WasabiNodeType.GROUP, WasabiNodeProperty.DISPLAY_NAME,
+				displayName, s);
 	}
 
 	public static Node getMemberByName(Node groupNode, String userName) throws UnexpectedInternalProblemException {

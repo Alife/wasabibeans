@@ -31,7 +31,12 @@ import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the local access on WasabiLinkDTO objects.
@@ -39,42 +44,57 @@ import de.wasabibeans.framework.server.core.exception.DestinationNotFoundExcepti
 @Local
 public interface LinkServiceLocal extends ObjectServiceLocal {
 
-	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment);
+	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment)
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public WasabiObjectDTO getDestination(WasabiLinkDTO link) throws DestinationNotFoundException;
+	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
+			TargetDoesNotExistException, ObjectDoesNotExistException;
 
-	public WasabiLocationDTO getEnvironment(WasabiLinkDTO link);
+	public WasabiValueDTO getEnvironment(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name);
+	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location);
+	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order);
-
-	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate,
-			int depth);
+			int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator);
+	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment);
+	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate);
+	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth);
+			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier);
+	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment);
+	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
-	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment);
+	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void remove(WasabiLinkDTO link);
+	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment, Long optLockId)
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
+			ObjectDoesNotExistException;
 
-	public void rename(WasabiLinkDTO link, String name);
+	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
-	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object);
+	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException;
 
+	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
 }

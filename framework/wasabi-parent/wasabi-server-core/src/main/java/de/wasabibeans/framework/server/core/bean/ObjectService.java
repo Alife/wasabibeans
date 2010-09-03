@@ -30,6 +30,7 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -108,33 +109,70 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	}
 
 	@Override
-	public boolean exists(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			s.getNodeByIdentifier(object.getId());
+			return true;
+		} catch (ItemNotFoundException infe) {
+			return false;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getCreatedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
+			return TransferManager.convertValue2DTO(ObjectServiceImpl.getCreatedBy(objectNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Date getCreatedOn(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getCreatedOn(WasabiObjectDTO object) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
+			return TransferManager.convertValue2DTO(ObjectServiceImpl.getCreatedOn(objectNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getModifiedBy(WasabiObjectDTO object) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
+			return TransferManager.convertValue2DTO(ObjectServiceImpl.getModifiedBy(objectNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Date getModifiedOn(WasabiObjectDTO object) {
-		// TODO Auto-generated method stub
-		return null;
+	public WasabiValueDTO getModifiedOn(WasabiObjectDTO object) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
+			return TransferManager.convertValue2DTO(ObjectServiceImpl.getModifiedOn(objectNode), optLockId);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override

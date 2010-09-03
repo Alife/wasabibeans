@@ -41,12 +41,14 @@ import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.internal.AttributeServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ContainerServiceImpl;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
+import de.wasabibeans.framework.server.core.internal.LinkServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
@@ -167,6 +169,22 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			ContainerServiceImpl.create("container3", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(container1Node);
+		} finally {
+			s.logout();
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiLinkDTO initLinkServiceTest() throws Exception {
+		Session s = jcr.getJCRSession();
+		try {
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+			Node link1Node = LinkServiceImpl.create("link1", wasabiRootNode, wasabiRootNode, s,
+					WasabiConstants.ROOT_USER_NAME);
+			LinkServiceImpl.create("link2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+			s.save();
+			return TransferManager.convertNode2DTO(link1Node);
 		} finally {
 			s.logout();
 		}

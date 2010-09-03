@@ -40,19 +40,18 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface ObjectServiceRemote {
 
-	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException;
+
+	public WasabiValueDTO getCreatedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public WasabiUserDTO getCreatedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getCreatedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public Date getCreatedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getModifiedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
-	public WasabiUserDTO getModifiedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
-
-	public Date getModifiedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+	public WasabiValueDTO getModifiedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
 	public boolean isRightsActive(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
