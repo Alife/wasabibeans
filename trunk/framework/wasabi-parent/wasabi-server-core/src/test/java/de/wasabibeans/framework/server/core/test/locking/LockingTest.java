@@ -49,8 +49,8 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -88,7 +88,7 @@ public class LockingTest extends Arquillian {
 		testArchive.addPackage(SqlLoginModule.class.getPackage()) // authentication
 				.addPackage(WasabiUserACL.class.getPackage()) // authorization
 				.addPackage(WasabiConstants.class.getPackage()) // common
-				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
+				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(Locker.class.getPackage()) // locking

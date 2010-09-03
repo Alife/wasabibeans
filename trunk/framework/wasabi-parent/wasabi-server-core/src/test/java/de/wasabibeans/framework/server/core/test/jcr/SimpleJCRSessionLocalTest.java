@@ -43,7 +43,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
-import de.wasabibeans.framework.server.core.exception.DestinationNotFoundException;
+import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
@@ -54,6 +54,8 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperLocal;
 import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Run(RunModeType.IN_CONTAINER)
 public class SimpleJCRSessionLocalTest extends Arquillian {
@@ -64,7 +66,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		testArchive.addPackage(SqlLoginModule.class.getPackage()) // authentication
 				.addPackage(WasabiUserACL.class.getPackage()) // authorization
 				.addPackage(WasabiConstants.class.getPackage()) // common
-				.addPackage(DestinationNotFoundException.class.getPackage()) // exception
+				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
 				.addPackage(Locker.class.getPackage()) // locking
@@ -80,7 +82,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		return testArchive;
 	}
 
-	@Test
+	//@Test
 	public void subsequentWrites() throws Exception {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
@@ -132,7 +134,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		utx.commit();
 	}
 
-	@Test
+	//@Test
 	public void concurrentTransactions() throws Throwable {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
@@ -241,7 +243,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 	 * 
 	 * @throws Throwable
 	 */
-	@Test
+	//@Test
 	public void concurrentSessions() throws Throwable {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
@@ -339,6 +341,29 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 			user1.interrupt();
 			user2.interrupt();
 			AssertJUnit.fail();
+		}
+	}
+	
+	@Test
+	public void test() throws Exception {
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector();
+
+		TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
+		testHelper.initDatabase();
+		testHelper.initRepository();
+
+		Session s = jcr.getJCRSession();
+		try {
+			Node n = s.getRootNode().addNode("n");
+			n.setProperty("hu", "hu");
+			s.save();
+			System.out.println(n.getProperty("hu").getString());
+			n.setProperty("hu", (String) null);
+			s.save();
+			n.getProperty("hu");
+		} finally {
+			s.logout();
 		}
 	}
 }
