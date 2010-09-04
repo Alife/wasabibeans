@@ -83,7 +83,8 @@ public class WasabiRoomACL {
 		}
 	}
 
-	public static void remove(Node roomNode, String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
+	public static void remove(Node roomNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException {
 		WasabiObjectACL.remove(roomNode, callerPrincipal, s);
 	}
 }

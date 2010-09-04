@@ -39,13 +39,7 @@ public class WasabiObjectACL {
 
 	public static void remove(Node objectNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException {
-		try {
-			String objectUUID = objectNode.getIdentifier();
-			WasabiObjectSQL.SqlQueryForRemove(objectUUID);
-			removeRecursive(objectNode, callerPrincipal, s);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		removeRecursive(objectNode, callerPrincipal, s);
 	}
 
 	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s)
@@ -101,8 +95,11 @@ public class WasabiObjectACL {
 
 			if (childreenNodes.size() == 0) {
 				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
+					String objectUUID = objectNode.getIdentifier();
+					WasabiObjectSQL.SqlQueryForRemove(objectUUID);
+					WasabiRoomSQL.SQLQueryForRemove(objectUUID);
 					ObjectServiceImpl.remove(objectNode);
-					// TODO: Remove Template for Location
+
 					return 0;
 				} else
 					return 1;
@@ -111,10 +108,13 @@ public class WasabiObjectACL {
 					childNodes = childNodes + removeRecursive(node, callerPrincipal, s);
 				}
 			}
-			
+
 			if (childNodes == 0 && WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
+				String objectUUID = objectNode.getIdentifier();
+				WasabiObjectSQL.SqlQueryForRemove(objectUUID);
+				WasabiRoomSQL.SQLQueryForRemove(objectUUID);
 				ObjectServiceImpl.remove(objectNode);
-				// TODO: Remove Template for Location
+
 				return 0;
 			}
 		} catch (RepositoryException re) {
