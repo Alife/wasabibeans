@@ -51,7 +51,7 @@ public class WasabiRoomACL {
 			throws UnexpectedInternalProblemException {
 		if (!callerPrincipal.equals("root")) {
 			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-			
+
 			List<WasabiACLEntryTemplate> ACLEntryTemplateALL = ACLServiceImpl.getDefaultACLEntriesByType(
 					environmentNode, WasabiType.ALL, s);
 
@@ -81,5 +81,9 @@ public class WasabiRoomACL {
 				}
 			}
 		}
+	}
+
+	public static void remove(Node roomNode, String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s);
 	}
 }
