@@ -67,6 +67,101 @@ public class RoomServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void removeTest() throws WasabiException {
+		System.out.println("=== removeTest() ===");
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeTestRoom at usersHome... ");
+		WasabiRoomDTO removeTestRoom = null;
+		try {
+			removeTestRoom = roomService().create("removeTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for removeTestRoom... ");
+		aclService().deactivateInheritance(removeTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW and INSERT as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, new int[] { WasabiPermission.INSERT, WasabiPermission.VIEW },
+				new boolean[] { true, true });
+		System.out.println("done.");
+
+		System.out.print("Creating room1 at removeTestRoom... ");
+		WasabiRoomDTO room1 = null;
+		try {
+			room1 = roomService().create("room1", removeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating room2 at removeTestRoom... ");
+		WasabiRoomDTO room2 = null;
+		try {
+			room2 = roomService().create("room2", removeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating subroom1 at room2... ");
+		WasabiRoomDTO subroom1 = null;
+		try {
+			subroom1 = roomService().create("subroom1", room2);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE with forbiddance as userRight for room2... ");
+		aclService().create(room2, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE as userRight for subroom1... ");
+		aclService().create(subroom1, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Removing removeTestRoom... ");
+		try {
+			roomService().remove(removeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Display names of rooms with View at usersHome... ");
+		Vector<WasabiRoomDTO> rooms0 = roomService().getRooms(usersHome);
+		for (WasabiRoomDTO wasabiRoomDTO : rooms0) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		System.out.println("done.");
+
+		 System.out.println("Display names of rooms with View at removeTestRoom... ");
+		 Vector<WasabiRoomDTO> rooms1 = roomService().getRooms(removeTestRoom);
+		 for (WasabiRoomDTO wasabiRoomDTO : rooms1) {
+		 System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		 }
+		 System.out.println("done.");
+
+		 System.out.println("Display names of rooms with View at room2... ");
+		 Vector<WasabiRoomDTO> rooms2 = roomService().getRooms(room2);
+		 for (WasabiRoomDTO wasabiRoomDTO : rooms2) {
+		 System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		 }
+		 System.out.println("done.");
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void getRoomsTest() throws WasabiException {
 		System.out.println("=== getRoomsTest() ===");
 		WasabiGroupDTO g1 = groupService().create("g1", null);

@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -134,7 +135,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				Vector<String> authorizedRooms = WasabiAuthorizer.authorizeVIEW(roomNode, callerPrincipal, s);
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(roomNode, callerPrincipal,
+						WasabiPermission.VIEW, s);
 				for (String string : authorizedRooms) {
 					Node aNode = RoomServiceImpl.getRoomById(string, s);
 					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(aNode));
@@ -249,11 +251,26 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			RoomServiceImpl.remove(roomNode);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.remove()", "WRITE"));
+				else
+					WasabiRoomACL.remove(roomNode, callerPrincipal, s);
+			}
+			/* Authorization - End */
+
+			else
+				RoomServiceImpl.remove(roomNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

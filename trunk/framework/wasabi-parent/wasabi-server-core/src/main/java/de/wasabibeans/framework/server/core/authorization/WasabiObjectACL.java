@@ -21,20 +21,105 @@
 
 package de.wasabibeans.framework.server.core.authorization;
 
+import java.util.Vector;
+
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 
 public class WasabiObjectACL {
 
-	public static void remove(Node objectNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node objectNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException {
 		try {
 			String objectUUID = objectNode.getIdentifier();
 			WasabiObjectSQL.SqlQueryForRemove(objectUUID);
+			removeRecursive(objectNode, callerPrincipal, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
+	}
+
+	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			int childNodes = 0;
+			Vector<Node> childreenNodes = new Vector<Node>();
+
+			if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
+				NodeIterator RoomChildreen = objectNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
+				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
+				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator LinkChildreen = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
+				NodeIterator DocumentChildreen = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+
+				while (RoomChildreen.hasNext())
+					childreenNodes.add(RoomChildreen.nextNode());
+
+				while (ContainerChildreen.hasNext())
+					childreenNodes.add(ContainerChildreen.nextNode());
+
+				while (AttributeChildreen.hasNext())
+					childreenNodes.add(AttributeChildreen.nextNode());
+
+				while (LinkChildreen.hasNext())
+					childreenNodes.add(LinkChildreen.nextNode());
+
+				while (DocumentChildreen.hasNext())
+					childreenNodes.add(DocumentChildreen.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
+				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
+				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator LinkChildreen = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
+				NodeIterator DocumentChildreen = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+
+				while (ContainerChildreen.hasNext())
+					childreenNodes.add(ContainerChildreen.nextNode());
+
+				while (AttributeChildreen.hasNext())
+					childreenNodes.add(AttributeChildreen.nextNode());
+
+				while (LinkChildreen.hasNext())
+					childreenNodes.add(LinkChildreen.nextNode());
+
+				while (DocumentChildreen.hasNext())
+					childreenNodes.add(DocumentChildreen.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ATTRIBUTE)) {
+				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+
+				while (AttributeChildreen.hasNext())
+					childreenNodes.add(AttributeChildreen.nextNode());
+			}
+
+			if (childreenNodes.size() == 0) {
+				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
+					ObjectServiceImpl.remove(objectNode);
+					// TODO: Remove Template for Location
+					return 0;
+				} else
+					return 1;
+			} else {
+				for (Node node : childreenNodes) {
+					childNodes = childNodes + removeRecursive(node, callerPrincipal, s);
+				}
+			}
+			
+			if (childNodes == 0 && WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
+				ObjectServiceImpl.remove(objectNode);
+				// TODO: Remove Template for Location
+				return 0;
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+		return 1;
 	}
 }
