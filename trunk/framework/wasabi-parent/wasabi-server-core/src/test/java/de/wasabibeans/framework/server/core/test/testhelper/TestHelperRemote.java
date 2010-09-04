@@ -46,12 +46,14 @@ public interface TestHelperRemote {
 	public WasabiUserDTO initUserServiceTest() throws Exception;
 
 	public WasabiGroupDTO initGroupServiceTest() throws Exception;
-	
+
 	public WasabiAttributeDTO initAttributeServiceTest() throws Exception;
-	
+
 	public WasabiContainerDTO initContainerServiceTest() throws Exception;
-	
+
 	public WasabiLinkDTO initLinkServiceTest() throws Exception;
+
+	public void initTagServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 

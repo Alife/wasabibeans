@@ -50,6 +50,7 @@ import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.LinkServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
+import de.wasabibeans.framework.server.core.internal.TagServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
@@ -150,21 +151,23 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 			Node attribute1Node = AttributeServiceImpl.create("attribute1", "attribute1", wasabiRootNode, s,
 					WasabiConstants.ROOT_USER_NAME);
-			AttributeServiceImpl.create("attribute2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+			AttributeServiceImpl
+					.create("attribute2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(attribute1Node);
 		} finally {
 			s.logout();
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiContainerDTO initContainerServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
 			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			Node container1Node = ContainerServiceImpl.create("container1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+			Node container1Node = ContainerServiceImpl.create("container1", wasabiRootNode, s,
+					WasabiConstants.ROOT_USER_NAME);
 			ContainerServiceImpl.create("container2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			ContainerServiceImpl.create("container3", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
@@ -173,7 +176,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.logout();
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiLinkDTO initLinkServiceTest() throws Exception {
@@ -185,6 +188,20 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			LinkServiceImpl.create("link2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(link1Node);
+		} finally {
+			s.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void initTagServiceTest() throws Exception {
+		Session s = jcr.getJCRSession();
+		try {
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+			TagServiceImpl.addTag(wasabiRootNode, "tag1", s, WasabiConstants.ROOT_USER_NAME);
+			TagServiceImpl.addTag(wasabiRootNode, "tag2", s, WasabiConstants.ROOT_USER_NAME);
+			s.save();
 		} finally {
 			s.logout();
 		}

@@ -53,6 +53,8 @@ public interface TestHelperLocal {
 	public WasabiContainerDTO initContainerServiceTest() throws Exception;
 	
 	public WasabiLinkDTO initLinkServiceTest() throws Exception;
+	
+	public void initTagServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 

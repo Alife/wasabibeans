@@ -29,6 +29,8 @@ import javax.ejb.Local;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
  * Interface, that defines the local access on Tags of WasabiObjectsDTO.
@@ -36,18 +38,32 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 @Local
 public interface TagServiceLocal extends ObjectServiceLocal {
 
-	public void addTag(WasabiObjectDTO object, String tag);
+	public void addTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public void clearTags(WasabiObjectDTO object);
+	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
 
-	public Vector<WasabiObjectDTO> getObjectsByTag(String tag);
+	/**
+	 * Parameter {@code limit} does nothing currently.
+	 * 
+	 * @param environment
+	 * @param limit
+	 * @return
+	 * @throws ObjectDoesNotExistException
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public Map<String, Integer> getMostUsedDocumentTags(WasabiLocationDTO environment, int limit)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
-	public Vector<WasabiDocumentDTO> getDocumentsByTags(WasabiLocationDTO environment, Vector<String> tags);
+	public Vector<WasabiObjectDTO> getObjectsByTag(String tag) throws UnexpectedInternalProblemException;
 
-	public Map<String, Integer> getMostUsedDocumentTags(WasabiLocationDTO environment, int limit);
+	public Vector<String> getTags(WasabiObjectDTO object) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public Vector<String> getTags(WasabiObjectDTO object);
+	public void removeTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
 
-	public void removeTag(WasabiObjectDTO object, String tag);
-
+	public Vector<WasabiDocumentDTO> getDocumentsByTags(WasabiLocationDTO environment, Vector<String> tags)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 }
