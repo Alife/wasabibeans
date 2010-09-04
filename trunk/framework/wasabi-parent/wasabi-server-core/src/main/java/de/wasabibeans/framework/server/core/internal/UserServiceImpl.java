@@ -37,7 +37,6 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
-import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -54,6 +53,7 @@ public class UserServiceImpl {
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), s, callerPrincipal);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode, null);
+			move(userNode, homeRoomNode);
 			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode);
 
 			// special case when creating the root user
@@ -158,20 +158,74 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static Node getUserByName(WasabiRoomDTO room, String userName) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Node getUserByName(Node roomNode, String userName) throws UnexpectedInternalProblemException {
+		try {
+			Node userNode = getUserByName(userName, roomNode.getSession());
+			if (userNode == null) { // user does not exist any more
+				return null;
+			}
+			if (roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).hasNode(userNode.getIdentifier())) {
+				// user is present in room
+				return userNode;
+			}
+			// user exists but is not present in room
+			return null;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static Vector<Node> getUsers(WasabiRoomDTO room) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
+	 * wasabi:user-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:user-nodes (this is
+	 * due to efficiency reasons).
+	 * 
+	 * @param roomNode
+	 *            the node representing a wasabi-user
+	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
+	 * @throws UnexpectedInternalProblemException
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getUsers(Node roomNode) throws UnexpectedInternalProblemException {
+		try {
+			return roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static NodeIterator getUsersByDisplayName(String displayName, Session s)
 			throws UnexpectedInternalProblemException {
 		return ObjectServiceImpl.getNodeByPropertyStringValue(WasabiNodeType.USER, WasabiNodeProperty.DISPLAY_NAME,
 				displayName, s);
+	}
+
+	public static void move(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
+		try {
+			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+		} catch (ItemExistsException iee) {
+			// do nothing, user is already present in room
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+	
+	public static void leave(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
+		try {
+			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNode(userNode.getIdentifier());
+			userRef.remove();
+		} catch (PathNotFoundException pnfe) {
+			// do nothing, user not present
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+	
+	public static Vector<Node> getRoomsWhereUserIsPresent(Node userNode) {
+		// TODO come up with a good query for this
+		return null;
 	}
 
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException {
@@ -186,9 +240,6 @@ public class UserServiceImpl {
 			// nothing to remove if home room does not exist
 		}
 		ObjectServiceImpl.remove(userNode);
-
-		// TODO Environment of user?
-		// TODO memberships of user?
 	}
 
 	public static void rename(Node userNode, String name, String callerPrincipal)

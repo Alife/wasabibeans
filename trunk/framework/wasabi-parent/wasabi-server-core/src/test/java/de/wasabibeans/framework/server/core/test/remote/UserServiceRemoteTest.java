@@ -124,6 +124,35 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test(dependsOnMethods = { ".*get1.*" })
+	public void get2UsersRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
+		Vector<WasabiUserDTO> result = userService().getUsers(homeRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertTrue(result.contains(user1));
+	}
+
+	@Test(dependsOnMethods = { ".*get1.*" })
+	public void get2UsersByNameRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
+		try {
+			userService().getUserByName(homeRoom, null);
+			AssertJUnit.fail();
+		} catch (IllegalArgumentException e) {
+			// passed
+		}
+
+		// search not existing user
+		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "doesNotExist"));
+
+		// search existing but not present user
+		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "user2"));
+
+		// search existing and present user
+		WasabiUserDTO test = userService().getUserByName(homeRoom, "user1");
+		AssertJUnit.assertEquals(user1, test);
+	}
+
+	@Test(dependsOnMethods = { ".*get2.*" })
 	public void createTest() throws WasabiException {
 		WasabiUserDTO user3 = userService().create("user3", "pwd");
 		AssertJUnit.assertEquals("user3", userService().getDisplayName(user3).getValue());
@@ -136,6 +165,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertTrue((Boolean) userService().getStatus(user3).getValue());
 		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
 		AssertJUnit.assertTrue(groupService().isDirectMember(wasabiGroup, user3));
+		AssertJUnit.assertTrue(userService().getUsers(homeRoom).contains(user3));
 
 		try {
 			userService().create(null, "pwd");
@@ -160,8 +190,45 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
+	public void moveTest() throws Exception {
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().move(user1, rootRoom);
+		userService().move(user2, rootRoom);
+		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
+		AssertJUnit.assertEquals(2, result.size());
+		AssertJUnit.assertTrue(result.contains(user1) && result.contains(user2));
+	}
+	
+	@Test(dependsOnMethods = { "createTest" })
+	public void leaveTest() throws Exception {
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().move(user1, rootRoom);
+		userService().move(user2, rootRoom);
+		userService().leave(user1, rootRoom);
+		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertTrue(result.contains(user2));
+	}
+
+	@Test(dependsOnMethods = { "moveTest" })
 	public void removeTest() throws Exception {
-		// still todos in remove
+		userService().move(user1, rootRoom);
+
+		userService().remove(user1);
+		// check that user is removed
+		Vector<WasabiUserDTO> users = userService().getAllUsers();
+		AssertJUnit.assertFalse(users.contains(user1));
+		AssertJUnit.assertEquals(4, users.size());
+		// check that the user's home-room is removed
+		AssertJUnit.assertTrue(userService().getUsers(rootRoom).isEmpty());
+		// check that the user not listed as present any more
+		AssertJUnit.assertNull(roomService().getRoomByName(roomService().getRootHome(), "user1"));
+		// check that the user is not listed as member any more
+		WasabiGroupDTO wasabi = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+		AssertJUnit.assertTrue(!groupService().getMembers(wasabi).contains(user1));
+		// check that the user's entries in the database have been removed by attempting to create a new user with
+		// exactly the same attributes
+		userService().create("user1", "user1");
 	}
 
 	@Test(dependsOnMethods = { "createTest" })

@@ -40,6 +40,7 @@ public class WasabiNodeProperty {
 
 	// properties of wasabi:room
 	public static final String ROOMS = WasabiConstants.JCR_NS_PREFIX + ":rooms";
+	public static final String PRESENT_USERS = WasabiConstants.JCR_NS_PREFIX + ":presentUsers";
 
 	// properties of wasabi:identity
 	public static final String DISPLAY_NAME = WasabiConstants.JCR_NS_PREFIX + ":displayName";

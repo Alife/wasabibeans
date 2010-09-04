@@ -78,6 +78,12 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
+	public void move(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
+
+	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException;
+
 	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
