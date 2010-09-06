@@ -12,14 +12,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiVersionDTO;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
-// TODO include containers, links, attributes, and tags in tests
 @Run(RunModeType.AS_CLIENT)
 public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 
@@ -28,6 +30,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 	private static final String DOCUMENT1 = "document1", DOCUMENT2 = "document2";
 
 	private WasabiRoomDTO room, room1, room2;
+	private WasabiContainerDTO container1;
 	private WasabiDocumentDTO document1, document2;
 
 	@BeforeMethod
@@ -41,9 +44,11 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		room = roomService().create(ROOM, rootRoom);
 		room1 = roomService().create(ROOM1, room);
 		room2 = roomService().create(ROOM2, room);
-		document1 = documentService().create(DOCUMENT1, room1);
+		container1 = containerService().create(CONTAINER1, room1);
+		containerService().create(CONTAINER2, room1);
+		document1 = documentService().create(DOCUMENT1, container1);
 		documentService().setContent(document1, DOCUMENT1, null);
-		document2 = documentService().create(DOCUMENT2, room1);
+		document2 = documentService().create(DOCUMENT2, container1);
 		documentService().setContent(document1, DOCUMENT1, null);
 		reWaCon.logout();
 
@@ -131,6 +136,11 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		WasabiVersionDTO version = versions.get(0);
 		AssertJUnit.assertEquals("test", version.getComment());
 
+		versions = versioningService().getVersions(container1);
+		AssertJUnit.assertEquals(1, versions.size());
+		version = versions.get(0);
+		AssertJUnit.assertEquals("test", version.getComment());
+
 		versions = versioningService().getVersions(document1);
 		AssertJUnit.assertEquals(1, versions.size());
 		version = versions.get(0);
@@ -144,11 +154,11 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(DOCUMENT1, documentService().getContent(document1).getValue());
 
 		documentService().remove(document2);
-		AssertJUnit.assertNull(documentService().getDocumentByName(room1, DOCUMENT2));
+		AssertJUnit.assertNull(documentService().getDocumentByName(container1, DOCUMENT2));
 
 		// restore must recreate deleted wasabi-objects in the subtree
 		versioningService().restoreVersion(room, theVersion.getLabel());
-		AssertJUnit.assertNotNull(documentService().getDocumentByName(room1, DOCUMENT2));
+		AssertJUnit.assertNotNull(documentService().getDocumentByName(container1, DOCUMENT2));
 	}
 
 	@Test
@@ -170,6 +180,11 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		WasabiVersionDTO version = versions.get(0);
 		AssertJUnit.assertEquals("test", version.getComment());
 
+		versions = versioningService().getVersions(container1);
+		AssertJUnit.assertEquals(3, versions.size());
+		version = versions.get(0);
+		AssertJUnit.assertEquals("test", version.getComment());
+
 		versions = versioningService().getVersions(document1);
 		AssertJUnit.assertEquals(3, versions.size());
 		version = versions.get(0);
@@ -182,11 +197,44 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	// tests whether objects like links, attributes, and tags that do not have their own version history are versioned
+	// with their 'parent-objects'
+	public void versioningAppendingObjects() throws Exception {
+		tagService().addTag(room, "tag");
+		WasabiLinkDTO link = linkService().create("link", room, container1);
+		WasabiAttributeDTO attribute = attributeService().create("attribute", "attribute", document1);
+		// store this state as a version
+		versioningService().createVersion(room, "test");
+		WasabiVersionDTO version = versioningService().getVersions(room).get(0);
+		// make a few changes and confirm them
+		tagService().addTag(room, "anotherTag");
+		linkService().setDestination(link, document1, null);
+		attributeService().setValue(attribute, "changedAttribute", null);
+		AssertJUnit.assertEquals(2, tagService().getTags(room).size());
+		AssertJUnit.assertEquals(document1, linkService().getDestination(link).getValue());
+		AssertJUnit.assertEquals("changedAttribute", attributeService().getValue(String.class, attribute).getValue());
+		// restore version and make assertions
+		// tag of room
+		versioningService().restoreVersion(room, version.getLabel());
+		Vector<String> tags = tagService().getTags(room);
+		AssertJUnit.assertEquals(1, tags.size());
+		AssertJUnit.assertEquals("tag", tags.get(0));
+		// link of container1
+		Vector<WasabiLinkDTO> links = linkService().getLinks(container1);
+		AssertJUnit.assertEquals(1, links.size());
+		AssertJUnit.assertEquals(room, linkService().getDestination(links.get(0)).getValue());
+		// attribute of document1
+		Vector<WasabiAttributeDTO> attributes = attributeService().getAttributes(document1);
+		AssertJUnit.assertEquals(1, attributes.size());
+		AssertJUnit.assertEquals("attribute", attributeService().getValue(String.class, attributes.get(0)).getValue());
+	}
+
+	@Test
 	// tests whether the creation of a version is rolled back when this creation takes place within a transaction that
 	// fails
 	public void versioningWithinTxAndRollback() throws Exception {
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
-		
+
 		// execute transaction
 		try {
 			utx.begin();
@@ -199,9 +247,10 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		} catch (EJBTransactionRolledbackException rb) {
 			utx.rollback();
 		}
-		
+
 		// check that the creation of the version has been rolled back
 		AssertJUnit.assertTrue(versioningService().getVersions(room).isEmpty());
+		AssertJUnit.assertTrue(versioningService().getVersions(container1).isEmpty());
 		AssertJUnit.assertTrue(versioningService().getVersions(room2).isEmpty());
 		AssertJUnit.assertTrue(versioningService().getVersions(document1).isEmpty());
 	}
