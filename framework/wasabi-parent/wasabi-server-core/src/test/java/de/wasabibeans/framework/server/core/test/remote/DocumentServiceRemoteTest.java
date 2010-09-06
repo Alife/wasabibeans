@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.test.remote;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Vector;
 
 import org.jboss.arquillian.api.Run;
@@ -33,9 +35,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
@@ -62,7 +67,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getDocumentByNameTest() throws Exception {
+	public void get1DocumentByNameTest() throws Exception {
 		WasabiDocumentDTO test = documentService().getDocumentByName(rootRoom, "document1");
 		AssertJUnit.assertEquals(document1, test);
 
@@ -77,25 +82,25 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getContentTest() throws Exception {
+	public void get1ContentTest() throws Exception {
 		Serializable content = documentService().getContent(document1).getValue();
 		AssertJUnit.assertEquals("document1", content);
 	}
 
 	@Test
-	public void getEnvironmentTest() throws Exception {
+	public void get1EnvironmentTest() throws Exception {
 		WasabiLocationDTO environment = documentService().getEnvironment(document1).getValue();
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
 	@Test
-	public void getDocumentsTest() throws Exception {
+	public void get1DocumentsTest() throws Exception {
 		Vector<WasabiDocumentDTO> documents = documentService().getDocuments(rootRoom);
 		AssertJUnit.assertTrue(documents.contains(document1));
 		AssertJUnit.assertEquals(2, documents.size());
 	}
 
-	@Test(dependsOnMethods = { ".*get.*" })
+	@Test(dependsOnMethods = { ".*get1.*" })
 	public void createTest() throws Exception {
 		WasabiDocumentDTO newDocument = documentService().create("document3", rootRoom);
 		AssertJUnit.assertNotNull(newDocument);
@@ -208,4 +213,330 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(1, documents.size());
 	}
 
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByCreationDateTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// create 5 documents with 5 different timestamps (before, begin, in-between, end, after)
+		WasabiDocumentDTO[] documents = new WasabiDocumentDTO[5];
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int i = 0; i < 5; i++) {
+			dates[i] = cal.getTime();
+			documents[i] = documentService().create("link" + i, room);
+			objectService().setCreatedOn(documents[i], dates[i], null);
+
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// do the test
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByCreationDate(room, dates[1], dates[3]);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(documents[0]));
+		AssertJUnit.assertFalse(result.contains(documents[4]));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByCreationDateTestDepth() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// 5 timestamps (before, start, in-between, end, after)
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int t = 0; t < 5; t++) {
+			dates[t] = cal.getTime();
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// tree with 5 sub-layers: room -> layer 0 (5 nodes, 5 timestamps) -> layer 1 (5 nodes, 5 timestamps) -> etc.
+		WasabiDocumentDTO[][] documents = new WasabiDocumentDTO[5][5];
+		WasabiRoomDTO[][] rooms = new WasabiRoomDTO[4][5];
+		for (int d = 0; d < 5; d++) {
+			for (int t = 0; t < 5; t++) {
+				if (d == 0) {
+					documents[d][t] = documentService().create("document" + t, room);
+					rooms[d][t] = roomService().create("room" + t, room);
+				} else {
+					documents[d][t] = documentService().create("document" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+					if (d != 4) {
+						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+					}
+				}
+				objectService().setCreatedOn(documents[d][t], dates[t], null);
+			}
+		}
+
+		// test for layers 0, 1, 2, 3
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByCreationDate(room, dates[1], dates[3], 3);
+		AssertJUnit.assertEquals(12, result.size());
+		for (int d = 0; d < 4; d++) {
+			AssertJUnit.assertFalse(result.contains(documents[d][0]));
+			AssertJUnit.assertFalse(result.contains(documents[d][4]));
+		}
+		for (int t = 0; t < 5; t++) {
+			AssertJUnit.assertFalse(result.contains(documents[4][t]));
+		}
+
+		// test for layer 0 only
+		result = documentService().getDocumentsByCreationDate(room, dates[1], dates[3], 0);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(documents[0][0]));
+		AssertJUnit.assertFalse(result.contains(documents[0][4]));
+
+		// test for all 5 layers
+		result = documentService().getDocumentsByCreationDate(room, dates[1], dates[3], -1);
+		AssertJUnit.assertEquals(15, result.size());
+		for (int d = 0; d < 5; d++) {
+			AssertJUnit.assertFalse(result.contains(documents[d][0]));
+			AssertJUnit.assertFalse(result.contains(documents[d][4]));
+		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByCreatorTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create document that should not be returned
+		WasabiDocumentDTO document1ThisUser = documentService().create("document1ThisUser", rootRoom);
+		WasabiDocumentDTO document2ThisUser = documentService().create("document2ThisUser", room);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another document to be found
+		documentService().create("anotherDocumentOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get documents modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByCreator(root);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(document1ThisUser));
+		AssertJUnit.assertFalse(result.contains(document2ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByCreatorTestEnvironment() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create a document that should not be returned (wrong creator)
+		WasabiDocumentDTO document1ThisUser = documentService().create("document1ThisUser", rootRoom);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another document that should not be returned (correct creator, but wrong location)
+		documentService().create("anotherDocumentOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get documents modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByCreator(root, rootRoom);
+		AssertJUnit.assertEquals(2, result.size());
+		AssertJUnit.assertFalse(result.contains(document1ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByModificationDateTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// create 5 documents with 5 different timestamps (before, begin, in-between, end, after)
+		WasabiDocumentDTO[] documents = new WasabiDocumentDTO[5];
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int i = 0; i < 5; i++) {
+			dates[i] = cal.getTime();
+			documents[i] = documentService().create("link" + i, room);
+			objectService().setModifiedOn(documents[i], dates[i], null);
+
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// do the test
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByModificationDate(room, dates[1], dates[3]);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(documents[0]));
+		AssertJUnit.assertFalse(result.contains(documents[4]));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByModificationDateTestDepth() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// 5 timestamps (before, start, in-between, end, after)
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int t = 0; t < 5; t++) {
+			dates[t] = cal.getTime();
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// tree with 5 sub-layers: room -> layer 0 (5 nodes, 5 timestamps) -> layer 1 (5 nodes, 5 timestamps) -> etc.
+		WasabiDocumentDTO[][] documents = new WasabiDocumentDTO[5][5];
+		WasabiRoomDTO[][] rooms = new WasabiRoomDTO[4][5];
+		for (int d = 0; d < 5; d++) {
+			for (int t = 0; t < 5; t++) {
+				if (d == 0) {
+					documents[d][t] = documentService().create("document" + t, room);
+					rooms[d][t] = roomService().create("room" + t, room);
+				} else {
+					documents[d][t] = documentService().create("document" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+					if (d != 4) {
+						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+					}
+				}
+				objectService().setModifiedOn(documents[d][t], dates[t], null);
+			}
+		}
+
+		// test for layers 0, 1, 2, 3
+		Vector<WasabiDocumentDTO> result = documentService()
+				.getDocumentsByModificationDate(room, dates[1], dates[3], 3);
+		AssertJUnit.assertEquals(12, result.size());
+		for (int d = 0; d < 4; d++) {
+			AssertJUnit.assertFalse(result.contains(documents[d][0]));
+			AssertJUnit.assertFalse(result.contains(documents[d][4]));
+		}
+		for (int t = 0; t < 5; t++) {
+			AssertJUnit.assertFalse(result.contains(documents[4][t]));
+		}
+
+		// test for layer 0 only
+		result = documentService().getDocumentsByModificationDate(room, dates[1], dates[3], 0);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(documents[0][0]));
+		AssertJUnit.assertFalse(result.contains(documents[0][4]));
+
+		// test for all 5 layers
+		result = documentService().getDocumentsByModificationDate(room, dates[1], dates[3], -1);
+		AssertJUnit.assertEquals(15, result.size());
+		for (int d = 0; d < 5; d++) {
+			AssertJUnit.assertFalse(result.contains(documents[d][0]));
+			AssertJUnit.assertFalse(result.contains(documents[d][4]));
+		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByModifierTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create document that should not be returned
+		WasabiDocumentDTO document1ThisUser = documentService().create("document1ThisUser", rootRoom);
+		WasabiDocumentDTO document2ThisUser = documentService().create("document2ThisUser", room);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another document to be found
+		documentService().create("anotherDocumentOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get documents modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByModifier(root);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(document1ThisUser));
+		AssertJUnit.assertFalse(result.contains(document2ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsByModifierTestEnvironment() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create a document that should not be returned (wrong creator)
+		WasabiDocumentDTO document1ThisUser = documentService().create("document1ThisUser", rootRoom);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another document that should not be returned (correct creator, but wrong location)
+		documentService().create("anotherDocumentOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get documents modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsByModifier(root, rootRoom);
+		AssertJUnit.assertEquals(2, result.size());
+		AssertJUnit.assertFalse(result.contains(document1ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getDocumentsOrderedByCreationDateTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// create 5 document with 5 different timestamps
+		WasabiDocumentDTO[] documents = new WasabiDocumentDTO[5];
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int i = 0; i < 5; i++) {
+			dates[i] = cal.getTime();
+			documents[i] = documentService().create("document" + i, room);
+			objectService().setCreatedOn(documents[i], dates[i], null);
+
+			cal.add(Calendar.SECOND, 1);
+		}
+
+		// do the test
+		Vector<WasabiDocumentDTO> result = documentService().getDocumentsOrderedByCreationDate(room,
+				SortType.DESCENDING);
+		for (int i = 0; i < 5; i++) {
+			AssertJUnit.assertEquals(documents[4 - i], result.get(i));
+		}
+		result = documentService().getDocumentsOrderedByCreationDate(room, SortType.ASCENDING);
+		for (int i = 0; i < 5; i++) {
+			AssertJUnit.assertEquals(documents[i], result.get(i));
+		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void hasDocumentsCreatedAfterTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		WasabiDocumentDTO document = documentService().create("test", room);
+
+		Calendar cal = Calendar.getInstance();
+		objectService().setCreatedOn(document, cal.getTime(), null);
+
+		AssertJUnit.assertTrue(documentService().hasDocumentsCreatedAfter(room, cal.getTimeInMillis()));
+
+		cal.add(Calendar.MILLISECOND, 1);
+		AssertJUnit.assertFalse(documentService().hasDocumentsCreatedAfter(room, cal.getTimeInMillis()));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void hasDocumentsCreatedBeforeTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		WasabiDocumentDTO document = documentService().create("test", room);
+
+		Calendar cal = Calendar.getInstance();
+		objectService().setCreatedOn(document, cal.getTime(), null);
+
+		AssertJUnit.assertTrue(documentService().hasDocumentsCreatedBefore(room, cal.getTimeInMillis()));
+
+		cal.add(Calendar.MILLISECOND, -1);
+		AssertJUnit.assertFalse(documentService().hasDocumentsCreatedBefore(room, cal.getTimeInMillis()));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void hasDocumentsModifiedAfterTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		WasabiDocumentDTO document = documentService().create("test", room);
+
+		Calendar cal = Calendar.getInstance();
+		objectService().setModifiedOn(document, cal.getTime(), null);
+
+		AssertJUnit.assertTrue(documentService().hasDocumentsModifiedAfter(room, cal.getTimeInMillis()));
+
+		cal.add(Calendar.MILLISECOND, 1);
+		AssertJUnit.assertFalse(documentService().hasDocumentsModifiedAfter(room, cal.getTimeInMillis()));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void hasDocumentsModifiedBeforeTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		WasabiDocumentDTO document = documentService().create("test", room);
+
+		Calendar cal = Calendar.getInstance();
+		objectService().setModifiedOn(document, cal.getTime(), null);
+
+		AssertJUnit.assertTrue(documentService().hasDocumentsModifiedBefore(room, cal.getTimeInMillis()));
+
+		cal.add(Calendar.MILLISECOND, -1);
+		AssertJUnit.assertFalse(documentService().hasDocumentsModifiedBefore(room, cal.getTimeInMillis()));
+	}
 }

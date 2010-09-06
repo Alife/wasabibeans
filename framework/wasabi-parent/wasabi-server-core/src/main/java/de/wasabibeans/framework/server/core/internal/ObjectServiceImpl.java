@@ -28,6 +28,7 @@ import java.util.Vector;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
@@ -42,8 +43,6 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
-import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
-import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -102,6 +101,8 @@ public class ObjectServiceImpl {
 	public static Node getCreatedBy(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.CREATED_BY).getNode();
+		} catch (PathNotFoundException pnfe) { // created by not set
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -118,6 +119,8 @@ public class ObjectServiceImpl {
 	public static Node getModifiedBy(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.MODIFIED_BY).getNode();
+		} catch (PathNotFoundException pnfe) { // modified by not set
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -131,24 +134,29 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getObjectsByAttributeName(String attributeName, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			Vector<Node> result = new Vector<Node>();
+			for (NodeIterator ni = getNodesByTypeAndName(WasabiNodeType.ATTRIBUTE, attributeName, s); ni.hasNext();) {
+				result.add(ni.nextNode().getParent().getParent());
+			}
+			return result;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getObjectsByCreator(Node creatorNode) throws UnexpectedInternalProblemException {
+		return getNodesByCreator(creatorNode, WasabiNodeType.OBJECT);
 	}
 
-	public static Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getObjectsByModifier(Node modifierNode) throws UnexpectedInternalProblemException {
+		return getNodesByModifier(modifierNode, WasabiNodeType.OBJECT);
 	}
 
-	public static Vector<WasabiObjectDTO> getObjectsByName(String name) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getObjectsByName(String name, Session s) throws UnexpectedInternalProblemException {
+		return getNodesByTypeAndName(WasabiNodeType.OBJECT, name, s);
 	}
 
 	/**
@@ -189,7 +197,7 @@ public class ObjectServiceImpl {
 	 * @return
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static NodeIterator getNodeByTypeAndName(String nodeType, String name, Session s)
+	public static NodeIterator getNodesByTypeAndName(String nodeType, String name, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
 			// get the factories
@@ -252,7 +260,8 @@ public class ObjectServiceImpl {
 	/**
 	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
 	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) Their creation-date is not
-	 * before the given {@code startDate} and not after the given {@code endDate}.
+	 * before the given {@code startDate} and not after the given {@code endDate}. One, but only one, of the two
+	 * parameters {@code startDate} and {@code endDate} may be {@code null}, meaning no limit in one direction.
 	 * 
 	 * @param parentNode
 	 * @param whichChildren
@@ -269,8 +278,18 @@ public class ObjectServiceImpl {
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				Date creationDate = ObjectServiceImpl.getCreatedOn(node);
-				if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
-					result.add(node);
+				if (startDate != null && endDate != null) {
+					if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
+						result.add(node);
+					}
+				} else if (startDate == null) {
+					if (!creationDate.after(endDate)) {
+						result.add(node);
+					}
+				} else if (endDate == null) {
+					if (!creationDate.before(startDate)) {
+						result.add(node);
+					}
 				}
 			}
 			return result;
@@ -376,7 +395,8 @@ public class ObjectServiceImpl {
 	/**
 	 * Returns all JCR nodes for which the following conditions are true: 1) They are child-nodes of the given {@code
 	 * parentNode}. 2) They belong to the given child-node category {@code whichChildren}. 3) Their modification-date is
-	 * not before the given {@code startDate} and not after the given {@code endDate}.
+	 * not before the given {@code startDate} and not after the given {@code endDate}. One, but only one, of the two
+	 * parameters {@code startDate} and {@code endDate} may be {@code null}, meaning no limit in one direction.
 	 * 
 	 * @param parentNode
 	 * @param whichChildren
@@ -392,9 +412,19 @@ public class ObjectServiceImpl {
 			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
-				Date creationDate = ObjectServiceImpl.getModifiedOn(node);
-				if (!creationDate.before(startDate) && !creationDate.after(endDate)) {
-					result.add(node);
+				Date modificationDate = ObjectServiceImpl.getModifiedOn(node);
+				if (startDate != null && endDate != null) {
+					if (!modificationDate.before(startDate) && !modificationDate.after(endDate)) {
+						result.add(node);
+					}
+				} else if (startDate == null) {
+					if (!modificationDate.after(endDate)) {
+						result.add(node);
+					}
+				} else if (endDate == null) {
+					if (!modificationDate.before(startDate)) {
+						result.add(node);
+					}
 				}
 			}
 			return result;
@@ -507,7 +537,8 @@ public class ObjectServiceImpl {
 			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
-				if (creatorNode.getIdentifier().equals(ObjectServiceImpl.getCreatedBy(node).getIdentifier())) {
+				Node actualCreator = ObjectServiceImpl.getCreatedBy(node);
+				if (actualCreator != null && creatorNode.getIdentifier().equals(actualCreator.getIdentifier())) {
 					result.add(node);
 				}
 			}
@@ -569,7 +600,8 @@ public class ObjectServiceImpl {
 			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
-				if (modifierNode.getIdentifier().equals(ObjectServiceImpl.getModifiedBy(node).getIdentifier())) {
+				Node actualModifier = ObjectServiceImpl.getModifiedBy(node);
+				if (actualModifier != null && modifierNode.getIdentifier().equals(actualModifier.getIdentifier())) {
 					result.add(node);
 				}
 			}

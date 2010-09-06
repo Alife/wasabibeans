@@ -21,6 +21,8 @@
 
 package de.wasabibeans.framework.server.core.test.remote;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Vector;
 
 import org.jboss.arquillian.api.Run;
@@ -32,6 +34,7 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
@@ -59,26 +62,26 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getRootRoomTest() throws WasabiException {
+	public void get1RootRoomTest() throws WasabiException {
 		WasabiRoomDTO rootRoomActual = roomService().getRootRoom();
 		AssertJUnit.assertEquals(rootRoom, rootRoomActual);
 	}
 
 	@Test
-	public void getRootHomeTest() throws WasabiException {
+	public void get1RootHomeTest() throws WasabiException {
 		WasabiRoomDTO rootHome = roomService().getRootHome();
 		AssertJUnit.assertNotNull(rootHome);
 		AssertJUnit.assertEquals(WasabiConstants.HOME_ROOM_NAME, roomService().getName(rootHome).getValue());
 	}
 
 	@Test
-	public void getEnvironmentTest() throws Exception {
+	public void get1EnvironmentTest() throws Exception {
 		WasabiRoomDTO environment = roomService().getEnvironment(room1).getValue();
 		AssertJUnit.assertEquals(rootRoom, environment);
 	}
 
 	@Test
-	public void getRoomByNameTest() throws WasabiException {
+	public void get1RoomByNameTest() throws WasabiException {
 		WasabiRoomDTO test = roomService().getRoomByName(rootRoom, "room1");
 		AssertJUnit.assertEquals(room1, test);
 
@@ -93,13 +96,13 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getRoomsTest() throws WasabiException {
+	public void get1RoomsTest() throws WasabiException {
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertTrue(rooms.contains(room1));
 		AssertJUnit.assertEquals(2, rooms.size());
 	}
 
-	@Test(dependsOnMethods = { ".*get.*" })
+	@Test(dependsOnMethods = { ".*get1.*" })
 	public void createTest() throws WasabiException {
 		WasabiRoomDTO newRoom = roomService().create("room2", rootRoom);
 		AssertJUnit.assertNotNull(newRoom);
@@ -178,5 +181,268 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertFalse(rooms.contains(room2));
 		AssertJUnit.assertEquals(2, rooms.size());
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsTestDepth() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// tree with 5 sub-layers: room -> layer 0 (5 nodes, 5 timestamps) -> layer 1 (5 nodes, 5 timestamps) -> etc.
+		WasabiRoomDTO[][] rooms = new WasabiRoomDTO[5][5];
+		for (int d = 0; d < 5; d++) {
+			for (int t = 0; t < 5; t++) {
+				if (d == 0) {
+					rooms[d][t] = roomService().create("room" + t, room);
+				} else {
+					rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+				}
+			}
+		}
+
+		// test for layers 0, 1, 2, 3
+		Vector<WasabiRoomDTO> result = roomService().getRooms(room, 3);
+		AssertJUnit.assertEquals(20, result.size());
+
+		// test for layer 0 only
+		result = roomService().getRooms(room, 0);
+		AssertJUnit.assertEquals(5, result.size());
+
+		// test for all 5 layers
+		result = roomService().getRooms(room, -1);
+		AssertJUnit.assertEquals(25, result.size());
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByCreationDateTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// create 5 rooms with 5 different timestamps (before, begin, in-between, end, after)
+		WasabiRoomDTO[] rooms = new WasabiRoomDTO[5];
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int i = 0; i < 5; i++) {
+			dates[i] = cal.getTime();
+			rooms[i] = roomService().create("room" + i, room);
+			objectService().setCreatedOn(rooms[i], dates[i], null);
+
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// do the test
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByCreationDate(room, dates[1], dates[3]);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(rooms[0]));
+		AssertJUnit.assertFalse(result.contains(rooms[4]));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByCreationDateTestDepth() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// 5 timestamps (before, start, in-between, end, after)
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int t = 0; t < 5; t++) {
+			dates[t] = cal.getTime();
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// tree with 5 sub-layers: room -> layer 0 (5 nodes, 5 timestamps) -> layer 1 (5 nodes, 5 timestamps) -> etc.
+		WasabiRoomDTO[][] rooms = new WasabiRoomDTO[5][5];
+		for (int d = 0; d < 5; d++) {
+			for (int t = 0; t < 5; t++) {
+				if (d == 0) {
+					rooms[d][t] = roomService().create("room" + t, room);
+				} else {
+					rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+				}
+				objectService().setCreatedOn(rooms[d][t], dates[t], null);
+			}
+		}
+
+		// test for layers 0, 1, 2, 3
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByCreationDate(room, dates[1], dates[3], 3);
+		AssertJUnit.assertEquals(12, result.size());
+		for (int d = 0; d < 4; d++) {
+			AssertJUnit.assertFalse(result.contains(rooms[d][0]));
+			AssertJUnit.assertFalse(result.contains(rooms[d][4]));
+		}
+		for (int t = 0; t < 5; t++) {
+			AssertJUnit.assertFalse(result.contains(rooms[4][t]));
+		}
+
+		// test for layer 0 only
+		result = roomService().getRoomsByCreationDate(room, dates[1], dates[3], 0);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(rooms[0][0]));
+		AssertJUnit.assertFalse(result.contains(rooms[0][4]));
+
+		// test for all 5 layers
+		result = roomService().getRoomsByCreationDate(room, dates[1], dates[3], -1);
+		AssertJUnit.assertEquals(15, result.size());
+		for (int d = 0; d < 5; d++) {
+			AssertJUnit.assertFalse(result.contains(rooms[d][0]));
+			AssertJUnit.assertFalse(result.contains(rooms[d][4]));
+		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByCreatorTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create rooms that should not be returned
+		WasabiRoomDTO room1ThisUser = roomService().create("room1ThisUser", rootRoom);
+		WasabiRoomDTO room2ThisUser = roomService().create("room2ThisUser", room);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another room to be found
+		roomService().create("anotherRoomOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get rooms created by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByCreator(root);
+		// home-room of user 'admin', home-room of user 'user', room1 via TestHelper, the room created in this method
+		AssertJUnit.assertEquals(4, result.size());
+		AssertJUnit.assertFalse(result.contains(room1ThisUser));
+		AssertJUnit.assertFalse(result.contains(room2ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByCreatorTestEnvironment() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create a room that should not be returned (wrong modifier)
+		WasabiRoomDTO room1ThisUser = roomService().create("room1ThisUser", rootRoom);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another room that should not be returned (correct modifier, but wrong location)
+		roomService().create("anotherRoomOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get rooms created by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByCreator(root, rootRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertFalse(result.contains(room1ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByModificationDateTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// create 5 rooms with 5 different timestamps (before, begin, in-between, end, after)
+		WasabiRoomDTO[] rooms = new WasabiRoomDTO[5];
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int i = 0; i < 5; i++) {
+			dates[i] = cal.getTime();
+			rooms[i] = roomService().create("room" + i, room);
+			objectService().setModifiedOn(rooms[i], dates[i], null);
+
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// do the test
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByModificationDate(room, dates[1], dates[3]);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(rooms[0]));
+		AssertJUnit.assertFalse(result.contains(rooms[4]));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByModificationDateTestDepth() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+
+		// 5 timestamps (before, start, in-between, end, after)
+		Calendar cal = Calendar.getInstance();
+		Date[] dates = new Date[5];
+		for (int t = 0; t < 5; t++) {
+			dates[t] = cal.getTime();
+			cal.add(Calendar.MILLISECOND, 1);
+		}
+
+		// tree with 5 sub-layers: room -> layer 0 (5 nodes, 5 timestamps) -> layer 1 (5 nodes, 5 timestamps) -> etc.
+		WasabiRoomDTO[][] rooms = new WasabiRoomDTO[5][5];
+		for (int d = 0; d < 5; d++) {
+			for (int t = 0; t < 5; t++) {
+				if (d == 0) {
+					rooms[d][t] = roomService().create("room" + t, room);
+				} else {
+					rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
+				}
+				objectService().setModifiedOn(rooms[d][t], dates[t], null);
+			}
+		}
+
+		// test for layers 0, 1, 2, 3
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByModificationDate(room, dates[1], dates[3], 3);
+		AssertJUnit.assertEquals(12, result.size());
+		for (int d = 0; d < 4; d++) {
+			AssertJUnit.assertFalse(result.contains(rooms[d][0]));
+			AssertJUnit.assertFalse(result.contains(rooms[d][4]));
+		}
+		for (int t = 0; t < 5; t++) {
+			AssertJUnit.assertFalse(result.contains(rooms[4][t]));
+		}
+
+		// test for layer 0 only
+		result = roomService().getRoomsByModificationDate(room, dates[1], dates[3], 0);
+		AssertJUnit.assertEquals(3, result.size());
+		AssertJUnit.assertFalse(result.contains(rooms[0][0]));
+		AssertJUnit.assertFalse(result.contains(rooms[0][4]));
+
+		// test for all 5 layers
+		result = roomService().getRoomsByModificationDate(room, dates[1], dates[3], -1);
+		AssertJUnit.assertEquals(15, result.size());
+		for (int d = 0; d < 5; d++) {
+			AssertJUnit.assertFalse(result.contains(rooms[d][0]));
+			AssertJUnit.assertFalse(result.contains(rooms[d][4]));
+		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByModifierTest() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create rooms that should not be returned
+		WasabiRoomDTO room1ThisUser = roomService().create("room1ThisUser", rootRoom);
+		WasabiRoomDTO room2ThisUser = roomService().create("room2ThisUser", room);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another room to be found
+		roomService().create("anotherRoomOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get rooms modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByModifier(root);
+		// home-room of user 'admin', home-room of user 'user', room1 via TestHelper, the room created in this method
+		AssertJUnit.assertEquals(4, result.size());
+		AssertJUnit.assertFalse(result.contains(room1ThisUser));
+		AssertJUnit.assertFalse(result.contains(room2ThisUser));
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void getRoomsByModifierTestEnvironment() throws Exception {
+		WasabiRoomDTO room = roomService().create("room", rootRoom);
+		// create a room that should not be returned (wrong modifier)
+		WasabiRoomDTO room1ThisUser = roomService().create("room1ThisUser", rootRoom);
+		reWaCon.logout();
+
+		reWaCon.defaultLogin();
+		// create another room that should not be returned (correct modifier, but wrong location)
+		roomService().create("anotherRoomOfRoot", room);
+		reWaCon.logout();
+
+		reWaCon.login("user", "user");
+		// get rooms modified by root
+		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
+		Vector<WasabiRoomDTO> result = roomService().getRoomsByModifier(root, rootRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertFalse(result.contains(room1ThisUser));
 	}
 }

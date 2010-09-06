@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.common;
 public class WasabiNodeType {
 
 	// node types representing wasabi objects
+	public static final String OBJECT = WasabiConstants.JCR_NS_PREFIX + ":object";
 	public static final String ROOM = WasabiConstants.JCR_NS_PREFIX + ":room";
 	public static final String CONTAINER = WasabiConstants.JCR_NS_PREFIX + ":container";
 	public static final String GROUP = WasabiConstants.JCR_NS_PREFIX + ":group";

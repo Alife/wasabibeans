@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -176,27 +177,74 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	}
 
 	@Override
-	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName)
+			throws UnexpectedInternalProblemException {
+		if (attributeName == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"attributeName"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
+			for (Node node : ObjectServiceImpl.getObjectsByAttributeName(attributeName, s)) {
+				result.add(TransferManager.convertNode2DTO(node));
+			}
+			return result;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiObjectDTO> getObjectsByCreator(WasabiUserDTO creator)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByCreator(creatorNode); ni.hasNext();) {
+				result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return result;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiObjectDTO> getObjectsByModifier(WasabiUserDTO modifier) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();) {
+				result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return result;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiObjectDTO> getObjectsByName(String name) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiObjectDTO> getObjectsByName(String name) throws UnexpectedInternalProblemException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();) {
+				result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return result;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override

@@ -45,7 +45,6 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
-import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -189,68 +188,70 @@ public class DocumentServiceImpl {
 		ObjectServiceImpl.rename(documentNode, name, callerPrincipal);
 	}
 
-	public static Vector<Node> getDocumentsByCreationDate(Node environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByCreationDate(Node environmentNode, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.DOCUMENTS, startDate,
+				endDate);
 	}
 
-	public static Vector<Node> getDocumentsByCreationDate(Node environment, Date startDate, Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByCreationDate(Node environmentNode, Date startDate, Date endDate, int depth)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.DOCUMENTS, startDate,
+				endDate, depth);
 	}
 
-	public static Vector<Node> getDocumentsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getDocumentsByCreator(Node creatorNode) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, WasabiNodeType.DOCUMENT);
 	}
 
-	public static Vector<Node> getDocumentsByCreator(WasabiUserDTO creator, Node environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByCreator(Node creatorNode, Node environmentNode)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, environmentNode, WasabiNodeProperty.DOCUMENTS);
 	}
 
-	public static Vector<Node> getDocumentsByModificationDate(Node environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByModificationDate(Node environmentNode, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.DOCUMENTS, startDate,
+				endDate);
 	}
 
-	public static Vector<Node> getDocumentsByModificationDate(Node environment, Date startDate, Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByModificationDate(Node environmentNode, Date startDate, Date endDate,
+			int depth) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.DOCUMENTS, startDate,
+				endDate, depth);
 	}
 
-	public static Vector<Node> getDocumentsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getDocumentsByModifier(Node modifierNode) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, WasabiNodeType.DOCUMENT);
 	}
 
-	public static Vector<Node> getDocumentsByModifier(WasabiUserDTO modifier, Node environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getDocumentsByModifier(Node modifierNode, Node environmentNode)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, environmentNode, WasabiNodeProperty.DOCUMENTS);
 	}
 
-	public static Vector<Node> getDocumentsOrderedByCreationDate(Node location, SortType order) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getDocumentsOrderedByCreationDate(Node locationNode, SortType order)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesOrderedByCreationDate(locationNode, WasabiNodeProperty.DOCUMENTS, order);
 	}
 
-	public static boolean hasDocumentsCreatedAfter(Node environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public static boolean hasDocumentsCreatedAfter(Node environmentNode, Long timestamp)
+			throws UnexpectedInternalProblemException {
+		return !getDocumentsByCreationDate(environmentNode, new Date(timestamp), null).isEmpty();
 	}
 
-	public static boolean hasDocumentsCreatedBefore(Node environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public static boolean hasDocumentsCreatedBefore(Node environmentNode, Long timestamp)
+			throws UnexpectedInternalProblemException {
+		return !getDocumentsByCreationDate(environmentNode, null, new Date(timestamp)).isEmpty();
 	}
 
-	public static boolean hasDocumentsModifiedAfter(Node environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public static boolean hasDocumentsModifiedAfter(Node environmentNode, Long timestamp)
+			throws UnexpectedInternalProblemException {
+		return !getDocumentsByModificationDate(environmentNode, new Date(timestamp), null).isEmpty();
 	}
 
-	public static boolean hasDocumentsModifiedBefore(Node environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public static boolean hasDocumentsModifiedBefore(Node environmentNode, Long timestamp)
+			throws UnexpectedInternalProblemException {
+		return !getDocumentsByModificationDate(environmentNode, null, new Date(timestamp)).isEmpty();
 	}
 }

@@ -155,59 +155,149 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO environment, int depth) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRooms(environmentNode, depth)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByCreationDate(environmentNode, startDate, endDate)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiRoomDTO> getRoomsByCreationDate(WasabiRoomDTO environment, Date startDate, Date endDate,
-			int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			int depth) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByCreationDate(environmentNode, startDate, endDate, depth)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByCreator(creatorNode); ni.hasNext();) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator, WasabiRoomDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByCreator(WasabiUserDTO creator, WasabiRoomDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByCreator(creatorNode, environmentNode)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByModificationDate(environmentNode, startDate, endDate)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiRoomDTO> getRoomsByModificationDate(WasabiRoomDTO environment, Date startDate, Date endDate,
-			int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			int depth) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByModificationDate(environmentNode, startDate, endDate, depth)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByModifier(modifierNode); ni.hasNext();) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier, WasabiRoomDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiRoomDTO> getRoomsByModifier(WasabiUserDTO modifier, WasabiRoomDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
+			for (Node room : RoomServiceImpl.getRoomsByModifier(modifierNode, environmentNode)) {
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+			}
+			return rooms;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override

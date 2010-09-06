@@ -94,7 +94,7 @@ public class GroupServiceImpl {
 	}
 
 	public static Node getGroupByName(String groupName, Session s) throws UnexpectedInternalProblemException {
-		NodeIterator ni = ObjectServiceImpl.getNodeByTypeAndName(WasabiNodeType.GROUP, groupName, s);
+		NodeIterator ni = ObjectServiceImpl.getNodesByTypeAndName(WasabiNodeType.GROUP, groupName, s);
 		if (ni.hasNext()) {
 			return ni.nextNode();
 		} else {
