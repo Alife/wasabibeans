@@ -36,7 +36,6 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
-import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -91,9 +90,18 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static Vector<Node> getRooms(Node environment, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRooms(Node environmentNode, int depth) throws UnexpectedInternalProblemException {
+		Vector<Node> allSubRooms = new Vector<Node>();
+		for (NodeIterator ni = getRooms(environmentNode); ni.hasNext();) {
+			Node subroom = ni.nextNode();
+			allSubRooms.add(subroom);
+			if (depth > 0) {
+				allSubRooms.addAll(getRooms(subroom, depth - 1));
+			} else if (depth < 0) {
+				allSubRooms.addAll(getRooms(subroom, depth));
+			}
+		}
+		return allSubRooms;
 	}
 
 	public static Node getRoomById(String id, Session s) throws UnexpectedInternalProblemException {
@@ -104,44 +112,45 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static Vector<Node> getRoomsByCreationDate(Node environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByCreationDate(Node environmentNode, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.ROOMS, startDate, endDate);
 	}
 
-	public static Vector<Node> getRoomsByCreationDate(Node environment, Date startDate, Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByCreationDate(Node environmentNode, Date startDate, Date endDate, int depth)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreationDate(environmentNode, WasabiNodeProperty.ROOMS, startDate, endDate,
+				depth);
 	}
 
-	public static Vector<Node> getRoomsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getRoomsByCreator(Node creatorNode) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, WasabiNodeType.ROOM);
 	}
 
-	public static Vector<Node> getRoomsByCreator(WasabiUserDTO creator, Node environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByCreator(Node creatorNode, Node environmentNode)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByCreator(creatorNode, environmentNode, WasabiNodeProperty.ROOMS);
 	}
 
-	public static Vector<Node> getRoomsByModificationDate(Node environment, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByModificationDate(Node environmentNode, Date startDate, Date endDate)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.ROOMS, startDate,
+				endDate);
 	}
 
-	public static Vector<Node> getRoomsByModificationDate(Node environment, Date startDate, Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByModificationDate(Node environmentNode, Date startDate, Date endDate, int depth)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModificationDate(environmentNode, WasabiNodeProperty.ROOMS, startDate,
+				endDate, depth);
 	}
 
-	public static Vector<Node> getRoomsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public static NodeIterator getRoomsByModifier(Node modifierNode) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, WasabiNodeType.ROOM);
 	}
 
-	public static Vector<Node> getRoomsByModifier(WasabiUserDTO modifier, Node environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Vector<Node> getRoomsByModifier(Node modifierNode, Node environmentNode)
+			throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getNodesByModifier(modifierNode, environmentNode, WasabiNodeProperty.ROOMS);
 	}
 
 	public static Node getRootHome(Session s) throws UnexpectedInternalProblemException {

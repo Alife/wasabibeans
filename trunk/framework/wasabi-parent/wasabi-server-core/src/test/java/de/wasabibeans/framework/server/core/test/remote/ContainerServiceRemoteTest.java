@@ -248,18 +248,18 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void getContainersByCreatorTest() throws Exception {
 		WasabiRoomDTO room = roomService().create("room", rootRoom);
-		// create rooms that should not be returned
+		// create containers that should not be returned
 		WasabiContainerDTO container1ThisUser = containerService().create("container1ThisUser", rootRoom);
 		WasabiContainerDTO container2ThisUser = containerService().create("container2ThisUser", room);
 		reWaCon.logout();
 
 		reWaCon.defaultLogin();
-		// create another room to be found
+		// create another container to be found
 		containerService().create("anotherContainerOfRoot", room);
 		reWaCon.logout();
 
 		reWaCon.login("user", "user");
-		// get rooms created by root
+		// get containers created by root
 		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
 		Vector<WasabiContainerDTO> result = containerService().getContainersByCreator(root);
 		AssertJUnit.assertEquals(4, result.size());
@@ -270,17 +270,17 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void getContainersByCreatorEnvironmentTest() throws Exception {
 		WasabiRoomDTO room = roomService().create("room", rootRoom);
-		// create a room that should not be returned (wrong creator)
+		// create a container that should not be returned (wrong creator)
 		WasabiContainerDTO container1ThisUser = containerService().create("container1ThisUser", rootRoom);
 		reWaCon.logout();
 
 		reWaCon.defaultLogin();
-		// create another room that should not be returned (correct creator, but wrong location)
+		// create another container that should not be returned (correct creator, but wrong location)
 		containerService().create("anotherContainerOfRoot", room);
 		reWaCon.logout();
 
 		reWaCon.login("user", "user");
-		// get rooms created by root
+		// get containers created by root
 		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
 		Vector<WasabiContainerDTO> result = containerService().getContainersByCreator(root, rootRoom);
 		AssertJUnit.assertEquals(3, result.size());
@@ -367,18 +367,18 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void getContainersByModifierTest() throws Exception {
 		WasabiRoomDTO room = roomService().create("room", rootRoom);
-		// create rooms that should not be returned
+		// create containers that should not be returned
 		WasabiContainerDTO container1ThisUser = containerService().create("container1ThisUser", rootRoom);
 		WasabiContainerDTO container2ThisUser = containerService().create("container2ThisUser", room);
 		reWaCon.logout();
 
 		reWaCon.defaultLogin();
-		// create another room to be found
+		// create another container to be found
 		containerService().create("anotherContainerOfRoot", room);
 		reWaCon.logout();
 
 		reWaCon.login("user", "user");
-		// get rooms modified by root
+		// get containers modified by root
 		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
 		Vector<WasabiContainerDTO> result = containerService().getContainersByModifier(root);
 		AssertJUnit.assertEquals(4, result.size());
@@ -389,17 +389,17 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void getContainersByModifierEnvironmentTest() throws Exception {
 		WasabiRoomDTO room = roomService().create("room", rootRoom);
-		// create a room that should not be returned (wrong modifier)
+		// create a container that should not be returned (wrong modifier)
 		WasabiContainerDTO container1ThisUser = containerService().create("container1ThisUser", rootRoom);
 		reWaCon.logout();
 
 		reWaCon.defaultLogin();
-		// create another room that should not be returned (correct modifier, but wrong location)
+		// create another container that should not be returned (correct modifier, but wrong location)
 		containerService().create("anotherContainerOfRoot", room);
 		reWaCon.logout();
 
 		reWaCon.login("user", "user");
-		// get rooms modified by root
+		// get containers modified by root
 		WasabiUserDTO root = userService().getUserByName(WasabiConstants.ROOT_USER_NAME);
 		Vector<WasabiContainerDTO> result = containerService().getContainersByModifier(root, rootRoom);
 		AssertJUnit.assertEquals(3, result.size());

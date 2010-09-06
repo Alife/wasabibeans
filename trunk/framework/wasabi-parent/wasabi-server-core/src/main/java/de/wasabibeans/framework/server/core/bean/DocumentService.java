@@ -213,83 +213,199 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+			Date endDate) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate,
+					depth)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate) {
-		// TODO Auto-generated method stub
-		return null;
+			Date endDate) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl
+					.getDocumentsByModificationDate(environmentNode, startDate, endDate)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
-			Date endDate, int depth) {
-		// TODO Auto-generated method stub
-		return null;
+			Date endDate, int depth) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate,
+					endDate, depth)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (Node document : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode)) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node locationNode = TransferManager.convertDTO2Node(location, s);
+			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsOrderedByCreationDate(locationNode, order); ni
+					.hasNext();) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+			}
+			return documents;
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			return DocumentServiceImpl.hasDocumentsCreatedAfter(environmentNode, timestamp);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			return DocumentServiceImpl.hasDocumentsCreatedBefore(environmentNode, timestamp);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			return DocumentServiceImpl.hasDocumentsModifiedAfter(environmentNode, timestamp);
+		} finally {
+			s.logout();
+		}
 	}
 
 	@Override
-	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			return DocumentServiceImpl.hasDocumentsModifiedBefore(environmentNode, timestamp);
+		} finally {
+			s.logout();
+		}
 	}
 }
