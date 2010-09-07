@@ -22,16 +22,16 @@
 package de.wasabibeans.framework.server.core.common;
 
 public class WasabiACLPriority {
-	
-	/* User rights */
+
+	/* time rights */
 	public static final int EXPLICIT_USER_TIME_RIGHT = 0;
-	public static final int EXPLICIT_USER_RIGHT = 1;
-	public static final int INHERITED_USER_TIME_RIGHT = 2;
-	public static final int INHERITED_USER_RIGHT = 3;
-	
-	/* Group rights */
-	public static final int EXPLICIT_GROUP_TIME_RIGHT = 4;
-	public static final int EXPLICIT_GROUP_RIGHT = 5;
-	public static final int INHERITED_GROUP_TIME_RIGHT = 6;
+	public static final int INHERITED_USER_TIME_RIGHT = 1;
+	public static final int EXPLICIT_GROUP_TIME_RIGHT = 2;
+	public static final int INHERITED_GROUP_TIME_RIGHT = 3;
+
+	/* unlimited rights */
+	public static final int EXPLICIT_USER_RIGHT = 4;
+	public static final int INHERITED_USER_RIGHT = 5;
+	public static final int EXPLICIT_GROUP_RIGHT = 6;
 	public static final int INHERITED_GROUP_RIGHT = 7;
 }
