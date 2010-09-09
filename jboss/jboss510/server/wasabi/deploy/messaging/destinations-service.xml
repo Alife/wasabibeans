@@ -23,12 +23,36 @@
       The Default Expiry Queue.
    -->
 
-   <mbean code="org.jboss.jms.server.destination.QueueService"
+	<mbean code="org.jboss.jms.server.destination.QueueService"
       name="jboss.messaging.destination:service=Queue,name=ExpiryQueue"
       xmbean-dd="xmdesc/Queue-xmbean.xml">
       <depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
       <depends>jboss.messaging:service=PostOffice</depends>
-   </mbean>   
+	</mbean>   
+   
+	<!-- Wasabi: queue of Event2UserDestinationAllocator -->
+	<mbean code="org.jboss.jms.server.destination.QueueService"
+		name="jboss.messaging.destination:service=Queue,name=allocator"
+		xmbean-dd="xmdesc/Queue-xmbean.xml">
+		<depends optional-attribute-name="ServerPeer">
+			jboss.messaging:service=ServerPeer
+		</depends>
+		<depends>jboss.messaging:service=PostOffice</depends>
+		<attribute name="RedeliveryDelay">10000</attribute>
+		<attribute name="MaxDeliveryAttempts">3</attribute>
+	</mbean>
+	
+	<!-- Wasabi: queue of ListenerRegistrar -->
+	<mbean code="org.jboss.jms.server.destination.QueueService"
+		name="jboss.messaging.destination:service=Queue,name=registrar"
+		xmbean-dd="xmdesc/Queue-xmbean.xml">
+		<depends optional-attribute-name="ServerPeer">
+			jboss.messaging:service=ServerPeer
+		</depends>
+		<depends>jboss.messaging:service=PostOffice</depends>
+		<attribute name="RedeliveryDelay">10000</attribute>
+		<attribute name="MaxDeliveryAttempts">3</attribute>
+	</mbean>
 
 
 </server>
