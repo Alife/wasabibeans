@@ -22,7 +22,6 @@
 package de.wasabibeans.framework.server.core.common;
 
 public interface WasabiConstants {
-	public final static boolean JMSEnabled = false;
 	public final static String HOME_ROOM_NAME = "home";
 	public final static String ROOT_ROOM_NAME = "root";
 	public final static String ROOT_USER_NAME = "root";
@@ -35,6 +34,10 @@ public interface WasabiConstants {
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
+	
+	/* JMS for event-handling */
+	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";
+	public final static String JMS_QUEUE_REGISTRAR = "queue/registrar";
 
 	/* Enumerations */
 	public enum SortType {
@@ -59,6 +62,7 @@ public interface WasabiConstants {
 	/* JNDI datasources */
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
 	public final static String JNDI_JCR_DATASOURCE = "java:/jcr";
+	public final static String JNDI_JMS_DATASOURCE = "java:/JmsXA";
 
 	/* JCR */
 	public final static String JCR_NS_PREFIX = "wasabi";

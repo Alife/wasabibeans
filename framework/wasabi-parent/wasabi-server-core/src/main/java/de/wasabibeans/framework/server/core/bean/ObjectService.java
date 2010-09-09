@@ -56,6 +56,8 @@ import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 /**
  * Class, that implements the internal access on WasabiObject objects.
@@ -72,9 +74,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	protected LockingHelperLocal locker;
 
 	protected JcrConnector jcr;
+	protected JmsConnector jms;
 
 	public ObjectService() {
-		this.jcr = JcrConnector.getJCRConnector();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
 	}
 
 	public WasabiValueDTO getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,

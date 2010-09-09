@@ -39,6 +39,8 @@ import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.event.EventCreator;
+import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -70,10 +72,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
-			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, ctx.getCallerPrincipal()
-					.getName());
+			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, callerPrincipal);
 			s.save();
+			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(attributeNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -93,11 +96,12 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
 			Node valueNode = TransferManager.convertDTO2Node(value, s);
-			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, ctx
-					.getCallerPrincipal().getName());
+			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, callerPrincipal);
 			s.save();
+			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(attributeNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -203,11 +207,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Node attributeNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
 			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
-			AttributeServiceImpl.move(attributeNode, newAffiliationNode, ctx.getCallerPrincipal().getName());
+			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal);
 			s.save();
+			EventCreator.createMovedEvent(attributeNode, newAffiliationNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -221,7 +227,9 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
 			AttributeServiceImpl.remove(attributeNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -243,10 +251,12 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Node attributeNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
-			AttributeServiceImpl.rename(attributeNode, name, ctx.getCallerPrincipal().getName());
+			AttributeServiceImpl.rename(attributeNode, name, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -262,10 +272,12 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Node attributeNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
-			AttributeServiceImpl.setValue(attributeNode, value, ctx.getCallerPrincipal().getName());
+			AttributeServiceImpl.setValue(attributeNode, value, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, value, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -280,14 +292,17 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Node attributeNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node valueNode = null;
 			if (value != null) {
 				valueNode = TransferManager.convertDTO2Node(value, s);
 			}
 			Locker.acquireLock(attributeNode, attribute, optLockId, s, locker);
-			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, ctx.getCallerPrincipal().getName());
+			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, valueNode, jms,
+					callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {

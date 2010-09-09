@@ -190,10 +190,10 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
-	public void moveTest() throws Exception {
+	public void enterTest() throws Exception {
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().move(user1, rootRoom);
-		userService().move(user2, rootRoom);
+		userService().enter(user1, rootRoom);
+		userService().enter(user2, rootRoom);
 		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
 		AssertJUnit.assertEquals(2, result.size());
 		AssertJUnit.assertTrue(result.contains(user1) && result.contains(user2));
@@ -202,17 +202,17 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void leaveTest() throws Exception {
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().move(user1, rootRoom);
-		userService().move(user2, rootRoom);
+		userService().enter(user1, rootRoom);
+		userService().enter(user2, rootRoom);
 		userService().leave(user1, rootRoom);
 		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
 		AssertJUnit.assertEquals(1, result.size());
 		AssertJUnit.assertTrue(result.contains(user2));
 	}
 
-	@Test(dependsOnMethods = { "moveTest" })
+	@Test(dependsOnMethods = { "enterTest" })
 	public void removeTest() throws Exception {
-		userService().move(user1, rootRoom);
+		userService().enter(user1, rootRoom);
 
 		userService().remove(user1);
 		// check that user is removed

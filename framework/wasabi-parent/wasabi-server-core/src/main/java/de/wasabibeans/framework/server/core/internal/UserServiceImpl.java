@@ -53,7 +53,7 @@ public class UserServiceImpl {
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), s, callerPrincipal);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
 			setStartRoom(userNode, homeRoomNode, null);
-			move(userNode, homeRoomNode);
+			enter(userNode, homeRoomNode);
 			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode);
 
 			// special case when creating the root user
@@ -200,7 +200,7 @@ public class UserServiceImpl {
 				displayName, s);
 	}
 
-	public static void move(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
+	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);

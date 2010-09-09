@@ -42,6 +42,8 @@ import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.event.EventCreator;
+import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -71,11 +73,12 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, ctx.getCallerPrincipal()
-					.getName());
+			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, callerPrincipal);
 			s.save();
+			EventCreator.createCreatedEvent(linkNode, environmentNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(linkNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -296,10 +299,12 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node linkNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 			Locker.acquireLock(linkNode, link, optLockId, s, locker);
-			LinkServiceImpl.move(linkNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
+			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal);
+			EventCreator.createMovedEvent(linkNode, newEnvironmentNode, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -313,7 +318,9 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
+			EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
 			LinkServiceImpl.remove(linkNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -334,10 +341,12 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node linkNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
 			Locker.acquireLock(linkNode, link, optLockId, s, locker);
-			LinkServiceImpl.rename(linkNode, name, ctx.getCallerPrincipal().getName());
+			LinkServiceImpl.rename(linkNode, name, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -353,14 +362,17 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node linkNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
 			Node objectNode = null;
 			if (object != null) {
 				objectNode = TransferManager.convertDTO2Node(object, s);
 			}
 			Locker.acquireLock(linkNode, link, optLockId, s, locker);
-			LinkServiceImpl.setDestination(linkNode, objectNode, ctx.getCallerPrincipal().getName());
+			LinkServiceImpl.setDestination(linkNode, objectNode, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.DESTINATION, objectNode, jms,
+					callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
