@@ -42,6 +42,8 @@ import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.event.EventCreator;
+import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -70,10 +72,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			Node documentNode = DocumentServiceImpl
-					.create(name, environmentNode, s, ctx.getCallerPrincipal().getName());
+			Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
+			EventCreator.createCreatedEvent(documentNode, environmentNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(documentNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -100,10 +103,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node documentNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Locker.acquireLock(documentNode, document, optLockId, s, locker);
-			DocumentServiceImpl.setContent(documentNode, content, ctx.getCallerPrincipal().getName());
+			DocumentServiceImpl.setContent(documentNode, content, callerPrincipal);
 			s.save();
+			EventCreator
+					.createPropertyChangedEvent(documentNode, WasabiProperty.CONTENT, content, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -162,11 +168,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node documentNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 			Locker.acquireLock(documentNode, document, optLockId, s, locker);
-			DocumentServiceImpl.move(documentNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
+			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal);
 			s.save();
+			EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -179,7 +187,9 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
+			EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
 			DocumentServiceImpl.remove(documentNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -199,10 +209,12 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node documentNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Locker.acquireLock(documentNode, document, optLockId, s, locker);
-			DocumentServiceImpl.rename(documentNode, name, ctx.getCallerPrincipal().getName());
+			DocumentServiceImpl.rename(documentNode, name, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {

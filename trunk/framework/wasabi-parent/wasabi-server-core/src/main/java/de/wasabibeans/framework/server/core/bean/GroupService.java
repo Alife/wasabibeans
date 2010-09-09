@@ -40,6 +40,8 @@ import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.event.EventCreator;
+import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -63,10 +65,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			GroupServiceImpl.addMember(groupNode, userNode);
 			s.save();
+			EventCreator.createMembershipEvent(groupNode, userNode, true, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -84,6 +88,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			if (GroupServiceImpl.getGroupByName(name, s) != null) {
 				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
@@ -93,9 +98,10 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			if (parentGroup != null) {
 				parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
 			}
-			Node newGroup = GroupServiceImpl.create(name, parentGroupNode, s, ctx.getCallerPrincipal().getName());
+			Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, callerPrincipal);
 			s.save();
-			return TransferManager.convertNode2DTO(newGroup);
+			EventCreator.createCreatedEvent(groupNode, parentGroupNode, jms, callerPrincipal);
+			return TransferManager.convertNode2DTO(groupNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -344,14 +350,16 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Node groupNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node newParentGroupNode = null;
 			if (newParentGroup != null) {
 				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 			}
 			groupNode = TransferManager.convertDTO2Node(group, s);
 			Locker.acquireLock(groupNode, group, optLockId, s, locker);
-			GroupServiceImpl.move(groupNode, newParentGroupNode, ctx.getCallerPrincipal().getName());
+			GroupServiceImpl.move(groupNode, newParentGroupNode, callerPrincipal);
 			s.save();
+			EventCreator.createMovedEvent(groupNode, newParentGroupNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -365,7 +373,9 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
 			GroupServiceImpl.remove(groupNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -381,10 +391,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			GroupServiceImpl.removeMember(groupNode, userNode);
 			s.save();
+			EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -404,10 +416,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Node groupNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
 			Locker.acquireLock(groupNode, group, optLockId, s, locker);
-			GroupServiceImpl.rename(groupNode, name, ctx.getCallerPrincipal().getName());
+			GroupServiceImpl.rename(groupNode, name, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -428,10 +442,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Node groupNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
 			Locker.acquireLock(groupNode, group, optLockId, s, locker);
-			GroupServiceImpl.setDisplayName(groupNode, displayName, ctx.getCallerPrincipal().getName());
+			GroupServiceImpl.setDisplayName(groupNode, displayName, callerPrincipal);
 			s.save();
+			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {

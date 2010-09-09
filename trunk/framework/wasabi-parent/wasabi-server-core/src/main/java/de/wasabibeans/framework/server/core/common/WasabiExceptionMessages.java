@@ -53,6 +53,9 @@ public class WasabiExceptionMessages {
 
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Internal Problem: Could not use JCR repository as expected.";
+	
+	/* JMS */
+	public final static String JMS_PROVIDER_FAILURE = "Internal Problem: Could not use JMS provider as expected.";
 
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";

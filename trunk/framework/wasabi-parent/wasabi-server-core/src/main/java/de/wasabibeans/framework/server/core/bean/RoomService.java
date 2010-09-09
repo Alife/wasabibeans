@@ -43,6 +43,8 @@ import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
+import de.wasabibeans.framework.server.core.event.EventCreator;
+import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
@@ -72,8 +74,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		Session s = jcr.getJCRSession();
 		try {
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -86,6 +88,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 			Node roomNode = RoomServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
+			EventCreator.createCreatedEvent(roomNode, environmentNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(roomNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -327,11 +330,13 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Node roomNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			roomNode = TransferManager.convertDTO2Node(room, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 			Locker.acquireLock(roomNode, room, optLockId, s, locker);
-			RoomServiceImpl.move(roomNode, newEnvironmentNode, ctx.getCallerPrincipal().getName());
+			RoomServiceImpl.move(roomNode, newEnvironmentNode, callerPrincipal);
 			s.save();
+			EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -345,8 +350,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
@@ -359,16 +364,17 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			/* Authorization - End */
 
-			else
+			else {
+				// TODO special case for events due to recursive deletion of subtree
+				EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
 				RoomServiceImpl.remove(roomNode);
+			}
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			s.logout();
 		}
-
-		// TODO was start-room of a user
 	}
 
 	@Override
@@ -382,9 +388,11 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Node roomNode = null;
 		Session s = jcr.getJCRSession();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			roomNode = TransferManager.convertDTO2Node(room, s);
 			Locker.acquireLock(roomNode, room, optLockId, s, locker);
-			RoomServiceImpl.rename(roomNode, name, ctx.getCallerPrincipal().getName());
+			RoomServiceImpl.rename(roomNode, name, callerPrincipal);
+			EventCreator.createPropertyChangedEvent(roomNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
