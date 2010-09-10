@@ -27,16 +27,21 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import org.jboss.ejb3.annotation.ResourceAdapter;
+
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 @MessageDriven(activationConfig = {
 		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jmx.Queue"),
-		@ActivationConfigProperty(propertyName = "destination", propertyValue = WasabiConstants.JMS_QUEUE_REGISTRAR) })
+		@ActivationConfigProperty(propertyName = "destination", propertyValue = WasabiConstants.JMS_QUEUE_REGISTRAR),
+		@ActivationConfigProperty(propertyName = "user", propertyValue = WasabiConstants.JMS_EVENT_ADMIN),
+		@ActivationConfigProperty(propertyName = "password", propertyValue = WasabiConstants.JMS_EVENT_ADMIN_PASSWORD) })
+@ResourceAdapter("jms-ra.rar")
 public class EventListenerRegistrar implements MessageListener {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(EventListenerRegistrar.class);
-
+	
 	@Override
 	public void onMessage(Message message) {
 		try {
