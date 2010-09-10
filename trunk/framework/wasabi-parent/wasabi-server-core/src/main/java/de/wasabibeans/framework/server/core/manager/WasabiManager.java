@@ -43,6 +43,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
@@ -62,6 +63,15 @@ public class WasabiManager {
 		try {
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+
+		/* Create the internally used JMS_EVENT_ADMIN (administers the JMS queues used for event handling) */
+		String insertWasabiEventAdmin = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
+		try {
+			run.update(insertWasabiEventAdmin, WasabiConstants.JMS_EVENT_ADMIN, HashGenerator.generateHash(
+					WasabiConstants.JMS_EVENT_ADMIN_PASSWORD, WasabiConstants.hashAlgorithms.SHA));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -146,7 +156,7 @@ public class WasabiManager {
 
 				// create basic wasabi content
 				Node workspaceRoot = baseSession.getRootNode();
-				Node highestVersionLabel = workspaceRoot.addNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL); 
+				Node highestVersionLabel = workspaceRoot.addNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL);
 				highestVersionLabel.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, 0L);
 				highestVersionLabel.addMixin(NodeType.MIX_LOCKABLE);
 				// initial rooms

@@ -32,13 +32,18 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import org.jboss.ejb3.annotation.ResourceAdapter;
+
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 @MessageDriven(activationConfig = {
 		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jmx.Queue"),
-		@ActivationConfigProperty(propertyName = "destination", propertyValue = WasabiConstants.JMS_QUEUE_ALLOCATOR) })
+		@ActivationConfigProperty(propertyName = "destination", propertyValue = WasabiConstants.JMS_QUEUE_ALLOCATOR),
+		@ActivationConfigProperty(propertyName = "user", propertyValue = WasabiConstants.JMS_EVENT_ADMIN),
+		@ActivationConfigProperty(propertyName = "password", propertyValue = WasabiConstants.JMS_EVENT_ADMIN_PASSWORD) })
+@ResourceAdapter("jms-ra.rar")
 public class Event2UserDestinationAllocator implements MessageListener {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(Event2UserDestinationAllocator.class);
@@ -56,7 +61,6 @@ public class Event2UserDestinationAllocator implements MessageListener {
 		try {
 			jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			jmsConnection.start();
 			// create producer without specified destination
 			MessageProducer jmsProducer = jmsSession.createProducer(null);
 

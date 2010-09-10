@@ -38,6 +38,9 @@ public interface WasabiConstants {
 	/* JMS for event-handling */
 	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";
 	public final static String JMS_QUEUE_REGISTRAR = "queue/registrar";
+	public final static String JMS_EVENT_ADMIN = "event_admin";
+	public final static String JMS_EVENT_ADMIN_PASSWORD = "event_admin";
+	public final static String JMS_EVENT_USER = "event_user";
 
 	/* Enumerations */
 	public enum SortType {

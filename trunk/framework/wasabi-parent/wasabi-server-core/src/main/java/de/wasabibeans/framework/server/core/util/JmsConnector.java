@@ -65,7 +65,7 @@ public class JmsConnector {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMS_PROVIDER_FAILURE, je);
 		}
 	}
-	
+
 	public Queue getAllocatorQueue() throws UnexpectedInternalProblemException {
 		if (this.allocatorQueue == null) {
 			this.allocatorQueue = (Queue) jndi.lookup(WasabiConstants.JMS_QUEUE_ALLOCATOR);
