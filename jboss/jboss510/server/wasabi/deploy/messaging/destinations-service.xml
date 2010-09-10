@@ -38,6 +38,12 @@
 			jboss.messaging:service=ServerPeer
 		</depends>
 		<depends>jboss.messaging:service=PostOffice</depends>
+		<attribute name="SecurityConfig">
+			<security>
+				<role name="event_admin" read="true" write="true" create="true"/>
+				<role name="event_user" read="false" write="false" create="false"/>
+			</security>
+		</attribute>
 		<attribute name="RedeliveryDelay">10000</attribute>
 		<attribute name="MaxDeliveryAttempts">3</attribute>
 	</mbean>
@@ -50,6 +56,12 @@
 			jboss.messaging:service=ServerPeer
 		</depends>
 		<depends>jboss.messaging:service=PostOffice</depends>
+		<attribute name="SecurityConfig">
+			<security>
+				<role name="event_admin" read="true" write="true" create="true"/>
+				<role name="event_user" read="false" write="true" create="false"/>
+			</security>
+		</attribute>
 		<attribute name="RedeliveryDelay">10000</attribute>
 		<attribute name="MaxDeliveryAttempts">3</attribute>
 	</mbean>

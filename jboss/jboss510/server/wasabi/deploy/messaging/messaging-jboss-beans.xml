@@ -28,7 +28,7 @@
          ]]>
       </property>
       <property name="suckerPassword">CHANGE ME!!</property>
-      <property name="securityDomain">messaging</property>
+      <property name="securityDomain">wasabi_event</property> <!-- CHANGED FOR WASABI -->
       <property name="securityManagement"><inject bean="JNDIBasedSecurityManagement"/></property>
       <!-- @JMX annotation to export the management view of this bean -->
       <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.messaging:service=SecurityStore",exposedInterface=org.jboss.jms.server.jbosssx.JBossASSecurityMetadataStoreMBean.class)</annotation>
