@@ -43,7 +43,7 @@ import de.wasabibeans.framework.server.core.util.WasabiLogger;
 		@ActivationConfigProperty(propertyName = "destination", propertyValue = WasabiConstants.JMS_QUEUE_ALLOCATOR),
 		@ActivationConfigProperty(propertyName = "user", propertyValue = WasabiConstants.JMS_EVENT_ADMIN),
 		@ActivationConfigProperty(propertyName = "password", propertyValue = WasabiConstants.JMS_EVENT_ADMIN_PASSWORD) })
-@ResourceAdapter("jms-ra.rar")
+@ResourceAdapter(WasabiConstants.JMS_RESOURCE_ADAPTER)
 public class Event2UserDestinationAllocator implements MessageListener {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(Event2UserDestinationAllocator.class);

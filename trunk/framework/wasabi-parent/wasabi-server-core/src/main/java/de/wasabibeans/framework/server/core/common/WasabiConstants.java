@@ -41,6 +41,7 @@ public interface WasabiConstants {
 	public final static String JMS_EVENT_ADMIN = "event_admin";
 	public final static String JMS_EVENT_ADMIN_PASSWORD = "event_admin";
 	public final static String JMS_EVENT_USER = "event_user";
+	public final static String JMS_RESOURCE_ADAPTER = "jms-ra.rar";
 
 	/* Enumerations */
 	public enum SortType {
