@@ -42,13 +42,13 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!-- jboss security framework (used for authentication) -->
+		<!-- jboss security framework (used for authentication) 
 		<dependency>
 			<groupId>jboss</groupId>
 			<artifactId>jbosssx</artifactId>
 			<version>4.2.3.GA</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>-->
 
 		<dependency>
 			<groupId>javax.jcr</groupId>
