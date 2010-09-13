@@ -22,14 +22,15 @@
 package de.wasabibeans.framework.server.core.local;
 
 import javax.ejb.Local;
-import javax.jms.Destination;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Local
 public interface EventServiceLocal {
 
-	public void subscribe(WasabiObjectDTO object, Destination jmsDestination);
+	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
+			throws UnexpectedInternalProblemException;
 
 	public void unsubscribe(WasabiObjectDTO object);
 }

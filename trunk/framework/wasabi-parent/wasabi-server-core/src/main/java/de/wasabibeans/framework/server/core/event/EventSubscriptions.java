@@ -20,37 +20,76 @@
  */
 package de.wasabibeans.framework.server.core.event;
 
+import java.util.Calendar;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.Destination;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 
 public class EventSubscriptions {
 
-	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Destination>> subscriptions = new ConcurrentHashMap<String, ConcurrentHashMap<String, Destination>>();
+	private static ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>> subscriptions = new ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>>();
 
-	public static Set<Entry<String, Destination>> getSubscribers(String objectId) {
-		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
+	public static Set<Entry<String, SubscriptionInfo>> getSubscribers(String objectId) {
+		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
 			return subscriptionsOfObject.entrySet();
 		}
 		return null;
 	}
 
-	public static synchronized void subscribe(String objectId, String username, Destination jmsDestination) {
-		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
+	public static synchronized void subscribe(String objectId, String username, String jmsDestinationName,
+			boolean isQueue) {
+		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject == null) {
-			subscriptionsOfObject = new ConcurrentHashMap<String, Destination>();
+			subscriptionsOfObject = new ConcurrentHashMap<String, SubscriptionInfo>();
 			subscriptions.put(objectId, subscriptionsOfObject);
 		}
-		subscriptionsOfObject.put(username, jmsDestination);
+		subscriptionsOfObject.put(username, new SubscriptionInfo(jmsDestinationName, isQueue));
 	}
 
 	public static void unsubscribe(String objectId, String username) {
-		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
+		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
 			subscriptionsOfObject.remove(username);
+		}
+	}
+
+	/**
+	 * Inner class encapsulating additional information of a subscription: the name of the temporary destination used by
+	 * the client to receive events, whether the temporary destination is a queue, and a timestamp for caching read
+	 * permissions
+	 * 
+	 */
+	public static class SubscriptionInfo {
+
+		private String jmsDestinationName;
+		private boolean isQueue;
+		private Calendar timestamp;
+
+		public SubscriptionInfo(String jmsDestinationName, boolean isQueue) {
+			this.jmsDestinationName = jmsDestinationName;
+			this.isQueue = isQueue;
+			this.timestamp = Calendar.getInstance();
+		}
+
+		public String getJmsDestinationName() {
+			return jmsDestinationName;
+		}
+
+		public boolean isQueue() {
+			return isQueue;
+		}
+
+		public boolean isTimestampStillValid(Calendar actualTime) {
+			long actualTimeInMillis = actualTime.getTimeInMillis();
+			actualTime.add(Calendar.MINUTE, -WasabiConstants.JMS_PERMISSION_CACHE_TIME);
+			if (actualTime.after(timestamp)) {
+				timestamp.setTimeInMillis(actualTimeInMillis);
+				return false;
+			}
+			return true;
 		}
 	}
 }

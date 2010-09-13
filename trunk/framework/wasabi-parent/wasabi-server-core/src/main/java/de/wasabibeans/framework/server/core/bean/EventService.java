@@ -26,12 +26,17 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.jms.Destination;
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.EventServiceLocal;
 import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 @Stateless(name = "EventService")
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -40,9 +45,36 @@ public class EventService implements EventServiceLocal, EventServiceRemote {
 	@Resource
 	protected SessionContext ctx;
 
-	public void subscribe(WasabiObjectDTO object, Destination jmsDestination) {
+	private JmsConnector jms;
+
+	public EventService() {
+		this.jms = JmsConnector.getJmsConnector();
+	}
+
+	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
+			throws UnexpectedInternalProblemException {
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		EventSubscriptions.subscribe(object.getId(), callerPrincipal, jmsDestination);
+		Connection jmsConnection = jms.getJmsConnection();
+		try {
+			// check that the parameters jmsDestinationName and isQueue actually match
+			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			try {
+				if (isQueue) {
+					jmsSession.createQueue(jmsDestinationName);
+				} else {
+					jmsSession.createTopic(jmsDestinationName);
+				}
+			} catch (JMSException je) {
+				throw new IllegalArgumentException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.JMS_DESTINATION_INVALID, isQueue ? "queue" : "topic"));
+			}
+
+			EventSubscriptions.subscribe(object.getId(), callerPrincipal, jmsDestinationName, isQueue);
+		} catch (JMSException je) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMS_PROVIDER_FAILURE, je);
+		} finally {
+			jms.close(jmsConnection);
+		}
 	}
 
 	public void unsubscribe(WasabiObjectDTO object) {

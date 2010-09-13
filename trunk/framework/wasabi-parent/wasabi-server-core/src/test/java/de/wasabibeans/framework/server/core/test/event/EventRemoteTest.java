@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -34,6 +33,7 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.jms.Topic;
 import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.api.Run;
@@ -63,7 +63,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 	private static final String USER1 = "user1", USER2 = "user2", USER3 = "user3";
 	private static final String[] users = { USER1, USER2, USER3 };
 	private static ConcurrentHashMap<String, Byte> eventReceived;
-	private static HashMap<String, Destination> userDestinations;
+	private static HashMap<String, Queue> userQueues;
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -106,7 +106,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 
 		for (String user : users) {
 			reWaCon.login(user, user);
-			eventService().subscribe(object, userDestinations.get(user));
+			eventService().subscribe(object, userQueues.get(user).getQueueName(), true);
 			reWaCon.logout();
 		}
 
@@ -149,7 +149,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 		HashMap<String, Connection> connections = new HashMap<String, Connection>();
 		HashMap<String, Session> sessions = new HashMap<String, Session>();
 		HashMap<String, MessageConsumer> consumers = new HashMap<String, MessageConsumer>();
-		userDestinations = new HashMap<String, Destination>();
+		userQueues = new HashMap<String, Queue>();
 		try {
 			ConnectionFactory factory = (ConnectionFactory) reWaCon.lookupGeneral("ConnectionFactory");
 			// set up the users as event listeners
@@ -159,9 +159,9 @@ public class EventRemoteTest extends WasabiRemoteTest {
 				// jms session
 				sessions.put(user, connections.get(user).createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE));
 				// temporary queue for receiving events
-				userDestinations.put(user, sessions.get(user).createTemporaryQueue());
+				userQueues.put(user, sessions.get(user).createTemporaryQueue());
 				// jms consumer
-				consumers.put(user, sessions.get(user).createConsumer(userDestinations.get(user)));
+				consumers.put(user, sessions.get(user).createConsumer(userQueues.get(user)));
 				// message listener
 				consumers.get(user).setMessageListener(new EventListener(user));
 				// start connection
@@ -356,7 +356,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			// jms session
 			session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
 			// temporary queue for receiving events
-			Destination queue = session.createTemporaryQueue();
+			Queue queue = session.createTemporaryQueue();
 			// jms consumer
 			consumer = session.createConsumer(queue);
 			// message listener
@@ -368,8 +368,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			WasabiRoomDTO testRoom = roomService().create("testRoom", rootRoom);
 
 			// subscribe for events
-			eventService().subscribe(rootRoom, queue);
-			eventService().subscribe(testRoom, queue);
+			eventService().subscribe(rootRoom, queue.getQueueName(), true);
+			eventService().subscribe(testRoom, queue.getQueueName(), true);
 
 			// trigger events within a transaction that fails
 			UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
@@ -425,7 +425,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			} catch (JMSException e) {
 				// passed
 			}
-			
+
 			try {
 				MessageProducer producer = session.createProducer(allocatorQueue);
 				producer.send(session.createMessage());
@@ -443,6 +443,58 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			}
 			if (connection != null) {
 				connection.stop();
+				connection.close();
+			}
+		}
+	}
+
+	@Test
+	// tests whether the subscribe method of the EventService only takes valid parameters
+	public void testValidParameter() throws Exception {
+		Connection connection = null;
+		Session session = null;
+		MessageConsumer consumer = null;
+		try {
+			ConnectionFactory factory = (ConnectionFactory) reWaCon.lookupGeneral("ConnectionFactory");
+			// jms connection
+			connection = factory.createConnection("user", "user");
+			// jms session
+			session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+			// create a temporary queue
+			Queue queue = session.createTemporaryQueue();
+			// create a temporary topic
+			Topic topic = session.createTemporaryTopic();
+
+			// test the subscribe method
+			try {
+				eventService().subscribe(rootRoom, queue.getQueueName(), false);
+				AssertJUnit.fail();
+			} catch (IllegalArgumentException e) {
+				// passed
+			}
+
+			try {
+				eventService().subscribe(rootRoom, topic.getTopicName(), true);
+				AssertJUnit.fail();
+			} catch (IllegalArgumentException e) {
+				// passed
+			}
+			
+			try {
+				eventService().subscribe(rootRoom, "randomName", true);
+				AssertJUnit.fail();
+			} catch (IllegalArgumentException e) {
+				// passed
+			}
+
+		} finally {
+			if (consumer != null) {
+				consumer.close();
+			}
+			if (session != null) {
+				session.close();
+			}
+			if (connection != null) {
 				connection.close();
 			}
 		}
