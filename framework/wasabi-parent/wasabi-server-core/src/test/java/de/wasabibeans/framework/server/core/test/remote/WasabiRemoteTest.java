@@ -47,6 +47,7 @@ import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
 import de.wasabibeans.framework.server.core.remote.AuthorizationServiceRemote;
 import de.wasabibeans.framework.server.core.remote.ContainerServiceRemote;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
+import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
 import de.wasabibeans.framework.server.core.remote.GroupServiceRemote;
 import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
@@ -77,6 +78,7 @@ public class WasabiRemoteTest extends Arquillian {
 	private UserServiceRemote userService;
 	private ObjectServiceRemote objectService;
 	private VersioningServiceRemote versioningService;
+	private EventServiceRemote eventService;
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -240,6 +242,17 @@ public class WasabiRemoteTest extends Arquillian {
 				versioningService = (VersioningServiceRemote) reWaCon.lookup("VersioningService");
 			}
 			return versioningService;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public EventServiceRemote eventService() {
+		try {
+			if (eventService == null) {
+				eventService = (EventServiceRemote) reWaCon.lookup("EventService");
+			}
+			return eventService;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

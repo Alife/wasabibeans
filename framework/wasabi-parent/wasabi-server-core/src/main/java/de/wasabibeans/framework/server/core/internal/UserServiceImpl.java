@@ -98,7 +98,7 @@ public class UserServiceImpl {
 	public static Node getHomeRoom(Node userNode) throws UnexpectedInternalProblemException,
 			TargetDoesNotExistException {
 		try {
-			return userNode.getProperty(WasabiNodeProperty.START_ROOM).getNode();
+			return userNode.getProperty(WasabiNodeProperty.HOME_ROOM).getNode();
 		} catch (ItemNotFoundException infe) {
 			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
 		} catch (RepositoryException re) {
