@@ -24,6 +24,7 @@
          <![CDATA[
             <security>
                <role name="guest" read="true" write="true" create="true"/>
+			   <role name="event_admin" read="true" write="true" create="true"/>
             </security>
          ]]>
       </property>
