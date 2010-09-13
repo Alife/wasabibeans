@@ -79,7 +79,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = UserServiceImpl.create(name, password, s, getCurrentUser());
 			s.save();
-			EventCreator.createCreatedEvent(userNode, null, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(userNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

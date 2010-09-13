@@ -21,10 +21,14 @@
 
 package de.wasabibeans.framework.server.core.event;
 
+import java.util.Set;
+import java.util.Map.Entry;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -96,18 +100,17 @@ public class Event2UserDestinationAllocator implements MessageListener {
 	}
 
 	private void sendEvents(String objectId, Message message, MessageProducer jmsProducer) {
-		for (Message registrationMessage : EventSubscriptions.getSubscribers(objectId)) {
+		Set<Entry<String, Destination>> subscribers = EventSubscriptions.getSubscribers(objectId);
+		if (subscribers == null) {
+			return;
+		}
+		for (Entry<String, Destination> subscriber : subscribers) {
 			try {
-				jmsProducer.send(registrationMessage.getJMSReplyTo(), message);
+				jmsProducer.send(subscriber.getValue(), message);
 			} catch (InvalidDestinationException ide) {
-				// client has closed his jms session and his temporary destination (JMSReplyTo) does not exist any more
+				// client has closed his jms session and his temporary destination does not exist any more
 				// unsubscribe the client
-				try {
-					EventSubscriptions.unsubscribe(objectId, registrationMessage
-							.getStringProperty(WasabiEventRegistration.USERNAME));
-				} catch (JMSException e) {
-					logger.warn("Could not properly unsubscribe a subscriber");
-				}
+				EventSubscriptions.unsubscribe(objectId, subscriber.getKey());
 			} catch (JMSException e) {
 				logger.warn("An event could not be dispatched to one subscriber");
 			}

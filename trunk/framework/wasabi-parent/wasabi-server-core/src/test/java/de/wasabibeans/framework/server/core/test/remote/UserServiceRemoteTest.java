@@ -220,9 +220,9 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertFalse(users.contains(user1));
 		AssertJUnit.assertEquals(4, users.size());
 		// check that the user's home-room is removed
-		AssertJUnit.assertTrue(userService().getUsers(rootRoom).isEmpty());
-		// check that the user not listed as present any more
 		AssertJUnit.assertNull(roomService().getRoomByName(roomService().getRootHome(), "user1"));
+		// check that the user not listed as present any more
+		AssertJUnit.assertTrue(userService().getUsers(rootRoom).isEmpty());
 		// check that the user is not listed as member any more
 		WasabiGroupDTO wasabi = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
 		AssertJUnit.assertTrue(!groupService().getMembers(wasabi).contains(user1));

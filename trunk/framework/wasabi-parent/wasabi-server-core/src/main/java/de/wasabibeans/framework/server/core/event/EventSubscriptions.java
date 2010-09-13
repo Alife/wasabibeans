@@ -20,36 +20,35 @@
  */
 package de.wasabibeans.framework.server.core.event;
 
-import java.util.Collection;
-import java.util.Vector;
+import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.Message;
+import javax.jms.Destination;
 
 public class EventSubscriptions {
 
-	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Message>> subscriptions = new ConcurrentHashMap<String, ConcurrentHashMap<String, Message>>();
+	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Destination>> subscriptions = new ConcurrentHashMap<String, ConcurrentHashMap<String, Destination>>();
 
-	public static Collection<Message> getSubscribers(String objectId) {
-		ConcurrentHashMap<String, Message> subscriptionsOfObject = subscriptions.get(objectId);
+	public static Set<Entry<String, Destination>> getSubscribers(String objectId) {
+		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
-			return subscriptionsOfObject.values();
-		} else {
-			return new Vector<Message>();
+			return subscriptionsOfObject.entrySet();
 		}
+		return null;
 	}
 
-	public static void subscribe(String objectId, String username, Message message) {
-		ConcurrentHashMap<String, Message> subscriptionsOfObject = subscriptions.get(objectId);
+	public static synchronized void subscribe(String objectId, String username, Destination jmsDestination) {
+		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject == null) {
-			subscriptionsOfObject = new ConcurrentHashMap<String, Message>();
+			subscriptionsOfObject = new ConcurrentHashMap<String, Destination>();
 			subscriptions.put(objectId, subscriptionsOfObject);
 		}
-		subscriptionsOfObject.put(username, message);
+		subscriptionsOfObject.put(username, jmsDestination);
 	}
 
 	public static void unsubscribe(String objectId, String username) {
-		ConcurrentHashMap<String, Message> subscriptionsOfObject = subscriptions.get(objectId);
+		ConcurrentHashMap<String, Destination> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
 			subscriptionsOfObject.remove(username);
 		}
