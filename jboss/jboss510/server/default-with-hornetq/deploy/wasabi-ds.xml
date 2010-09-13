@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Documentation for configuring JDBC datasources: 
+http://docs.jboss.org/jbossas/docs/Administration_And_Configuration_Guide/5/html/Configuring_JDBC_DataSources.html -->
+<datasources>
+    <xa-datasource>
+        <jndi-name>wasabi</jndi-name>
+        <xa-datasource-property name="URL">jdbc:mysql://localhost:3306/wasabibeans</xa-datasource-property>
+        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+        <user-name>wasabi</user-name>
+        <password>wasabi</password>
+		
+		<!--  Specifying a true value for this element makes the connection manager keep an xid to connection map and
+		only put the connection back in the pool when the transaction completes and all the connection handles are closed
+		or disassociated (by the method calls returning). As a side effect, we never suspend and resume the xid on the
+		connection's XAResource. This is the same connection tracking behavior used for local transactions.
+		The XA spec implies that any connection may be enrolled in any transaction using any xid for that transaction at
+		any time from any thread (suspending other transactions if necessary). The original JCA implementation assumed
+		this and aggressively delisted connections and put them back in the pool as soon as control left the EJB they
+		were used in or handles were closed. Since some other transaction could be using the connection the next time 
+		work needed to be done on the original transaction, there is no way to get the original connection back. It turns
+		out that most XADataSource driver vendors do not support this, and require that all work done under a particular
+		xid go through the same connection -->
+        <track-connection-by-tx>true</track-connection-by-tx>
+		
+		<!-- This specifies a class that implements the org.jboss.resource.adapter.jdbc.ExceptionSorter
+		interface to examine database exceptions to determine whether or not the exception indicates a connection error. -->
+        <exception-sorter-class-name>org.jboss.resource.adapter.jdbc.vendor.MySQLExceptionSorter</exception-sorter-class-name>
+		
+		<!-- This specifies a class that implements the org.jboss.resource.adapter.jdbc.ValidConnectionChecker  interface to
+		provide a SQLException isValidConnection(Connection e) method that is called with a connection that is to be returned
+		from the pool to test its validity. This overrides the check-valid-connection-sql  when present. The only provided
+		implementation is org.jboss.resource.adapter.jdbc.vendor.OracleValidConnectionChecker. -->
+        <valid-connection-checker-class-name>org.jboss.resource.adapter.jdbc.vendor.MySQLValidConnectionChecker</valid-connection-checker-class-name>
+		
+		<!-- This element specifies the maximum time in minutes a connection may be idle before being closed. 
+		The actual maximum time depends also on the IdleRemover scan time, which is 1/2 the smallest 
+		idle-timeout-minutes of any pool -->
+        <idle-timeout-minutes>10</idle-timeout-minutes>
+        <metadata>
+            <type-mapping>mySQL</type-mapping>
+        </metadata>
+    </xa-datasource>
+</datasources>
