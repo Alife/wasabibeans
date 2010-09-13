@@ -21,7 +21,7 @@
 		<xa-transaction/>
 		<rar-name>jackrabbit-jca-2.1.1.rar</rar-name>
 		<connection-definition>javax.jcr.Repository</connection-definition>
-		<config-property name="homeDir" type="java.lang.String">C:/MADev/jackrabbit</config-property>
+		<config-property name="homeDir" type="java.lang.String">/jackrabbit</config-property>
 
 		<!-- <config-property name="configFile" type="java.lang.String">/jackrabbit/repository.xml</config-property> -->
 		
