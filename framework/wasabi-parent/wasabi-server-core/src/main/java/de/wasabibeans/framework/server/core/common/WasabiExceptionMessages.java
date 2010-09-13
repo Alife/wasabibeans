@@ -56,6 +56,7 @@ public class WasabiExceptionMessages {
 	
 	/* JMS */
 	public final static String JMS_PROVIDER_FAILURE = "Internal Problem: Could not use JMS provider as expected.";
+	public final static String JMS_DESTINATION_INVALID = "The given jmsDestinationName does not belong to an existing JMS &0.";
 
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";

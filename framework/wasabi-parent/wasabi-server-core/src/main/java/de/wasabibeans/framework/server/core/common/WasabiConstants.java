@@ -30,16 +30,17 @@ public interface WasabiConstants {
 	public final static String ADMIN_USER_PASSWORD = "meerrettich";
 	public final static String ADMINS_GROUP_NAME = "admins";
 	public final static String WASABI_GROUP_NAME = "wasabi";
-	
+
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
-	
+
 	/* JMS for event-handling */
 	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";
 	public final static String JMS_EVENT_ADMIN = "event_admin";
 	public final static String JMS_EVENT_ADMIN_PASSWORD = "event_admin";
 	public final static String JMS_EVENT_USER = "event_user";
+	public final static int JMS_PERMISSION_CACHE_TIME = 10;
 	public final static String JMS_RESOURCE_ADAPTER = "jms-ra.rar";
 
 	/* Enumerations */
@@ -76,7 +77,7 @@ public interface WasabiConstants {
 	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
 	public final static String JCR_LOGIN = "wasabi";
 	public final static String JCR_HIGHEST_VERSION_LABEL = "versionLabel";
-	
+
 	/* DTO */
 	public final static String DTO_SUFFIX = "DTO";
 	public final static String DTO_PREFIX = "Wasabi";

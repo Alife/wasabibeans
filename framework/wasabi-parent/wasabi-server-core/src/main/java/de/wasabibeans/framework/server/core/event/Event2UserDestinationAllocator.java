@@ -28,7 +28,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -39,6 +38,7 @@ import javax.jms.Session;
 import org.jboss.ejb3.annotation.ResourceAdapter;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.event.EventSubscriptions.SubscriptionInfo;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
@@ -71,26 +71,26 @@ public class Event2UserDestinationAllocator implements MessageListener {
 			// subscribers of the affected object (e.g. create new document in room, the document is the affected
 			// object)
 			String objectId = message.getStringProperty(WasabiEventProperty.OBJECT_ID);
-			sendEvents(objectId, message, jmsProducer);
+			sendEvents(objectId, message, jmsProducer, jmsSession);
 
 			// subscribers of the environment (e.g. create new document in room, the room is the environment)
 			objectId = message.getStringProperty(WasabiEventProperty.ENV_ID);
 			if (objectId != null) {
-				sendEvents(objectId, message, jmsProducer);
+				sendEvents(objectId, message, jmsProducer, jmsSession);
 			}
 
 			// subscribes of the new environment (e.g. move document from roomA to roomB, roomA is the environment,
 			// roomB is the new environment)
 			objectId = message.getStringProperty(WasabiEventProperty.NEW_ENV_ID);
 			if (objectId != null) {
-				sendEvents(objectId, message, jmsProducer);
+				sendEvents(objectId, message, jmsProducer, jmsSession);
 			}
 
 			// special case: membership events -> subscribers of the member (e.g. add member to group, the group is the
 			// affected object, but subscribers of the member must be informed as well)
 			objectId = message.getStringProperty(WasabiEventProperty.MEMBER_ID);
 			if (objectId != null) {
-				sendEvents(objectId, message, jmsProducer);
+				sendEvents(objectId, message, jmsProducer, jmsSession);
 			}
 		} catch (Exception e) {
 			logger.warn("An event could not be dispatched to all subscribers");
@@ -99,14 +99,22 @@ public class Event2UserDestinationAllocator implements MessageListener {
 		}
 	}
 
-	private void sendEvents(String objectId, Message message, MessageProducer jmsProducer) {
-		Set<Entry<String, Destination>> subscribers = EventSubscriptions.getSubscribers(objectId);
+	private void sendEvents(String objectId, Message message, MessageProducer jmsProducer, Session jmsSession) {
+		Set<Entry<String, SubscriptionInfo>> subscribers = EventSubscriptions.getSubscribers(objectId);
 		if (subscribers == null) {
 			return;
 		}
-		for (Entry<String, Destination> subscriber : subscribers) {
+		// get all subscribers
+		for (Entry<String, SubscriptionInfo> subscriber : subscribers) {
 			try {
-				jmsProducer.send(subscriber.getValue(), message);
+				SubscriptionInfo info = subscriber.getValue();
+				// TODO check read permission 
+				// get temporary destination of subscriber (queue or topic) and send message
+				if (info.isQueue()) {
+					jmsProducer.send(jmsSession.createQueue(info.getJmsDestinationName()), message);
+				} else {
+					jmsProducer.send(jmsSession.createTopic(info.getJmsDestinationName()), message);
+				}
 			} catch (InvalidDestinationException ide) {
 				// client has closed his jms session and his temporary destination does not exist any more
 				// unsubscribe the client
