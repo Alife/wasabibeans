@@ -83,7 +83,14 @@
          <permission type="consume" roles="event_user"/>
          <permission type="send" roles="event_admin"/>
       </security-setting>
-	  <!-- security settings for default queues -->
+	  <!-- security settings for JMS temporary topic -->
+      <security-setting match="jms.temptopic.#">
+         <permission type="createNonDurableQueue" roles="event_user"/>
+         <permission type="deleteNonDurableQueue" roles="event_user"/>
+         <permission type="consume" roles="event_user"/>
+         <permission type="send" roles="event_admin"/>
+      </security-setting>
+	  <!-- security settings for default destinations -->
       <security-setting match="#">
          <permission type="createNonDurableQueue" roles="guest, event_user, event_admin"/>
          <permission type="deleteNonDurableQueue" roles="guest, event_user, event_admin"/>
