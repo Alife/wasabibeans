@@ -40,16 +40,17 @@
 [wasabi:identity] > wasabi:object
 	abstract
 	- wasabi:displayName (STRING) 
-	- wasabi:homeRoom (WEAKREFERENCE)
 	
 [wasabi:group] > wasabi:identity
 	+ wasabi:subgroups (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	+ wasabi:members (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 	
 [wasabi:user] > wasabi:identity
+	- wasabi:homeRoom (WEAKREFERENCE)
 	- wasabi:startRoom (WEAKREFERENCE) 
 	- wasabi:active (BOOLEAN) = 'true' autocreated
 	+ wasabi:memberships (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
+	+ wasabi:whereabouts (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated
 
 [wasabi:document] > wasabi:object, wasabiMix:versionable
 	primaryitem 'wasabi:content'

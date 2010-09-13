@@ -408,6 +408,37 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 	}
 
+	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
+			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
+			while (ni.hasNext()) {
+				Node roomRef = ni.nextNode();
+				Node room = null;
+				try {
+					room = roomRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+				} catch (ItemNotFoundException infe) {
+					try {
+						roomRef.remove();
+					} catch (RepositoryException re) {
+						// do nothing -> remove failed -> reference already removed by another thread concurrently
+					}
+				}
+				if (room != null) {
+					whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+				}
+			}
+			return whereabouts;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			s.logout();
+		}
+	}
+
 	@Override
 	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();

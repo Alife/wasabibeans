@@ -44,16 +44,17 @@ public class WasabiNodeProperty {
 
 	// properties of wasabi:identity
 	public static final String DISPLAY_NAME = WasabiConstants.JCR_NS_PREFIX + ":displayName";
-	public static final String HOME_ROOM = WasabiConstants.JCR_NS_PREFIX + ":homeRoom";
 
 	// properties of wasabi:group
 	public static final String SUBGROUPS = WasabiConstants.JCR_NS_PREFIX + ":subgroups";
 	public static final String MEMBERS = WasabiConstants.JCR_NS_PREFIX + ":members";
 
 	// properties of wasabi:user
+	public static final String HOME_ROOM = WasabiConstants.JCR_NS_PREFIX + ":homeRoom";
 	public static final String START_ROOM = WasabiConstants.JCR_NS_PREFIX + ":startRoom";
 	public static final String ACTIVE = WasabiConstants.JCR_NS_PREFIX + ":active";
 	public static final String MEMBERSHIPS = WasabiConstants.JCR_NS_PREFIX + ":memberships";
+	public static final String WHEREABOUTS = WasabiConstants.JCR_NS_PREFIX + ":whereabouts";
 	
 	// properties of wasabi:attribute
 	public static final String VALUE = WasabiConstants.JCR_NS_PREFIX + ":value";

@@ -21,8 +21,6 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
-import java.util.Vector;
-
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -205,27 +203,45 @@ public class UserServiceImpl {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).addNode(roomNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already present in room
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
+
 	public static void leave(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNode(userNode.getIdentifier());
 			userRef.remove();
+			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNode(roomNode.getIdentifier());
+			roomRef.remove();
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user not present
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
-	public static Vector<Node> getRoomsWhereUserIsPresent(Node userNode) {
-		// TODO come up with a good query for this
-		return null;
+
+	/**
+	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
+	 * wasabi:room-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:room-nodes (this is
+	 * due to efficiency reasons).
+	 * 
+	 * @param userNode
+	 *            the node representing a wasabi-user
+	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getWhereabouts(Node userNode) throws UnexpectedInternalProblemException {
+		try {
+			return userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException {
