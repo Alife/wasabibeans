@@ -23,14 +23,14 @@ package de.wasabibeans.framework.server.core.test.testhelper;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventListener;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
@@ -54,14 +54,23 @@ import de.wasabibeans.framework.server.core.internal.TagServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless
 public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
+	private JndiConnector jndi;
 	private JcrConnector jcr;
 
-	public TestHelper() {
-		this.jcr = JcrConnector.getJCRConnector();
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	@Override
@@ -87,7 +96,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(room1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -101,7 +110,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(user1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -118,7 +127,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(document1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -139,7 +148,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(group1_1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -156,7 +165,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(attribute1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -173,7 +182,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(container1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -189,7 +198,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return TransferManager.convertNode2DTO(link1Node);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -203,7 +212,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			TagServiceImpl.addTag(wasabiRootNode, "tag2", s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -215,22 +224,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			UserServiceImpl.create("user", "user", s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 		} finally {
-			s.logout();
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception {
-		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			EventListener listener = new DisplayNameListener();
-			s.getWorkspace().getObservationManager().addEventListener(listener, Event.PROPERTY_CHANGED,
-					userNode.getPath(), false, null, null, false);
-			s.save();
-		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -256,7 +250,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			s.save();
 			return nodeIds;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -275,7 +269,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			ids.add("ByIdLookup: " + (System.currentTimeMillis() - startTime) + "ms");
 			return ids;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -300,7 +294,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			ids.add("ByIdFilter: " + (System.currentTimeMillis() - startTime) + "ms");
 			return ids;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -327,7 +321,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			result.add("ByQuery: " + endTime + "ms");
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -351,7 +345,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			result.add("ByFilter: " + endTime + "ms");
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

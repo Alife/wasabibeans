@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.bean;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
@@ -73,13 +75,20 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	@EJB
 	protected LockingHelperLocal locker;
 
+	protected JndiConnector jndi;
 	protected JcrConnector jcr;
 	protected JmsConnector jms;
-
-	public ObjectService() {
-		JndiConnector jndi = JndiConnector.getJNDIConnector();
+	
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
 		this.jcr = JcrConnector.getJCRConnector(jndi);
 		this.jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	public WasabiValueDTO getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
@@ -99,7 +108,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 			return TransferManager.convertValue2DTO(ObjectServiceImpl.getName(objectNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -110,7 +119,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			return ObjectServiceImpl.getUUID(objectNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -125,7 +134,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -138,7 +147,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 			return TransferManager.convertValue2DTO(ObjectServiceImpl.getCreatedBy(objectNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -151,7 +160,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 			return TransferManager.convertValue2DTO(ObjectServiceImpl.getCreatedOn(objectNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -164,7 +173,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 			return TransferManager.convertValue2DTO(ObjectServiceImpl.getModifiedBy(objectNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -177,7 +186,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 			return TransferManager.convertValue2DTO(ObjectServiceImpl.getModifiedOn(objectNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -197,7 +206,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -213,7 +222,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -229,7 +238,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -248,7 +257,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -273,7 +282,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(objectNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -291,7 +300,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(objectNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -310,7 +319,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(objectNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -328,7 +337,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(objectNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 

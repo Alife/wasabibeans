@@ -28,7 +28,6 @@ import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
-import org.apache.jackrabbit.jca.JCASessionHandle;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
@@ -84,7 +83,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		return testArchive;
 	}
 
-	//@Test
+	// @Test
 	public void subsequentWrites() throws Exception {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
@@ -136,227 +135,17 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		utx.commit();
 	}
 
-	//@Test
-	public void concurrentTransactions() throws Throwable {
-		LocalWasabiConnector loCon = new LocalWasabiConnector();
-		loCon.connect();
-		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
-		loCon.disconnect();
-		final Object activeThreadLock = new Object();
-
-		InitialContext jndiContext = new InitialContext();
-		Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-		Session s = rep
-				.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-		System.out.println("1: " + ((JCASessionHandle) s).getXAResource().toString());
-		Node node = s.getRootNode().addNode("aNode");
-		node.setProperty("aProperty", "1");
-		s.save();
-		s.logout();
-
-		Thread user1 = new Thread() {
-			public void run() {
-				Session s = null;
-				try {
-					Thread.sleep(1000);
-					InitialContext jndiContext = new InitialContext();
-					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
-					utx.begin();
-					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
-							.toCharArray()));
-					System.out.println("3: " + ((JCASessionHandle) s).getXAResource().toString());
-
-					Node node = s.getRootNode().getNode("aNode");
-					System.out.println(node.getProperty("aProperty").getString());
-
-					synchronized (activeThreadLock) {
-						activeThreadLock.notify();
-						activeThreadLock.wait();
-					}
-
-					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
-							.toCharArray()));
-					System.out.println("4: " + ((JCASessionHandle) s).getXAResource().toString());
-					node = s.getRootNode().getNode("aNode");
-					System.out.println(node.getProperty("aProperty").getString());
-					s.save();
-					utx.commit();
-				} catch (Exception e) {
-					if (s != null) {
-						s.logout();
-					}
-					e.printStackTrace();
-				}
-			}
-		};
-
-		Thread user2 = new Thread() {
-			public void run() {
-				Session s = null;
-				try {
-					InitialContext jndiContext = new InitialContext();
-					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					UserTransaction utx = (UserTransaction) jndiContext.lookup("UserTransaction");
-					utx.begin();
-					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
-							.toCharArray()));
-					System.out.println("2: " + ((JCASessionHandle) s).getXAResource().toString());
-					Node node = s.getRootNode().getNode("aNode");
-
-					synchronized (activeThreadLock) {
-						activeThreadLock.wait();
-					}
-
-					node.setProperty("aProperty", "2");
-					s.save();
-					utx.commit();
-
-					synchronized (activeThreadLock) {
-						activeThreadLock.notify();
-					}
-
-				} catch (Exception e) {
-					if (s != null) {
-						s.logout();
-					}
-					e.printStackTrace();
-				}
-			}
-		};
-
-		user1.start();
-		user2.start();
-		user1.join(5000);
-		user2.join(5000);
-		if (user1.isAlive() || user2.isAlive()) {
-			user1.interrupt();
-			user2.interrupt();
-			AssertJUnit.fail();
-		}
-	}
-	
-
-	/**
-	 * Causes an InvalidItemStateException (see console-log of JBoss). Would not cause this exception, if there was no
-	 * version-number of the parent-node to be updated.
-	 * 
-	 * @throws Throwable
-	 */
-	//@Test
-	public void concurrentSessions() throws Throwable {
-		LocalWasabiConnector loCon = new LocalWasabiConnector();
-		loCon.connect();
-		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
-		loCon.disconnect();
-		final Object activeThreadLock = new Object();
-
-		InitialContext jndiContext = new InitialContext();
-		Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-		Session s = rep
-				.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-		// create node with version-number-property and two sub-nodes
-		Node node = s.getRootNode().addNode("aNode");
-		node.setProperty("versionNumber", 0);
-		node.addNode("sub1").setProperty("sub1prop", 0);
-		node.addNode("sub2").setProperty("sub2prop", 0);
-		s.save();
-		s.logout();
-
-		Thread user1 = new Thread() {
-			public void run() {
-				Session s = null;
-				try {
-					Thread.sleep(1000);
-					InitialContext jndiContext = new InitialContext();
-					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
-							.toCharArray()));
-
-					// user1 edits sub-node 1 and updates version-number of parent-node
-					Node node = s.getRootNode().getNode("aNode");
-					Node sub1 = node.getNode("sub1");
-					sub1.setProperty("sub1prop", 1);
-					node.setProperty("versionNumber", 1);
-
-					// user1 waits for user2 before saving
-					synchronized (activeThreadLock) {
-						activeThreadLock.notify();
-						activeThreadLock.wait();
-					}
-
-					s.save();
-				} catch (Exception e) {
-					if (s != null) {
-						s.logout();
-					}
-					e.printStackTrace();
-				}
-			}
-		};
-
-		Thread user2 = new Thread() {
-			public void run() {
-				Session s = null;
-				try {
-					InitialContext jndiContext = new InitialContext();
-					Repository rep = (Repository) jndiContext.lookup("java:/jcr/local");
-					s = rep.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN
-							.toCharArray()));
-
-					// user2 waits for user1 before doing anything
-					synchronized (activeThreadLock) {
-						activeThreadLock.wait();
-					}
-
-					// user2 edits sub-node 2 and updates version-number of parent-node
-					Node node = s.getRootNode().getNode("aNode");
-					Node sub2 = node.getNode("sub2");
-					sub2.setProperty("sub2prop", 1);
-					node.setProperty("versionNumber", 1);
-
-					s.save();
-
-					// user2 informs user1 that he's done
-					synchronized (activeThreadLock) {
-						activeThreadLock.notify();
-					}
-
-				} catch (Exception e) {
-					if (s != null) {
-						s.logout();
-					}
-					e.printStackTrace();
-				}
-			}
-		};
-
-		user1.start();
-		user2.start();
-		user1.join(5000);
-		user2.join(5000);
-		if (user1.isAlive() || user2.isAlive()) {
-			user1.interrupt();
-			user2.interrupt();
-			AssertJUnit.fail();
-		}
-	}
-	
 	@Test
 	public void test() throws Exception {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-
-		TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
-		testHelper.initDatabase();
-		testHelper.initRepository();
-
-		Session s = jcr.getJCRSession();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
+
+			TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
+			testHelper.initDatabase();
+			testHelper.initRepository();
+
 			Node n = s.getRootNode().addNode("n");
 			n.setProperty("hu", "hu");
 			s.save();
@@ -365,7 +154,8 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 			s.save();
 			n.getProperty("hu");
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 }

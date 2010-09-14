@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.jms.Connection;
@@ -40,6 +41,7 @@ import org.jboss.ejb3.annotation.ResourceAdapter;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions.SubscriptionInfo;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 @MessageDriven(activationConfig = {
@@ -52,18 +54,24 @@ public class Event2UserDestinationAllocator implements MessageListener {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(Event2UserDestinationAllocator.class);
 
+	private JndiConnector jndi;
 	private JmsConnector jms;
 
 	@PostConstruct
 	protected void postConstruct() {
-		jms = JmsConnector.getJmsConnector();
+		jndi = JndiConnector.getJNDIConnector();
+		jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	@Override
 	public void onMessage(Message message) {
-		Connection jmsConnection = null;
 		try {
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			// create producer without specified destination
 			MessageProducer jmsProducer = jmsSession.createProducer(null);
@@ -95,7 +103,7 @@ public class Event2UserDestinationAllocator implements MessageListener {
 		} catch (Exception e) {
 			logger.warn("An event could not be dispatched to all subscribers");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
@@ -108,7 +116,7 @@ public class Event2UserDestinationAllocator implements MessageListener {
 		for (Entry<String, SubscriptionInfo> subscriber : subscribers) {
 			try {
 				SubscriptionInfo info = subscriber.getValue();
-				// TODO check read permission 
+				// TODO check read permission
 				// get temporary destination of subscriber (queue or topic) and send message
 				if (info.isQueue()) {
 					jmsProducer.send(jmsSession.createQueue(info.getJmsDestinationName()), message);

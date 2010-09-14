@@ -68,7 +68,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -83,7 +83,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -104,7 +104,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -116,7 +116,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -135,7 +135,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			}
 			return result;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -147,7 +147,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			return TagServiceImpl.getTags(objectNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -167,7 +167,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

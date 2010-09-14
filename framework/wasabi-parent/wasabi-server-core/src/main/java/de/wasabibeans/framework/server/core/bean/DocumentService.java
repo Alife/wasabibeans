@@ -81,7 +81,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -93,7 +93,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
 			return TransferManager.convertValue2DTO(DocumentServiceImpl.getContent(documentNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -114,7 +114,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(documentNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -130,7 +130,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			return TransferManager.convertNode2DTO(DocumentServiceImpl.getDocumentByName(locationNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -146,7 +146,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -158,7 +158,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
 			return TransferManager.convertValue2DTO(DocumentServiceImpl.getEnvironment(documentNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -179,7 +179,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(documentNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -195,7 +195,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -219,7 +219,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(documentNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -235,7 +235,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -252,7 +252,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -268,7 +268,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -285,7 +285,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -302,7 +302,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -319,7 +319,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -335,7 +335,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -352,7 +352,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -369,7 +369,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			return documents;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -381,7 +381,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			return DocumentServiceImpl.hasDocumentsCreatedAfter(environmentNode, timestamp);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -393,7 +393,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			return DocumentServiceImpl.hasDocumentsCreatedBefore(environmentNode, timestamp);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -405,7 +405,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			return DocumentServiceImpl.hasDocumentsModifiedAfter(environmentNode, timestamp);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -417,7 +417,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			return DocumentServiceImpl.hasDocumentsModifiedBefore(environmentNode, timestamp);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

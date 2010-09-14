@@ -26,8 +26,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
-import org.apache.jackrabbit.jca.JCASessionHandle;
-
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -36,19 +34,13 @@ public class JcrConnector {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(JcrConnector.class);
 	
-	private Repository jcrRepository;
 	private JndiConnector jndi;
 
-	public static JcrConnector getJCRConnector() {
-		return new JcrConnector();
-	}
+	private Repository jcrRepository;
+	private Session session;
 
 	public static JcrConnector getJCRConnector(JndiConnector jndi) {
 		return new JcrConnector(jndi);
-	}
-
-	public JcrConnector() {
-		this.jndi = JndiConnector.getJNDIConnector();
 	}
 
 	public JcrConnector(JndiConnector jndi) {
@@ -64,12 +56,21 @@ public class JcrConnector {
 
 	public Session getJCRSession() throws UnexpectedInternalProblemException {
 		try {
-			Session s = getJCRRepository().login(
-					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-//			logger.info("Session used: " + ((JCASessionHandle) s).getXAResource().toString());
-			return s;
+			if (session == null) {
+				session = getJCRRepository().login(
+						new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+			}
+			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
+			return session;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public void logout() {
+		if (session != null) {
+			session.logout();
+			session = null;
 		}
 	}
 }

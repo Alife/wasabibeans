@@ -81,7 +81,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -106,7 +106,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -119,7 +119,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
 			return TransferManager.convertValue2DTO(AttributeServiceImpl.getAffiliation(attributeNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -136,7 +136,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -148,7 +148,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			return AttributeServiceImpl.getAttributeType(attributeNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -165,7 +165,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			}
 			return attributes;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -183,7 +183,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
 			return TransferManager.convertValue2DTO(AttributeServiceImpl.getValue(type, attributeNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -196,7 +196,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
 			return TransferManager.convertValue2DTO(AttributeServiceImpl.getWasabiValue(attributeNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -218,7 +218,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(attributeNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -235,7 +235,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -261,7 +261,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(attributeNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -282,7 +282,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(attributeNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -307,7 +307,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(attributeNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -50,6 +52,7 @@ import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
@@ -59,10 +62,18 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
+	private JndiConnector jndi;
 	private JcrConnector jcr;
 
-	public ACLService() {
-		this.jcr = JcrConnector.getJCRConnector();
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+	}
+	
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	@Override
@@ -77,7 +88,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
 					+ re.toString(), re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -94,7 +105,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			allow[0] = allowance;
 			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -112,7 +123,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			allow[0] = allowance;
 			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -125,7 +136,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -149,7 +160,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 						endTime[i], s);
 			}
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -167,7 +178,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, 0, 0);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -191,7 +202,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 			ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -203,7 +214,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 			ACLServiceImpl.setInheritance(wasabiObjectNode, false, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -225,7 +236,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			}
 			return wasabiACLEntriesDTO;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -246,7 +257,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 			return wasabiACLEntriesDTO;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -270,7 +281,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			}
 			return wasabiACLEntriesDTO;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -293,7 +304,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 			return wasabiACLEntriesByIdentityDTO;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -329,7 +340,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 			return ACLServiceImpl.getInheritance(wasabiObjectNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -344,7 +355,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			perm[0] = permission;
 			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, 0, 0, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -359,7 +370,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			perm[0] = permission;
 			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, perm, startTime, endTime, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -372,7 +383,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 			ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, 0, 0, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -394,7 +405,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 				ACLServiceImpl.remove(wasabiObjectNode, wasabiIdentityNode, permission, startTime[i], endTime[i], s);
 			}
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -406,7 +417,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, 0, 0);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -418,7 +429,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
 			ACLServiceImpl.removeDefault(wasabiLocationNode, wasabiType, permission, startTime, endTime);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -430,7 +441,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 			ACLServiceImpl.reset(wasabiObjectNode, s);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -452,7 +463,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 			}
 			return wasabiDefaultACLEntriesDTO;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 

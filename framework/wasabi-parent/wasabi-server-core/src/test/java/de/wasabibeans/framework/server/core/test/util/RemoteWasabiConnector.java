@@ -99,12 +99,18 @@ public class RemoteWasabiConnector {
 		loggedIn = false;
 	}
 
-	public void disconnect() throws LoginException, NamingException {
-		if (loggedIn) {
-			loginContext.logout();
-		}
-		if (connected) {
-			initialContext.close();
+	public void disconnect() {
+		try {
+			if (loggedIn) {
+				loginContext.logout();
+			}
+			if (connected) {
+				initialContext.close();
+			}
+		} catch (LoginException e) {
+			System.out.println("Could not properly close login context.");
+		} catch (NamingException e) {
+			System.out.println("Could not properly close jndi context.");
 		}
 		loggedIn = false;
 		connected = false;
@@ -114,9 +120,9 @@ public class RemoteWasabiConnector {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");
 		}
-		return initialContext.lookup(name  + "/remote");
+		return initialContext.lookup(name + "/remote");
 	}
-	
+
 	public Object lookupGeneral(String name) throws NamingException, LoginException {
 		if (!connected) {
 			throw new NoInitialContextException("Not connected.");

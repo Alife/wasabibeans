@@ -30,14 +30,12 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class JndiConnector {
 
+	private static WasabiLogger logger = WasabiLogger.getLogger(JndiConnector.class);
+
 	private InitialContext jndiContext;
-	private WasabiLogger logger;
+
 	public static JndiConnector getJNDIConnector() {
 		return new JndiConnector();
-	}
-
-	public JndiConnector() {
-		this.logger = WasabiLogger.getLogger(this.getClass());
 	}
 
 	public InitialContext getJNDIContext() throws UnexpectedInternalProblemException {
@@ -89,5 +87,15 @@ public class JndiConnector {
 					WasabiExceptionMessages.JNDI_FAILED_UNBIND, name), ne);
 		}
 	}
-}
 
+	public void close() {
+		try {
+			if (this.jndiContext != null) {
+				this.jndiContext.close();
+				this.jndiContext = null;
+			}
+		} catch (NamingException ne) {
+			logger.warn("Could not close JNDI context", ne);
+		}
+	}
+}

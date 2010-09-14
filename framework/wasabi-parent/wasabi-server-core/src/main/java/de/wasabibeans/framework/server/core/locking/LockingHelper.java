@@ -21,6 +21,8 @@
 
 package de.wasabibeans.framework.server.core.locking;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -35,15 +37,24 @@ import javax.jcr.lock.LockManager;
 
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 public class LockingHelper implements LockingHelperLocal {
 
+	private JndiConnector jndi;
 	private JcrConnector jcr;
 
-	public LockingHelper() {
-		this.jcr = JcrConnector.getJCRConnector();
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	@Override
@@ -53,11 +64,12 @@ public class LockingHelper implements LockingHelperLocal {
 		Session s = jcr.getJCRSession();
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
-			String lockToken = lockManager.lock(s.getNodeByIdentifier(nodeId).getPath(), isDeep, false, 10, null).getLockToken();
+			String lockToken = lockManager.lock(s.getNodeByIdentifier(nodeId).getPath(), isDeep, false, 10, null)
+					.getLockToken();
 			lockManager.removeLockToken(lockToken);
 			return lockToken;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -71,7 +83,7 @@ public class LockingHelper implements LockingHelperLocal {
 			lockManager.addLockToken(lockToken);
 			lockManager.unlock(s.getNodeByIdentifier(nodeId).getPath());
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

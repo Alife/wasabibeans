@@ -170,9 +170,6 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 
 		// do the test
 		Vector<WasabiObjectDTO> result = objectService().getObjectsByName("name");
-		for (WasabiObjectDTO o : result) {
-			System.out.println(objectService().getName(o).getValue());
-		}
 		// 4 objects see above + the home-room of the user 'name'
 		AssertJUnit.assertEquals(5, result.size());
 		AssertJUnit.assertTrue(result.contains(container) && result.contains(document) && result.contains(group)

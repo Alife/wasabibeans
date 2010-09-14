@@ -66,6 +66,7 @@ import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Run(RunModeType.IN_CONTAINER)
 public class LockingTest extends Arquillian {
@@ -108,29 +109,33 @@ public class LockingTest extends Arquillian {
 
 	// @BeforeMethod annotation does not seem to work for IN_CONTAINER tests in arquillian version 1.0.0.Alpha2
 	public void setUpBeforeEachMethod() throws Exception {
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.connect();
+		try {
+			loWaCon.connect();
 
-		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
+			TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+			testhelper.initDatabase();
+			testhelper.initRepository();
 
-		loWaCon.defaultLogin();
-		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		userService.create(USER1, USER1);
-		userService.create(USER2, USER2);
+			loWaCon.defaultLogin();
+			UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+			userService.create(USER1, USER1);
+			userService.create(USER2, USER2);
 
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
-		Node document = s.getRootNode().addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
-		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
-		s.save();
+			Session s = jcr.getJCRSession();
+			Node document = s.getRootNode().addNode(DOC1, WasabiNodeType.DOCUMENT);
+			document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
+			document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
+			s.save();
 
-		docid = document.getIdentifier();
-		s.logout();
-
-		loWaCon.disconnect();
+			docid = document.getIdentifier();
+		} finally {
+			jcr.logout();
+			jndi.close();
+			loWaCon.disconnect();
+		}
 	}
 
 	abstract class UserThread extends Thread {
@@ -265,19 +270,19 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
+				document = s.getNodeByIdentifier(docid);
 				try {
-					document = s.getNodeByIdentifier(docid);
-
 					if (username.equals(USER2)) {
 						waitForMyTurn();
 					}
@@ -298,8 +303,6 @@ public class LockingTest extends Arquillian {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 
 					if (username.equals(USER2)) {
 						notifyOther();
@@ -307,6 +310,10 @@ public class LockingTest extends Arquillian {
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -328,13 +335,15 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -349,20 +358,20 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Node node1 = null;
 				Session s = jcr.getJCRSession();
+				document = s.getNodeByIdentifier(docid);
 				try {
-					document = s.getNodeByIdentifier(docid);
-
 					if (username.equals(USER2)) {
 						waitForMyTurn();
 						acquireLock(document, null, s, locker);
@@ -370,7 +379,6 @@ public class LockingTest extends Arquillian {
 						node1 = document.getParent().getParent();
 						acquireLock(node1, true, s, locker);
 					}
-
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
 					if (username.equals(USER1)) {
@@ -387,8 +395,6 @@ public class LockingTest extends Arquillian {
 				} finally {
 					releaseLock(node1, s, locker);
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 
 					if (username.equals(USER2)) {
 						notifyOther();
@@ -396,6 +402,10 @@ public class LockingTest extends Arquillian {
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -403,33 +413,37 @@ public class LockingTest extends Arquillian {
 	@Test
 	public void setSomethingTest1_1() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.connect();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			loWaCon.connect();
 
-		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
+			TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+			testhelper.initDatabase();
+			testhelper.initRepository();
 
-		loWaCon.defaultLogin();
-		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		userService.create(USER1, USER1);
-		userService.create(USER2, USER2);
+			loWaCon.defaultLogin();
+			UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+			userService.create(USER1, USER1);
+			userService.create(USER2, USER2);
 
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
-		Node node1 = s.getRootNode().addNode("node1");
-		node1.addMixin(NodeType.MIX_LOCKABLE);
-		Node node2 = node1.addNode("node2");
-		node2.addMixin(NodeType.MIX_LOCKABLE);
+			Session s = jcr.getJCRSession();
+			Node node1 = s.getRootNode().addNode("node1");
+			node1.addMixin(NodeType.MIX_LOCKABLE);
+			Node node2 = node1.addNode("node2");
+			node2.addMixin(NodeType.MIX_LOCKABLE);
 
-		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
-		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
-		s.save();
+			Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
+			document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
+			document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
+			s.save();
 
-		docid = document.getIdentifier();
-		s.logout();
-
-		loWaCon.disconnect();
+			docid = document.getIdentifier();
+		} finally {
+			jcr.logout();
+			jndi.close();
+			loWaCon.disconnect();
+		}
 
 		UserThread user1 = new SetSomethingTest1_1(USER1);
 		UserThread user2 = new SetSomethingTest1_1(USER2);
@@ -445,12 +459,13 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		s = jcr.getJCRSession();
+		Session s = jcr.getJCRSession();
 		try {
-			document = s.getNodeByIdentifier(docid);
+			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -464,23 +479,22 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
+				document = s.getNodeByIdentifier(docid);
 				try {
-					document = s.getNodeByIdentifier(docid);
-
 					if (username.equals(USER2)) {
 						waitForCommitOfOther();
 					}
-
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
@@ -491,11 +505,13 @@ public class LockingTest extends Arquillian {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -508,13 +524,15 @@ public class LockingTest extends Arquillian {
 
 		// assert that there are no errors -> shows that after one thread is done another one is able to acquire a lock
 		AssertJUnit.assertTrue(executeUserThreads(user1, user2).isEmpty());
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -528,23 +546,22 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
+				document = s.getNodeByIdentifier(docid);
 				try {
-					document = s.getNodeByIdentifier(docid);
-
 					if (username.equals(USER2)) {
 						waitForMyTurn();
 					}
-
 					acquireLock(document, null, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
@@ -559,8 +576,6 @@ public class LockingTest extends Arquillian {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 
 					if (username.equals(USER1)) {
 						notifyOther();
@@ -568,6 +583,10 @@ public class LockingTest extends Arquillian {
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -583,13 +602,15 @@ public class LockingTest extends Arquillian {
 				throw t; // node could not be unlocked by user1
 			}
 		}
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -603,19 +624,19 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
+				document = s.getNodeByIdentifier(docid);
 				try {
-					document = s.getNodeByIdentifier(docid);
-
 					if (username.equals(USER2)) {
 						Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 						waitForCommitOfOther();
@@ -623,7 +644,6 @@ public class LockingTest extends Arquillian {
 					} else {
 						acquireLock(document, null, s, locker);
 					}
-
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
@@ -633,11 +653,13 @@ public class LockingTest extends Arquillian {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -650,7 +672,6 @@ public class LockingTest extends Arquillian {
 
 		boolean problemRecognized = false;
 		for (Throwable t : executeUserThreads(user1, user2)) {
-			t.printStackTrace();
 			if (t instanceof ConcurrentModificationException) {
 				if (t.getCause() == null) {
 					problemRecognized = true;
@@ -660,13 +681,15 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -680,8 +703,10 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
@@ -689,7 +714,6 @@ public class LockingTest extends Arquillian {
 				boolean error = false;
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
@@ -721,7 +745,6 @@ public class LockingTest extends Arquillian {
 					throw t;
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
 
 					if (error) {
 						utx.rollback();
@@ -729,14 +752,16 @@ public class LockingTest extends Arquillian {
 						utx.commit();
 					}
 
-					loWaCon.disconnect();
-
 					if (username.equals(USER2)) {
 						notifyOther();
 					}
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -758,13 +783,15 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -779,8 +806,10 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
@@ -788,7 +817,6 @@ public class LockingTest extends Arquillian {
 				boolean error = false;
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node node1 = null;
 				Node document = null;
@@ -825,7 +853,6 @@ public class LockingTest extends Arquillian {
 				} finally {
 					releaseLock(node1, s, locker);
 					releaseLock(document, s, locker);
-					s.logout();
 
 					if (error) {
 						utx.rollback();
@@ -833,14 +860,16 @@ public class LockingTest extends Arquillian {
 						utx.commit();
 					}
 
-					loWaCon.disconnect();
-
 					if (username.equals(USER2)) {
 						notifyOther();
 					}
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -848,33 +877,37 @@ public class LockingTest extends Arquillian {
 	@Test
 	public void setSomethingTest1_1WithTransaction() throws Throwable {
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.connect();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			loWaCon.connect();
 
-		TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
+			TestHelperLocal testhelper = (TestHelperLocal) loWaCon.lookup("TestHelper");
+			testhelper.initDatabase();
+			testhelper.initRepository();
 
-		loWaCon.defaultLogin();
-		UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
-		userService.create(USER1, USER1);
-		userService.create(USER2, USER2);
+			loWaCon.defaultLogin();
+			UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
+			userService.create(USER1, USER1);
+			userService.create(USER2, USER2);
 
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
-		Node node1 = s.getRootNode().addNode("node1");
-		node1.addMixin(NodeType.MIX_LOCKABLE);
-		Node node2 = node1.addNode("node2");
-		node2.addMixin(NodeType.MIX_LOCKABLE);
+			Session s = jcr.getJCRSession();
+			Node node1 = s.getRootNode().addNode("node1");
+			node1.addMixin(NodeType.MIX_LOCKABLE);
+			Node node2 = node1.addNode("node2");
+			node2.addMixin(NodeType.MIX_LOCKABLE);
 
-		Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
-		document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
-		document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
-		s.save();
+			Node document = node2.addNode(DOC1, WasabiNodeType.DOCUMENT);
+			document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
+			document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
+			s.save();
 
-		docid = document.getIdentifier();
-		s.logout();
-
-		loWaCon.disconnect();
+			docid = document.getIdentifier();
+		} finally {
+			jcr.logout();
+			jndi.close();
+			loWaCon.disconnect();
+		}
 
 		UserThread user1 = new SetSomethingTest1_1WithTransaction(USER1);
 		UserThread user2 = new SetSomethingTest1_1WithTransaction(USER2);
@@ -890,12 +923,13 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		s = jcr.getJCRSession();
 		try {
-			document = s.getNodeByIdentifier(docid);
+			Session s = jcr.getJCRSession();
+			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -909,8 +943,10 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
@@ -918,7 +954,6 @@ public class LockingTest extends Arquillian {
 				boolean error = false;
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
@@ -944,18 +979,19 @@ public class LockingTest extends Arquillian {
 					throw t;
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
 
 					if (error) {
 						utx.rollback();
 					} else {
 						utx.commit();
 					}
-
-					loWaCon.disconnect();
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -968,13 +1004,15 @@ public class LockingTest extends Arquillian {
 
 		// assert that there are no errors -> proves that after one thread is done another one is able to acquire a lock
 		AssertJUnit.assertTrue(executeUserThreads(user1, user2).isEmpty());
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -988,8 +1026,10 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
@@ -997,7 +1037,6 @@ public class LockingTest extends Arquillian {
 				boolean error = false;
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
@@ -1027,7 +1066,6 @@ public class LockingTest extends Arquillian {
 					throw t;
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
 
 					if (error) {
 						utx.rollback();
@@ -1035,14 +1073,16 @@ public class LockingTest extends Arquillian {
 						utx.commit();
 					}
 
-					loWaCon.disconnect();
-
 					if (username.equals(USER1)) {
 						notifyOther();
 					}
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -1058,13 +1098,15 @@ public class LockingTest extends Arquillian {
 				throw t; // node could not be unlocked by user1
 			}
 		}
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -1078,13 +1120,14 @@ public class LockingTest extends Arquillian {
 
 		@Override
 		public void run() {
+			LocalWasabiConnector loWaCon = new LocalWasabiConnector();
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				LocalWasabiConnector loWaCon = new LocalWasabiConnector();
 				loWaCon.connect();
 				loWaCon.login(username, username);
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-				JcrConnector jcr = JcrConnector.getJCRConnector();
 
 				Node document = null;
 				Session s = jcr.getJCRSession();
@@ -1108,11 +1151,13 @@ public class LockingTest extends Arquillian {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
 					releaseLock(document, s, locker);
-					s.logout();
-					loWaCon.disconnect();
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				jcr.logout();
+				jndi.close();
+				loWaCon.disconnect();
 			}
 		}
 	}
@@ -1125,7 +1170,6 @@ public class LockingTest extends Arquillian {
 
 		boolean problemRecognized = false;
 		for (Throwable t : executeUserThreads(user1, user2)) {
-			t.printStackTrace();
 			if (t instanceof ConcurrentModificationException) {
 				if (t.getCause() == null) {
 					problemRecognized = true;
@@ -1135,13 +1179,15 @@ public class LockingTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 
@@ -1151,18 +1197,20 @@ public class LockingTest extends Arquillian {
 	public void unlockWithoutLock() throws Throwable {
 		setUpBeforeEachMethod();
 		LocalWasabiConnector loWaCon = new LocalWasabiConnector();
-		loWaCon.connect();
-		loWaCon.login(USER1, USER1);
-
-		LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			loWaCon.connect();
+			loWaCon.login(USER1, USER1);
+
+			LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
+
+			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
 			releaseLock(document, s, locker);
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 			loWaCon.disconnect();
 		}
 		// success

@@ -21,6 +21,8 @@
 
 package de.wasabibeans.framework.server.core.bean;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -37,6 +39,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.local.EventServiceLocal;
 import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "EventService")
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -45,17 +48,25 @@ public class EventService implements EventServiceLocal, EventServiceRemote {
 	@Resource
 	protected SessionContext ctx;
 
+	private JndiConnector jndi;
 	private JmsConnector jms;
 
-	public EventService() {
-		this.jms = JmsConnector.getJmsConnector();
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
 			throws UnexpectedInternalProblemException {
-		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		Connection jmsConnection = jms.getJmsConnection();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Connection jmsConnection = jms.getJmsConnection();
 			// check that the parameters jmsDestinationName and isQueue actually match
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			try {
@@ -73,7 +84,7 @@ public class EventService implements EventServiceLocal, EventServiceRemote {
 		} catch (JMSException je) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMS_PROVIDER_FAILURE, je);
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
