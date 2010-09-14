@@ -58,8 +58,6 @@ public interface TestHelperLocal {
 
 	public void initTestUser() throws Exception;
 
-	public void registerEventForDisplayName(WasabiUserDTO user) throws Exception;
-
 	public <V> V call(Callable<V> callable) throws Exception;
 
 	public Vector<String> createManyNodes(int number) throws Exception;

@@ -74,7 +74,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -105,7 +105,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -120,7 +120,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			}
 			return allGroups;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -133,7 +133,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
 			return TransferManager.convertValue2DTO(GroupServiceImpl.getDisplayName(groupNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -149,7 +149,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Node groupNode = GroupServiceImpl.getGroupByName(groupName, s);
 			return TransferManager.convertNode2DTO(groupNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -169,7 +169,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			}
 			return groups;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -187,7 +187,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Node userNode = GroupServiceImpl.getMemberByName(groupNode, userName);
 			return TransferManager.convertNode2DTO(userNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -219,7 +219,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -251,7 +251,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -265,7 +265,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
 			return TransferManager.convertValue2DTO(GroupServiceImpl.getParentGroup(groupNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -282,7 +282,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -299,7 +299,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			}
 			return subgroups;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -314,7 +314,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			}
 			return topgroups;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -327,7 +327,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			return GroupServiceImpl.isDirectMember(groupNode, userNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -340,7 +340,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			return GroupServiceImpl.isMember(groupNode, userNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -364,7 +364,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(groupNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 
 	}
@@ -381,7 +381,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 
 	}
@@ -400,7 +400,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 
 	}
@@ -426,7 +426,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(groupNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 
 	}
@@ -452,7 +452,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(groupNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

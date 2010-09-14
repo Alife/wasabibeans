@@ -93,7 +93,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -106,7 +106,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
 			return TransferManager.convertValue2DTO(RoomServiceImpl.getEnvironment(roomNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -123,7 +123,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			return TransferManager.convertNode2DTO(RoomServiceImpl.getRoomByName(roomNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -153,7 +153,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -169,7 +169,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -185,7 +185,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -201,7 +201,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -217,7 +217,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -234,7 +234,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -250,7 +250,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -266,7 +266,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -282,7 +282,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -299,7 +299,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			}
 			return rooms;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -309,7 +309,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			return TransferManager.convertNode2DTO(RoomServiceImpl.getRootHome(s));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -319,7 +319,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			return TransferManager.convertNode2DTO(RoomServiceImpl.getRootRoom(s));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -341,7 +341,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(roomNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -373,7 +373,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -398,7 +398,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(roomNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

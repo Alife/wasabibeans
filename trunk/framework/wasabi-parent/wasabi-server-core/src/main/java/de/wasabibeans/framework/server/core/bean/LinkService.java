@@ -83,7 +83,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -96,7 +96,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
 			return TransferManager.convertValue2DTO(LinkServiceImpl.getDestination(linkNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -109,7 +109,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
 			return TransferManager.convertValue2DTO(LinkServiceImpl.getEnvironment(linkNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -126,7 +126,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -142,7 +142,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -158,7 +158,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -174,7 +174,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -190,7 +190,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -207,7 +207,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -223,7 +223,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -239,7 +239,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -255,7 +255,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -272,7 +272,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -288,7 +288,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			}
 			return links;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -310,7 +310,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(linkNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -326,7 +326,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -351,7 +351,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(linkNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 
 	}
@@ -377,7 +377,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(linkNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

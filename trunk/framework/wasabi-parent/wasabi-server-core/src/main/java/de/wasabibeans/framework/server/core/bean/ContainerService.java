@@ -79,7 +79,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -96,7 +96,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			return TransferManager.convertNode2DTO(ContainerServiceImpl.getContainerByName(locationNode, name));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -112,7 +112,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -128,7 +128,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -145,7 +145,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -161,7 +161,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -178,7 +178,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -195,7 +195,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -212,7 +212,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -228,7 +228,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -245,7 +245,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -261,7 +261,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			return containers;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -274,7 +274,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Long optLockId = ObjectServiceImpl.getOptLockId(containerNode);
 			return TransferManager.convertValue2DTO(ContainerServiceImpl.getEnvironment(containerNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -296,7 +296,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(containerNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -313,7 +313,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -339,7 +339,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(containerNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

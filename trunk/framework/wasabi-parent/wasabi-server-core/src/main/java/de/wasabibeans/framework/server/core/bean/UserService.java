@@ -83,7 +83,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -98,7 +98,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			}
 			return users;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -116,7 +116,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			long optLockId = ObjectServiceImpl.getOptLockId(userNode);
 			return TransferManager.convertValue2DTO(UserServiceImpl.getDisplayName(userNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -129,7 +129,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
 			return TransferManager.convertValue2DTO(UserServiceImpl.getHomeRoom(userNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -161,7 +161,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -173,7 +173,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			return UserServiceImpl.getPassword(userNode);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -186,7 +186,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
 			return TransferManager.convertValue2DTO(UserServiceImpl.getStartRoom(userNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -199,7 +199,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
 			return TransferManager.convertValue2DTO(UserServiceImpl.getStatus(userNode), optLockId);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -214,7 +214,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -231,7 +231,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(roomNode, userName));
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -263,7 +263,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -283,7 +283,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			}
 			return users;
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -309,7 +309,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(userNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -326,7 +326,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			UserServiceImpl.setPassword(userNode, password);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -348,7 +348,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(userNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -368,7 +368,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(userNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -386,7 +386,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -404,7 +404,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -435,7 +435,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -451,7 +451,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -476,7 +476,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(userNode, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 }

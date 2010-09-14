@@ -96,51 +96,58 @@ public class SimpleJCRVersioningTest extends Arquillian {
 	// @BeforeMethod annotation does not seem to work for IN_CONTAINER tests in arquillian version 1.0.0.Alpha2
 	public void setUpBeforeEachMethod() throws Exception {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
-		JcrConnector jcr = JcrConnector.getJCRConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 
-		TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
-		testHelper.initDatabase();
-		testHelper.initRepository();
+		try {
+			TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
+			testHelper.initDatabase();
+			testHelper.initRepository();
 
-		Session s = jcr.getJCRSession();
-		VersionManager versionManager = s.getWorkspace().getVersionManager();
+			Session s = jcr.getJCRSession();
+			VersionManager versionManager = s.getWorkspace().getVersionManager();
 
-		Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
-		room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		roomId = room.getIdentifier();
+			Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
+			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			roomId = room.getIdentifier();
 
-		Node room1 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM1, WasabiNodeType.ROOM);
-		room1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		room1Id = room1.getIdentifier();
-		Node room2 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM2, WasabiNodeType.ROOM);
-		room2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		room2Id = room2.getIdentifier();
+			Node room1 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM1, WasabiNodeType.ROOM);
+			room1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			room1Id = room1.getIdentifier();
+			Node room2 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM2, WasabiNodeType.ROOM);
+			room2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			room2Id = room2.getIdentifier();
 
-		Node container1 = room1.getNode(WasabiNodeProperty.CONTAINERS).addNode(CONTAINER1, WasabiNodeType.CONTAINER);
-		container1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		container1Id = container1.getIdentifier();
-		Node container2 = room1.getNode(WasabiNodeProperty.CONTAINERS).addNode(CONTAINER2, WasabiNodeType.CONTAINER);
-		container2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		container2Id = container2.getIdentifier();
+			Node container1 = room1.getNode(WasabiNodeProperty.CONTAINERS)
+					.addNode(CONTAINER1, WasabiNodeType.CONTAINER);
+			container1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			container1Id = container1.getIdentifier();
+			Node container2 = room1.getNode(WasabiNodeProperty.CONTAINERS)
+					.addNode(CONTAINER2, WasabiNodeType.CONTAINER);
+			container2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			container2Id = container2.getIdentifier();
 
-		Node document1 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT1, WasabiNodeType.DOCUMENT);
-		document1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		document1Id = document1.getIdentifier();
-		Node document2 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT2, WasabiNodeType.DOCUMENT);
-		document2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
-		document2Id = document2.getIdentifier();
+			Node document1 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT1,
+					WasabiNodeType.DOCUMENT);
+			document1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			document1Id = document1.getIdentifier();
+			Node document2 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT2,
+					WasabiNodeType.DOCUMENT);
+			document2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
+			document2Id = document2.getIdentifier();
 
-		s.save();
-		
-		versionManager.checkout(room.getPath());
-		versionManager.checkout(room1.getPath());
-		versionManager.checkout(room1.getPath());
-		versionManager.checkout(container1.getPath());
-		versionManager.checkout(container2.getPath());
-		versionManager.checkout(document1.getPath());
-		versionManager.checkout(document2.getPath());
-		
-		s.logout();
+			s.save();
+
+			versionManager.checkout(room.getPath());
+			versionManager.checkout(room1.getPath());
+			versionManager.checkout(room1.getPath());
+			versionManager.checkout(container1.getPath());
+			versionManager.checkout(container2.getPath());
+			versionManager.checkout(document1.getPath());
+			versionManager.checkout(document2.getPath());
+		} finally {
+			jcr.logout();
+			jndi.close();
+		}
 	}
 
 	private void printOutVersionHistory(Node node) throws Exception {
@@ -152,10 +159,9 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			System.out.println(aVersion.getName());
 		}
 	}
-	
+
 	private void printOutVersionHistory(String path, Session s) throws Exception {
-		VersionHistory versionHistory = s.getWorkspace().getVersionManager().getVersionHistory(
-				path);
+		VersionHistory versionHistory = s.getWorkspace().getVersionManager().getVersionHistory(path);
 		System.out.println("=== Version History of " + path + " ===");
 		for (VersionIterator vi = versionHistory.getAllVersions(); vi.hasNext();) {
 			Version aVersion = vi.nextVersion();
@@ -172,8 +178,10 @@ public class SimpleJCRVersioningTest extends Arquillian {
 		for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
 			Node aNode = ni.nextNode();
 			try {
-			System.out.println(prefix + aNode.getName() + ": " + aNode.getProperty(WasabiNodeProperty.VERSION_COMMENT).getString());
-			} catch (PathNotFoundException e) {}
+				System.out.println(prefix + aNode.getName() + ": "
+						+ aNode.getProperty(WasabiNodeProperty.VERSION_COMMENT).getString());
+			} catch (PathNotFoundException e) {
+			}
 			for (NodeIterator ni2 = aNode.getNodes(); ni2.hasNext();) {
 				printOutTestTree(ni2.nextNode(), prefix);
 			}
@@ -196,9 +204,10 @@ public class SimpleJCRVersioningTest extends Arquillian {
 	@Test
 	public void test() throws Throwable {
 		setUpBeforeEachMethod();
-		JcrConnector jcr = JcrConnector.getJCRConnector();
-		Session s = jcr.getJCRSession();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
+			Session s = jcr.getJCRSession();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 			Node room = s.getNodeByIdentifier(roomId);
 
@@ -207,16 +216,17 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			Version version = versionManager.checkin(room.getPath());
 			versionManager.getVersionHistory(room.getPath()).addVersionLabel(version.getName(), "hu", false);
 			versionManager.checkout(room.getPath());
-			
+
 			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 3);
 			s.save();
 			version = versionManager.checkin(room.getPath());
 			versionManager.checkout(room.getPath());
-			
+
 			printOutFullTree(version, "");
 
 		} finally {
-			s.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 

@@ -33,15 +33,12 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public class JmsConnector {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(JmsConnector.class);
-
-	private ConnectionFactory jmsConnectionFactory;
-	private Queue allocatorQueue;
+	
 	private JndiConnector jndi;
 
-	public static JmsConnector getJmsConnector() {
-		JndiConnector jndi = JndiConnector.getJNDIConnector();
-		return new JmsConnector(jndi);
-	}
+	private ConnectionFactory jmsConnectionFactory;
+	private Connection jmsConnection;
+	private Queue allocatorQueue;
 
 	public static JmsConnector getJmsConnector(JndiConnector jndi) {
 		return new JmsConnector(jndi);
@@ -60,7 +57,10 @@ public class JmsConnector {
 
 	public Connection getJmsConnection() throws UnexpectedInternalProblemException {
 		try {
-			return getJmsConnectionFactory().createConnection();
+			if (jmsConnection == null) {
+				jmsConnection = getJmsConnectionFactory().createConnection();
+			}
+			return jmsConnection;
 		} catch (JMSException je) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMS_PROVIDER_FAILURE, je);
 		}
@@ -73,10 +73,11 @@ public class JmsConnector {
 		return this.allocatorQueue;
 	}
 
-	public void close(Connection jmsConnection) {
+	public void close() {
 		try {
 			if (jmsConnection != null) {
 				jmsConnection.close();
+				jmsConnection = null;
 			}
 		} catch (JMSException je) {
 			logger.warn("Could not return JMS connection to JCA pool.");

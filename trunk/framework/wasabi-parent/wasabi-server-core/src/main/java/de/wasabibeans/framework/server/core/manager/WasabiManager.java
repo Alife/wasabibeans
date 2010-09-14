@@ -45,6 +45,7 @@ import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
@@ -128,64 +129,62 @@ public class WasabiManager {
 	 * @return the JCR node representing the wasabi root room
 	 */
 	public static Node initRepository(String jcrNodeTypesResourcePath, boolean resetContent) {
-		Session baseSession = null;
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			JcrConnector jcr = JcrConnector.getJCRConnector();
-			baseSession = jcr.getJCRSession();
+			Session s = jcr.getJCRSession();
 
 			// register wasabi nodetypes (also registers the wasabi jcr namespaces) in case a path to a .cnd file has
 			// been given
 			if (jcrNodeTypesResourcePath != null) {
 				InputStream in = WasabiManager.class.getClassLoader().getResourceAsStream(jcrNodeTypesResourcePath);
 				Reader r = new InputStreamReader(in, "utf-8");
-				CndImporter.registerNodeTypes(r, baseSession);
+				CndImporter.registerNodeTypes(r, s);
 			}
 
 			if (resetContent) {
 				// clear existing wasabi content
 				logger.info("Resetting wasabi content: Deletion of existing content started.");
-				NodeIterator ni = baseSession.getRootNode().getNodes();
+				NodeIterator ni = s.getRootNode().getNodes();
 				while (ni.hasNext()) {
 					Node aNode = ni.nextNode();
 					if (!aNode.getName().equals("jcr:system")) {
-						removeNodeAndItsVersionHistoryRecursively(aNode,
-								baseSession.getWorkspace().getVersionManager(), baseSession);
+						removeNodeAndItsVersionHistoryRecursively(aNode, s.getWorkspace().getVersionManager(), s);
 					}
 				}
 				logger.info("Resetting wasabi content: Deletion of existing content finished.");
 
 				// create basic wasabi content
-				Node workspaceRoot = baseSession.getRootNode();
+				Node workspaceRoot = s.getRootNode();
 				Node highestVersionLabel = workspaceRoot.addNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL);
 				highestVersionLabel.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, 0L);
 				highestVersionLabel.addMixin(NodeType.MIX_LOCKABLE);
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
-				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, baseSession,
-						WasabiConstants.ROOT_USER_NAME);
+				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, s, WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi groups and initial groups
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.OBJECT_COLLECTION);
-				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, baseSession,
+				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, s,
 						WasabiConstants.ROOT_USER_NAME);
-				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, baseSession,
-						WasabiConstants.ROOT_USER_NAME);
+				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, s, WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi users and initial users
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME, WasabiNodeType.OBJECT_COLLECTION);
 				Node rootUser = UserServiceImpl.create(WasabiConstants.ROOT_USER_NAME,
-						WasabiConstants.ROOT_USER_PASSWORD, baseSession, WasabiConstants.ROOT_USER_NAME);
+						WasabiConstants.ROOT_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
 				Node adminUser = UserServiceImpl.create(WasabiConstants.ADMIN_USER_NAME,
-						WasabiConstants.ADMIN_USER_PASSWORD, baseSession, WasabiConstants.ROOT_USER_NAME);
+						WasabiConstants.ADMIN_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.addMember(adminGroup, rootUser);
 				GroupServiceImpl.addMember(adminGroup, adminUser);
 				logger.info("Resetting wasabi content: Initial wasabi content created.");
 			}
 
-			baseSession.save();
-			return baseSession.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+			s.save();
+			return s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			baseSession.logout();
+			jcr.logout();
+			jndi.close();
 		}
 	}
 

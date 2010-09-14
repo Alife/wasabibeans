@@ -57,7 +57,7 @@ public class ConcurrentlyAddChildNodesTest extends Arquillian {
 	private static final String USER1 = "user1", USER2 = "user2";
 
 	private static HashMap<String, Boolean> tickets;
-	
+
 	static {
 		tickets = new HashMap<String, Boolean>();
 		tickets.put(USER1, false);
@@ -154,7 +154,7 @@ public class ConcurrentlyAddChildNodesTest extends Arquillian {
 	}
 
 	// --------------------------------------------------------------------------------------------
-	// Tests wheter there are problems when two users add child nodes concurrently 
+	// Tests wheter there are problems when two users add child nodes concurrently
 	// seems to work since Jackrabbit version 2.1.1
 	class ProvokeError extends UserThread {
 
@@ -164,10 +164,10 @@ public class ConcurrentlyAddChildNodesTest extends Arquillian {
 
 		@Override
 		public void run() {
+			RemoteWasabiConnector reCon = new RemoteWasabiConnector();
 			try {
 				// authentication
 				System.out.println(username + " authenticates");
-				RemoteWasabiConnector reCon = new RemoteWasabiConnector();
 				reCon.connect();
 				reCon.login(username, username);
 
@@ -179,9 +179,10 @@ public class ConcurrentlyAddChildNodesTest extends Arquillian {
 					roomService.create(username + "-" + i, rootRoom);
 				}
 
-				reCon.disconnect();
 			} catch (Throwable t) {
 				throwables.add(t);
+			} finally {
+				reCon.disconnect();
 			}
 		}
 
@@ -190,18 +191,20 @@ public class ConcurrentlyAddChildNodesTest extends Arquillian {
 	@Test
 	public void provokeErrorTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
-		reWaCon.defaultConnectAndLogin();
+		try {
+			reWaCon.defaultConnectAndLogin();
 
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		testhelper.initRepository();
+			TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+			testhelper.initDatabase();
+			testhelper.initRepository();
 
-		UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
+			UserServiceRemote userService = (UserServiceRemote) reWaCon.lookup("UserService");
 
-		userService.create(USER1, USER1);
-		userService.create(USER2, USER2);
-
-		reWaCon.disconnect();
+			userService.create(USER1, USER1);
+			userService.create(USER2, USER2);
+		} finally {
+			reWaCon.disconnect();
+		}
 
 		UserThread user1 = new ProvokeError(USER1);
 		UserThread user2 = new ProvokeError(USER2);

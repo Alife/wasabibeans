@@ -2,6 +2,8 @@ package de.wasabibeans.framework.server.core.bean;
 
 import java.util.Vector;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -32,6 +34,7 @@ import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.remote.VersioningServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "VersioningService")
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -40,10 +43,18 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	@EJB
 	private LockingHelperLocal locker;
 
+	private JndiConnector jndi;
 	private JcrConnector jcr;
 
-	public VersioningService() {
-		this.jcr = JcrConnector.getJCRConnector();
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	/**
@@ -79,7 +90,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -116,7 +127,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 
@@ -216,7 +227,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, s, locker);
-			s.logout();
+			jcr.logout();
 		}
 	}
 

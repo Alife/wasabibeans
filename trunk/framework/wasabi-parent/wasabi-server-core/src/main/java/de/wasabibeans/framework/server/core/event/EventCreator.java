@@ -37,7 +37,6 @@ public class EventCreator {
 
 	public static void createPropertyChangedEvent(Node objectNode, String propertyName, Object value, JmsConnector jms,
 			String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
 			Node envNode = null;
 			try {
@@ -46,7 +45,7 @@ public class EventCreator {
 				// no parent available
 			}
 
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -72,14 +71,13 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
 	public static void createCreatedEvent(Node objectNode, Node envNode, JmsConnector jms, String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -99,12 +97,11 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
 	public static void createRemovedEvent(Node objectNode, JmsConnector jms, String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
 			Node envNode = null;
 			try {
@@ -113,7 +110,7 @@ public class EventCreator {
 				// no parent available
 			}
 
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -133,12 +130,11 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
 	public static void createMovedEvent(Node objectNode, Node newEnv, JmsConnector jms, String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
 			Node envNode = null;
 			try {
@@ -147,7 +143,7 @@ public class EventCreator {
 				// no parent available
 			}
 
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -170,15 +166,14 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
 	public static void createUserMovementEvent(Node userNode, Node roomNode, boolean entered, JmsConnector jms,
 			String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -200,15 +195,14 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
 	public static void createMembershipEvent(Node groupNode, Node userNode, boolean added, JmsConnector jms,
 			String triggeredBy) {
-		Connection jmsConnection = null;
 		try {
-			jmsConnection = jms.getJmsConnection();
+			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			Message event = jmsSession.createMessage();
@@ -229,7 +223,7 @@ public class EventCreator {
 		} catch (Exception e) {
 			logger.warn("An event could not be forwarded to the allocator.");
 		} finally {
-			jms.close(jmsConnection);
+			jms.close();
 		}
 	}
 
