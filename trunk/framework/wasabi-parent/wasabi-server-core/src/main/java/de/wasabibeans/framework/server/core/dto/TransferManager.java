@@ -162,8 +162,8 @@ public class TransferManager {
 	public static WasabiVersionDTO convertVersion2DTO(Version version, VersionHistory versionHistory)
 			throws UnexpectedInternalProblemException {
 		try {
-			Date creationDate = version.getCreated().getTime();
 			String label = versionHistory.getVersionLabels(version)[0];
+			Date creationDate = new Date(Long.parseLong(label));
 			String comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
 			return new WasabiVersionDTO(label, comment, creationDate);
 		} catch (RepositoryException re) {
