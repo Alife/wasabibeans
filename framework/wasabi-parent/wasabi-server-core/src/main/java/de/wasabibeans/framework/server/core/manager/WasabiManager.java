@@ -156,9 +156,6 @@ public class WasabiManager {
 
 				// create basic wasabi content
 				Node workspaceRoot = s.getRootNode();
-				Node highestVersionLabel = workspaceRoot.addNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL);
-				highestVersionLabel.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, 0L);
-				highestVersionLabel.addMixin(NodeType.MIX_LOCKABLE);
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
 				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, s, WasabiConstants.ROOT_USER_NAME);

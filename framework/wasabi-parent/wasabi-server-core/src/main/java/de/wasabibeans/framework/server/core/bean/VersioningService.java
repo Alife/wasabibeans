@@ -1,5 +1,6 @@
 package de.wasabibeans.framework.server.core.bean;
 
+import java.util.Calendar;
 import java.util.Vector;
 
 import javax.annotation.PostConstruct;
@@ -9,18 +10,13 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.version.VersionManager;
 
-import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
@@ -29,6 +25,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiVersionDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.VersioningServiceImpl;
 import de.wasabibeans.framework.server.core.local.VersioningServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
@@ -116,83 +113,18 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		Session s = jcr.getJCRSession();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
-			// get unique version label
-			String label = getUniqueVersionLabel(s.getRootNode().getNode(WasabiConstants.JCR_HIGHEST_VERSION_LABEL),
-					dto, s);
+			// get unique version label (that is, unique in the version histories of the affected nodes)
+			// timestamp
+			String label = "" + Calendar.getInstance().getTimeInMillis();
 			// acquire deep lock
 			Locker.acquireLock(node, dto, true, s, locker);
 			// create versions for entire subtree
-			createVersionRecursively(node, label, comment, s.getWorkspace().getVersionManager());
+			VersioningServiceImpl.createVersionRecursively(node, label, comment, s.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, s, locker);
 			jcr.logout();
-		}
-	}
-
-	/**
-	 * Returns a version-label that must be unique in the version-history of the node to be versioned and in the
-	 * version-histories of the versionable nodes in the subtree of the node to be versioned.
-	 * 
-	 * @param workspaceRoot
-	 * @param dto
-	 * @param s
-	 * @return
-	 * @throws UnexpectedInternalProblemException
-	 * @throws ConcurrentModificationException
-	 */
-	private String getUniqueVersionLabel(Node highestVersionLabelStore, WasabiObjectDTO dto, Session s)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			Locker.acquireLock(highestVersionLabelStore, dto, false, s, locker);
-			Long uniqueVersionNumber = highestVersionLabelStore.getProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL)
-					.getLong();
-			highestVersionLabelStore.setProperty(WasabiConstants.JCR_HIGHEST_VERSION_LABEL, ++uniqueVersionNumber);
-			s.save();
-			return "" + uniqueVersionNumber;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			Locker.releaseLock(highestVersionLabelStore, s, locker);
-		}
-	}
-
-	/**
-	 * Recursively creates a new version for the given node as well as for each versionable node in the subtree of the
-	 * given node. All versions created by this method will have the same comment and the same label.
-	 * 
-	 * @param node
-	 * @param label
-	 * @param comment
-	 * @param versionManager
-	 * @throws UnexpectedInternalProblemException
-	 */
-	private void createVersionRecursively(Node node, String label, String comment, VersionManager versionManager)
-			throws UnexpectedInternalProblemException {
-		try {
-			// check whether the node supports versioning
-			VersionHistory versionHistory = null;
-			try {
-				versionHistory = versionManager.getVersionHistory(node.getPath());
-			} catch (UnsupportedRepositoryOperationException uroe) {
-				// does not support versioning
-				return;
-			}
-
-			// deal with the subtree first
-			for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
-				createVersionRecursively(ni.nextNode(), label, comment, versionManager);
-			}
-
-			// create a version
-			node.setProperty(WasabiNodeProperty.VERSION_COMMENT, comment);
-			node.getSession().save();
-			Version version = versionManager.checkin(node.getPath());
-			versionHistory.addVersionLabel(version.getName(), label, false);
-			versionManager.checkout(node.getPath());
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
@@ -222,45 +154,12 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			// acquire deep lock
 			Locker.acquireLock(node, dto, true, s, locker);
 			// restore versions for entire subtree
-			restoreVersionRecursively(node, versionLabel, s.getWorkspace().getVersionManager());
+			VersioningServiceImpl.restoreVersionRecursively(node, versionLabel, s.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, s, locker);
 			jcr.logout();
-		}
-	}
-
-	/**
-	 * Recursively restores the version represented by the given {@code label} for the given node as well as for each
-	 * versionable node in the subtree of the given node.
-	 * 
-	 * @param node
-	 * @param label
-	 * @param versionManager
-	 * @throws UnexpectedInternalProblemException
-	 */
-	private void restoreVersionRecursively(Node node, String label, VersionManager versionManager)
-			throws UnexpectedInternalProblemException {
-		try {
-			// check whether the node supports versioning
-			try {
-				versionManager.checkout(node.getPath());
-			} catch (UnsupportedRepositoryOperationException uroe) {
-				// does not support versioning
-				return;
-			}
-
-			// deal with the subtree first
-			for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
-				restoreVersionRecursively(ni.nextNode(), label, versionManager);
-			}
-
-			// restore the version
-			versionManager.restoreByLabel(node.getPath(), label, true);
-			versionManager.checkout(node.getPath());
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 }

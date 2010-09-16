@@ -76,7 +76,6 @@ public interface WasabiConstants {
 	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";
 	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
 	public final static String JCR_LOGIN = "wasabi";
-	public final static String JCR_HIGHEST_VERSION_LABEL = "versionLabel";
 
 	/* DTO */
 	public final static String DTO_SUFFIX = "DTO";
