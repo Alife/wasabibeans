@@ -20,6 +20,7 @@
  */
 package de.wasabibeans.framework.server.core.event;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -62,8 +63,10 @@ public class EventSubscriptions {
 	 * permissions
 	 * 
 	 */
-	public static class SubscriptionInfo {
+	public static class SubscriptionInfo implements Serializable {
 
+		private static final long serialVersionUID = -1002710476315617258L;
+		
 		private String jmsDestinationName;
 		private boolean isQueue;
 		private Calendar timestamp;
