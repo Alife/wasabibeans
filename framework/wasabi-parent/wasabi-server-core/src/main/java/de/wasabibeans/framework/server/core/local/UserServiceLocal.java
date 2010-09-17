@@ -42,7 +42,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException;
+			ObjectAlreadyExistsException, ConcurrentModificationException;
 
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException;
 

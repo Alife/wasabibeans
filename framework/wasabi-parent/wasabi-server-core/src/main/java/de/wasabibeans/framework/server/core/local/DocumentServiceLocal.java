@@ -46,7 +46,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface DocumentServiceLocal extends ObjectServiceLocal {
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
+			ConcurrentModificationException;
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, DocumentContentException;

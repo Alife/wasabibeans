@@ -44,11 +44,11 @@ public interface AttributeServiceRemote extends ObjectServiceRemote {
 
 	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			AttributeValueException;
+			AttributeValueException, ConcurrentModificationException;
 
 	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			AttributeValueException;
+			AttributeValueException, ConcurrentModificationException;
 
 	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;

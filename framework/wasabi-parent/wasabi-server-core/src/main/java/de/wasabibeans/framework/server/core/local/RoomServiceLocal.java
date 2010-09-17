@@ -42,7 +42,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface RoomServiceLocal extends ObjectServiceLocal {
 
 	public WasabiRoomDTO create(String name, WasabiRoomDTO environment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException, NoPermissionException;
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, NoPermissionException,
+			ConcurrentModificationException;
 
 	public WasabiValueDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;

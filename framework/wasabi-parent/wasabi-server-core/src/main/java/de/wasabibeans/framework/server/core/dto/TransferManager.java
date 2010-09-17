@@ -68,6 +68,16 @@ public class TransferManager {
 		return (T) dto;
 	}
 
+	public static WasabiObjectDTO enrichWithLockToken(WasabiObjectDTO wasabiObjectDTO, String lockToken) {
+		wasabiObjectDTO.setLockToken(lockToken);
+		return wasabiObjectDTO;
+	}
+	
+	public static WasabiObjectDTO removeLockToken(WasabiObjectDTO wasabiObjectDTO) {
+		wasabiObjectDTO.setLockToken(null);
+		return wasabiObjectDTO;
+	}
+
 	public static Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		if (wasabiObjectDTO != null) {

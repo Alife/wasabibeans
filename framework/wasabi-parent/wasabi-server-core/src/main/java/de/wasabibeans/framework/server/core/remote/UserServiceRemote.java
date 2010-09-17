@@ -42,7 +42,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface UserServiceRemote extends ObjectServiceRemote {
 
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException;
+			ObjectAlreadyExistsException, ConcurrentModificationException;
 
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException;
 

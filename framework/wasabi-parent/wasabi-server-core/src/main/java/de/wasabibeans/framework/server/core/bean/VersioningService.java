@@ -23,6 +23,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiVersionDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.VersioningServiceImpl;
@@ -102,9 +103,10 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ObjectDoesNotExistException
 	 * @throws ConcurrentModificationException
+	 * @throws LockingException
 	 */
 	public void createVersion(WasabiObjectDTO dto, String comment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, LockingException {
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
@@ -123,7 +125,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			Locker.releaseLock(node, s, locker);
+			Locker.releaseLock(node, dto, s, locker);
 			jcr.logout();
 		}
 	}
@@ -140,9 +142,10 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ObjectDoesNotExistException
 	 * @throws ConcurrentModificationException
+	 * @throws LockingException
 	 */
 	public void restoreVersion(WasabiObjectDTO dto, String versionLabel) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, LockingException {
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
@@ -158,7 +161,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
-			Locker.releaseLock(node, s, locker);
+			Locker.releaseLock(node, dto, s, locker);
 			jcr.logout();
 		}
 	}

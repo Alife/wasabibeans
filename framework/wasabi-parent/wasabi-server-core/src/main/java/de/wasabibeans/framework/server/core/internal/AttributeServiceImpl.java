@@ -40,12 +40,14 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -53,7 +55,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public class AttributeServiceImpl {
 
 	public static Node create(String name, Serializable value, Node affiliationNode, Session s, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException,
+			ConcurrentModificationException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
@@ -64,13 +67,16 @@ public class AttributeServiceImpl {
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "attribute", name), name, iee);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static Node create(String name, Node valueNode, Node affiliationNode, Session s, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
@@ -81,6 +87,9 @@ public class AttributeServiceImpl {
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "attribute", name), name, iee);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
