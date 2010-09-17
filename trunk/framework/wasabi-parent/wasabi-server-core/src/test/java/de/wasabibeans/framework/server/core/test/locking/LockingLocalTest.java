@@ -27,7 +27,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
-import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.NodeType;
 import javax.transaction.UserTransaction;
 
@@ -52,7 +51,6 @@ import de.wasabibeans.framework.server.core.event.WasabiEventType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
-import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.local.UserServiceLocal;
@@ -62,6 +60,7 @@ import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperLocal;
+import de.wasabibeans.framework.server.core.test.testhelper.DummyDTO;
 import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
@@ -69,7 +68,7 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Run(RunModeType.IN_CONTAINER)
-public class LockingTest extends Arquillian {
+public class LockingLocalTest extends Arquillian {
 
 	private static final String USER1 = "user1", USER2 = "user2";
 	private static final String DOC1 = "document1", CONTENT1 = "content1";
@@ -83,6 +82,7 @@ public class LockingTest extends Arquillian {
 	}
 
 	private String docid;
+	private DummyDTO dto;
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -131,6 +131,7 @@ public class LockingTest extends Arquillian {
 			s.save();
 
 			docid = document.getIdentifier();
+			dto = new DummyDTO(docid);
 		} finally {
 			jcr.logout();
 			jndi.close();
@@ -206,60 +207,6 @@ public class LockingTest extends Arquillian {
 		return throwables;
 	}
 
-	// -------------------------------------------------------------------------------------------
-	// the lock methods of Locker.java to be tested (simplification: no dtos involved)
-	// copied here in order to be able to add assertions (... and leave out the dtos)
-	public static void acquireLock(Node node, Long optLockId, Session s, LockingHelperLocal locker)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			String lockToken = locker.acquireLock(node.getIdentifier(), false);
-			LockManager lockManager = s.getWorkspace().getLockManager();
-			lockManager.addLockToken(lockToken);
-			AssertJUnit.assertTrue(node.isLocked()); // node must be locked before making the version check
-			if (optLockId != null && !optLockId.equals(ObjectServiceImpl.getOptLockId(node))) {
-				lockManager.removeLockToken(lockToken);
-				locker.releaseLock(node.getIdentifier(), lockToken);
-				AssertJUnit.assertFalse(node.isLocked());
-				throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_OPTLOCK);
-			}
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	public static void acquireLock(Node node, boolean isDeep, Session s, LockingHelperLocal locker)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			String lockToken = locker.acquireLock(node.getIdentifier(), isDeep);
-			s.getWorkspace().getLockManager().addLockToken(lockToken);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL, le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	public static void releaseLock(Node node, Session s, LockingHelperLocal locker)
-			throws UnexpectedInternalProblemException {
-		if (node == null) {
-			// do nothing
-			return;
-		}
-		try {
-			LockManager lockManager = s.getWorkspace().getLockManager();
-			String lockToken = lockManager.getLock(node.getPath()).getLockToken();
-			lockManager.removeLockToken(lockToken);
-			locker.releaseLock(node.getIdentifier(), lockToken);
-			AssertJUnit.assertFalse(node.isLocked());
-		} catch (LockException e) {
-			// do nothing... there was no lock to unlock
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
 	// ------------------------------------------------------------------------------------------
 	// tests the case when one user tries to write an already locked node
 	class SetSomethingTest1 extends UserThread {
@@ -287,7 +234,7 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
 					if (username.equals(USER1)) {
@@ -302,7 +249,7 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (username.equals(USER2)) {
 						notifyOther();
@@ -367,17 +314,16 @@ public class LockingTest extends Arquillian {
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
-				Node document = null;
-				Node node1 = null;
 				Session s = jcr.getJCRSession();
-				document = s.getNodeByIdentifier(docid);
+				Node document = s.getNodeByIdentifier(docid);
+				Node node1 = document.getParent().getParent();
+				DummyDTO node1DTO = new DummyDTO(node1.getIdentifier());
 				try {
 					if (username.equals(USER2)) {
 						waitForMyTurn();
-						acquireLock(document, null, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
 					} else {
-						node1 = document.getParent().getParent();
-						acquireLock(node1, true, s, locker);
+						Locker.acquireLock(node1, node1DTO, true, s, locker);
 					}
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
@@ -393,8 +339,8 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(node1, s, locker);
-					releaseLock(document, s, locker);
+					Locker.releaseLock(node1, node1DTO, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (username.equals(USER2)) {
 						notifyOther();
@@ -439,6 +385,7 @@ public class LockingTest extends Arquillian {
 			s.save();
 
 			docid = document.getIdentifier();
+			dto = new DummyDTO(docid);
 		} finally {
 			jcr.logout();
 			jndi.close();
@@ -495,7 +442,7 @@ public class LockingTest extends Arquillian {
 					if (username.equals(USER2)) {
 						waitForCommitOfOther();
 					}
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
@@ -504,7 +451,7 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
@@ -562,7 +509,7 @@ public class LockingTest extends Arquillian {
 					if (username.equals(USER2)) {
 						waitForMyTurn();
 					}
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
@@ -575,7 +522,7 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (username.equals(USER1)) {
 						notifyOther();
@@ -640,9 +587,10 @@ public class LockingTest extends Arquillian {
 					if (username.equals(USER2)) {
 						Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 						waitForCommitOfOther();
-						acquireLock(document, optLockId, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
+						Locker.checkOptLockId(document, dto, optLockId);
 					} else {
-						acquireLock(document, null, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
 					}
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
@@ -652,7 +600,7 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
@@ -725,7 +673,7 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 
 					if (username.equals(USER1)) {
@@ -744,7 +692,7 @@ public class LockingTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (error) {
 						utx.rollback();
@@ -818,19 +766,18 @@ public class LockingTest extends Arquillian {
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
-				Node node1 = null;
-				Node document = null;
 				Session s = jcr.getJCRSession();
+				Node document = s.getNodeByIdentifier(docid);
+				Node node1 = document.getParent().getParent();
+				DummyDTO node1DTO = new DummyDTO(node1.getIdentifier());
 				try {
 					utx.begin();
-					document = s.getNodeByIdentifier(docid);
 
 					if (username.equals(USER2)) {
 						waitForMyTurn();
-						acquireLock(document, null, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
 					} else {
-						node1 = document.getParent().getParent();
-						acquireLock(node1, true, s, locker);
+						Locker.acquireLock(node1, node1DTO, true, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
@@ -851,8 +798,8 @@ public class LockingTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					releaseLock(node1, s, locker);
-					releaseLock(document, s, locker);
+					Locker.releaseLock(node1, node1DTO, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (error) {
 						utx.rollback();
@@ -903,6 +850,7 @@ public class LockingTest extends Arquillian {
 			s.save();
 
 			docid = document.getIdentifier();
+			dto = new DummyDTO(docid);
 		} finally {
 			jcr.logout();
 			jndi.close();
@@ -965,7 +913,7 @@ public class LockingTest extends Arquillian {
 						waitForCommitOfOther();
 					}
 
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
@@ -978,7 +926,7 @@ public class LockingTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (error) {
 						utx.rollback();
@@ -1048,7 +996,7 @@ public class LockingTest extends Arquillian {
 						waitForMyTurn();
 					}
 
-					acquireLock(document, null, s, locker);
+					Locker.acquireLock(document, dto, false, s, locker);
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
 					Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 					document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, ++optLockId);
@@ -1065,7 +1013,7 @@ public class LockingTest extends Arquillian {
 					error = true;
 					throw t;
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 
 					if (error) {
 						utx.rollback();
@@ -1137,9 +1085,10 @@ public class LockingTest extends Arquillian {
 					if (username.equals(USER2)) {
 						Long optLockId = document.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
 						waitForCommitOfOther();
-						acquireLock(document, optLockId, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
+						Locker.checkOptLockId(document, dto, optLockId);
 					} else {
-						acquireLock(document, null, s, locker);
+						Locker.acquireLock(document, dto, false, s, locker);
 					}
 
 					document.setProperty(WasabiNodeProperty.CONTENT, username);
@@ -1150,7 +1099,7 @@ public class LockingTest extends Arquillian {
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				} finally {
-					releaseLock(document, s, locker);
+					Locker.releaseLock(document, dto, s, locker);
 				}
 			} catch (Throwable t) {
 				throwables.add(t);
@@ -1207,7 +1156,7 @@ public class LockingTest extends Arquillian {
 
 			Session s = jcr.getJCRSession();
 			Node document = s.getNodeByIdentifier(docid);
-			releaseLock(document, s, locker);
+			Locker.releaseLock(document, dto, s, locker);
 		} finally {
 			jcr.logout();
 			jndi.close();

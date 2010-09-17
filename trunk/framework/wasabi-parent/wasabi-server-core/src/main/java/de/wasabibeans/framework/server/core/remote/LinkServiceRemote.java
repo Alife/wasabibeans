@@ -43,8 +43,10 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
  */
 @Remote
 public interface LinkServiceRemote extends ObjectServiceRemote {
+	
 	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment)
-			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException;
 
 	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
 			TargetDoesNotExistException, ObjectDoesNotExistException;

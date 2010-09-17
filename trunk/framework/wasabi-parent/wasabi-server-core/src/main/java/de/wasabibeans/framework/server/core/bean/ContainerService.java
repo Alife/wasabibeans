@@ -43,6 +43,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -62,7 +63,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public WasabiContainerDTO create(String name, WasabiLocationDTO environment) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -70,6 +71,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
+			Locker.recognizeDeepLockToken(environment, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, callerPrincipal);
@@ -288,14 +290,17 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			Locker.acquireLock(containerNode, container, optLockId, s, locker);
+			Locker.acquireLock(containerNode, container, false, s, locker);
+			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal);
 			s.save();
 			EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(containerNode, s, locker);
+			Locker.releaseLock(containerNode, container, s, locker);
 			jcr.logout();
 		}
 	}
@@ -331,14 +336,17 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
-			Locker.acquireLock(containerNode, container, optLockId, s, locker);
+			Locker.acquireLock(containerNode, container, false, s, locker);
+			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.rename(containerNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(containerNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(containerNode, s, locker);
+			Locker.releaseLock(containerNode, container, s, locker);
 			jcr.logout();
 		}
 	}

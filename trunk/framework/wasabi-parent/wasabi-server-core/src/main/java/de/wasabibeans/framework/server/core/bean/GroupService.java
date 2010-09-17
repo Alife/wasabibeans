@@ -43,6 +43,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -80,7 +81,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 	@Override
 	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -88,6 +89,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 		Session s = jcr.getJCRSession();
 		try {
+			Locker.recognizeDeepLockToken(parentGroup, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			if (GroupServiceImpl.getGroupByName(name, s) != null) {
 				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -356,14 +358,17 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 			}
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, optLockId, s, locker);
+			Locker.acquireLock(groupNode, group, false, s, locker);
+			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.move(groupNode, newParentGroupNode, callerPrincipal);
 			s.save();
 			EventCreator.createMovedEvent(groupNode, newParentGroupNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(groupNode, s, locker);
+			Locker.releaseLock(groupNode, group, s, locker);
 			jcr.logout();
 		}
 
@@ -418,14 +423,17 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, optLockId, s, locker);
+			Locker.acquireLock(groupNode, group, false, s, locker);
+			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.rename(groupNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(groupNode, s, locker);
+			Locker.releaseLock(groupNode, group, s, locker);
 			jcr.logout();
 		}
 
@@ -444,14 +452,17 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.acquireLock(groupNode, group, optLockId, s, locker);
+			Locker.acquireLock(groupNode, group, false, s, locker);
+			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.setDisplayName(groupNode, displayName, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(groupNode, s, locker);
+			Locker.releaseLock(groupNode, group, s, locker);
 			jcr.logout();
 		}
 	}

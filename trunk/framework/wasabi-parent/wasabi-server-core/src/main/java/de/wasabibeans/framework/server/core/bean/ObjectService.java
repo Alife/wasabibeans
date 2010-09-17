@@ -49,6 +49,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -78,7 +79,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	protected JndiConnector jndi;
 	protected JcrConnector jcr;
 	protected JmsConnector jms;
-	
+
 	@PostConstruct
 	public void postConstruct() {
 		this.jndi = JndiConnector.getJNDIConnector();
@@ -275,13 +276,16 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(objectNode, object, optLockId, s, locker);
+			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedBy(objectNode, userNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(objectNode, s, locker);
+			Locker.releaseLock(objectNode, object, s, locker);
 			jcr.logout();
 		}
 	}
@@ -293,13 +297,16 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		Session s = jcr.getJCRSession();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
-			Locker.acquireLock(objectNode, object, optLockId, s, locker);
+			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedOn(objectNode, creationTime);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(objectNode, s, locker);
+			Locker.releaseLock(objectNode, object, s, locker);
 			jcr.logout();
 		}
 	}
@@ -312,13 +319,16 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(objectNode, object, optLockId, s, locker);
+			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedBy(objectNode, userNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(objectNode, s, locker);
+			Locker.releaseLock(objectNode, object, s, locker);
 			jcr.logout();
 		}
 	}
@@ -330,13 +340,16 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		Session s = jcr.getJCRSession();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
-			Locker.acquireLock(objectNode, object, optLockId, s, locker);
+			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedOn(objectNode, modificationTime);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(objectNode, s, locker);
+			Locker.releaseLock(objectNode, object, s, locker);
 			jcr.logout();
 		}
 	}

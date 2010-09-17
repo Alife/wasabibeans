@@ -37,6 +37,8 @@ public abstract class WasabiObjectDTO implements Serializable {
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected String id;
+	
+	protected String lockToken;
 
 	protected WasabiObjectDTO() {
 
@@ -48,6 +50,14 @@ public abstract class WasabiObjectDTO implements Serializable {
 
 	protected void setId(String id) {
 		this.id = id;
+	}
+	
+	public String getLockToken() {
+		return lockToken;
+	}
+	
+	protected void setLockToken(String lockToken) {
+		this.lockToken = lockToken;
 	}
 
 	@Override

@@ -42,7 +42,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface ContainerServiceRemote extends ObjectServiceRemote {
 
 	public WasabiContainerDTO create(String name, WasabiLocationDTO environment) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
 	public WasabiContainerDTO getContainerByName(WasabiLocationDTO location, String name)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;

@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -64,7 +65,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+			ObjectAlreadyExistsException, ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -300,15 +301,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, optLockId, s, locker);
+			Locker.acquireLock(userNode, user, false, s, locker);
+			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setDisplayName(userNode, displayName, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.DISPLAY_NAME, displayName, jms,
 					callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(userNode, s, locker);
+			Locker.releaseLock(userNode, user, s, locker);
 			jcr.logout();
 		}
 	}
@@ -339,15 +343,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.acquireLock(userNode, user, optLockId, s, locker);
+			Locker.acquireLock(userNode, user, false, s, locker);
+			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStartRoom(userNode, roomNode, callerPrincipal);
 			EventCreator
 					.createPropertyChangedEvent(userNode, WasabiProperty.START_ROOM, roomNode, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(userNode, s, locker);
+			Locker.releaseLock(userNode, user, s, locker);
 			jcr.logout();
 		}
 	}
@@ -360,14 +367,17 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, optLockId, s, locker);
+			Locker.acquireLock(userNode, user, false, s, locker);
+			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStatus(userNode, active, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.STATUS, active, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(userNode, s, locker);
+			Locker.releaseLock(userNode, user, s, locker);
 			jcr.logout();
 		}
 	}
@@ -468,14 +478,17 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.acquireLock(userNode, user, optLockId, s, locker);
+			Locker.acquireLock(userNode, user, false, s, locker);
+			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.rename(userNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (LockingException e) {
+			// cannot happen
 		} finally {
-			Locker.releaseLock(userNode, s, locker);
+			Locker.releaseLock(userNode, user, s, locker);
 			jcr.logout();
 		}
 	}

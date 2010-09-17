@@ -43,7 +43,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 			UnexpectedInternalProblemException;
 
 	public WasabiGroupDTO create(String name, WasabiGroupDTO parentGroup) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException;
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException;
 
 	public WasabiValueDTO getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
