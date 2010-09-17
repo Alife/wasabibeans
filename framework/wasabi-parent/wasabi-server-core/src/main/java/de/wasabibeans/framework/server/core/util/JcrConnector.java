@@ -29,11 +29,12 @@ import javax.jcr.SimpleCredentials;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.locking.Locker;
 
 public class JcrConnector {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(JcrConnector.class);
-	
+
 	private JndiConnector jndi;
 
 	private Repository jcrRepository;
@@ -68,9 +69,17 @@ public class JcrConnector {
 	}
 
 	public void logout() {
-		if (session != null) {
-			session.logout();
-			session = null;
+		try {
+			if (session != null) {
+				Locker.cleanUpLockTokens(session);
+				session.logout();
+				session = null;
+			}
+		} catch (Exception e) {
+			logger
+					.error(
+							"Fatal internal error: A JCR session is corrupted and could not be returned to the connection pool properly.",
+							e);
 		}
 	}
 }

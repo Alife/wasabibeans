@@ -63,12 +63,13 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 	@Override
 	public void addMember(WasabiGroupDTO group, WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, group, user);
 			GroupServiceImpl.addMember(groupNode, userNode);
 			s.save();
 			EventCreator.createMembershipEvent(groupNode, userNode, true, jms, callerPrincipal);
@@ -89,7 +90,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(parentGroup, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			if (GroupServiceImpl.getGroupByName(name, s) != null) {
 				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -100,10 +100,11 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			if (parentGroup != null) {
 				parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
 			}
+			Locker.recognizeLockTokens(s, parentGroup);
 			Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(groupNode, parentGroupNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(groupNode);
+			return TransferManager.convertNode2DTO(groupNode, parentGroup);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -282,7 +283,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		try {
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name));
+			return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name), group);
 		} finally {
 			jcr.logout();
 		}
@@ -297,7 +298,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			Vector<WasabiGroupDTO> subgroups = new Vector<WasabiGroupDTO>();
 			NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
 			while (ni.hasNext()) {
-				subgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				subgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode(), group));
 			}
 			return subgroups;
 		} finally {
@@ -358,6 +359,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 			}
 			groupNode = TransferManager.convertDTO2Node(group, s);
+			Locker.recognizeLockTokens(s, group, newParentGroup);
 			Locker.acquireLock(groupNode, group, false, s, locker);
 			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.move(groupNode, newParentGroupNode, callerPrincipal);
@@ -375,12 +377,14 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	}
 
 	@Override
-	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, group);
 			GroupServiceImpl.remove(groupNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -393,12 +397,13 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 
 	@Override
 	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, group, user);
 			GroupServiceImpl.removeMember(groupNode, userNode);
 			s.save();
 			EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
@@ -423,6 +428,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
+			Locker.recognizeLockTokens(s, group);
 			Locker.acquireLock(groupNode, group, false, s, locker);
 			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.rename(groupNode, name, callerPrincipal);
@@ -452,6 +458,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			groupNode = TransferManager.convertDTO2Node(group, s);
+			Locker.recognizeLockTokens(s, group);
 			Locker.acquireLock(groupNode, group, false, s, locker);
 			Locker.checkOptLockId(groupNode, group, optLockId);
 			GroupServiceImpl.setDisplayName(groupNode, displayName, callerPrincipal);

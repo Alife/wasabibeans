@@ -214,7 +214,8 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static void remove(Node attributeNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node attributeNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		ObjectServiceImpl.remove(attributeNode);
 	}
 

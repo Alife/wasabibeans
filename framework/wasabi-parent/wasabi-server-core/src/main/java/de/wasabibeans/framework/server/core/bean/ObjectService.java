@@ -276,6 +276,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedBy(objectNode, userNode);
@@ -297,6 +298,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		Session s = jcr.getJCRSession();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
+			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedOn(objectNode, creationTime);
@@ -319,6 +321,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedBy(objectNode, userNode);
@@ -340,6 +343,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		Session s = jcr.getJCRSession();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
+			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedOn(objectNode, modificationTime);

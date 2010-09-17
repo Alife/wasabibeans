@@ -119,6 +119,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			// timestamp
 			String label = "" + Calendar.getInstance().getTimeInMillis();
 			// acquire deep lock
+			Locker.recognizeLockTokens(s, dto);
 			Locker.acquireLock(node, dto, true, s, locker);
 			// create versions for entire subtree
 			VersioningServiceImpl.createVersionRecursively(node, label, comment, s.getWorkspace().getVersionManager());
@@ -155,6 +156,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
 			// acquire deep lock
+			Locker.recognizeLockTokens(s, dto);
 			Locker.acquireLock(node, dto, true, s, locker);
 			// restore versions for entire subtree
 			VersioningServiceImpl.restoreVersionRecursively(node, versionLabel, s.getWorkspace().getVersionManager());

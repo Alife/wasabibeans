@@ -65,20 +65,21 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 		jndi.close();
 	}
 
-	public WasabiObjectDTO acquireLock(WasabiObjectDTO object, boolean isDeep)
+	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
 			LockingException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			String lockToken = Locker.acquireLockByToken(objectNode, object, isDeep, s, locker);
-			return TransferManager.enrichWithLockToken(object, lockToken);
+			Locker.recognizeLockTokens(s, object);
+			String lockToken = Locker.acquireLock(objectNode, object, isDeep, s, locker);
+			return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
 		} finally {
 			jcr.logout();
 		}
 	}
 
-	public WasabiObjectDTO releaseLock(WasabiObjectDTO object) throws UnexpectedInternalProblemException {
+	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException {
 		if (object == null) {
 			return null;
 		}

@@ -184,7 +184,8 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void remove(Node documentNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node documentNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		ObjectServiceImpl.remove(documentNode);
 	}
 

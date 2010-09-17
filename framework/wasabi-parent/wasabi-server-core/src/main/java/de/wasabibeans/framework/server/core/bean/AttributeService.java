@@ -73,13 +73,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(affiliation, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+			Locker.recognizeLockTokens(s, affiliation);
 			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(attributeNode);
+			return TransferManager.convertNode2DTO(attributeNode, affiliation);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -98,14 +98,14 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(affiliation, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
 			Node valueNode = TransferManager.convertDTO2Node(value, s);
+			Locker.recognizeLockTokens(s, affiliation);
 			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(attributeNode);
+			return TransferManager.convertNode2DTO(attributeNode, affiliation);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -137,7 +137,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name));
+			return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name), object);
 		} finally {
 			jcr.logout();
 		}
@@ -164,7 +164,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			Vector<WasabiAttributeDTO> attributes = new Vector<WasabiAttributeDTO>();
 			NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
 			while (ni.hasNext()) {
-				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
 			}
 			return attributes;
 		} finally {
@@ -213,6 +213,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
+			Locker.recognizeLockTokens(s, attribute, newAffiliation);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal);
@@ -230,12 +231,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 	@Override
 	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, attribute);
 			AttributeServiceImpl.remove(attributeNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -259,6 +261,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.rename(attributeNode, name, callerPrincipal);
@@ -283,6 +286,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.setValue(attributeNode, value, callerPrincipal);
@@ -310,6 +314,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			if (value != null) {
 				valueNode = TransferManager.convertDTO2Node(value, s);
 			}
+			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, callerPrincipal);

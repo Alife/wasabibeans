@@ -85,7 +85,7 @@ public interface ContainerServiceLocal extends ObjectServiceLocal {
 			ObjectDoesNotExistException;
 
 	public void remove(WasabiContainerDTO container) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void rename(WasabiContainerDTO container, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,

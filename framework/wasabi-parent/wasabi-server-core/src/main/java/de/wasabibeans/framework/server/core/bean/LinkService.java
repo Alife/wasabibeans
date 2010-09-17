@@ -75,14 +75,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(environment, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Locker.recognizeLockTokens(s, environment);
 			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(linkNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(linkNode);
+			return TransferManager.convertNode2DTO(linkNode, environment);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -127,7 +127,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSession();
 		try {
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
-			return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name));
+			return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name), location);
 		} finally {
 			jcr.logout();
 		}
@@ -141,7 +141,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 			return links;
 		} finally {
@@ -157,7 +157,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -173,7 +173,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -206,7 +206,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -222,7 +222,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -238,7 +238,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -271,7 +271,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode)) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 			}
 			return links;
 		} finally {
@@ -287,7 +287,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 			for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 			return links;
 		} finally {
@@ -305,6 +305,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+			Locker.recognizeLockTokens(s, link, newEnvironment);
 			Locker.acquireLock(linkNode, link, false, s, locker);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal);
@@ -321,12 +322,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	}
 
 	@Override
-	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, link);
 			LinkServiceImpl.remove(linkNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -349,6 +352,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
+			Locker.recognizeLockTokens(s, link);
 			Locker.acquireLock(linkNode, link, false, s, locker);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.rename(linkNode, name, callerPrincipal);
@@ -377,6 +381,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			if (object != null) {
 				objectNode = TransferManager.convertDTO2Node(object, s);
 			}
+			Locker.recognizeLockTokens(s, link);
 			Locker.acquireLock(linkNode, link, false, s, locker);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.setDestination(linkNode, objectNode, callerPrincipal);

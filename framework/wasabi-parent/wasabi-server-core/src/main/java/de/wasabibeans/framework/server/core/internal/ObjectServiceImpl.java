@@ -32,6 +32,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
+import javax.jcr.lock.LockException;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.Ordering;
@@ -43,6 +44,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -90,9 +92,18 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void remove(Node objectNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node objectNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			objectNode.remove();
+		} catch (LockException le) {
+			try {
+				String what = objectNode.getPrimaryNodeType().getName();
+				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.INTERNAL_LOCKING_REMOVE_FAILURE, what), le);
+			} catch (RepositoryException re) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
