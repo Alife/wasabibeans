@@ -28,6 +28,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
@@ -199,7 +200,8 @@ public class UserServiceImpl {
 				displayName, s);
 	}
 
-	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
+	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
@@ -209,12 +211,15 @@ public class UserServiceImpl {
 			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already present in room
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void leave(Node userNode, Node roomNode) throws UnexpectedInternalProblemException {
+	public static void leave(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNode(userNode.getIdentifier());
 			userRef.remove();
@@ -222,6 +227,8 @@ public class UserServiceImpl {
 			roomRef.remove();
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user not present
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -245,7 +252,7 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static void remove(Node userNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node userNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		// Database
 		WasabiUserSQL.SqlQueryForRemove(userNode);
 

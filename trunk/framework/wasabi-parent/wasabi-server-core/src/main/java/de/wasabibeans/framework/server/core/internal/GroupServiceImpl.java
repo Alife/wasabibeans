@@ -42,7 +42,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class GroupServiceImpl {
 
-	public static void addMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+	public static void addMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
@@ -52,6 +53,8 @@ public class GroupServiceImpl {
 			groupRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, groupNode);
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already a member of the group
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -268,11 +271,13 @@ public class GroupServiceImpl {
 
 	}
 
-	public static void remove(Node groupNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node groupNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		ObjectServiceImpl.remove(groupNode);
 	}
 
-	public static void removeMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
+	public static void removeMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			Node userref = groupNode.getNode(WasabiNodeProperty.MEMBERS).getNode(userNode.getIdentifier());
 			userref.remove();
@@ -280,6 +285,8 @@ public class GroupServiceImpl {
 			groupref.remove();
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user to be removed is not a member
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

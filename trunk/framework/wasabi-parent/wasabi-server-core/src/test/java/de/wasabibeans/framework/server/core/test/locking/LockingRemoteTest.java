@@ -30,7 +30,9 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
@@ -68,36 +70,50 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 	@Test
 	// user acquires lock and then edits the object
 	public void lockAndWrite() throws Exception {
-		WasabiDocumentDTO userDocument = null;
+		WasabiDocumentDTO lockDocument = null;
 		try {
-			userDocument = (WasabiDocumentDTO) lockingService().acquireLock(document, false);
-			documentService().setContent(userDocument, "hallo", null);
-			AssertJUnit.assertEquals("hallo", documentService().getContent(userDocument).getValue());
+			lockDocument = lockingService().lock(document, false);
+			documentService().setContent(lockDocument, "hallo", null);
+			AssertJUnit.assertEquals("hallo", documentService().getContent(lockDocument).getValue());
 		} finally {
-			lockingService().releaseLock(userDocument);
+			lockingService().unlock(lockDocument);
 		}
 	}
 
 	@Test
 	// user acquires deep lock and then adds object
 	public void deepLockAndWrite() throws Exception {
-		WasabiContainerDTO userContainer = null;
+		WasabiContainerDTO lockContainer = null;
 		try {
-			userContainer = (WasabiContainerDTO) lockingService().acquireLock(container, true);
-			documentService().create("document2", userContainer);
-			AssertJUnit.assertEquals(2, documentService().getDocuments(userContainer).size());
+			lockContainer = lockingService().lock(container, true);
+			documentService().create("document2", lockContainer);
+			AssertJUnit.assertEquals(2, documentService().getDocuments(lockContainer).size());
 		} finally {
-			lockingService().releaseLock(userContainer);
+			lockingService().unlock(lockContainer);
+		}
+	}
+	
+	@Test
+	// user acquires deep lock and then adds object on a deeper level
+	public void deepLockAndWrite2() throws Exception {
+		WasabiRoomDTO lockRoom = null;
+		try {
+			lockRoom = lockingService().lock(room, true);
+			WasabiContainerDTO lockContainer = containerService().getContainerByName(lockRoom, "container");
+			documentService().create("document2", lockContainer);
+			AssertJUnit.assertEquals(2, documentService().getDocuments(lockContainer).size());
+		} finally {
+			lockingService().unlock(lockRoom);
 		}
 	}
 
 	@Test
 	// user locks and subsequent write access without corresponding dto fails
 	public void lockAndFailedAccess() throws Exception {
-		WasabiDocumentDTO userDocument = null;
+		WasabiDocumentDTO lockDocument = null;
 		try {
 			// lock
-			userDocument = (WasabiDocumentDTO) lockingService().acquireLock(document, false);
+			lockDocument = lockingService().lock(document, false);
 
 			// try to access with the dto that does not contain the lock token
 			try {
@@ -107,17 +123,17 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 				// passed
 			}
 		} finally {
-			lockingService().releaseLock(userDocument);
+			lockingService().unlock(lockDocument);
 		}
 	}
 
 	@Test
 	// user locks deep and subsequent attempts to add child-objects by using the wrong dto fail
 	public void deeplockAndFailedAccess() throws Exception {
-		WasabiRoomDTO userRoom = null;
+		WasabiRoomDTO lockRoom = null;
 		try {
 			// lock
-			userRoom = (WasabiRoomDTO) lockingService().acquireLock(room, true);
+			lockRoom = lockingService().lock(room, true);
 
 			// try to add child nodes by using the wrong dto
 			try {
@@ -127,95 +143,95 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 				// passed
 			}
 		} finally {
-			lockingService().releaseLock(userRoom);
+			lockingService().unlock(lockRoom);
 		}
 	}
 
 	@Test
 	// user locks, unlocks and writes/locks again
 	public void lockAndUnlock() throws Exception {
-		WasabiDocumentDTO userDocument = null;
+		WasabiDocumentDTO lockDocument = null;
 		// lock and unlock
 		try {
-			userDocument = (WasabiDocumentDTO) lockingService().acquireLock(document, false);
+			lockDocument = lockingService().lock(document, false);
 		} finally {
-			lockingService().releaseLock(userDocument);
+			lockingService().unlock(lockDocument);
 		}
 
 		// write and lock again
 		documentService().setContent(document, "hallo", null);
 		try {
-			userDocument = (WasabiDocumentDTO) lockingService().acquireLock(document, false);
+			lockDocument = lockingService().lock(document, false);
 		} finally {
-			lockingService().releaseLock(userDocument);
+			lockingService().unlock(lockDocument);
 		}
 	}
 
 	@Test
 	// user locks deep, unlocks and writes/locks deep again
 	public void lockDeepAndUnlock() throws Exception {
-		WasabiContainerDTO userContainer = null;
+		WasabiContainerDTO lockContainer = null;
 		// lock and unlock
 		try {
-			userContainer = (WasabiContainerDTO) lockingService().acquireLock(container, true);
+			lockContainer = lockingService().lock(container, true);
 		} finally {
-			lockingService().releaseLock(userContainer);
+			lockingService().unlock(lockContainer);
 		}
 
 		// write and lock again
 		documentService().create("document2", container);
 		try {
-			userContainer = (WasabiContainerDTO) lockingService().acquireLock(container, true);
+			lockContainer = lockingService().lock(container, true);
 		} finally {
-			lockingService().releaseLock(userContainer);
+			lockingService().unlock(lockContainer);
 		}
 	}
 
 	@Test
 	// user acquires normal lock and then tries to create a version
 	public void provokeLockingException() throws Exception {
-		WasabiRoomDTO userRoom = null;
+		WasabiRoomDTO lockRoom = null;
 		try {
-			userRoom = (WasabiRoomDTO) lockingService().acquireLock(room, false);
+			lockRoom =  lockingService().lock(room, false);
 			try {
-				versioningService().createVersion(userRoom, "test");
+				versioningService().createVersion(lockRoom, "test");
 			} catch (LockingException e) {
 				// passed
 			}
 		} finally {
-			lockingService().releaseLock(userRoom);
+			lockingService().unlock(lockRoom);
 		}
 
 		// check that it actually works with a deep lock
 		try {
-			userRoom = (WasabiRoomDTO) lockingService().acquireLock(room, true);
-			versioningService().createVersion(userRoom, "test");
-			AssertJUnit.assertEquals(1, versioningService().getVersions(userRoom).size());
+			lockRoom = lockingService().lock(room, true);
+			versioningService().createVersion(lockRoom, "test");
+			AssertJUnit.assertEquals(1, versioningService().getVersions(lockRoom).size());
 		} finally {
-			lockingService().releaseLock(userRoom);
+			lockingService().unlock(lockRoom);
 		}
 	}
 
 	@Test
 	// user tries to acquire lock although he already has it -> should be no problem if 'isDeep' is the same
-	public void redundantlyAcquireLock() throws Exception {
-		WasabiRoomDTO userRoom = null;
+	public void redundantlylock() throws Exception {
+		WasabiRoomDTO lockRoom = null;
 		try {
-			userRoom = (WasabiRoomDTO) lockingService().acquireLock(room, false);
+			lockRoom = lockingService().lock(room, false);
 
 			// problem
 			try {
-				lockingService().acquireLock(userRoom, true);
+				lockingService().lock(lockRoom, true);
 				AssertJUnit.fail();
 			} catch (LockingException e) {
 				// passed
 			}
 
 			// no problem
-			WasabiRoomDTO userRoom2 = (WasabiRoomDTO) lockingService().acquireLock(userRoom, false);
-			AssertJUnit.assertEquals(userRoom.getLockToken(), userRoom2.getLockToken());
+			WasabiRoomDTO lockRoom2 = lockingService().lock(lockRoom, false);
+			AssertJUnit.assertEquals(lockRoom.getLockToken(), lockRoom2.getLockToken());
 		} finally {
-			lockingService().releaseLock(userRoom);
+			lockingService().unlock(lockRoom);
 		}
 
 		// check that no lock is left -> then the following call causes no problems
@@ -226,44 +242,63 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 	// tests what happens if DTOs with invalid lock-tokens are used
 	public void invalidDTOs() throws Exception {
 		// lock and unlock and keep the dto
-		WasabiRoomDTO userRoom1 = null;
+		WasabiContainerDTO lockContainer = null;
 		try {
-			userRoom1 = (WasabiRoomDTO) lockingService().acquireLock(room, true);
+			lockContainer = lockingService().lock(container, true);
 		} finally {
-			lockingService().releaseLock(userRoom1);
+			lockingService().unlock(lockContainer);
 		}
 
-		// create a new lock and try to write using old dto
-		WasabiRoomDTO userRoom2 = null;
+		// create a new deep lock on a parent and then try to write using old dto
+		WasabiRoomDTO lockRoom = null;
 		try {
-			userRoom2 = (WasabiRoomDTO) lockingService().acquireLock(room, true);
-			System.out.println(userRoom1.getLockToken());
-			System.out.println(userRoom2.getLockToken());
+			lockRoom = lockingService().lock(room, true);
 			try {
-				documentService().create("document2", userRoom1);
+				documentService().create("document2", lockContainer);
 				AssertJUnit.fail();
 			} catch (ConcurrentModificationException e) {
 				// passed
 			}
 		} finally {
-			lockingService().releaseLock(userRoom2);
+			lockingService().unlock(lockRoom);
 		}
 		
 		// no problem to use dto that contains old lock-token when no locks are set
-		documentService().create("document2", userRoom1);
+		documentService().create("document2", lockRoom);
+	}
+	
+	@Test
+	// tests that calling unlock() although there is no lock causes no harm
+	public void invalidunlock() throws Exception {
+		try {
+			lockingService().unlock(room);
+			AssertJUnit.fail();
+		} catch (IllegalArgumentException e) {
+			// passed
+		}
+		
+		// lock and unlock
+		WasabiDocumentDTO lockDocument = null;
+		try {
+			lockDocument = lockingService().lock(document, false);
+		} finally {
+			lockingService().unlock(lockDocument);
+		}
+		// try to release non-existing lock
+		lockingService().unlock(lockDocument);
 	}
 	
 	@Test
 	// tests that locks remain active until explicitly removed
 	public void lockRemainsActiveDuringMultipleWrites() throws Exception {
-		WasabiDocumentDTO userDocument = null;
+		WasabiDocumentDTO lockDocument = null;
 		try {
 			// lock
-			userDocument = (WasabiDocumentDTO) lockingService().acquireLock(document, false);
+			lockDocument = lockingService().lock(document, false);
 			// multiple writes
-			documentService().setContent(userDocument, "hello1", null);
-			documentService().setContent(userDocument, "hello2", null);
-			documentService().setContent(userDocument, "hello3", null);
+			documentService().setContent(lockDocument, "hello1", null);
+			documentService().setContent(lockDocument, "hello2", null);
+			documentService().setContent(lockDocument, "hello3", null);
 
 			// try to access with the dto that does not contain the lock token
 			try {
@@ -273,7 +308,49 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 				// passed
 			}
 		} finally {
-			lockingService().releaseLock(userDocument);
+			lockingService().unlock(lockDocument);
+		}
+	}
+	
+	@Test
+	// tests a service that uses multiple locks at once
+	public void multipleLocksAtOnce() throws Exception {
+		WasabiGroupDTO group = groupService().create("group", null);
+		WasabiUserDTO member = userService().create("member", "member");
+		
+		WasabiGroupDTO lockGroup = null;
+		WasabiUserDTO lockMember = null;
+		try {
+			// lock both the group and the member
+			lockGroup = lockingService().lock(group, true);
+			lockMember = lockingService().lock(member, true);
+			
+			try {
+				groupService().addMember(group, member);
+				AssertJUnit.fail();
+			} catch (ConcurrentModificationException e) {
+				// passed
+			}
+			
+			try {
+				groupService().addMember(lockGroup, member);
+				AssertJUnit.fail();
+			} catch (ConcurrentModificationException e) {
+				// passed
+			}
+			
+			try {
+				groupService().addMember(group, lockMember);
+				AssertJUnit.fail();
+			} catch (ConcurrentModificationException e) {
+				// passed
+			}
+			
+			groupService().addMember(lockGroup, lockMember);
+			AssertJUnit.assertTrue(groupService().getMembers(lockGroup).contains(lockMember));
+		} finally {
+			lockingService().unlock(lockGroup);
+			lockingService().unlock(lockMember);
 		}
 	}
 }

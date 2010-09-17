@@ -256,6 +256,7 @@ public class LockingLocalTest extends Arquillian {
 					}
 				}
 			} catch (Throwable t) {
+				t.printStackTrace();
 				throwables.add(t);
 			} finally {
 				jcr.logout();

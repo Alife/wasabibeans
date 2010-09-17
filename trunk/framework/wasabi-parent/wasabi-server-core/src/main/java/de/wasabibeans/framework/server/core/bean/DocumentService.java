@@ -74,13 +74,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(environment, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Locker.recognizeLockTokens(s, environment);
 			Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(documentNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(documentNode);
+			return TransferManager.convertNode2DTO(documentNode, environment);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -108,6 +108,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
+			Locker.recognizeLockTokens(s, document);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.setContent(documentNode, content, callerPrincipal);
@@ -134,7 +135,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSession();
 		try {
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
-			return TransferManager.convertNode2DTO(DocumentServiceImpl.getDocumentByName(locationNode, name));
+			return TransferManager.convertNode2DTO(DocumentServiceImpl.getDocumentByName(locationNode, name), location);
 		} finally {
 			jcr.logout();
 		}
@@ -148,7 +149,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			NodeIterator ni = DocumentServiceImpl.getDocuments(locationNode);
 			while (ni.hasNext()) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 			return documents;
 		} finally {
@@ -177,6 +178,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+			Locker.recognizeLockTokens(s, document, newEnvironment);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal);
@@ -193,12 +195,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	}
 
 	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
 			EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, document);
 			DocumentServiceImpl.remove(documentNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -220,6 +223,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
+			Locker.recognizeLockTokens(s, document);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.rename(documentNode, name, callerPrincipal);
@@ -243,7 +247,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -260,7 +264,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate,
 					depth)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -293,7 +297,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -310,7 +314,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl
 					.getDocumentsByModificationDate(environmentNode, startDate, endDate)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -327,7 +331,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate,
 					endDate, depth)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -360,7 +364,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (Node document : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode)) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 			}
 			return documents;
 		} finally {
@@ -377,7 +381,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 			for (NodeIterator ni = DocumentServiceImpl.getDocumentsOrderedByCreationDate(locationNode, order); ni
 					.hasNext();) {
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 			return documents;
 		} finally {

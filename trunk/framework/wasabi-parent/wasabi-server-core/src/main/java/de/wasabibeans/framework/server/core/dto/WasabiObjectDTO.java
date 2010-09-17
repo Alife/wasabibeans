@@ -39,9 +39,10 @@ public abstract class WasabiObjectDTO implements Serializable {
 	protected String id;
 	
 	protected String lockToken;
+	protected boolean deepLock;
 
 	protected WasabiObjectDTO() {
-
+		this.deepLock = false;
 	}
 
 	public String getId() {
@@ -56,8 +57,13 @@ public abstract class WasabiObjectDTO implements Serializable {
 		return lockToken;
 	}
 	
-	protected void setLockToken(String lockToken) {
+	public boolean isDeepLock() {
+		return deepLock;
+	}
+	
+	protected void setLockToken(String lockToken, boolean isDeep) {
 		this.lockToken = lockToken;
+		this.deepLock = isDeep;
 	}
 
 	@Override

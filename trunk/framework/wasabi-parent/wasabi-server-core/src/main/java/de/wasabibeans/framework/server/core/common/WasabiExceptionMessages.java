@@ -69,6 +69,8 @@ public class WasabiExceptionMessages {
 	public final static String INTERNAL_ATTRIBUTE_WRONG_TYPE = "A value of the requested type is not stored. The currently stored value has the type &0.";
 	public final static String INTERNAL_LOCKING_GENERAL = "Exclusive access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification.";
 	public final static String INTERNAL_LOCKING_CREATION_FAILURE = "A new &0 could not be created because there was a deep lock on the parent object.";
+	public final static String INTERNAL_LOCKING_REMOVE_FAILURE = "A &0 could not be removed because there was a deep lock on the parent object.";
+	public final static String INTERNAL_LOCKING_GENERAL_FAILURE = "The operation could not be performed because of an existing lock.";
 	public final static String INTERNAL_LOCKING_OPTLOCK = "Write access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification. Please refresh your data and try again.";
 	public final static String INTERNAL_LOCKING_TOKEN_NULL = "The lock-token of the given WasabiObject-DTO must not be null.";
 	public final static String INTERNAL_LOCKING_NOT_DEEP = "The currently held lock is not deep, but a deep lock is required.";

@@ -301,6 +301,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, user);
 			Locker.acquireLock(userNode, user, false, s, locker);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setDisplayName(userNode, displayName, callerPrincipal);
@@ -343,6 +344,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			Locker.recognizeLockTokens(s, user);
 			Locker.acquireLock(userNode, user, false, s, locker);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStartRoom(userNode, roomNode, callerPrincipal);
@@ -367,6 +369,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, user);
 			Locker.acquireLock(userNode, user, false, s, locker);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStatus(userNode, active, callerPrincipal);
@@ -384,12 +387,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			Locker.recognizeLockTokens(s, user, room);
 			UserServiceImpl.enter(userNode, roomNode);
 			s.save();
 			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
@@ -402,12 +406,13 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			Locker.recognizeLockTokens(s, user, room);
 			UserServiceImpl.leave(userNode, roomNode);
 			s.save();
 			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
@@ -450,12 +455,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, user);
 			UserServiceImpl.remove(userNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -478,6 +485,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.recognizeLockTokens(s, user);
 			Locker.acquireLock(userNode, user, false, s, locker);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.rename(userNode, name, callerPrincipal);

@@ -29,6 +29,7 @@ import javax.ejb.Remote;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -39,10 +40,10 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface TagServiceRemote extends ObjectServiceRemote {
 
 	public void addTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, ConcurrentModificationException;
 
 	/**
 	 * Parameter {@code limit} does nothing currently.
@@ -62,7 +63,7 @@ public interface TagServiceRemote extends ObjectServiceRemote {
 			UnexpectedInternalProblemException;
 
 	public void removeTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, ConcurrentModificationException;
 	
 	public Vector<WasabiDocumentDTO> getDocumentsByTags(WasabiLocationDTO environment, Vector<String> tags)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;

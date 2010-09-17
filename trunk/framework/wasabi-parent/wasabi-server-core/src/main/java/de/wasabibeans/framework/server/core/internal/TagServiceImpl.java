@@ -32,6 +32,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
+import javax.jcr.lock.LockException;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -41,12 +42,13 @@ import javax.jcr.query.qom.Selector;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class TagServiceImpl {
 
 	public static void addTag(Node objectNode, String tag, Session s, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Calendar timestamp = Calendar.getInstance();
 			Node tagNode = null;
@@ -66,16 +68,21 @@ public class TagServiceImpl {
 			tagNode.setProperty(WasabiNodeProperty.CREATED_ON, timestamp);
 			Node currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
 			tagNode.setProperty(WasabiNodeProperty.CREATED_BY, currentUser);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void clearTags(Node objectNode) throws UnexpectedInternalProblemException {
+	public static void clearTags(Node objectNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			for (NodeIterator ni = objectNode.getNode(WasabiNodeProperty.TAGS).getNodes(); ni.hasNext();) {
 				ni.nextNode().remove();
 			}
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -155,7 +162,8 @@ public class TagServiceImpl {
 		}
 	}
 
-	public static void removeTag(Node objectNode, String tag) throws UnexpectedInternalProblemException {
+	public static void removeTag(Node objectNode, String tag) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			for (NodeIterator ni = objectNode.getNode(WasabiNodeProperty.TAGS).getNodes(); ni.hasNext();) {
 				Node tagNode = ni.nextNode();
@@ -163,6 +171,8 @@ public class TagServiceImpl {
 					tagNode.remove();
 				}
 			}
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

@@ -32,18 +32,19 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 
 public class WasabiObjectACL {
 
 	public static void remove(Node objectNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		removeRecursive(objectNode, callerPrincipal, s);
 	}
 
 	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			int childNodes = 0;
 			Vector<Node> childreenNodes = new Vector<Node>();

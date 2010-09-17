@@ -71,13 +71,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		Session s = jcr.getJCRSession();
 		try {
-			Locker.recognizeDeepLockToken(environment, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+			Locker.recognizeLockTokens(s, environment);
 			Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(containerNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(containerNode);
+			return TransferManager.convertNode2DTO(containerNode, environment);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
@@ -96,7 +96,8 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSession();
 		try {
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
-			return TransferManager.convertNode2DTO(ContainerServiceImpl.getContainerByName(locationNode, name));
+			return TransferManager.convertNode2DTO(ContainerServiceImpl.getContainerByName(locationNode, name),
+					location);
 		} finally {
 			jcr.logout();
 		}
@@ -110,7 +111,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node locationNode = TransferManager.convertDTO2Node(location, s);
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (NodeIterator ni = ContainerServiceImpl.getContainers(locationNode); ni.hasNext();) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 			return containers;
 		} finally {
@@ -126,7 +127,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -143,7 +144,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate,
 					depth)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -176,7 +177,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -193,7 +194,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
 					endDate)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -210,7 +211,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
 					endDate, depth)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -243,7 +244,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -259,7 +260,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 			Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 			for (Node container : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern)) {
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container));
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 			}
 			return containers;
 		} finally {
@@ -290,6 +291,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+			Locker.recognizeLockTokens(s, container, newEnvironment);
 			Locker.acquireLock(containerNode, container, false, s, locker);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal);
@@ -307,12 +309,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public void remove(WasabiContainerDTO container) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
 			EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
+			Locker.recognizeLockTokens(s, container);
 			ContainerServiceImpl.remove(containerNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -324,8 +327,8 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public void rename(WasabiContainerDTO container, String name, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -336,6 +339,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
+			Locker.recognizeLockTokens(s, container);
 			Locker.acquireLock(containerNode, container, false, s, locker);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.rename(containerNode, name, callerPrincipal);

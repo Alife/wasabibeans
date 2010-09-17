@@ -199,7 +199,7 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void remove(Node roomNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node roomNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		ObjectServiceImpl.remove(roomNode);
 	}
 

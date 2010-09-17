@@ -91,7 +91,8 @@ public interface LinkServiceLocal extends ObjectServiceLocal {
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException;
 
-	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException;
 
 	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException;

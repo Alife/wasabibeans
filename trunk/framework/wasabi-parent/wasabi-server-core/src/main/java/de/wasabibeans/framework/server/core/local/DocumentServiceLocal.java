@@ -105,7 +105,7 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 			ConcurrentModificationException;
 
 	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,

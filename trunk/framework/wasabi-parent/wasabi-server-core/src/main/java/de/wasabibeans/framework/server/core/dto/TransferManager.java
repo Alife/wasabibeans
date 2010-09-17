@@ -68,13 +68,23 @@ public class TransferManager {
 		return (T) dto;
 	}
 
-	public static WasabiObjectDTO enrichWithLockToken(WasabiObjectDTO wasabiObjectDTO, String lockToken) {
-		wasabiObjectDTO.setLockToken(lockToken);
+	public static <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject, WasabiObjectDTO dtoOfParent)
+			throws UnexpectedInternalProblemException {
+		T dto = convertNode2DTO(wasabiObject);
+		String lockToken = dtoOfParent != null ? dtoOfParent.getLockToken() : null;
+		if (lockToken != null && dtoOfParent.isDeepLock()) {
+			return enrichWithLockToken(dto, lockToken, true);
+		}
+		return dto;
+	}
+
+	public static <T extends WasabiObjectDTO> T enrichWithLockToken(T wasabiObjectDTO, String lockToken, boolean isDeep) {
+		wasabiObjectDTO.setLockToken(lockToken, isDeep);
 		return wasabiObjectDTO;
 	}
-	
-	public static WasabiObjectDTO removeLockToken(WasabiObjectDTO wasabiObjectDTO) {
-		wasabiObjectDTO.setLockToken(null);
+
+	public static <T extends WasabiObjectDTO> T removeLockToken(T wasabiObjectDTO) {
+		wasabiObjectDTO.setLockToken(null, false);
 		return wasabiObjectDTO;
 	}
 

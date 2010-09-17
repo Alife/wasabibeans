@@ -32,10 +32,10 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Local
 public interface LockingServiceLocal {
 
-	public WasabiObjectDTO acquireLock(WasabiObjectDTO object, boolean isDeep)
+	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
 			LockingException;
 
-	public WasabiObjectDTO releaseLock(WasabiObjectDTO object) throws UnexpectedInternalProblemException;
+	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException;
 
 }

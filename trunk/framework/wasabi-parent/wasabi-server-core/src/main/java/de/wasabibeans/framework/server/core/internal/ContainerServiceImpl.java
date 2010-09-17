@@ -213,7 +213,8 @@ public class ContainerServiceImpl {
 
 	}
 
-	public static void remove(Node containerNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node containerNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		ObjectServiceImpl.remove(containerNode);
 	}
 

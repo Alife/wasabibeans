@@ -175,7 +175,7 @@ public class LinkServiceImpl {
 		}
 	}
 
-	public static void remove(Node linkNode) throws UnexpectedInternalProblemException {
+	public static void remove(Node linkNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		ObjectServiceImpl.remove(linkNode);
 	}
 
