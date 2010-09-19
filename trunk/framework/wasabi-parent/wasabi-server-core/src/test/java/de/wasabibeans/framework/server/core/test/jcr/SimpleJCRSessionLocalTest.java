@@ -21,12 +21,8 @@
 
 package de.wasabibeans.framework.server.core.test.jcr;
 
-import javax.jcr.Node;
-import javax.jcr.Repository;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.naming.InitialContext;
-import javax.transaction.UserTransaction;
+import java.util.HashMap;
+import java.util.Vector;
 
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
@@ -37,6 +33,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -69,6 +66,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
@@ -83,8 +81,8 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		return testArchive;
 	}
 
-	// @Test
-	public void subsequentWrites() throws Exception {
+	@Test
+	public void test() throws Throwable {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
 		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
@@ -92,70 +90,93 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 		testhelper.initRepository();
 		loCon.disconnect();
 
-		/**
-		 * The following test-case works, IF step 1 is done without being encapsulated in a transaction (just remove the
-		 * utx-lines in step 1 and add the 's1.logout()')
-		 */
-		InitialContext jndiContext = new InitialContext();
-		Repository rep = (Repository) jndiContext.lookup(WasabiConstants.JNDI_JCR_DATASOURCE + "/local");
-		UserTransaction utx;
-		String id;
-
-		// Step 1: user 1 acquires session and writes, then logs out
-		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
-		utx.begin();
-		Session s1 = rep
-				.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-		Node nodeBys1 = s1.getRootNode().addNode("aNode");
-		nodeBys1.setProperty("aProperty", "user1");
-		s1.save();
-		id = nodeBys1.getIdentifier();
-		s1.logout();
-		utx.commit();
-
-		// Step 2: user 2 acquires session, alters value written by user 1, then logs out
-		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
-		utx.begin();
-		Session s2 = rep
-				.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-		AssertJUnit.assertEquals("user1", s2.getNodeByIdentifier(id).getProperty("aProperty").getString());
-		s2.getNodeByIdentifier(id).setProperty("aProperty", "user2");
-		s2.save();
-		s2.logout();
-		utx.commit();
-
-		// Step 3: user 1 acquires session again, reads the property altered by user 2... but does not read the correct
-		// value
-		utx = (UserTransaction) jndiContext.lookup("UserTransaction");
-		utx.begin();
-		Session s = rep
-				.login(new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-		AssertJUnit.assertEquals("user2", s.getNodeByIdentifier(id).getProperty("aProperty").getString());
-		s.logout();
-		utx.commit();
-	}
-
-	@Test
-	public void test() throws Exception {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
-
-			TestHelperLocal testHelper = (TestHelperLocal) jndi.lookup("test/TestHelper/local");
-			testHelper.initDatabase();
-			testHelper.initRepository();
-
-			Node n = s.getRootNode().addNode("n");
-			n.setProperty("hu", "hu");
-			s.save();
-			System.out.println(n.getProperty("hu").getString());
-			n.setProperty("hu", (String) null);
-			s.save();
-			n.getProperty("hu");
+			jcr.getJCRSession();
 		} finally {
 			jcr.logout();
 			jndi.close();
 		}
 	}
+
+	// -----------------------------------------------------------------
+
+	abstract class UserThread extends Thread {
+		protected Thread otherUser;
+		protected String username;
+		protected Vector<Throwable> throwables;
+
+		public UserThread(String username) {
+			super();
+			this.username = username;
+		}
+
+		public void setThrowables(Vector<Throwable> throwables) {
+			this.throwables = throwables;
+		}
+
+		public void setOtherUser(Thread otherUser) {
+			this.otherUser = otherUser;
+		}
+
+		protected void waitForMyTurn() throws InterruptedException {
+			synchronized (tickets) {
+				while (!tickets.get(username)) {
+					tickets.wait();
+				}
+				tickets.put(username, false);
+			}
+		}
+
+		protected void notifyOther() throws Exception {
+			String otherUser;
+			if (username.equals(USER1)) {
+				otherUser = USER2;
+			} else {
+				otherUser = USER1;
+			}
+			synchronized (tickets) {
+				tickets.put(otherUser, true);
+				tickets.notify();
+			}
+		}
+
+		protected void waitForCommitOfOther() throws InterruptedException {
+			otherUser.join();
+		}
+
+		@Override
+		public abstract void run();
+	}
+
+	public Vector<Throwable> executeUserThreads(UserThread user1, UserThread user2) throws Throwable {
+		Vector<Throwable> throwables = new Vector<Throwable>();
+		user1.setThrowables(throwables);
+		user2.setThrowables(throwables);
+		user1.setOtherUser(user2);
+		user2.setOtherUser(user1);
+
+		user1.start();
+		user2.start();
+
+		user1.join(5000);
+		user2.join(5000);
+		if (user1.isAlive() || user2.isAlive()) {
+			user1.interrupt();
+			user2.interrupt();
+			AssertJUnit.fail();
+		}
+		return throwables;
+	}
+
+	private static final String USER1 = "user1", USER2 = "user2";
+	private static HashMap<String, Boolean> tickets;
+
+	static {
+		tickets = new HashMap<String, Boolean>();
+		tickets.put(USER1, false);
+		tickets.put(USER2, false);
+	}
+
 }

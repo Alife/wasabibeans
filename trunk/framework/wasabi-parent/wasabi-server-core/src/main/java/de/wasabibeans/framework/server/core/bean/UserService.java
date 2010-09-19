@@ -83,24 +83,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			return TransferManager.convertNode2DTO(userNode);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
 	@Override
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
-			NodeIterator ni = UserServiceImpl.getAllUsers(s);
-			while (ni.hasNext()) {
-				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-			}
-			return users;
-		} finally {
-			jcr.logout();
+		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+		NodeIterator ni = UserServiceImpl.getAllUsers(s);
+		while (ni.hasNext()) {
+			users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
+		return users;
 	}
 
 	@Override
@@ -112,26 +106,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public WasabiValueDTO getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			long optLockId = ObjectServiceImpl.getOptLockId(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getDisplayName(userNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+		return TransferManager.convertValue2DTO(UserServiceImpl.getDisplayName(userNode), optLockId);
 	}
 
 	@Override
 	public WasabiValueDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getHomeRoom(userNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+		return TransferManager.convertValue2DTO(UserServiceImpl.getHomeRoom(userNode), optLockId);
 	}
 
 	@Override
@@ -161,8 +147,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			return memberships;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -170,38 +154,26 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			return UserServiceImpl.getPassword(userNode);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		return UserServiceImpl.getPassword(userNode);
 	}
 
 	@Override
 	public WasabiValueDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getStartRoom(userNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+		return TransferManager.convertValue2DTO(UserServiceImpl.getStartRoom(userNode), optLockId);
 	}
 
 	@Override
 	public WasabiValueDTO getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
-			return TransferManager.convertValue2DTO(UserServiceImpl.getStatus(userNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
+		return TransferManager.convertValue2DTO(UserServiceImpl.getStatus(userNode), optLockId);
 	}
 
 	@Override
@@ -212,11 +184,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
-		} finally {
-			jcr.logout();
-		}
+		return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
 	}
 
 	@Override
@@ -228,12 +196,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(roomNode, userName));
-		} finally {
-			jcr.logout();
-		}
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(roomNode, userName));
 	}
 
 	@Override
@@ -263,8 +227,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			return users;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -276,16 +238,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
-			NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
-			while (ni.hasNext()) {
-				users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-			}
-			return users;
-		} finally {
-			jcr.logout();
+		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+		NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
+		while (ni.hasNext()) {
+			users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
+		return users;
 	}
 
 	@Override
@@ -314,7 +272,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			// cannot happen
 		} finally {
 			Locker.releaseLock(userNode, user, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -327,12 +284,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			UserServiceImpl.setPassword(userNode, password);
-		} finally {
-			jcr.logout();
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		UserServiceImpl.setPassword(userNode, password);
 	}
 
 	@Override
@@ -357,7 +310,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			// cannot happen
 		} finally {
 			Locker.releaseLock(userNode, user, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -381,7 +333,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			// cannot happen
 		} finally {
 			Locker.releaseLock(userNode, user, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -399,8 +350,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -418,8 +367,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -449,8 +396,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			return whereabouts;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -467,8 +412,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -497,7 +440,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			// cannot happen
 		} finally {
 			Locker.releaseLock(userNode, user, s, locker);
-			jcr.logout();
 		}
 	}
 }

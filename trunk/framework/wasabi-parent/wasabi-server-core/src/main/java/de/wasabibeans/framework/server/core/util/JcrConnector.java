@@ -26,6 +26,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
+import org.apache.jackrabbit.jca.JCASessionHandle;
+
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -67,7 +69,23 @@ public class JcrConnector {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+	
+	
 
+	public void destroy() {
+		try {
+			if (session != null) {
+				((JCASessionHandle) session).getManagedConnection().destroy();
+				session = null;
+			}
+		} catch (Exception e) {
+			logger
+					.error(
+							"Fatal internal error: A JCR session is corrupted and could not be returned to the connection pool properly.",
+							e);
+		}
+	}
+	
 	public void logout() {
 		try {
 			if (session != null) {

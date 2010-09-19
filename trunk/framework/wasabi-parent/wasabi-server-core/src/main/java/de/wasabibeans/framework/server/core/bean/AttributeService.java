@@ -82,8 +82,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			return TransferManager.convertNode2DTO(attributeNode, affiliation);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -108,8 +106,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			return TransferManager.convertNode2DTO(attributeNode, affiliation);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -117,13 +113,9 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
-			return TransferManager.convertValue2DTO(AttributeServiceImpl.getAffiliation(attributeNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+		return TransferManager.convertValue2DTO(AttributeServiceImpl.getAffiliation(attributeNode), optLockId);
 	}
 
 	@Override
@@ -135,41 +127,29 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name), object);
-		} finally {
-			jcr.logout();
-		}
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name), object);
 	}
 
 	@Override
 	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			return AttributeServiceImpl.getAttributeType(attributeNode);
-		} finally {
-			jcr.logout();
-		}
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		return AttributeServiceImpl.getAttributeType(attributeNode);
 	}
 
 	@Override
 	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			Vector<WasabiAttributeDTO> attributes = new Vector<WasabiAttributeDTO>();
-			NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
-			while (ni.hasNext()) {
-				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
-			}
-			return attributes;
-		} finally {
-			jcr.logout();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		Vector<WasabiAttributeDTO> attributes = new Vector<WasabiAttributeDTO>();
+		NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
+		while (ni.hasNext()) {
+			attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
 		}
+		return attributes;
 	}
 
 	@Override
@@ -181,26 +161,18 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
-			return TransferManager.convertValue2DTO(AttributeServiceImpl.getValue(type, attributeNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+		return TransferManager.convertValue2DTO(AttributeServiceImpl.getValue(type, attributeNode), optLockId);
 	}
 
 	@Override
 	public WasabiValueDTO getWasabiValue(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
 			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
-			return TransferManager.convertValue2DTO(AttributeServiceImpl.getWasabiValue(attributeNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
+		return TransferManager.convertValue2DTO(AttributeServiceImpl.getWasabiValue(attributeNode), optLockId);
 	}
 
 	@Override
@@ -225,7 +197,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			// cannot happen
 		} finally {
 			Locker.releaseLock(attributeNode, attribute, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -242,8 +213,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -273,7 +242,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			// cannot happen
 		} finally {
 			Locker.releaseLock(attributeNode, attribute, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -298,7 +266,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			// cannot happen
 		} finally {
 			Locker.releaseLock(attributeNode, attribute, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -327,7 +294,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			// cannot happen
 		} finally {
 			Locker.releaseLock(attributeNode, attribute, s, locker);
-			jcr.logout();
 		}
 	}
 }

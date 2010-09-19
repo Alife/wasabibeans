@@ -9,6 +9,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -16,6 +17,8 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
+import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
+import de.wasabibeans.framework.server.core.aop.WasabiService;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
@@ -35,14 +38,12 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "VersioningService")
+@Interceptors( { TransactionInterceptor.class })
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote {
+public class VersioningService extends WasabiService implements VersioningServiceLocal, VersioningServiceRemote {
 
 	@EJB
 	private LockingHelperLocal locker;
-
-	private JndiConnector jndi;
-	private JcrConnector jcr;
 
 	@PostConstruct
 	public void postConstruct() {
@@ -87,8 +88,6 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			return versions;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -127,7 +126,6 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, dto, s, locker);
-			jcr.logout();
 		}
 	}
 
@@ -164,7 +162,6 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} finally {
 			Locker.releaseLock(node, dto, s, locker);
-			jcr.logout();
 		}
 	}
 }

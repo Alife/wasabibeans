@@ -70,8 +70,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -86,8 +84,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -98,30 +94,22 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"tags"));
 		}
-		
+
 		Session s = jcr.getJCRSession();
-		try {
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			Vector<WasabiDocumentDTO> result = new Vector<WasabiDocumentDTO>();
-			for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags)) {
-				result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
-			}
-			return result;
-		} finally {
-			jcr.logout();
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		Vector<WasabiDocumentDTO> result = new Vector<WasabiDocumentDTO>();
+		for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags)) {
+			result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
 		}
+		return result;
 	}
 
 	@Override
 	public Map<String, Integer> getMostUsedDocumentTags(WasabiLocationDTO environment, int limit)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
-		} finally {
-			jcr.logout();
-		}
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
 	}
 
 	@Override
@@ -132,27 +120,19 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
-			for (Node node : TagServiceImpl.getObjectsByTag(tag, s)) {
-				result.add(TransferManager.convertNode2DTO(node));
-			}
-			return result;
-		} finally {
-			jcr.logout();
+		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
+		for (Node node : TagServiceImpl.getObjectsByTag(tag, s)) {
+			result.add(TransferManager.convertNode2DTO(node));
 		}
+		return result;
 	}
 
 	@Override
 	public Vector<String> getTags(WasabiObjectDTO object) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			return TagServiceImpl.getTags(objectNode);
-		} finally {
-			jcr.logout();
-		}
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		return TagServiceImpl.getTags(objectNode);
 	}
 
 	@Override
@@ -171,8 +151,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 }
