@@ -213,7 +213,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	}
 
-	//@Test
+	@Test
 	public void dirtyReadPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
@@ -306,7 +306,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	}
 
-	//@Test
+	@Test
 	public void nonRepeatableReadTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
@@ -401,7 +401,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	}
 
-	//@Test
+	@Test
 	public void lostUpdateRollbackTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
@@ -504,7 +504,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 		}
 	}
 
-	//@Test
+	@Test
 	public void lostUpdateRollbackDueToOptLockIdTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
@@ -602,7 +602,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 
 	}
 
-	//@Test
+	@Test
 	public void lostUpdateNotPreventedTest() throws Throwable {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
@@ -643,7 +643,7 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 	// ** Rollback -------------------------------------------------------------------
 	// Successfully create a user within a transaction which rolls back afterwards -> the user must neither exist in the
 	// database nor in the repository
-	@Test(invocationCount = 50)
+	@Test//(invocationCount = 50)
 	public void userCreateRollbackTest() throws Exception {
 		RemoteWasabiConnector reWaCon = new RemoteWasabiConnector();
 		try {
