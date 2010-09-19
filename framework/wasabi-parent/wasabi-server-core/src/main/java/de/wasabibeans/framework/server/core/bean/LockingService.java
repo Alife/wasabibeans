@@ -27,9 +27,12 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
+import de.wasabibeans.framework.server.core.aop.WasabiService;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -45,14 +48,12 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "LockingService")
+@Interceptors( { TransactionInterceptor.class })
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-public class LockingService implements LockingServiceLocal, LockingServiceRemote {
+public class LockingService extends WasabiService implements LockingServiceLocal, LockingServiceRemote {
 
 	@EJB
 	private LockingHelperLocal locker;
-
-	protected JndiConnector jndi;
-	protected JcrConnector jcr;
 
 	@PostConstruct
 	public void postConstruct() {
@@ -65,18 +66,13 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 		jndi.close();
 	}
 
-	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
-			LockingException {
+	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException, ObjectDoesNotExistException, LockingException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			Locker.recognizeLockTokens(s, object);
-			String lockToken = Locker.acquireLock(objectNode, object, isDeep, s, locker);
-			return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
-		} finally {
-			jcr.logout();
-		}
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		Locker.recognizeLockTokens(s, object);
+		String lockToken = Locker.acquireLock(objectNode, object, isDeep, s, locker);
+		return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
 	}
 
 	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException {

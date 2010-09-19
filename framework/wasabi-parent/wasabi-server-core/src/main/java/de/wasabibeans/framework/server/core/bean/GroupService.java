@@ -75,8 +75,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			EventCreator.createMembershipEvent(groupNode, userNode, true, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -107,37 +105,27 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			return TransferManager.convertNode2DTO(groupNode, parentGroup);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
 	@Override
 	public Vector<WasabiGroupDTO> getAllGroups() throws UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiGroupDTO> allGroups = new Vector<WasabiGroupDTO>();
-			NodeIterator ni = GroupServiceImpl.getAllGroups(s);
-			while (ni.hasNext()) {
-				allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-			}
-			return allGroups;
-		} finally {
-			jcr.logout();
+		Vector<WasabiGroupDTO> allGroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getAllGroups(s);
+		while (ni.hasNext()) {
+			allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
+		return allGroups;
 	}
 
 	@Override
 	public WasabiValueDTO getDisplayName(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
-			return TransferManager.convertValue2DTO(GroupServiceImpl.getDisplayName(groupNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
+		return TransferManager.convertValue2DTO(GroupServiceImpl.getDisplayName(groupNode), optLockId);
 	}
 
 	@Override
@@ -148,12 +136,8 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = GroupServiceImpl.getGroupByName(groupName, s);
-			return TransferManager.convertNode2DTO(groupNode);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = GroupServiceImpl.getGroupByName(groupName, s);
+		return TransferManager.convertNode2DTO(groupNode);
 	}
 
 	@Override
@@ -164,16 +148,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiGroupDTO> groups = new Vector<WasabiGroupDTO>();
-			NodeIterator ni = GroupServiceImpl.getGroupsByDisplayName(displayName, s);
-			while (ni.hasNext()) {
-				groups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-			}
-			return groups;
-		} finally {
-			jcr.logout();
+		Vector<WasabiGroupDTO> groups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getGroupsByDisplayName(displayName, s);
+		while (ni.hasNext()) {
+			groups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
+		return groups;
 	}
 
 	@Override
@@ -185,13 +165,9 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Node userNode = GroupServiceImpl.getMemberByName(groupNode, userName);
-			return TransferManager.convertNode2DTO(userNode);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = GroupServiceImpl.getMemberByName(groupNode, userName);
+		return TransferManager.convertNode2DTO(userNode);
 	}
 
 	@Override
@@ -221,8 +197,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			return members;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -253,8 +227,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			return allMembers;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 	}
 
@@ -263,13 +235,9 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
-			return TransferManager.convertValue2DTO(GroupServiceImpl.getParentGroup(groupNode), optLockId);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Long optLockId = ObjectServiceImpl.getOptLockId(groupNode);
+		return TransferManager.convertValue2DTO(GroupServiceImpl.getParentGroup(groupNode), optLockId);
 	}
 
 	@Override
@@ -281,70 +249,50 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name), group);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		return TransferManager.convertNode2DTO(GroupServiceImpl.getSubGroupByName(groupNode, name), group);
 	}
 
 	@Override
 	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Vector<WasabiGroupDTO> subgroups = new Vector<WasabiGroupDTO>();
-			NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
-			while (ni.hasNext()) {
-				subgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode(), group));
-			}
-			return subgroups;
-		} finally {
-			jcr.logout();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Vector<WasabiGroupDTO> subgroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
+		while (ni.hasNext()) {
+			subgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode(), group));
 		}
+		return subgroups;
 	}
 
 	@Override
 	public Vector<WasabiGroupDTO> getTopLevelGroups() throws UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Vector<WasabiGroupDTO> topgroups = new Vector<WasabiGroupDTO>();
-			NodeIterator ni = GroupServiceImpl.getTopLevelGroups(s);
-			while (ni.hasNext()) {
-				topgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
-			}
-			return topgroups;
-		} finally {
-			jcr.logout();
+		Vector<WasabiGroupDTO> topgroups = new Vector<WasabiGroupDTO>();
+		NodeIterator ni = GroupServiceImpl.getTopLevelGroups(s);
+		while (ni.hasNext()) {
+			topgroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
+		return topgroups;
 	}
 
 	@Override
 	public boolean isDirectMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			return GroupServiceImpl.isDirectMember(groupNode, userNode);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		return GroupServiceImpl.isDirectMember(groupNode, userNode);
 	}
 
 	@Override
 	public boolean isMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			return GroupServiceImpl.isMember(groupNode, userNode);
-		} finally {
-			jcr.logout();
-		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		return GroupServiceImpl.isMember(groupNode, userNode);
 	}
 
 	@Override
@@ -371,7 +319,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			// cannot happen
 		} finally {
 			Locker.releaseLock(groupNode, group, s, locker);
-			jcr.logout();
 		}
 
 	}
@@ -389,8 +336,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 
 	}
@@ -409,8 +354,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			jcr.logout();
 		}
 
 	}
@@ -440,7 +383,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			// cannot happen
 		} finally {
 			Locker.releaseLock(groupNode, group, s, locker);
-			jcr.logout();
 		}
 
 	}
@@ -470,7 +412,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			// cannot happen
 		} finally {
 			Locker.releaseLock(groupNode, group, s, locker);
-			jcr.logout();
 		}
 	}
 }

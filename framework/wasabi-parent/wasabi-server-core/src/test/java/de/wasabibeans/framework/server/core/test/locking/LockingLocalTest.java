@@ -39,6 +39,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -58,9 +59,9 @@ import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
+import de.wasabibeans.framework.server.core.test.testhelper.DummyDTO;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperLocal;
-import de.wasabibeans.framework.server.core.test.testhelper.DummyDTO;
 import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
@@ -93,6 +94,7 @@ public class LockingLocalTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
+				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
