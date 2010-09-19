@@ -63,29 +63,32 @@ public class JcrConnector {
 				session = getJCRRepository().login(
 						new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
 			}
-			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
+			//logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
 			return session;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
-	
 
 	public void destroy() {
 		try {
 			if (session != null) {
-				((JCASessionHandle) session).getManagedConnection().destroy();
+				JCASessionHandle handle = (JCASessionHandle) session;
+				// sending an error event forces the JCA adapter to get rid of the corrupt JCR session
+				// (calling handle.getManagedConnection().destroy() does not work, as destroy() reduces the size of the
+				// JCA pool, which would eventually lead to no JCR session being available at all)
+				handle.getManagedConnection().sendrrorEvent(handle,
+						new Exception("This is just a workaround to close a corrupt JCR session - IGNORE."));
 				session = null;
 			}
 		} catch (Exception e) {
 			logger
 					.error(
-							"Fatal internal error: A JCR session is corrupted and could not be returned to the connection pool properly.",
+							"Fatal internal error: A JCR session is corrupt and could not be dealt with accordingly. Restart the JCR repository to avoid possible consequential errors.",
 							e);
 		}
 	}
-	
+
 	public void logout() {
 		try {
 			if (session != null) {
@@ -96,7 +99,7 @@ public class JcrConnector {
 		} catch (Exception e) {
 			logger
 					.error(
-							"Fatal internal error: A JCR session is corrupted and could not be returned to the connection pool properly.",
+							"Fatal internal error: A JCR session could not be returned to the connection pool properly. Restart the JCR repository to avoid possible consequential errors.",
 							e);
 		}
 	}
