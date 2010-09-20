@@ -1,0 +1,101 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="test.all">
+	<test name="attribute">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.AttributeServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="container">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.ContainerServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="document">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.DocumentServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="group">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.GroupServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="link">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.LinkServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="object">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.ObjectServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="room">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.RoomServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="tag">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.TagServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="user">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.UserServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="user">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.versioning.VersioningServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="versioning">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.versioning.VersioningServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="transaction-local">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.transaction.WasabiTransactionLocalTest" />
+		</classes>
+	</test>
+	<test name="transaction-remote">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.transaction.WasabiTransactionRemoteTest" />
+		</classes>
+	</test>
+	<test name="locking-local">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.locking.LockingLocalTest" />
+		</classes>
+	</test>
+	<test name="locking-remote">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.locking.LockingRemoteTest" />
+		</classes>
+	</test>
+	<test name="event">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.event.EventRemoteTest" />
+		</classes>
+	</test>
+</suite>
+
