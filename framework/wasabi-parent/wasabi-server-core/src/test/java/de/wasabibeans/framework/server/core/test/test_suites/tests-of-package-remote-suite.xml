@@ -1,0 +1,59 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="test.remote">
+	<test name="attribute">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.AttributeServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="container">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.ContainerServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="document">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.DocumentServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="group">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.GroupServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="link">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.LinkServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="object">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.ObjectServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="room">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.RoomServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="tag">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.TagServiceRemoteTest" />
+		</classes>
+	</test>
+	<test name="user">
+		<classes>
+			<class
+				name="de.wasabibeans.framework.server.core.test.remote.UserServiceRemoteTest" />
+		</classes>
+	</test>
+</suite>
+
