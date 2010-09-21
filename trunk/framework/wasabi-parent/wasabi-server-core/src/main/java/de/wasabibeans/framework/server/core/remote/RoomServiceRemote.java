@@ -49,7 +49,7 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 			ObjectDoesNotExistException;
 
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiRoomDTO> getRooms(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;

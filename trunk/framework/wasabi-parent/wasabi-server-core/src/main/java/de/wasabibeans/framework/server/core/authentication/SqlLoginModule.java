@@ -40,16 +40,13 @@ import de.wasabibeans.framework.server.core.util.WasabiUserEntry;
 
 public class SqlLoginModule extends UsernamePasswordLoginModule {
 
-	@Override
-	protected boolean validatePassword(String inputPassword, String expectedPassword) {
-		if (inputPassword == null || expectedPassword == null) {
-			return false;
-		}
-		return expectedPassword.equals(convertRawPassword(inputPassword));
-	}
-
 	private String convertRawPassword(String rawPassword) {
 		return HashGenerator.generateHash(rawPassword, hashAlgorithms.SHA);
+	}
+
+	@Override
+	protected Group[] getRoleSets() throws LoginException {
+		return new Group[0];
 	}
 
 	@SuppressWarnings("unchecked")
@@ -71,7 +68,10 @@ public class SqlLoginModule extends UsernamePasswordLoginModule {
 	}
 
 	@Override
-	protected Group[] getRoleSets() throws LoginException {
-		return new Group[0];
+	protected boolean validatePassword(String inputPassword, String expectedPassword) {
+		if (inputPassword == null || expectedPassword == null) {
+			return false;
+		}
+		return expectedPassword.equals(convertRawPassword(inputPassword));
 	}
 }

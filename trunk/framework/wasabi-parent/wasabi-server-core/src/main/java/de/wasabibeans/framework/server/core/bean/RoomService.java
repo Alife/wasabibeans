@@ -109,7 +109,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -117,6 +117,15 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		Session s = jcr.getJCRSession();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getRoomByName()", "VIEW"));
+		/* Authorization - End */
+
 		return TransferManager.convertNode2DTO(RoomServiceImpl.getRoomByName(roomNode, name), room);
 	}
 
@@ -321,7 +330,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	@Override

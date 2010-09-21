@@ -60,15 +60,21 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-
 		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
 			roomService().create(String.valueOf(i), usersHome);
 			// System.out.println("create room " + i);
 		}
-
 		long endTime = java.lang.System.currentTimeMillis();
 
-		System.out.println("Pass 1: " + (endTime - startTime));
+		long startTimeRead = java.lang.System.currentTimeMillis();
+		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+			roomService().getName(room);
+		}
+		long endTimeRead = java.lang.System.currentTimeMillis();
+
+		System.out.println("Write pass 1: " + (endTime - startTime));
+		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
 	}
 
 	@Test
@@ -79,15 +85,21 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-
 		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
 			roomService().create(String.valueOf(i), usersHome);
 			// System.out.println("create room " + i);
 		}
-
 		long endTime = java.lang.System.currentTimeMillis();
 
-		System.out.println("Pass 2: " + (endTime - startTime));
+		long startTimeRead = java.lang.System.currentTimeMillis();
+		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+			roomService().getName(room);
+		}
+		long endTimeRead = java.lang.System.currentTimeMillis();
+
+		System.out.println("Write pass 2: " + (endTime - startTime));
+		System.out.println("Read pass 2: " + (endTimeRead - startTimeRead));
 	}
 
 	@Test
@@ -98,14 +110,20 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-
 		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
 			roomService().create(String.valueOf(i), usersHome);
 			// System.out.println("create room " + i);
 		}
-
 		long endTime = java.lang.System.currentTimeMillis();
 
-		System.out.println("Pass 3: " + (endTime - startTime));
+		long startTimeRead = java.lang.System.currentTimeMillis();
+		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+			roomService().getName(room);
+		}
+		long endTimeRead = java.lang.System.currentTimeMillis();
+
+		System.out.println("Write pass 3: " + (endTime - startTime));
+		System.out.println("Read pass 3: " + (endTimeRead - startTimeRead));
 	}
 }

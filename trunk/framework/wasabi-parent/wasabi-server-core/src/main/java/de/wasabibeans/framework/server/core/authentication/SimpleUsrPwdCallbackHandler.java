@@ -29,8 +29,8 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 
 public class SimpleUsrPwdCallbackHandler implements CallbackHandler {
 
-	private String usr;
 	private String pwd;
+	private String usr;
 
 	public SimpleUsrPwdCallbackHandler(String usr, String pwd) {
 		this.usr = usr;
