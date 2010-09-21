@@ -61,7 +61,7 @@ public interface WasabiConstants {
 
 	public final static int preferredLoginModule = USE_JCR_LOGIN_MODULE;
 
-	public final static String SQL_LOGIN_MODULE_QUERY = "SELECT password FROM wasabi_user WHERE username=?";
+	public final static String SQL_LOGIN_MODULE_QUERY = "SELECT `password` FROM `wasabi_user` WHERE `username`=?";
 
 	/* JNDI datasources */
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";
