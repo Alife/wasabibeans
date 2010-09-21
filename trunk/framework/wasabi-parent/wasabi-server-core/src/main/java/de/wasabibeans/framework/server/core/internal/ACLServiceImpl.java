@@ -1244,7 +1244,7 @@ public class ACLServiceImpl {
 						+ "WHERE `object_id`=? "
 						+ "AND `start_time`=? "
 						+ "AND `end_time`=? "
-						+ "AND `user_id`=? " + "AND `inheritance_id`=?";
+						+ "AND `group_id`=? " + "AND `inheritance_id`=?";
 
 				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
