@@ -280,17 +280,28 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	@Override
 	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, NoPermissionException {
 		Node roomNode = null;
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			roomNode = TransferManager.convertDTO2Node(room, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s)
+						|| !WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+								WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, room, newEnvironment);
 			Locker.acquireLock(roomNode, room, false, s, locker);
 			Locker.checkOptLockId(roomNode, room, optLockId);
-			RoomServiceImpl.move(roomNode, newEnvironmentNode, callerPrincipal);
+			RoomServiceImpl.move(roomNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {

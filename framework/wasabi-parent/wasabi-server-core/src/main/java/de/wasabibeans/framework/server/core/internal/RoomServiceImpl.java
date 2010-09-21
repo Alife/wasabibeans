@@ -180,12 +180,18 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void move(Node roomNode, Node newEnvironmentNode, String callerPrincipal)
+	public static void move(Node roomNode, Node newEnvironmentNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			roomNode.getSession().move(roomNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/" + roomNode.getName());
 			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
+
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiRoomACL.ACLEntryForMove(roomNode, s);
+			/* ACL Environment - End */
+
 		} catch (ItemExistsException iee) {
 			try {
 				String name = roomNode.getName();
