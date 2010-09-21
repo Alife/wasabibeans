@@ -87,7 +87,7 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 
 	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException, ConcurrentModificationException;

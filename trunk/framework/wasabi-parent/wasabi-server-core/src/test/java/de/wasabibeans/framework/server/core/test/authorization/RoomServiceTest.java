@@ -258,6 +258,116 @@ public class RoomServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void moveTest() throws WasabiException {
+		System.out.println("=== moveTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating moveTestRoom1 at usersHome... ");
+		WasabiRoomDTO moveTestRoom1 = null;
+		try {
+			moveTestRoom1 = roomService().create("moveTestRoom1", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating moveTestRoom2 at usersHome... ");
+		WasabiRoomDTO moveTestRoom2 = null;
+		try {
+			moveTestRoom2 = roomService().create("moveTestRoom2", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for moveTestRoom1... ");
+		aclService().deactivateInheritance(moveTestRoom1);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for moveTestRoom2... ");
+		aclService().deactivateInheritance(moveTestRoom2);
+		System.out.println("done.");
+
+		displayACLEntry(moveTestRoom1, "moveTestRoom1");
+		displayACLEntry(moveTestRoom2, "moveTestRoom2");
+
+		System.out.print("Setting INSERT as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Creating moveRoom at moveTestRoom... ");
+		WasabiRoomDTO moveRoom = null;
+		try {
+			moveRoom = roomService().create("moveRoom", moveTestRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someRoom at moveRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", moveRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting COMMENT as userRight for moveRoom... ");
+		aclService().create(moveRoom, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		displayACLEntry(moveRoom, "moveRoom");
+		displayACLEntry(someRoom, "someRoom");
+
+		System.out.print("Moving moveRoom from moveTestRoom1 to moveTestRoom2... ");
+		try {
+			roomService().move(moveRoom, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		displayACLEntry(moveTestRoom1, "moveTestRoom1");
+		displayACLEntry(moveTestRoom2, "moveTestRoom2");
+
+		System.out.print("Moving moveRoom from moveTestRoom1 to moveTestRoom2... ");
+		try {
+			roomService().move(moveRoom, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting INSERT as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Moving moveRoom from moveTestRoom1 to moveTestRoom2... ");
+		try {
+			roomService().move(moveRoom, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(moveRoom, "moveRoom");
+		displayACLEntry(someRoom, "someRoom");
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void removeTest() throws WasabiException {
 		System.out.println("=== removeTest() ===");
 		WasabiUserDTO user = userService().getUserByName("user");

@@ -22,19 +22,45 @@
 package de.wasabibeans.framework.server.core.authorization;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
+import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiRoomSQL {
+
+	public static String[] SQLQueryForMove(String roomUUID) throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
+		try {
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, roomUUID);
+
+			String[] result = new String[results.size()];
+			int i = 0;
+
+			for (WasabiACLEntry wasabiACLEntry : results) {
+				result[i] = wasabiACLEntry.getInheritance_Id();
+				i++;
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+	}
 
 	public static void SQLQueryForRemove(String roomUUID) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String deleteEntryQuery = "DELETE FROM wasabi_template_rights WHERE `location_id`=?";
+		String deleteEntryQuery = "DELETE FROM `wasabi_template_rights` WHERE `location_id`=?";
 		try {
 			run.update(deleteEntryQuery, roomUUID);
 		} catch (SQLException e) {

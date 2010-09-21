@@ -60,83 +60,65 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void createTest() throws WasabiException {
+	public void inheritanceTest() throws WasabiException {
+		System.out.println("=== inheritanceTest() ===");
 
-		// Create document in users homeRoom and set rights to view, read document
-		WasabiUserDTO user= userService().getUserByName("user");
+		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating inheritanceTestRoom at usersHome... ");
+		WasabiRoomDTO inheritanceTestRoom = null;
+		try {
+			inheritanceTestRoom = roomService().create("inheritanceTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for inheritanceTestRoom... ");
+		aclService().deactivateInheritance(inheritanceTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating subRoom1 at inheritanceTestRoom... ");
+		WasabiRoomDTO subRoom1 = null;
+		try {
+			subRoom1 = roomService().create("subRoom1", inheritanceTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(subRoom1, "subRoom1");
+
+		System.out.print("Creating subSubRoom1 at subRoom1... ");
+		WasabiRoomDTO subSubRoom1 = null;
+		try {
+			subSubRoom1 = roomService().create("subSubRoom1", subRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(subSubRoom1, "subSubRoom1");
+
+		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		displayACLEntry(subRoom1, "subRoom1");
+		displayACLEntry(subSubRoom1, "subSubRoom1");
 		
-		int[] rights = { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.WRITE,
-				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
-		boolean[] allow = { true, true, true, true, true, true, true };
-		//aclService().create(usersHome, loginUser, rights, allow);
+		System.out.print("Activating inheritance for inheritanceTestRoom... ");
+		aclService().activateInheritance(inheritanceTestRoom);
+		System.out.println("done.");
 		
-		WasabiRoomDTO room1 = roomService().create("room1", usersHome);
-		WasabiRoomDTO room2 = roomService().create("room2", room1);
-		WasabiRoomDTO room3 = roomService().create("room3", room2);
-
-
-		aclService().deactivateInheritance(room1);
-		
-		// set some rights for room1 and active inheritance for room2. expected result should be inherited rights from
-		// room1 to room2
-		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
-				new boolean[] { true, true });
-	    //aclService().activateInheritance(room2);
-
-		// aclService().create(room2, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
-
-		// getAclEntries for room1
-		displayACLEntry(room1, "Raum1");
-		// getAclEntries for room2
-		displayACLEntry(room2, "Raum2");
-
-		// the same for room3
-		// aclService().activateInheritance(room3);
-
-		// getAclEntries for room3
-		displayACLEntry(room3, "Raum3");
-
-		// change rights at room1
-		aclService().create(room1, user, new int[] { WasabiPermission.GRANT }, new boolean[] { true });
-
-		// getAclEntries for room2
-		displayACLEntry(room2, "Raum2");
-		// getAclEntries for room3
-		displayACLEntry(room3, "Raum3");
-
-		// create explicit right for room2
-		// change rights at room1
-		aclService().create(room2, user, new int[] { WasabiPermission.EXECUTE }, new boolean[] { true });
-
-		// getAclEntries for room2
-		displayACLEntry(room2, "Raum2");
-		// getAclEntries for room3
-		displayACLEntry(room3, "Raum3");
-
-		// Remove explicit rights of room1
-		aclService().remove(room1, user,
-				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.GRANT });
-
-		// getAclEntries for room1
-		displayACLEntry(room1, "Raum1");
-		// getAclEntries for room2
-		displayACLEntry(room2, "Raum2");
-		// getAclEntries for room3
-		displayACLEntry(room3, "Raum3");
-		
-		
-		aclService().create(room1, user, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
-				new boolean[] { true, true });
-		//reset for room1
-		aclService().reset(room1);
-		
-		// getAclEntries for room1
-		displayACLEntry(room1, "Raum1");
-		// getAclEntries for room2
-		displayACLEntry(room2, "Raum2");
-		// getAclEntries for room3
-		displayACLEntry(room3, "Raum3");
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+		displayACLEntry(subRoom1, "subRoom1");
+		displayACLEntry(subSubRoom1, "subSubRoom1");
 	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
