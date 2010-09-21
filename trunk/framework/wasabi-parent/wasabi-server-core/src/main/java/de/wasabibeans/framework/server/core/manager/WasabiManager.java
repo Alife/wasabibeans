@@ -30,7 +30,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
@@ -149,7 +148,14 @@ public class WasabiManager {
 				while (ni.hasNext()) {
 					Node aNode = ni.nextNode();
 					if (!aNode.getName().equals("jcr:system")) {
-						removeNodeAndItsVersionHistoryRecursively(aNode, s.getWorkspace().getVersionManager(), s);
+						aNode.remove();
+						// to automatically remove version histories is not a use-case the jackrabbit developers
+						// support. the workaround implemented by removeNodeAndItsVersionHistoryRecursively() is not a
+						// stable solution and causes exceptions from time to time. thus the version histories cannot be
+						// deleted automatically. the jackrabbit version store (configured in the
+						// JACKRABBIT_HOME/repository.xml; by default: JACKRABBIT_HOME/version) must be deleted manually
+						// from to time if there is need to clear it (e.g. for testing).
+						// removeNodeAndItsVersionHistoryRecursively(aNode, s.getWorkspace().getVersionManager(), s);
 					}
 				}
 				logger.info("Resetting wasabi content: Deletion of existing content finished.");
