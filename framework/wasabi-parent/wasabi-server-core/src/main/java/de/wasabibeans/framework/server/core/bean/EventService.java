@@ -42,7 +42,7 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "EventService")
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class EventService implements EventServiceLocal, EventServiceRemote {
 
 	@Resource

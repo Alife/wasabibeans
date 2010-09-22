@@ -23,6 +23,8 @@ package de.wasabibeans.framework.server.core.test.remote;
 
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -72,8 +74,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().getGroupByName(null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(groupService().getGroupByName("doesNotExist"));
@@ -95,8 +99,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().getSubGroupByName(group1_1, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(groupService().getSubGroupByName(group1_1, "doesNotExist"));
@@ -153,8 +159,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().getMemberByName(group1_1, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(groupService().getMemberByName(group1_1, "doesNotExist"));
@@ -183,8 +191,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().create(null, group1_1);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
@@ -266,8 +276,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().rename(group1_1, null, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		groupService().rename(group1_1, "group1-1", null);
@@ -282,8 +294,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().setDisplayName(group1_1, null, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		WasabiGroupDTO group1_2 = groupService().getGroupByName("group1_2");
@@ -356,8 +370,10 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			groupService().getGroupsByDisplayName(null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertTrue(groupService().getGroupsByDisplayName("doesNotExist").isEmpty());

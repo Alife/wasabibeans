@@ -24,6 +24,10 @@ package de.wasabibeans.framework.server.core.test.jcr;
 import java.util.HashMap;
 import java.util.Vector;
 
+import javax.jcr.Session;
+import javax.jcr.version.VersionManager;
+
+import org.apache.jackrabbit.jca.JCASessionHandle;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
@@ -33,7 +37,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -66,7 +69,6 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
-				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
@@ -85,18 +87,48 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 	public void test() throws Throwable {
 		LocalWasabiConnector loCon = new LocalWasabiConnector();
 		loCon.connect();
+
 		TestHelperLocal testhelper = (TestHelperLocal) loCon.lookup("TestHelper");
 		testhelper.initDatabase();
 		testhelper.initRepository();
-		loCon.disconnect();
 
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		Session s = jcr.getJCRSessionNoTx();
 		try {
-			jcr.getJCRSession();
+			UserThread user1 = new TestUser(USER1);
+			UserThread user2 = new TestUser(USER2);
+			executeUserThreads(user1, user2);
+
 		} finally {
 			jcr.logout();
 			jndi.close();
+			loCon.disconnect();
+		}
+	}
+
+	class TestUser extends UserThread {
+		public TestUser(String name) {
+			super(name);
+		}
+
+		@Override
+		public void run() {
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+			try {
+				Session s = jcr.getJCRSessionNoTx();
+				JCASessionHandle handle = (JCASessionHandle) s;
+				System.out.println(username + " " + handle.getXAResource().toString());
+				VersionManager vm = s.getWorkspace().getVersionManager();
+				System.out.println(username + " " + vm.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				jcr.logout();
+				jndi.close();
+			}
+
 		}
 	}
 

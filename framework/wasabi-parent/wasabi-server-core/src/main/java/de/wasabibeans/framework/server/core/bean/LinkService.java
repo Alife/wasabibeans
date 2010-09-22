@@ -61,7 +61,7 @@ import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "LinkService")
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class LinkService extends ObjectService implements LinkServiceLocal, LinkServiceRemote {
 
 	@Override
@@ -73,7 +73,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 					"name"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
@@ -91,7 +91,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
 			TargetDoesNotExistException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node linkNode = TransferManager.convertDTO2Node(link, s);
 		Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
 		return TransferManager.convertValue2DTO(LinkServiceImpl.getDestination(linkNode), optLockId);
@@ -100,7 +100,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public WasabiValueDTO getEnvironment(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node linkNode = TransferManager.convertDTO2Node(link, s);
 		Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
 		return TransferManager.convertValue2DTO(LinkServiceImpl.getEnvironment(linkNode), optLockId);
@@ -114,7 +114,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 					"name"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name), location);
 	}
@@ -122,7 +122,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();) {
@@ -134,7 +134,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate)) {
@@ -146,7 +146,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByCreationDate(WasabiLocationDTO environment, Date startDate, Date endDate,
 			int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth)) {
@@ -158,7 +158,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
@@ -170,7 +170,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
@@ -183,7 +183,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate, Date endDate)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate)) {
@@ -195,7 +195,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByModificationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth)) {
@@ -207,7 +207,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
@@ -219,7 +219,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
@@ -232,7 +232,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public Vector<WasabiLinkDTO> getLinksOrderedByCreationDate(WasabiLocationDTO location, SortType order)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
 		for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
@@ -246,7 +246,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
 		Node linkNode = null;
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
@@ -269,7 +269,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			ConcurrentModificationException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
@@ -291,7 +291,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		}
 
 		Node linkNode = null;
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
@@ -315,7 +315,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
 		Node linkNode = null;
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			linkNode = TransferManager.convertDTO2Node(link, s);
