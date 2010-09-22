@@ -25,15 +25,15 @@
 	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
 	- wasabi:optLockId (LONG) 
 	
-[wasabi:location] > wasabi:object, wasabiMix:versionable
+[wasabi:location] > wasabi:object
 	abstract
-	+ wasabi:documents (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
-	+ wasabi:containers (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
+	+ wasabi:documents (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
+	+ wasabi:containers (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	+ wasabi:links (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	
 [wasabi:room] > wasabi:location
-	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated VERSION
-	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated IGNORE
+	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
+	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 	
 [wasabi:container] > wasabi:location
 
@@ -52,7 +52,7 @@
 	+ wasabi:memberships (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 	+ wasabi:whereabouts (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated
 
-[wasabi:document] > wasabi:object, wasabiMix:versionable
+[wasabi:document] > wasabi:object
 	primaryitem 'wasabi:content'
 	- wasabi:content (BINARY) 
 	
@@ -63,8 +63,8 @@
 	- wasabi:value (UNDEFINED)
 	- wasabi:type (STRING)
 	
-[wasabiStructure:objectCollection] > nt:base, wasabiMix:versionable
-	+ * (wasabi:object) VERSION
+[wasabiStructure:objectCollection] > nt:base
+	+ * (wasabi:object) 
 	
 [wasabiStructure:refCollection] > nt:base
 	+ * (wasabiStructure:objectref)
