@@ -61,12 +61,6 @@
 				name="de.wasabibeans.framework.server.core.test.versioning.VersioningServiceRemoteTest" />
 		</classes>
 	</test>
-	<test name="versioning">
-		<classes>
-			<class
-				name="de.wasabibeans.framework.server.core.test.versioning.VersioningServiceRemoteTest" />
-		</classes>
-	</test>
 	<test name="transaction-local">
 		<classes>
 			<class
