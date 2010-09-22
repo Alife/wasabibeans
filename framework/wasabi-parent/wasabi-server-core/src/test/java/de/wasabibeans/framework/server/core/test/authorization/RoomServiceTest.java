@@ -67,6 +67,62 @@ public class RoomServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void getEnvironmentTest() throws WasabiException {
+		System.out.println("=== getEnvironmentTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getEnvironmentTestRoom at usersHome... ");
+		WasabiRoomDTO getEnvironmentTestRoom = null;
+		try {
+			getEnvironmentTestRoom = roomService().create("getEnvironmentTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getEnvironmentTestRoom... ");
+		aclService().deactivateInheritance(getEnvironmentTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getEnvironmentTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom at getEnvironmentHome... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", getEnvironmentTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting environment of someRoom... ");
+		try {
+			roomService().getEnvironment(someRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getEnvironmentTestRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Getting environment of someRoom... ");
+		try {
+			roomService().getEnvironment(someRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void getRoomsTest() throws WasabiException {
 		System.out.println("=== getRoomsTest() ===");
 		WasabiGroupDTO g1 = groupService().create("g1", null);
