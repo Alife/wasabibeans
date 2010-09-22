@@ -68,9 +68,10 @@ public class TransferManager {
 		return (T) dto;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject, WasabiObjectDTO dtoOfParent)
 			throws UnexpectedInternalProblemException {
-		T dto = convertNode2DTO(wasabiObject);
+		T dto = (T) convertNode2DTO(wasabiObject);
 		String lockToken = dtoOfParent != null ? dtoOfParent.getLockToken() : null;
 		if (lockToken != null && dtoOfParent.isDeepLock()) {
 			return enrichWithLockToken(dto, lockToken, true);
