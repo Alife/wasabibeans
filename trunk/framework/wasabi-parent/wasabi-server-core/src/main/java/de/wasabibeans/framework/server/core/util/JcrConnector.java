@@ -21,11 +21,14 @@
 
 package de.wasabibeans.framework.server.core.util;
 
+import java.lang.reflect.Method;
+
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.jca.JCASessionHandle;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
@@ -57,19 +60,79 @@ public class JcrConnector {
 		return this.jcrRepository;
 	}
 
-	public Session getJCRSession() throws UnexpectedInternalProblemException {
+	/**
+	 * Returns a new JCA handle that is connected to a JCR session. This {@code JCRConnector} instance keeps a reference
+	 * to the returned JCA handle and thus can perform a logout later on. This method is to be used outside of JTA
+	 * transactions, where JCA handles have to be logged out explicitly.
+	 * 
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public Session getJCRSessionNoTx() throws UnexpectedInternalProblemException {
 		try {
 			if (session == null) {
-				session = getJCRRepository().login(
-						new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+				session = getJCRSessionTx();
 			}
-			//logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
+			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
 			return session;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (Exception e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, e);
 		}
 	}
 
+	/**
+	 * Returns a new JCA handle that is connected to a JCR session. This {@code JCRConnector} instance does not keep a
+	 * reference to the returned JCA handle and thus cannot perform a logout later on. So this method is to be used
+	 * within JTA transactions, within which JCA handles are logged out automatically.
+	 * 
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public Session getJCRSessionTx() throws UnexpectedInternalProblemException {
+		try {
+			Session s = getJCRRepository().login(
+					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+			/*
+			 * workaround 1: there seems to be a problem when using JCA handles within transactions (which happens
+			 * within the wasabi core almost all the time). normally the cache of a JCR session (to which a JCA handle
+			 * is connected) is updated when changes of other JCR sessions are persisted. within container managed
+			 * transactions this update procedure seems to fail from to time and consequently even simple test cases
+			 * fail. i have not yet been able to pinpoint this bug in a way that would allow me create a very concise
+			 * test-case that could be handed to the jackrabbit-developers. the bug seems very similar to this one
+			 * https://issues.apache.org/jira/browse/JCR-1953, which is already marked as resolved, though.
+			 */
+			clearCache(s);
+			/*
+			 * workaround 2: the automatic logout procedure of the JCA handles does not remove existing lock-tokens from
+			 * JCR sessions. so a client could retrieve a JCR session that still holds lock-tokens from the JCA
+			 * connection pool.
+			 */
+			Locker.cleanUpLockTokens(s);
+			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
+			return s;
+		} catch (Exception e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, e);
+		}
+	}
+
+	/**
+	 * Clears the item cache of the JCR session to which the given JCA handle {@code s} is connected.
+	 * 
+	 * @param s
+	 * @throws Exception
+	 */
+	private void clearCache(Session s) throws Exception {
+		JCASessionHandle jcaHandle = (JCASessionHandle) s;
+		SessionImpl jackrabbitSession = (SessionImpl) jcaHandle.getXAResource();
+		ItemManager cacheOfSession = jackrabbitSession.getItemManager();
+		Method clearCacheMethod = cacheOfSession.getClass().getDeclaredMethod("dispose");
+		clearCacheMethod.setAccessible(true);
+		clearCacheMethod.invoke(cacheOfSession);
+	}
+
+	/**
+	 * Destroys the JCR session to which the current JCA handle {@code session} of this instance is connected.
+	 */
 	public void destroy() {
 		try {
 			if (session != null) {
@@ -89,10 +152,14 @@ public class JcrConnector {
 		}
 	}
 
+	/**
+	 * Returns the JCR session to which the current JCA handle {@code session} of this instance is connected to the JCA
+	 * connection pool.
+	 */
 	public void logout() {
 		try {
 			if (session != null) {
-				Locker.cleanUpLockTokens(session);
+				// Locker.cleanUpLockTokens(session);
 				session.logout();
 				session = null;
 			}
@@ -103,4 +170,5 @@ public class JcrConnector {
 							e);
 		}
 	}
+
 }

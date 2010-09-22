@@ -51,7 +51,7 @@ import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
  */
 @SecurityDomain("wasabi")
 @Stateless(name = "TagService")
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class TagService extends ObjectService implements TagServiceLocal, TagServiceRemote {
 
 	@Override
@@ -62,7 +62,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			Locker.recognizeLockTokens(s, object);
@@ -76,7 +76,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			Locker.recognizeLockTokens(s, object);
@@ -95,7 +95,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tags"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> result = new Vector<WasabiDocumentDTO>();
 		for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags)) {
@@ -107,7 +107,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public Map<String, Integer> getMostUsedDocumentTags(WasabiLocationDTO environment, int limit)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
 	}
@@ -119,7 +119,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
 		for (Node node : TagServiceImpl.getObjectsByTag(tag, s)) {
 			result.add(TransferManager.convertNode2DTO(node));
@@ -130,7 +130,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public Vector<String> getTags(WasabiObjectDTO object) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		return TagServiceImpl.getTags(objectNode);
 	}
@@ -143,7 +143,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			Locker.recognizeLockTokens(s, object);

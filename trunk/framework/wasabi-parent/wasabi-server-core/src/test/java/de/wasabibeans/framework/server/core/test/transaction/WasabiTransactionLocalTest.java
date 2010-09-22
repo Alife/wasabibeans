@@ -36,7 +36,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -80,7 +79,6 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
-				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager

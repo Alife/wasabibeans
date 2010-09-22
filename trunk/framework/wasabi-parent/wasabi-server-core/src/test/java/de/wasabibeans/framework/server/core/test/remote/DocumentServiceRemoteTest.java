@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -74,8 +76,10 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().getDocumentByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(documentService().getDocumentByName(rootRoom, "doesNotExist"));
@@ -109,15 +113,19 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().create(null, rootRoom);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			documentService().create("test", null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
@@ -148,8 +156,10 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().setContent(null, "Hallo", null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		documentService().setContent(document, null, null);
@@ -194,8 +204,10 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			documentService().rename(document1, null, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		documentService().rename(document1, "document_2", null);

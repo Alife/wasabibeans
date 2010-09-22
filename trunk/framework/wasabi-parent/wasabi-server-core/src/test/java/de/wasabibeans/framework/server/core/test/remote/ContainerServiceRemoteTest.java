@@ -25,6 +25,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -70,8 +72,10 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			containerService().getContainerByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(containerService().getContainerByName(rootRoom, "doesNotExist"));
@@ -99,15 +103,19 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			containerService().create(null, rootRoom);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			containerService().create("test", null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {

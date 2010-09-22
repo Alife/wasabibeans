@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.test.remote;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -70,8 +72,10 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			attributeService().getAttributeByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(attributeService().getAttributeByName(rootRoom, "doesNotExist"));
@@ -104,8 +108,10 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			attributeService().getValue(null, attribute1);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
@@ -149,15 +155,19 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			attributeService().create(null, 3, rootRoom);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			attributeService().create("test", 3, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
@@ -218,8 +228,10 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			attributeService().rename(attribute1, null, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		attributeService().rename(attribute1, "attribute_2", null);

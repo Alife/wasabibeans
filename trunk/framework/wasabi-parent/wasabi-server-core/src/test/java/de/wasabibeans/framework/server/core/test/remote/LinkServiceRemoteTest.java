@@ -25,6 +25,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -64,7 +66,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 	public void tearDownAfterEachMethod() throws Exception {
 		reWaCon.logout();
 	}
-	
+
 	@Test
 	public void get1DestinationTest() throws Exception {
 		WasabiValueDTO test = linkService().getDestination(link1);
@@ -76,7 +78,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		WasabiValueDTO test = linkService().getEnvironment(link1);
 		AssertJUnit.assertEquals(rootRoom, test.getValue());
 	}
-	
+
 	@Test
 	public void get1LinkByNameTest() throws Exception {
 		WasabiLinkDTO test = linkService().getLinkByName(rootRoom, "link1");
@@ -85,8 +87,10 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			linkService().getLinkByName(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		AssertJUnit.assertNull(linkService().getLinkByName(rootRoom, "doesNotExist"));
@@ -109,22 +113,28 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			linkService().create(null, link1, rootRoom);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			linkService().create("test", link1, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
-		
+
 		try {
 			linkService().create("test", null, rootRoom);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
@@ -135,7 +145,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 	}
-	
+
 	@Test(dependsOnMethods = { "createTest" })
 	public void moveTest() throws Exception {
 		WasabiContainerDTO newEnvironment = containerService().create("newEnvironment", rootRoom);
@@ -182,8 +192,10 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			linkService().rename(link1, null, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		linkService().rename(link1, "link_2", null);
@@ -252,8 +264,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 					links[d][t] = linkService().create("link" + t, rootRoom, room);
 					rooms[d][t] = roomService().create("room" + t, room);
 				} else {
-					links[d][t] = linkService().create("link" + t, rootRoom,
-							rooms[d - 1][(int) (Math.random() * 5)]);
+					links[d][t] = linkService().create("link" + t, rootRoom, rooms[d - 1][(int) (Math.random() * 5)]);
 					if (d != 4) {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
@@ -374,8 +385,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 					links[d][t] = linkService().create("link" + t, rootRoom, room);
 					rooms[d][t] = roomService().create("room" + t, room);
 				} else {
-					links[d][t] = linkService().create("link" + t, rootRoom,
-							rooms[d - 1][(int) (Math.random() * 5)]);
+					links[d][t] = linkService().create("link" + t, rootRoom, rooms[d - 1][(int) (Math.random() * 5)]);
 					if (d != 4) {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
@@ -456,7 +466,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 	public void getLinksOrderedByCreationDateTest() throws Exception {
 		WasabiRoomDTO room = roomService().create("room", rootRoom);
 
-		// create 5 links with 5 different timestamps 
+		// create 5 links with 5 different timestamps
 		WasabiLinkDTO[] links = new WasabiLinkDTO[5];
 		Calendar cal = Calendar.getInstance();
 		Date[] dates = new Date[5];
@@ -464,14 +474,14 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 			dates[i] = cal.getTime();
 			links[i] = linkService().create("link" + i, rootRoom, room);
 			objectService().setCreatedOn(links[i], dates[i], null);
-			
+
 			cal.add(Calendar.SECOND, 1);
 		}
-		
+
 		// do the test
 		Vector<WasabiLinkDTO> result = linkService().getLinksOrderedByCreationDate(room, SortType.DESCENDING);
 		for (int i = 0; i < 5; i++) {
-			AssertJUnit.assertEquals(links[4-i], result.get(i));
+			AssertJUnit.assertEquals(links[4 - i], result.get(i));
 		}
 		result = linkService().getLinksOrderedByCreationDate(room, SortType.ASCENDING);
 		for (int i = 0; i < 5; i++) {

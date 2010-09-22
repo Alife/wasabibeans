@@ -24,6 +24,8 @@ package de.wasabibeans.framework.server.core.test.remote;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -75,8 +77,10 @@ public class TagServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			tagService().addTag(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		// test that adding tags with same content does not cause problems
@@ -139,8 +143,10 @@ public class TagServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			result = tagService().getObjectsByTag(null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 	}
 
@@ -149,8 +155,10 @@ public class TagServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			tagService().removeTag(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		tagService().removeTag(rootRoom, "noSuchTag");
@@ -181,8 +189,10 @@ public class TagServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			tagService().getDocumentsByTags(rootRoom, null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		Vector<String> test = new Vector<String>();

@@ -37,7 +37,6 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -80,7 +79,6 @@ public class SimpleJCRVersioningTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
-				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
@@ -105,7 +103,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			testHelper.initDatabase();
 			testHelper.initRepository();
 
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 
 			Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
@@ -209,7 +207,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 			Node room = s.getNodeByIdentifier(roomId);
 

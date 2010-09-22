@@ -9,7 +9,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -17,8 +16,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
-import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
-import de.wasabibeans.framework.server.core.aop.WasabiService;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
@@ -38,12 +35,14 @@ import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless(name = "VersioningService")
-@Interceptors( { TransactionInterceptor.class })
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-public class VersioningService extends WasabiService implements VersioningServiceLocal, VersioningServiceRemote {
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
+public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote {
 
 	@EJB
 	private LockingHelperLocal locker;
+
+	protected JndiConnector jndi;
+	protected JcrConnector jcr;
 
 	@PostConstruct
 	public void postConstruct() {
@@ -72,7 +71,7 @@ public class VersioningService extends WasabiService implements VersioningServic
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
 
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			Node node = TransferManager.convertDTO2Node(dto, s);
 			VersionHistory versionHistory = s.getWorkspace().getVersionManager().getVersionHistory(node.getPath());
@@ -111,7 +110,7 @@ public class VersioningService extends WasabiService implements VersioningServic
 		}
 
 		Node node = null;
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
 			// get unique version label (that is, unique in the version histories of the affected nodes)
@@ -150,7 +149,7 @@ public class VersioningService extends WasabiService implements VersioningServic
 		}
 
 		Node node = null;
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionTx();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
 			// acquire deep lock

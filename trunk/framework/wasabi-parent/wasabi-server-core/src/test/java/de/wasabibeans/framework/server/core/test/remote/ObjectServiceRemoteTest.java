@@ -23,6 +23,8 @@ package de.wasabibeans.framework.server.core.test.remote;
 
 import java.util.Vector;
 
+import javax.ejb.EJBException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.AssertJUnit;
@@ -72,8 +74,10 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			objectService().getObjectsByAttributeName(null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		// create some objects with attributes
@@ -156,8 +160,10 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			objectService().getObjectsByName(null);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		// create some objects

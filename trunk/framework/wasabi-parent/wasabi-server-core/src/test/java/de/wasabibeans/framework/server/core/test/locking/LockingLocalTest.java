@@ -39,7 +39,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.aop.TransactionInterceptor;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -94,7 +93,6 @@ public class LockingLocalTest extends Arquillian {
 				.addPackage(WasabiException.class.getPackage()) // exception
 				.addPackage(WasabiRoomDTO.class.getPackage()) // dto
 				.addPackage(HashGenerator.class.getPackage()) // util
-				.addPackage(TransactionInterceptor.class.getPackage()) // aop
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
@@ -126,7 +124,7 @@ public class LockingLocalTest extends Arquillian {
 			userService.create(USER1, USER1);
 			userService.create(USER2, USER2);
 
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getRootNode().addNode(DOC1, WasabiNodeType.DOCUMENT);
 			document.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 0);
 			document.setProperty(WasabiNodeProperty.CONTENT, CONTENT1);
@@ -229,7 +227,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				document = s.getNodeByIdentifier(docid);
 				try {
 					if (username.equals(USER2)) {
@@ -288,7 +286,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -317,7 +315,7 @@ public class LockingLocalTest extends Arquillian {
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				Node document = s.getNodeByIdentifier(docid);
 				Node node1 = document.getParent().getParent();
 				DummyDTO node1DTO = new DummyDTO(node1.getIdentifier());
@@ -376,7 +374,7 @@ public class LockingLocalTest extends Arquillian {
 			userService.create(USER1, USER1);
 			userService.create(USER2, USER2);
 
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node node1 = s.getRootNode().addNode("node1");
 			node1.addMixin(NodeType.MIX_LOCKABLE);
 			Node node2 = node1.addNode("node2");
@@ -409,7 +407,7 @@ public class LockingLocalTest extends Arquillian {
 			}
 		}
 		AssertJUnit.assertTrue(problemRecognized);
-		Session s = jcr.getJCRSession();
+		Session s = jcr.getJCRSessionNoTx();
 		try {
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
@@ -439,7 +437,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				document = s.getNodeByIdentifier(docid);
 				try {
 					if (username.equals(USER2)) {
@@ -477,7 +475,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -506,7 +504,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				document = s.getNodeByIdentifier(docid);
 				try {
 					if (username.equals(USER2)) {
@@ -555,7 +553,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -584,7 +582,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				document = s.getNodeByIdentifier(docid);
 				try {
 					if (username.equals(USER2)) {
@@ -635,7 +633,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -667,7 +665,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				try {
 					utx.begin();
 					document = s.getNodeByIdentifier(docid);
@@ -737,7 +735,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -769,7 +767,7 @@ public class LockingLocalTest extends Arquillian {
 
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				Node document = s.getNodeByIdentifier(docid);
 				Node node1 = document.getParent().getParent();
 				DummyDTO node1DTO = new DummyDTO(node1.getIdentifier());
@@ -841,7 +839,7 @@ public class LockingLocalTest extends Arquillian {
 			userService.create(USER1, USER1);
 			userService.create(USER2, USER2);
 
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node node1 = s.getRootNode().addNode("node1");
 			node1.addMixin(NodeType.MIX_LOCKABLE);
 			Node node2 = node1.addNode("node2");
@@ -875,7 +873,7 @@ public class LockingLocalTest extends Arquillian {
 		}
 		AssertJUnit.assertTrue(problemRecognized);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -907,7 +905,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				try {
 					utx.begin();
 					document = s.getNodeByIdentifier(docid);
@@ -958,7 +956,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -990,7 +988,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				try {
 					utx.begin();
 					document = s.getNodeByIdentifier(docid);
@@ -1052,7 +1050,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER2, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -1081,7 +1079,7 @@ public class LockingLocalTest extends Arquillian {
 				LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
 				Node document = null;
-				Session s = jcr.getJCRSession();
+				Session s = jcr.getJCRSessionNoTx();
 				try {
 					document = s.getNodeByIdentifier(docid);
 
@@ -1134,7 +1132,7 @@ public class LockingLocalTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			AssertJUnit.assertEquals(USER1, document.getProperty(WasabiNodeProperty.CONTENT).getString());
 		} finally {
@@ -1157,7 +1155,7 @@ public class LockingLocalTest extends Arquillian {
 
 			LockingHelperLocal locker = (LockingHelperLocal) loWaCon.lookup("LockingHelper");
 
-			Session s = jcr.getJCRSession();
+			Session s = jcr.getJCRSessionNoTx();
 			Node document = s.getNodeByIdentifier(docid);
 			Locker.releaseLock(document, dto, s, locker);
 		} finally {
