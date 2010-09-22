@@ -46,7 +46,7 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 			ConcurrentModificationException;
 
 	public WasabiValueDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;

@@ -100,9 +100,18 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public WasabiValueDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getEnvironment()", "VIEW"));
+		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
 		return TransferManager.convertValue2DTO(RoomServiceImpl.getEnvironment(roomNode), optLockId);
 	}
