@@ -54,7 +54,7 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 	@Test
 	public void createRooms1() throws WasabiException {
-		int numberOfRooms = 100;
+		int numberOfRooms = 500;
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -70,13 +70,9 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
 			roomService().getName(room);
-		}
-		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
 			roomService().getName(room);
-		}
-		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+			roomService().getName(room);
+			roomService().getName(room);
 			roomService().getName(room);
 		}
 		long endTimeRead = java.lang.System.currentTimeMillis();

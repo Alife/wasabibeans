@@ -108,7 +108,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getEnvironment()", "VIEW"));
 		/* Authorization - End */
@@ -131,7 +132,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getRoomByName()", "VIEW"));
 		/* Authorization - End */

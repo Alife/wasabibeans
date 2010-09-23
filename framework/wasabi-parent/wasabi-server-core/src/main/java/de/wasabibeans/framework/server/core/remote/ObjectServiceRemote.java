@@ -40,22 +40,20 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface ObjectServiceRemote {
 
-	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException;
+	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getCreatedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getCreatedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getModifiedBy(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getModifiedOn(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
-
-	public boolean isRightsActive(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getName(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
@@ -86,7 +84,4 @@ public interface ObjectServiceRemote {
 
 	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
-
-	public void setRightsActive(WasabiObjectDTO object, boolean rightsActive)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 }
