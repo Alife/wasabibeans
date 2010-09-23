@@ -65,6 +65,115 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			}
 		}
 	}
+	
+	@Test
+	public void getRoomsWithDepthTest() throws WasabiException {
+		System.out.println("=== getRoomsWithDepthTest() ===");
+		
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getRoomsWithDepthTestRoom at usersHome... ");
+		WasabiRoomDTO getRoomsWithDepthTestRoom = null;
+		try {
+			getRoomsWithDepthTestRoom = roomService().create("getRoomsWithDepthTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getRoomsWithDepthTestRoom... ");
+		aclService().deactivateInheritance(getRoomsWithDepthTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+		
+		System.out.print("Creating depth1Room at getRoomsWithDepthTestRoom... ");
+		WasabiRoomDTO depth1Room = null;
+		try {
+			depth1Room = roomService().create("depth1Room", getRoomsWithDepthTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Creating depth1RoomWithView at getRoomsWithDepthTestRoom... ");
+		WasabiRoomDTO depth1RoomWithView = null;
+		try {
+			depth1RoomWithView = roomService().create("depth1RoomWithView", getRoomsWithDepthTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Creating depth2Room at depth1Room... ");
+		WasabiRoomDTO depth2Room = null;
+		try {
+			depth2Room = roomService().create("depth2Room", depth1Room);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Creating depth2RoomWithView at depth1Room... ");
+		WasabiRoomDTO depth2RoomWithView = null;
+		try {
+			depth2RoomWithView = roomService().create("depth2RoomWithView", depth1Room);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Creating depth3Room at depth2Room... ");
+		WasabiRoomDTO depth3Room = null;
+		try {
+			depth3Room = roomService().create("depth3Room", depth2Room);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Creating depth3RoomWithView at depth2Room... ");
+		WasabiRoomDTO depth3RoomWithView = null;
+		try {
+			depth3RoomWithView = roomService().create("depth3RoomWithView", depth2Room);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting VIEW as userRight for depth1RoomWithView... ");
+		aclService().create(depth1RoomWithView, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+		
+		System.out.print("Setting VIEW as userRight for depth2RoomWithView... ");
+		aclService().create(depth2RoomWithView, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+		
+		System.out.print("Setting VIEW as userRight for depth3RoomWithView... ");
+		aclService().create(depth3RoomWithView, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+		
+		System.out.println("Display all rooms and subrooms with depth 2 at getRoomsWithDepthTestRoom:");
+		Vector <WasabiRoomDTO> allRooms = roomService().getRooms(getRoomsWithDepthTestRoom, 1);
+		for (WasabiRoomDTO wasabiRoomDTO : allRooms) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		
+		System.out.print("Setting VIEW as userRight for getRoomsWithDepthTestRoom... ");
+		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+		
+		System.out.println("Display all rooms and subrooms with depth 2 at getRoomsWithDepthTestRoom:");
+		Vector <WasabiRoomDTO> allRooms2 = roomService().getRooms(getRoomsWithDepthTestRoom, 1);
+		for (WasabiRoomDTO wasabiRoomDTO : allRooms2) {
+			System.out.println(roomService().getName(wasabiRoomDTO).getValue());
+		}
+		
+		System.out.println("===========================");
+	}
 
 	@Test
 	public void getEnvironmentTest() throws WasabiException {

@@ -170,9 +170,22 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
-		for (Node room : RoomServiceImpl.getRooms(environmentNode, depth)) {
-			rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = RoomServiceImpl.getRoomsFiltered(environmentNode, depth, callerPrincipal,
+					s);
+			for (String string : authorizedRooms) {
+				Node aNode = RoomServiceImpl.getRoomById(string, s);
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(aNode, environment));
+			}
+		} else {
+			for (Node room : RoomServiceImpl.getRooms(environmentNode, depth))
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room, environment));
 		}
+		/* Authorization - End */
+
 		return rooms;
 	}
 
