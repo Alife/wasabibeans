@@ -247,10 +247,21 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
 
-		for (NodeIterator ni = RoomServiceImpl.getRoomsByCreator(creatorNode); ni.hasNext();)
-			rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByCreator(creatorNode); ni.hasNext();) {
+				Node roomNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(roomNode));
+			}
+		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByCreator(creatorNode); ni.hasNext();)
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 
 		return rooms;
 	}
@@ -333,10 +344,22 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Vector<WasabiRoomDTO> rooms = new Vector<WasabiRoomDTO>();
-		for (NodeIterator ni = RoomServiceImpl.getRoomsByModifier(modifierNode); ni.hasNext();) {
-			rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByModifier(modifierNode); ni.hasNext();) {
+				Node roomNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(roomNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = RoomServiceImpl.getRoomsByModifier(modifierNode); ni.hasNext();)
+				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return rooms;
 	}
 
