@@ -65,6 +65,24 @@ public class ACLServiceImpl {
 		return allow;
 	}
 
+	private static String convertNodeType(String nodeType) {
+		if (nodeType.equals(WasabiNodeType.USER))
+			return WasabiType.USER.toString();
+		if (nodeType.equals(WasabiNodeType.GROUP))
+			return WasabiType.GROUP.toString();
+		if (nodeType.equals(WasabiNodeType.ROOM))
+			return WasabiType.ROOM.toString();
+		if (nodeType.equals(WasabiNodeType.CONTAINER))
+			return WasabiType.CONTAINER.toString();
+		if (nodeType.equals(WasabiNodeType.LINK))
+			return WasabiType.LINK.toString();
+		if (nodeType.equals(WasabiNodeType.ATTRIBUTE))
+			return WasabiType.ATTRIBUTE.toString();
+		if (nodeType.equals(WasabiNodeType.DOCUMENT))
+			return WasabiType.DOCUMENT.toString();
+		return null;
+	}
+
 	public static void create(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, boolean[] allowance,
 			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException {
 		if (permission.length != allowance.length) {
@@ -135,8 +153,8 @@ public class ACLServiceImpl {
 							}
 						} else {
 							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
-									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 							try {
 
 								int prio;
@@ -147,7 +165,7 @@ public class ACLServiceImpl {
 
 								run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
 										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
-										prio);
+										prio, convertNodeType(node.getPrimaryNodeType().getName()));
 							} catch (SQLException e) {
 								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 							}
@@ -168,8 +186,8 @@ public class ACLServiceImpl {
 							}
 						} else {
 							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
-									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 							try {
 
 								int prio;
@@ -180,7 +198,7 @@ public class ACLServiceImpl {
 
 								run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
 										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
-										prio);
+										prio, convertNodeType(node.getPrimaryNodeType().getName()));
 							} catch (SQLException e) {
 								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 							}
@@ -1100,6 +1118,7 @@ public class ACLServiceImpl {
 		String wasabiIdentityType = wasabiIdentityNode.getPrimaryNodeType().getName();
 		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
 		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(wasabiObjectNode));
+		String wasabiType = wasabiObjectNode.getPrimaryNodeType().getName();
 
 		int view, read, insert, write, execute, comment, grant;
 
@@ -1154,8 +1173,8 @@ public class ACLServiceImpl {
 					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
 							|| grant != 0) {
 						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 						int prio;
 						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
@@ -1168,7 +1187,8 @@ public class ACLServiceImpl {
 							prio = WasabiACLPriority.INHERITED_USER_RIGHT;
 
 						run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
-								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
+								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
+								convertNodeType(wasabiType));
 					}
 				} else {
 					view = result.get(0).getView();
@@ -1321,8 +1341,8 @@ public class ACLServiceImpl {
 					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
 							|| grant != 0) {
 						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 						int prio;
 						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
@@ -1335,7 +1355,8 @@ public class ACLServiceImpl {
 							prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
 
 						run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
-								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio);
+								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
+								convertNodeType(wasabiType));
 					}
 				} else {
 					view = result.get(0).getView();

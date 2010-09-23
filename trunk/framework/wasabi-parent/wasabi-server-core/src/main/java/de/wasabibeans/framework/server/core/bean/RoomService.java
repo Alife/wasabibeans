@@ -39,6 +39,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -149,7 +150,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
 			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(roomNode, callerPrincipal,
-					WasabiPermission.VIEW, s);
+					WasabiPermission.VIEW, WasabiType.ROOM, s);
 			for (String string : authorizedRooms) {
 				Node aNode = RoomServiceImpl.getRoomById(string, s);
 				rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(aNode, room));
