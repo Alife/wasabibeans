@@ -26,7 +26,7 @@
 		<!-- <config-property name="configFile" type="java.lang.String">/jackrabbit/repository.xml</config-property> -->
 		
 		<!--the minimum number of connections in the pool (default 0 - zero) -->
-		<min-pool-size>10</min-pool-size>
+		<!--<min-pool-size>10</min-pool-size>-->
 		<!-- the maximum number of connections in the pool (default 20) -->
 		<!--<max-pool-size>70</max-pool-size>-->
 		
@@ -34,12 +34,12 @@
 		transaction lifecyle. In other words, if this flag is true the handle
 		will be closed when the transaction ends (note: The HANDLE will be closed.
 		The actual session on the other hand will be returned to the JCA connection pool). -->
-		<config-property name="bindSessionToTransaction" type="java.lang.Boolean">false</config-property>
+		<config-property name="bindSessionToTransaction" type="java.lang.Boolean">true</config-property>
 		
 		<!-- This flag indicates that the parameters supplied by the application (that is, the
 		credentials used for 'repository.login' calls) are used to distinguish connections 
 		(that is, sessions) in the JCA connection pool. Alternatives are <security-domain>MyRealm</security-domain>
 		and even <security-domain-and-application> -->
-		<!--<application-managed-security/>-->  
-    </tx-connection-factory> 
+		<!--<application-managed-security/>-->
+    </tx-connection-factory>
 </connection-factories> 
