@@ -39,6 +39,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -114,7 +115,7 @@ public class RoomServiceImpl {
 	public static Vector<String> getRoomsFiltered(Node environmentNode, int depth, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException {
 		Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-				WasabiPermission.VIEW, s);
+				WasabiPermission.VIEW, WasabiType.ROOM, s);
 
 		NodeIterator ni = RoomServiceImpl.getRooms(environmentNode);
 
