@@ -1,10 +1,10 @@
 package de.wasabibeans.framework.server.core.authorization;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 public class Certificate {
 
-	private static ConcurrentHashMap<String, Boolean> certificate = new ConcurrentHashMap<String, Boolean>();
+	private static HashMap<String, Boolean> certificate = new HashMap<String, Boolean>();
 
 	public static void set(String key, boolean value) {
 		certificate.put(key, value);
@@ -16,7 +16,7 @@ public class Certificate {
 	}
 
 	public static boolean get(String key) {
-		if (certificate.get(key)!=null && certificate.get(key))
+		if (certificate.get(key) != null && certificate.get(key))
 			return true;
 		else
 			return false;
@@ -24,7 +24,7 @@ public class Certificate {
 
 	public static boolean get(String user, String service, String method, String objectUUID) {
 		String key = concatInputs(user, service, method, objectUUID);
-		if (certificate.get(key)!=null && certificate.get(key))
+		if (certificate.get(key) != null && certificate.get(key))
 			return true;
 		else
 			return false;
