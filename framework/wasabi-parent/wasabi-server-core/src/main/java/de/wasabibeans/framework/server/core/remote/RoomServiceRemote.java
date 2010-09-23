@@ -93,6 +93,7 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 			NoPermissionException, ConcurrentModificationException;
 
 	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException;
 
 }

@@ -368,7 +368,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -379,6 +380,14 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			roomNode = TransferManager.convertDTO2Node(room, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.rename()", "WRITE"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, room);
 			Locker.acquireLock(roomNode, room, false, s, locker);
 			Locker.checkOptLockId(roomNode, room, optLockId);
