@@ -789,65 +789,65 @@ public class WasabiAuthorizer {
 	// return false;
 	// }
 
-	private static int checkUserPriority(List<WasabiACLEntry> ACLEntries, int permission) {
-		int result = 0;
-
-		for (WasabiACLEntry wasabiACLEntry : ACLEntries) {
-			switch (permission) {
-			case WasabiPermission.VIEW:
-				int view = wasabiACLEntry.getView();
-				if (view == -1)
-					return -1;
-				else if (view == 1)
-					result = 1;
-				break;
-			case WasabiPermission.READ:
-				int read = wasabiACLEntry.getRead();
-				if (read == -1)
-					return -1;
-				else if (read == 1)
-					result = 1;
-				break;
-			case WasabiPermission.EXECUTE:
-				int execute = wasabiACLEntry.getExecute();
-				if (execute == -1)
-					return -1;
-				else if (execute == 1)
-					result = 1;
-				break;
-			case WasabiPermission.COMMENT:
-				int comment = wasabiACLEntry.getComment();
-				if (comment == -1)
-					return -1;
-				else if (comment == 1)
-					result = 1;
-				break;
-			case WasabiPermission.INSERT:
-				int insert = wasabiACLEntry.getInsert();
-				if (insert == -1)
-					return -1;
-				else if (insert == 1)
-					result = 1;
-				break;
-			case WasabiPermission.WRITE:
-				int write = wasabiACLEntry.getWrite();
-				if (write == -1)
-					return -1;
-				else if (write == 1)
-					result = 1;
-				break;
-			case WasabiPermission.GRANT:
-				int grant = wasabiACLEntry.getGrant();
-				if (grant == -1)
-					return -1;
-				else if (grant == 1)
-					result = 1;
-				break;
-			}
-
-		}
-		return result;
-	}
+//	private static int checkUserPriority(List<WasabiACLEntry> ACLEntries, int permission) {
+//		int result = 0;
+//
+//		for (WasabiACLEntry wasabiACLEntry : ACLEntries) {
+//			switch (permission) {
+//			case WasabiPermission.VIEW:
+//				int view = wasabiACLEntry.getView();
+//				if (view == -1)
+//					return -1;
+//				else if (view == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.READ:
+//				int read = wasabiACLEntry.getRead();
+//				if (read == -1)
+//					return -1;
+//				else if (read == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.EXECUTE:
+//				int execute = wasabiACLEntry.getExecute();
+//				if (execute == -1)
+//					return -1;
+//				else if (execute == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.COMMENT:
+//				int comment = wasabiACLEntry.getComment();
+//				if (comment == -1)
+//					return -1;
+//				else if (comment == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.INSERT:
+//				int insert = wasabiACLEntry.getInsert();
+//				if (insert == -1)
+//					return -1;
+//				else if (insert == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.WRITE:
+//				int write = wasabiACLEntry.getWrite();
+//				if (write == -1)
+//					return -1;
+//				else if (write == 1)
+//					result = 1;
+//				break;
+//			case WasabiPermission.GRANT:
+//				int grant = wasabiACLEntry.getGrant();
+//				if (grant == -1)
+//					return -1;
+//				else if (grant == 1)
+//					result = 1;
+//				break;
+//			}
+//
+//		}
+//		return result;
+//	}
 
 	private static int getRight(WasabiACLEntry wasabiACLEntry, int permission) {
 		switch (permission) {
@@ -956,319 +956,319 @@ public class WasabiAuthorizer {
 		return rightQuery;
 	}
 
-	private static Vector<String> GroupViewFilter(String parentUUID, String userUUID, Node userNode, Session s)
-			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//	private static Vector<String> GroupViewFilter(String parentUUID, String userUUID, Node userNode, Session s)
+//			throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		Vector<String> results = new Vector<String>();
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		try {
+//			Vector<String> allGroups = getGroupMemberships(userNode, s);
+//			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+//
+//			String getACLEntries = "SELECT DISTINCT `object_id` FROM `wasabi_rights` WHERE "
+//					+ "(`parent_id`=? AND `view`=1 AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=7 "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=7 OR `priority`=6 OR `priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND `view`=1 AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=6 AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=6 OR `priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND `view`=1 AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=5 "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND `view`=1 AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=4 AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `priority`=4))";
+//
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, time, time, parentUUID, time, time,
+//					time, time, parentUUID, time, time, time, time, parentUUID, time, time, time, time);
+//
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				String objectUUID = wasabiACLEntry.getObject_Id();
+//				if (priorityGroupCheck(objectUUID, userUUID, userNode, WasabiPermission.VIEW, s) == 1)
+//					;
+//				results.add(objectUUID);
+//			}
+//
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//		return results;
+//	}
 
-		Vector<String> results = new Vector<String>();
-		long time = java.lang.System.currentTimeMillis();
+//	private static Vector<String> GroupPermissionFilter(String parentUUID, String userUUID, Node userNode,
+//			int permission, Session s) throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		Vector<String> results = new Vector<String>();
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		try {
+//			Vector<String> allGroups = getGroupMemberships(userNode, s);
+//			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+//
+//			String getACLEntries = "SELECT DISTINCT `object_id` FROM `wasabi_rights` WHERE " + "(`parent_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=7 "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=7 OR `priority`=6 OR `priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=6 AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=6 OR `priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=5 "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND (`priority`=5 OR `priority`=4))) "
+//					+ "OR "
+//					+ "(`parent_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND "
+//					+ allGroupsQuery
+//					+ "AND `priority`=4 AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` " + "WHERE "
+//					+ getRightQueryDeny(permission) + "AND " + allGroupsQuery
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
+//					+ "AND `priority`=4))";
+//
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, time, time, parentUUID, time, time,
+//					time, time, parentUUID, time, time, time, time, parentUUID, time, time, time, time);
+//
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				String objectUUID = wasabiACLEntry.getObject_Id();
+//				results.add(objectUUID);
+//			}
+//
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//		return results;
+//	}
 
-		try {
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+//	private static boolean priorityCheck1(String objectUUID, String userUUID, int permission)
+//			throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		// explicit user time rights
+//		String getExplicitUserTimeRights = "SELECT * FROM wasabi_rights "
+//				+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? AND `inheritance_id`=?";
+//		try {
+//			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result1 = run.query(getExplicitUserTimeRights, h1, objectUUID, userUUID, time, time,
+//					"");
+//
+//			// Allowance check
+//			if (checkUserPriority(result1, permission) == -1) {
+//				return false;
+//			} else if (checkUserPriority(result1, permission) == 1) {
+//				return true;
+//			} else {
+//				// inherited user time rights
+//				String getInheritedUserTimeRights = "SELECT * FROM wasabi_rights "
+//						+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? AND `inheritance_id`!=?";
+//				try {
+//					ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(
+//							WasabiACLEntry.class);
+//					List<WasabiACLEntry> result2 = run.query(getInheritedUserTimeRights, h2, objectUUID, userUUID,
+//							time, time, "");
+//
+//					// Allowance check
+//					if (checkUserPriority(result2, permission) == -1) {
+//						return false;
+//					} else if (checkUserPriority(result2, permission) == 1) {
+//						return true;
+//					} else {
+//						// explicit user rights
+//						String getExplicitUserRights = "SELECT * FROM wasabi_rights "
+//								+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+//						try {
+//							ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
+//									WasabiACLEntry.class);
+//							List<WasabiACLEntry> result3 = run.query(getExplicitUserRights, h3, objectUUID, userUUID,
+//									0, 0, "");
+//
+//							// Allowance check
+//							if (checkUserPriority(result3, permission) == -1) {
+//								return false;
+//							} else if (checkUserPriority(result3, permission) == 1) {
+//								return true;
+//							} else {
+//								String getInheritedUserRights = "SELECT * FROM wasabi_rights "
+//										+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`!=?";
+//
+//								try {
+//									ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
+//											WasabiACLEntry.class);
+//									List<WasabiACLEntry> result4 = run.query(getInheritedUserRights, h4, objectUUID,
+//											userUUID, 0, 0, "");
+//
+//									// Allowance check
+//									if (checkUserPriority(result4, permission) == -1) {
+//										return false;
+//									} else if (checkUserPriority(result4, permission) == 1) {
+//										return true;
+//									} else {
+//										// TODO: Group check mechanism
+//										return false;
+//									}
+//								} catch (SQLException e) {
+//									throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//								}
+//							}
+//						} catch (SQLException e) {
+//							throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//						}
+//					}
+//				} catch (SQLException e) {
+//					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//				}
+//			}
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//	}
 
-			String getACLEntries = "SELECT DISTINCT `object_id` FROM `wasabi_rights` WHERE "
-					+ "(`parent_id`=? AND `view`=1 AND "
-					+ allGroupsQuery
-					+ "AND `priority`=7 "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=7 OR `priority`=6 OR `priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND `view`=1 AND "
-					+ allGroupsQuery
-					+ "AND `priority`=6 AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=6 OR `priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND `view`=1 AND "
-					+ allGroupsQuery
-					+ "AND `priority`=5 "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND `view`=1 AND "
-					+ allGroupsQuery
-					+ "AND `priority`=4 AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `priority`=4))";
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, time, time, parentUUID, time, time,
-					time, time, parentUUID, time, time, time, time, parentUUID, time, time, time, time);
-
-			for (WasabiACLEntry wasabiACLEntry : result) {
-				String objectUUID = wasabiACLEntry.getObject_Id();
-				if (priorityGroupCheck(objectUUID, userUUID, userNode, WasabiPermission.VIEW, s) == 1)
-					;
-				results.add(objectUUID);
-			}
-
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return results;
-	}
-
-	private static Vector<String> GroupPermissionFilter(String parentUUID, String userUUID, Node userNode,
-			int permission, Session s) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		Vector<String> results = new Vector<String>();
-		long time = java.lang.System.currentTimeMillis();
-
-		try {
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-
-			String getACLEntries = "SELECT DISTINCT `object_id` FROM `wasabi_rights` WHERE " + "(`parent_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND `priority`=7 "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=7 OR `priority`=6 OR `priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND `priority`=6 AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=6 OR `priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND `priority`=5 "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=5 OR `priority`=4))) "
-					+ "OR "
-					+ "(`parent_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND "
-					+ allGroupsQuery
-					+ "AND `priority`=4 AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` " + "WHERE "
-					+ getRightQueryDeny(permission) + "AND " + allGroupsQuery
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `priority`=4))";
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, time, time, parentUUID, time, time,
-					time, time, parentUUID, time, time, time, time, parentUUID, time, time, time, time);
-
-			for (WasabiACLEntry wasabiACLEntry : result) {
-				String objectUUID = wasabiACLEntry.getObject_Id();
-				results.add(objectUUID);
-			}
-
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return results;
-	}
-
-	private static boolean priorityCheck1(String objectUUID, String userUUID, int permission)
-			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		long time = java.lang.System.currentTimeMillis();
-
-		// explicit user time rights
-		String getExplicitUserTimeRights = "SELECT * FROM wasabi_rights "
-				+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? AND `inheritance_id`=?";
-		try {
-			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result1 = run.query(getExplicitUserTimeRights, h1, objectUUID, userUUID, time, time,
-					"");
-
-			// Allowance check
-			if (checkUserPriority(result1, permission) == -1) {
-				return false;
-			} else if (checkUserPriority(result1, permission) == 1) {
-				return true;
-			} else {
-				// inherited user time rights
-				String getInheritedUserTimeRights = "SELECT * FROM wasabi_rights "
-						+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`<=? AND `end_time`>=? AND `inheritance_id`!=?";
-				try {
-					ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(
-							WasabiACLEntry.class);
-					List<WasabiACLEntry> result2 = run.query(getInheritedUserTimeRights, h2, objectUUID, userUUID,
-							time, time, "");
-
-					// Allowance check
-					if (checkUserPriority(result2, permission) == -1) {
-						return false;
-					} else if (checkUserPriority(result2, permission) == 1) {
-						return true;
-					} else {
-						// explicit user rights
-						String getExplicitUserRights = "SELECT * FROM wasabi_rights "
-								+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-						try {
-							ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
-									WasabiACLEntry.class);
-							List<WasabiACLEntry> result3 = run.query(getExplicitUserRights, h3, objectUUID, userUUID,
-									0, 0, "");
-
-							// Allowance check
-							if (checkUserPriority(result3, permission) == -1) {
-								return false;
-							} else if (checkUserPriority(result3, permission) == 1) {
-								return true;
-							} else {
-								String getInheritedUserRights = "SELECT * FROM wasabi_rights "
-										+ "WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`!=?";
-
-								try {
-									ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
-											WasabiACLEntry.class);
-									List<WasabiACLEntry> result4 = run.query(getInheritedUserRights, h4, objectUUID,
-											userUUID, 0, 0, "");
-
-									// Allowance check
-									if (checkUserPriority(result4, permission) == -1) {
-										return false;
-									} else if (checkUserPriority(result4, permission) == 1) {
-										return true;
-									} else {
-										// TODO: Group check mechanism
-										return false;
-									}
-								} catch (SQLException e) {
-									throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-								}
-							}
-						} catch (SQLException e) {
-							throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-						}
-					}
-				} catch (SQLException e) {
-					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-				}
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-	}
-
-	private static boolean priorityCheck2(String objectUUID, String userUUID, int permission)
-			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		long time = java.lang.System.currentTimeMillis();
-
-		try {
-			String getACLEntries = "SELECT * FROM wasabi_rights WHERE `object_id`=? AND `user_id`=?";
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, userUUID);
-
-			// Filter and check explicit user time rights
-			List<WasabiACLEntry> explicitUserTimeRights = new Vector<WasabiACLEntry>();
-
-			for (WasabiACLEntry wasabiACLEntry : result) {
-				if (wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() <= time
-						&& wasabiACLEntry.getEnd_Time() >= time) {
-					explicitUserTimeRights.add(wasabiACLEntry);
-				}
-			}
-
-			// Allowance check
-			if (checkUserPriority(explicitUserTimeRights, permission) == -1) {
-				return false;
-			} else if (checkUserPriority(explicitUserTimeRights, permission) == 1) {
-				return true;
-			} else {
-				// Filter inherited user time rights
-				List<WasabiACLEntry> inheritedUserTimeRights = new Vector<WasabiACLEntry>();
-
-				for (WasabiACLEntry wasabiACLEntry : result) {
-					if (!wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() <= time
-							&& wasabiACLEntry.getEnd_Time() >= time) {
-						inheritedUserTimeRights.add(wasabiACLEntry);
-					}
-				}
-
-				// Allowance check
-				if (checkUserPriority(inheritedUserTimeRights, permission) == -1) {
-					return false;
-				} else if (checkUserPriority(inheritedUserTimeRights, permission) == 1) {
-					return true;
-				} else {
-					// Filter explicit user rights
-					List<WasabiACLEntry> explicitUserRights = new Vector<WasabiACLEntry>();
-
-					for (WasabiACLEntry wasabiACLEntry : result) {
-						if (wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() == 0
-								&& wasabiACLEntry.getEnd_Time() == 0) {
-							explicitUserRights.add(wasabiACLEntry);
-						}
-					}
-
-					// Allowance check
-					if (checkUserPriority(explicitUserRights, permission) == -1) {
-						return false;
-					} else if (checkUserPriority(explicitUserRights, permission) == 1) {
-						return true;
-					} else {
-						// Filter inherited user rights
-						List<WasabiACLEntry> inheritedUserRights = new Vector<WasabiACLEntry>();
-
-						for (WasabiACLEntry wasabiACLEntry : result) {
-							if (!wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() == 0
-									&& wasabiACLEntry.getEnd_Time() == 0) {
-								inheritedUserRights.add(wasabiACLEntry);
-							}
-						}
-
-						if (checkUserPriority(inheritedUserRights, permission) == -1) {
-							return false;
-						} else if (checkUserPriority(inheritedUserRights, permission) == 1) {
-							return true;
-						} else {
-							return false;
-							// TODO: Group check mechanism
-						}
-					}
-				}
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-	}
+//	private static boolean priorityCheck2(String objectUUID, String userUUID, int permission)
+//			throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		try {
+//			String getACLEntries = "SELECT * FROM wasabi_rights WHERE `object_id`=? AND `user_id`=?";
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getACLEntries, h, objectUUID, userUUID);
+//
+//			// Filter and check explicit user time rights
+//			List<WasabiACLEntry> explicitUserTimeRights = new Vector<WasabiACLEntry>();
+//
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				if (wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() <= time
+//						&& wasabiACLEntry.getEnd_Time() >= time) {
+//					explicitUserTimeRights.add(wasabiACLEntry);
+//				}
+//			}
+//
+//			// Allowance check
+//			if (checkUserPriority(explicitUserTimeRights, permission) == -1) {
+//				return false;
+//			} else if (checkUserPriority(explicitUserTimeRights, permission) == 1) {
+//				return true;
+//			} else {
+//				// Filter inherited user time rights
+//				List<WasabiACLEntry> inheritedUserTimeRights = new Vector<WasabiACLEntry>();
+//
+//				for (WasabiACLEntry wasabiACLEntry : result) {
+//					if (!wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() <= time
+//							&& wasabiACLEntry.getEnd_Time() >= time) {
+//						inheritedUserTimeRights.add(wasabiACLEntry);
+//					}
+//				}
+//
+//				// Allowance check
+//				if (checkUserPriority(inheritedUserTimeRights, permission) == -1) {
+//					return false;
+//				} else if (checkUserPriority(inheritedUserTimeRights, permission) == 1) {
+//					return true;
+//				} else {
+//					// Filter explicit user rights
+//					List<WasabiACLEntry> explicitUserRights = new Vector<WasabiACLEntry>();
+//
+//					for (WasabiACLEntry wasabiACLEntry : result) {
+//						if (wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() == 0
+//								&& wasabiACLEntry.getEnd_Time() == 0) {
+//							explicitUserRights.add(wasabiACLEntry);
+//						}
+//					}
+//
+//					// Allowance check
+//					if (checkUserPriority(explicitUserRights, permission) == -1) {
+//						return false;
+//					} else if (checkUserPriority(explicitUserRights, permission) == 1) {
+//						return true;
+//					} else {
+//						// Filter inherited user rights
+//						List<WasabiACLEntry> inheritedUserRights = new Vector<WasabiACLEntry>();
+//
+//						for (WasabiACLEntry wasabiACLEntry : result) {
+//							if (!wasabiACLEntry.getInheritance_Id().equals("") && wasabiACLEntry.getStart_Time() == 0
+//									&& wasabiACLEntry.getEnd_Time() == 0) {
+//								inheritedUserRights.add(wasabiACLEntry);
+//							}
+//						}
+//
+//						if (checkUserPriority(inheritedUserRights, permission) == -1) {
+//							return false;
+//						} else if (checkUserPriority(inheritedUserRights, permission) == 1) {
+//							return true;
+//						} else {
+//							return false;
+//							// TODO: Group check mechanism
+//						}
+//					}
+//				}
+//			}
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//	}
 
 	private static Vector<String> getGroupMemberships(Node userNode, Session s)
 			throws UnexpectedInternalProblemException {
@@ -1720,92 +1720,92 @@ public class WasabiAuthorizer {
 		return 0;
 	}
 
-	private static Vector<String> UserViewFilter(String parentUUID, String userUUID)
-			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		Vector<String> results = new Vector<String>();
-		long time = java.lang.System.currentTimeMillis();
-
-		try {
-			String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` " + "WHERE "
-					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND `priority`=3 AND `object_id` "
-					+ "NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3) "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
-					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND `priority`=2 AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
-					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2) "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
-					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND " + "(`priority`=1 OR `priority`=0) AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
-					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE `view`=-1 AND `priority`=0 "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))";
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time, parentUUID,
-					userUUID, time, time, time, time, parentUUID, userUUID, time, time, time, time);
-
-			for (WasabiACLEntry wasabiACLEntry : result) {
-				results.add(wasabiACLEntry.getObject_Id());
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return results;
-	}
-
-	private static Vector<String> UserPermissionFilter(String parentUUID, String userUUID, int permission)
-			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		Vector<String> results = new Vector<String>();
-		long time = java.lang.System.currentTimeMillis();
-
-		try {
-			String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` " + "WHERE "
-					+ "(`parent_id`=? AND`user_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND `priority`=3 AND `object_id` "
-					+ "NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3) "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))"
-					+ "OR "
-					+ "(`parent_id`=? AND`user_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND `priority`=2 AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
-					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2) "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))"
-					+ "OR "
-					+ "(`parent_id`=? AND`user_id`=? AND "
-					+ getRightQueryAllow(permission)
-					+ "AND "
-					+ "(`priority`=1 OR `priority`=0) AND "
-					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
-					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
-					+ "WHERE "
-					+ getRightQueryDeny(permission)
-					+ "AND `priority`=0 "
-					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))";
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time, parentUUID,
-					userUUID, time, time, time, time, parentUUID, userUUID, time, time, time, time);
-
-			for (WasabiACLEntry wasabiACLEntry : result) {
-				results.add(wasabiACLEntry.getObject_Id());
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return results;
-	}
+//	private static Vector<String> UserViewFilter(String parentUUID, String userUUID)
+//			throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		Vector<String> results = new Vector<String>();
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		try {
+//			String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` " + "WHERE "
+//					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND `priority`=3 AND `object_id` "
+//					+ "NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3) "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
+//					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND `priority`=2 AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
+//					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND (`priority`=0 OR `priority`=1 OR `priority`=2) "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))" + "OR "
+//					+ "(`parent_id`=? AND`user_id`=? AND `view`=1 AND " + "(`priority`=1 OR `priority`=0) AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
+//					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE `view`=-1 AND `priority`=0 "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))";
+//
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time, parentUUID,
+//					userUUID, time, time, time, time, parentUUID, userUUID, time, time, time, time);
+//
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				results.add(wasabiACLEntry.getObject_Id());
+//			}
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//		return results;
+//	}
+//
+//	private static Vector<String> UserPermissionFilter(String parentUUID, String userUUID, int permission)
+//			throws UnexpectedInternalProblemException {
+//		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+//
+//		Vector<String> results = new Vector<String>();
+//		long time = java.lang.System.currentTimeMillis();
+//
+//		try {
+//			String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` " + "WHERE "
+//					+ "(`parent_id`=? AND`user_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND `priority`=3 AND `object_id` "
+//					+ "NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3) "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))"
+//					+ "OR "
+//					+ "(`parent_id`=? AND`user_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND `priority`=2 AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
+//					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2) "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))"
+//					+ "OR "
+//					+ "(`parent_id`=? AND`user_id`=? AND "
+//					+ getRightQueryAllow(permission)
+//					+ "AND "
+//					+ "(`priority`=1 OR `priority`=0) AND "
+//					+ "((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0)) AND"
+//					+ "`object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` "
+//					+ "WHERE "
+//					+ getRightQueryDeny(permission)
+//					+ "AND `priority`=0 "
+//					+ "AND ((`start_time`<=? AND `end_time`>=?) OR (`start_time`=0 AND `end_time`=0))))";
+//
+//			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+//			List<WasabiACLEntry> result = run.query(getACLEntries, h, parentUUID, userUUID, time, time, parentUUID,
+//					userUUID, time, time, time, time, parentUUID, userUUID, time, time, time, time);
+//
+//			for (WasabiACLEntry wasabiACLEntry : result) {
+//				results.add(wasabiACLEntry.getObject_Id());
+//			}
+//		} catch (SQLException e) {
+//			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+//		}
+//		return results;
+//	}
 }

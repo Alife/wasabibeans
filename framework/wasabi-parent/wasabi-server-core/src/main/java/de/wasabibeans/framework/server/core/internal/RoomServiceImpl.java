@@ -32,11 +32,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -107,6 +109,24 @@ public class RoomServiceImpl {
 			}
 		}
 		return allSubRooms;
+	}
+
+	public static Vector<String> getRoomsFiltered(Node environmentNode, int depth, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException {
+		Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+				WasabiPermission.VIEW, s);
+
+		NodeIterator ni = RoomServiceImpl.getRooms(environmentNode);
+
+		while (ni.hasNext()) {
+			Node subroom = ni.nextNode();
+			if (depth > 0)
+				authorizedRooms.addAll(getRoomsFiltered(subroom, depth - 1, callerPrincipal, s));
+			else if (depth < 0)
+				authorizedRooms.addAll(getRoomsFiltered(subroom, depth, callerPrincipal, s));
+		}
+
+		return authorizedRooms;
 	}
 
 	public static Node getRoomById(String id, Session s) throws UnexpectedInternalProblemException {
