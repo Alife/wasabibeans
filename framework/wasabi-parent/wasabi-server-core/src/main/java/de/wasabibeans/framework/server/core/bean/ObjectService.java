@@ -40,6 +40,7 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.Certificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -54,6 +55,7 @@ import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
@@ -97,12 +99,18 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+			if (!Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode))
+					&& WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+				else if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+					Certificate.set(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode), true);
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
