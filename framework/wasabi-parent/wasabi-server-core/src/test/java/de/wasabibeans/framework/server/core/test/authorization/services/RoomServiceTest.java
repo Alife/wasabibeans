@@ -19,7 +19,7 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.test.authorization;
+package de.wasabibeans.framework.server.core.test.authorization.services;
 
 import java.util.Vector;
 
