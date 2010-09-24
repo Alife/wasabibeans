@@ -35,8 +35,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
@@ -44,8 +42,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceTest extends WasabiRemoteTest {
 
-	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
 		if (room != null) {
 			ACLEntries = aclService().getAclEntries(room);
@@ -88,6 +85,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Setting INSERT as userRight for getEnvironmentTestRoom... ");
 		aclService().create(getEnvironmentTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getEnvironmentTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
 		System.out.print("Creating someRoom at getEnvironmentHome... ");
@@ -157,6 +158,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Setting INSERT as userRight for getRoomsTestRoom... ");
 		aclService().create(getRoomsTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
 		displayACLEntry(getRoomsTestRoom, "getRoomsTestRoom");
@@ -337,6 +342,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
 
+		System.out.print("Setting READ as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
 		System.out.print("Creating depth1Room at getRoomsWithDepthTestRoom... ");
 		WasabiRoomDTO depth1Room = null;
 		try {
@@ -462,8 +471,16 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		aclService().create(moveTestRoom1, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
 
+		System.out.print("Setting READ as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
 		System.out.print("Setting READ as userRight for moveTestRoom2... ");
 		aclService().create(moveTestRoom2, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.EXECUTE, true);
 		System.out.println("done.");
 
 		System.out.print("Creating moveRoom at moveTestRoom... ");
@@ -551,9 +568,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(removeTestRoom);
 		System.out.println("done.");
 
-		System.out.print("Setting VIEW and INSERT as userRight for removeTestRoom... ");
-		aclService().create(removeTestRoom, user, new int[] { WasabiPermission.INSERT, WasabiPermission.VIEW },
-				new boolean[] { true, true });
+		System.out.print("Setting VIEW and INSERT and READ as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user,
+				new int[] { WasabiPermission.INSERT, WasabiPermission.VIEW, WasabiPermission.READ },
+				new boolean[] { true, true, true });
 		System.out.println("done.");
 
 		displayACLEntry(removeTestRoom, "removeTestRoom");
@@ -655,6 +673,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Setting INSERT as userRight for renameTestRoom... ");
 		aclService().create(renameTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for renameTestRoom... ");
+		aclService().create(renameTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
 		System.out.print("Creating renameTestRoom at renameTestRoom... ");
