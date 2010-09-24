@@ -38,7 +38,8 @@ public class WasabiRoomSQL {
 	public static String[] SQLQueryForMove(String roomUUID) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
+		String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+				+ "WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, roomUUID);

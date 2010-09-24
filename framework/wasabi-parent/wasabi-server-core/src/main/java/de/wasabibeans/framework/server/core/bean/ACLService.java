@@ -27,6 +27,8 @@ import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -36,8 +38,10 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
@@ -46,6 +50,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiACLEntryTemplateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
@@ -61,6 +66,9 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 @Stateless(name = "ACLService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class ACLService implements ACLServiceLocal, ACLServiceRemote {
+
+	@Resource
+	protected SessionContext ctx;
 
 	protected JndiConnector jndi;
 	protected JcrConnector jcr;
@@ -78,11 +86,21 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 	@Override
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
-			Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			ACLServiceImpl.setInheritance(wasabiObjectNode, true, s);
+			Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
+							"GRANT"));
+			/* Authorization - End */
+
+			ACLServiceImpl.setInheritance(objectNode, true, s);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
@@ -92,100 +110,200 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote {
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.create()", "GRANT"));
+		/* Authorization - End */
+
+		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 		int[] perm = new int[1];
 		boolean[] allow = new boolean[1];
 		perm[0] = permission;
 		allow[0] = allowance;
-		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, 0, 0, s);
+		ACLServiceImpl.create(objectNode, identityNode, perm, allow, 0, 0, s);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission,
 			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.create()", "GRANT"));
+		/* Authorization - End */
+
+		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 		int[] perm = new int[1];
 		boolean[] allow = new boolean[1];
 		perm[0] = permission;
 		allow[0] = allowance;
-		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, perm, allow, startTime, endTime, s);
+		ACLServiceImpl.create(objectNode, identityNode, perm, allow, startTime, endTime, s);
 	}
 
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-		ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, 0, 0, s);
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.create()", "GRANT"));
+		/* Authorization - End */
+
+		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		ACLServiceImpl.create(objectNode, identityNode, permission, allowance, 0, 0, s);
 	}
 
-	@Deprecated
 	@Override
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		if (startTime.length != endTime.length) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "startTime", "endTime"));
 		}
 
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		Node wasabiIdentityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-		for (int i = 0; i < endTime.length; i++) {
-			ACLServiceImpl.create(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime[i],
-					endTime[i], s);
-		}
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.create()", "GRANT"));
+		/* Authorization - End */
+
+		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
+
+		for (int i = 0; i < endTime.length; i++)
+			ACLServiceImpl.create(objectNode, identityNode, permission, allowance, startTime[i], endTime[i], s);
 	}
 
 	@Override
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
-			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		Node locationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 		if (permission.length != allowance.length) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
 		}
 
-		ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, 0, 0);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.createDefault()", "GRANT"));
+		/* Authorization - End */
+
+		ACLServiceImpl.createDefault(locationNode, wasabiType, permission, allowance, 0, 0);
+	}
+
+	@Override
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int permission, boolean allowance)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
+		Session s = jcr.getJCRSessionTx();
+		Node locationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.createDefault()", "GRANT"));
+		/* Authorization - End */
+
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.createDefault(locationNode, wasabiType, perm, allow, 0, 0);
+	}
+
+	@Override
+	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int permission,
+			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException {
+		Session s = jcr.getJCRSessionTx();
+		Node locationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.createDefault()", "GRANT"));
+		/* Authorization - End */
+
+		int[] perm = new int[1];
+		boolean[] allow = new boolean[1];
+		perm[0] = permission;
+		allow[0] = allowance;
+		ACLServiceImpl.createDefault(locationNode, wasabiType, perm, allow, startTime, endTime);
 	}
 
 	@Override
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
-			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiLocationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
-
-		if (!wasabiLocationNode.equals(WasabiNodeType.ROOM) || !wasabiLocationNode.equals(WasabiNodeType.ROOM)) {
-			throw new IllegalArgumentException(WasabiExceptionMessages
-					.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
-		}
+		Node locationNode = TransferManager.convertDTO2Node(wasabiLocation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 		if (permission.length != allowance.length) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
 		}
 
-		ACLServiceImpl.createDefault(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.createDefault()", "GRANT"));
+		/* Authorization - End */
+
+		for (int i = 0; i < endTime.length; i++)
+			ACLServiceImpl.createDefault(locationNode, wasabiType, permission, allowance, startTime[i], endTime[i]);
 	}
 
 	@Override
 	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
-		Node wasabiObjectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-		ACLServiceImpl.setInheritance(wasabiObjectNode, false, s);
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
+						"GRANT"));
+		/* Authorization - End */
+		
+		ACLServiceImpl.setInheritance(objectNode, false, s);
 	}
 
 	@Override
