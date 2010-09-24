@@ -702,9 +702,9 @@ public class ACLServiceImpl {
 			String parentId = ObjectServiceImpl.getUUID(wasabiObjectNode);
 			Vector<Node> Nodes = getChildren(wasabiObjectNode, s);
 
-			String inheritanceQuery = "";
+			String inheritanceQuery = " (";
 			for (int i = 0; i < inheritance_ids.length; i++) {
-				inheritanceQuery = " (`inheritance_id`='" + inheritance_ids[i] + "' OR";
+				inheritanceQuery = inheritanceQuery + " `inheritance_id`='" + inheritance_ids[i] + "' OR";
 			}
 			inheritanceQuery = inheritanceQuery + "`inheritance_id`='placeHolderValue')";
 
@@ -800,8 +800,25 @@ public class ACLServiceImpl {
 				}
 			} else {
 				try {
-					String removeInheritedACLEntries = "DELETE FROM wasabi_rights WHERE `inheritance_id`=?";
-					run.update(removeInheritedACLEntries, parentNode.getIdentifier());
+					String objectUUID = objectNode.getIdentifier();
+
+					String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+							+ "WHERE `object_id`=? AND `inheritance_id`!=''";
+
+					ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+					List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
+
+					String[] result = new String[results.size() + 1];
+					int i = 0;
+
+					for (WasabiACLEntry wasabiACLEntry : results) {
+						result[i] = wasabiACLEntry.getInheritance_Id();
+						i++;
+					}
+
+					result[i] = objectUUID;
+
+					resetInheritance(objectNode, result, s);
 				} catch (SQLException e) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 				}
