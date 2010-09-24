@@ -268,10 +268,23 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
-		for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();) {
-			result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();) {
+				Node objectNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ }, s))
+					result.add(TransferManager.convertNode2DTO(objectNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();)
+				result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return result;
 	}
 
@@ -283,17 +296,39 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		}
 
 		Session s = jcr.getJCRSessionTx();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
-		for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();) {
-			result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();) {
+				Node objectNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ }, s))
+					result.add(TransferManager.convertNode2DTO(objectNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();)
+				result.add(TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return result;
 	}
 
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getUUID()", "READ"));
+		/* Authorization - End */
+
 		return ObjectServiceImpl.getUUID(objectNode);
 	}
 
@@ -311,12 +346,23 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Override
 	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException {
 		Node objectNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedBy()",
+							"GRANT"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
@@ -333,11 +379,22 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Override
 	public void setCreatedOn(WasabiObjectDTO object, Date creationTime, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException {
 		Node objectNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			objectNode = TransferManager.convertDTO2Node(object, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedOn()",
+							"GRANT"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);
@@ -354,11 +411,22 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Override
 	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException {
 		Node objectNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedBy()",
+							"GRANT"));
+			/* Authorization - End */
+
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
@@ -376,11 +444,22 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@Override
 	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException {
 		Node objectNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedOn()",
+							"GRANT"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
 			Locker.acquireLock(objectNode, object, false, s, locker);
 			Locker.checkOptLockId(objectNode, object, optLockId);

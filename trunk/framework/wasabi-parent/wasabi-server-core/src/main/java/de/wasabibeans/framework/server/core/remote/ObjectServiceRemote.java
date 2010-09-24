@@ -71,17 +71,21 @@ public interface ObjectServiceRemote {
 			ObjectDoesNotExistException;
 
 	public String getUUID(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setCreatedOn(WasabiObjectDTO object, Date creationTime, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException;
 
 	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException;
 }

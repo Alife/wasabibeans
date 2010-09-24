@@ -21,6 +21,7 @@
 
 package de.wasabibeans.framework.server.core.test.authorization.services;
 
+import java.util.Date;
 import java.util.Vector;
 
 import org.jboss.arquillian.api.Run;
@@ -35,8 +36,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
@@ -44,8 +43,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class ObjectServiceTest extends WasabiRemoteTest {
 
-	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
 		if (room != null) {
 			ACLEntries = aclService().getAclEntries(room);
@@ -170,148 +168,6 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		System.out.print("Checking getCreatedBy of someRoom...");
 		try {
 			System.out.println(objectService().getCreatedBy(someRoom).getValue());
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.println("===========================");
-	}
-
-	@Test
-	public void getObjectsByAttributeNameTest() throws WasabiException {
-		System.out.println("=== getObjectsByAttributeNameTest() ===");
-
-		WasabiUserDTO user = userService().getUserByName("user");
-		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-
-		System.out.print("Creating getObjectsByAttributeNameTestRoom at usersHome... ");
-		WasabiRoomDTO getObjectsByAttributeNameTestRoom = null;
-		try {
-			getObjectsByAttributeNameTestRoom = roomService().create("getObjectsByAttributeNameTestRoom", usersHome);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Deactivating inheritance for getObjectsByAttributeNameTestRoom... ");
-		aclService().deactivateInheritance(getObjectsByAttributeNameTestRoom);
-		System.out.println("done.");
-
-		System.out.print("Setting INSERT as userRight for getObjectsByAttributeNameTestRoom... ");
-		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.INSERT, true);
-		System.out.println("done.");
-
-		System.out.print("Creating someRoom1 at getObjectsByAttributeNameTestRoom... ");
-		WasabiRoomDTO someRoom1 = null;
-		try {
-			someRoom1 = roomService().create("someRoom1", getObjectsByAttributeNameTestRoom);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Creating someRoom2 at getObjectsByAttributeNameTestRoom... ");
-		WasabiRoomDTO someRoom2 = null;
-		try {
-			someRoom2 = roomService().create("someRoom2", getObjectsByAttributeNameTestRoom);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Setting someAttribute at someRoom2... ");
-		WasabiAttributeDTO someAttribute = null;
-		try {
-			someAttribute = attributeService().create(
-					"someAttribute",
-					"Ich kenne mindestens 1000 Möglichkeiten wie wir aus der Situation hier wieder rauskommen"
-							+ "... Leider sind sie alle tödlich.", someRoom2);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Getting objects by someAttribute... ");
-		try {
-			Vector<WasabiObjectDTO> objects = objectService().getObjectsByAttributeName("someAttribute");
-			for (WasabiObjectDTO wasabiObjectDTO : objects) {
-				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
-			}
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Setting READ as userRight for getObjectsByAttributeNameTestRoom... ");
-		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.READ, true);
-		System.out.println("done.");
-
-		System.out.print("Getting objects by someAttribute... ");
-		try {
-			Vector<WasabiObjectDTO> objects = objectService().getObjectsByAttributeName("someAttribute");
-			for (WasabiObjectDTO wasabiObjectDTO : objects) {
-				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
-			}
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.println("===========================");
-	}
-
-	@Test
-	public void getObjectsByCreatorTest() throws WasabiException {
-		System.out.println("=== getObjectsByCreatorTest() ===");
-
-		WasabiUserDTO user = userService().getUserByName("user");
-		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-
-		System.out.print("Creating getObjectsByCreatorTestRoom at usersHome... ");
-		WasabiRoomDTO getObjectsByCreatorTestRoom = null;
-		try {
-			getObjectsByCreatorTestRoom = roomService().create("getObjectsByCreatorTestRoom", usersHome);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Deactivating inheritance for getObjectsByCreatorTestRoom... ");
-		aclService().deactivateInheritance(getObjectsByCreatorTestRoom);
-		System.out.println("done.");
-
-		System.out.print("Setting INSERT as userRight for getObjectsByCreatorTestRoom... ");
-		aclService().create(getObjectsByCreatorTestRoom, user, WasabiPermission.INSERT, true);
-		System.out.println("done.");
-
-		System.out.print("Creating someRoom1 at getObjectsByCreatorTestRoom... ");
-		WasabiRoomDTO someRoom1 = null;
-		try {
-			someRoom1 = roomService().create("someRoom1", getObjectsByCreatorTestRoom);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		WasabiRoomDTO someRoom2 = null;
-		try {
-			someRoom2 = roomService().create("someRoom2", getObjectsByCreatorTestRoom);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Setting READ as userRight for someRoom1... ");
-		aclService().create(someRoom1, user, WasabiPermission.READ, true);
-		System.out.println("done.");
-
-		System.out.print("Getting objects by creator user... ");
-		try {
-			Vector<WasabiObjectDTO> objects = objectService().getObjectsByCreator(user);
-			for (WasabiObjectDTO wasabiObjectDTO : objects) {
-				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
-			}
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -536,6 +392,515 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		System.out.print("Checking getName of someRoom...");
 		try {
 			System.out.println(objectService().getName(someRoom).getValue());
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getObjectsByAttributeNameTest() throws WasabiException {
+		System.out.println("=== getObjectsByAttributeNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getObjectsByAttributeNameTestRoom at usersHome... ");
+		WasabiRoomDTO getObjectsByAttributeNameTestRoom = null;
+		try {
+			getObjectsByAttributeNameTestRoom = roomService().create("getObjectsByAttributeNameTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getObjectsByAttributeNameTestRoom... ");
+		aclService().deactivateInheritance(getObjectsByAttributeNameTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getObjectsByAttributeNameTestRoom... ");
+		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at getObjectsByAttributeNameTestRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", getObjectsByAttributeNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someRoom2 at getObjectsByAttributeNameTestRoom... ");
+		WasabiRoomDTO someRoom2 = null;
+		try {
+			someRoom2 = roomService().create("someRoom2", getObjectsByAttributeNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting someAttribute at someRoom2... ");
+		WasabiAttributeDTO someAttribute = null;
+		try {
+			someAttribute = attributeService().create(
+					"someAttribute",
+					"Ich kenne mindestens 1000 Möglichkeiten wie wir aus der Situation hier wieder rauskommen"
+							+ "... Leider sind sie alle tödlich.", someRoom2);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting objects by someAttribute... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByAttributeName("someAttribute");
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getObjectsByAttributeNameTestRoom... ");
+		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Getting objects by someAttribute... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByAttributeName("someAttribute");
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getObjectsByCreatorTest() throws WasabiException {
+		System.out.println("=== getObjectsByCreatorTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getObjectsByCreatorTestRoom at usersHome... ");
+		WasabiRoomDTO getObjectsByCreatorTestRoom = null;
+		try {
+			getObjectsByCreatorTestRoom = roomService().create("getObjectsByCreatorTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getObjectsByCreatorTestRoom... ");
+		aclService().deactivateInheritance(getObjectsByCreatorTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getObjectsByCreatorTestRoom... ");
+		aclService().create(getObjectsByCreatorTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at getObjectsByCreatorTestRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", getObjectsByCreatorTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someRoom2 at getObjectsByModifierTestRoom... ");
+		WasabiRoomDTO someRoom2 = null;
+		try {
+			someRoom2 = roomService().create("someRoom2", getObjectsByCreatorTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting objects by creator user... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByCreator(user);
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Getting objects by creator user... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByCreator(user);
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getObjectsByModifierTest() throws WasabiException {
+		System.out.println("=== getObjectsByModifierTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getObjectsByModifierTestRoom at usersHome... ");
+		WasabiRoomDTO getObjectsByModifierTestRoom = null;
+		try {
+			getObjectsByModifierTestRoom = roomService().create("getObjectsByModifierTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getObjectsByModifierTestRoom... ");
+		aclService().deactivateInheritance(getObjectsByModifierTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getObjectsByModifierTestRoom... ");
+		aclService().create(getObjectsByModifierTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at getObjectsByModifierTestRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", getObjectsByModifierTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someRoom2 at getObjectsByModifierTestRoom... ");
+		WasabiRoomDTO someRoom2 = null;
+		try {
+			someRoom2 = roomService().create("someRoom2", getObjectsByModifierTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting objects by modifier user... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByModifier(user);
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Getting objects by modifier user... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByModifier(user);
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getObjectsByNameTest() throws WasabiException {
+		System.out.println("=== getObjectsByNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getObjectsByNameTestRoom at usersHome... ");
+		WasabiRoomDTO getObjectsByNameTestRoom = null;
+		try {
+			getObjectsByNameTestRoom = roomService().create("getObjectsByNameTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getObjectsByNameTestRoom... ");
+		aclService().deactivateInheritance(getObjectsByNameTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getObjectsByNameTestRoom... ");
+		aclService().create(getObjectsByNameTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at getObjectsByNameTestRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", getObjectsByNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someRoom2 at getObjectsByNameTestRoom... ");
+		WasabiRoomDTO someRoom2 = null;
+		try {
+			someRoom2 = roomService().create("someRoom2", getObjectsByNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting objects by name 'someRoom1'... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByName("someRoom1");
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Getting objects by name 'someRoom1'... ");
+		try {
+			Vector<WasabiObjectDTO> objects = objectService().getObjectsByName("someRoom1");
+			for (WasabiObjectDTO wasabiObjectDTO : objects) {
+				System.out.println(objectService().getName(wasabiObjectDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getUUIDTest() throws WasabiException {
+		System.out.println("=== getUUIDTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getUUIDTestRoom at usersHome... ");
+		WasabiRoomDTO getUUIDTestRoom = null;
+		try {
+			getUUIDTestRoom = roomService().create("getUUIDTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for getUUIDTestRoom... ");
+		aclService().deactivateInheritance(getUUIDTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Display ACL Entries... ");
+		try {
+			displayACLEntry(getUUIDTestRoom, "getUUIDTestRoom");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getUUIDTestRoom... ");
+		aclService().create(getUUIDTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Display ACL Entries... ");
+		try {
+			displayACLEntry(getUUIDTestRoom, "getUUIDTestRoom");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setCreatedByTest() throws WasabiException {
+		System.out.println("=== setCreatedByTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating setCreatedByTestRoom at usersHome... ");
+		WasabiRoomDTO setCreatedByTestRoom = null;
+		try {
+			setCreatedByTestRoom = roomService().create("setCreatedByTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for setCreatedByTestRoom... ");
+		aclService().deactivateInheritance(setCreatedByTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Using setCreatedBy at setCreatedByTestRoom... ");
+		try {
+			objectService().setCreatedBy(setCreatedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for setCreatedByTestRoom... ");
+		aclService().create(setCreatedByTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Using setCreatedBy at setCreatedByTestRoom... ");
+		try {
+			objectService().setCreatedBy(setCreatedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setCreatedOnTest() throws WasabiException {
+		System.out.println("=== setCreatedOnTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating setCreatedOnTestRoom at usersHome... ");
+		WasabiRoomDTO setCreatedOnTestRoom = null;
+		try {
+			setCreatedOnTestRoom = roomService().create("setCreatedOnTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for setCreatedOnTestRoom... ");
+		aclService().deactivateInheritance(setCreatedOnTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Using setCreatedOn at setCreatedOnTestRoom... ");
+		try {
+			objectService().setCreatedOn(setCreatedOnTestRoom, new Date(), null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for setCreatedOnTestRoom... ");
+		aclService().create(setCreatedOnTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Using setCreatedOn at setCreatedOnTestRoom... ");
+		try {
+			objectService().setCreatedOn(setCreatedOnTestRoom, new Date(), null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setModifiedByTest() throws WasabiException {
+		System.out.println("=== setModifiedByTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating setModifiedByTestRoom at usersHome... ");
+		WasabiRoomDTO setModifiedByTestRoom = null;
+		try {
+			setModifiedByTestRoom = roomService().create("setModifiedByTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for setModifiedByTestRoom... ");
+		aclService().deactivateInheritance(setModifiedByTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Using setModifiedBy at setModifiedByTestRoom... ");
+		try {
+			objectService().setModifiedBy(setModifiedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for setModifiedByTestRoom... ");
+		aclService().create(setModifiedByTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Using setModifiedBy at setModifiedByTestRoom... ");
+		try {
+			objectService().setModifiedBy(setModifiedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setModifiedOnTest() throws WasabiException {
+		System.out.println("=== setModifiedOnTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating setModifiedOnTestRoom at usersHome... ");
+		WasabiRoomDTO setModifiedOnTestRoom = null;
+		try {
+			setModifiedOnTestRoom = roomService().create("setModifiedOnTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for setModifiedOnTestRoom... ");
+		aclService().deactivateInheritance(setModifiedOnTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Using setModifiedOn at setModifiedOnTestRoom... ");
+		try {
+			objectService().setModifiedOn(setModifiedOnTestRoom, new Date(), null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for setModifiedOnTestRoom... ");
+		aclService().create(setModifiedOnTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Using setModifiedOn at setModifiedOnTestRoom... ");
+		try {
+			objectService().setModifiedOn(setModifiedOnTestRoom, new Date(), null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
