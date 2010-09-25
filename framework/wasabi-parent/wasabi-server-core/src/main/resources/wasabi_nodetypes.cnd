@@ -32,6 +32,7 @@
 	+ wasabi:links (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	
 [wasabi:room] > wasabi:location
+	- wasabi:pipeline (WEAKREFERENCE)
 	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
 	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
 	
@@ -55,6 +56,7 @@
 [wasabi:document] > wasabi:object
 	primaryitem 'wasabi:content'
 	- wasabi:content (BINARY) 
+	+ wasabi:contentrefs (wasabiStructure:contentrefs) = 'wasabiStructure:contentrefs' autocreated  
 	
 [wasabi:link] > wasabi:object
 	- wasabi:destination (WEAKREFERENCE) 
@@ -62,6 +64,22 @@
 [wasabi:attribute] > wasabi:object
 	- wasabi:value (UNDEFINED)
 	- wasabi:type (STRING)
+	
+[wasabi:pipeline] > wasabi:object
+	- wasabi:filter (BINARY)
+	- wasabi:embeddable (BOOLEAN)
+	
+[wasabiStructure:contentrefs] > nt:base
+	+ * (wasabiStructure:contentref) 
+	
+[wasabiStructure:contentref] > nt:base
+	- wasabiStructure:filterClass (STRING)
+	- wasabiStructure:ref (STRING)
+	- wasabiStructure:document (WEAKREFERENCE)
+	- wasabiStructure:mimeType (STRING)
+	- wasabiStructure:jsonData (String)
+	- wasabiStructure:size (LONG)
+	- wasabiStructure:isContentAvailable (BOOLEAN)
 	
 [wasabiStructure:objectCollection] > nt:base
 	+ * (wasabi:object) 

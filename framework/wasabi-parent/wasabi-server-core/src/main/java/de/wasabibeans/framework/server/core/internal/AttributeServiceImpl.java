@@ -169,9 +169,11 @@ public class AttributeServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
-			throw new AttributeValueException(WasabiExceptionMessages.INTERNAL_ATTRIBUTE_VALUE_LOAD, io);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
+					"value", "attribute"), io);
 		} catch (ClassNotFoundException cnfe) {
-			throw new AttributeValueException(WasabiExceptionMessages.INTERNAL_ATTRIBUTE_VALUE_LOAD, cnfe);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
+					"value", "attribute"), cnfe);
 		}
 	}
 
@@ -274,7 +276,8 @@ public class AttributeServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
-			throw new AttributeValueException(WasabiExceptionMessages.INTERNAL_ATTRIBUTE_VALUE_SAVE, io);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_SAVE,
+					"value"), io);
 		}
 	}
 

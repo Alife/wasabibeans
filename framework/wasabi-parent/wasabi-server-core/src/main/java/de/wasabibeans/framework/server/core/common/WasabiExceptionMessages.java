@@ -60,12 +60,14 @@ public class WasabiExceptionMessages {
 
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
+	
+	/* Pipes */
+	public final static String PIPES_NOT_FOUND = "The configured wasabi pipe could not be found.";
 
 	/* Internal Services */
-	public final static String INTERNAL_DOCUMENT_CONTENT_LOAD = "An exception occurred while trying to load the content of the given document.";
-	public final static String INTERNAL_DOCUMENT_CONTENT_SAVE = "An exception occurred while trying to save the given content.";
-	public final static String INTERNAL_ATTRIBUTE_VALUE_SAVE = "An exception occurred while trying to save the given value.";
-	public final static String INTERNAL_ATTRIBUTE_VALUE_LOAD = "An exception occurred while trying to load the value of the given attribute.";
+	public final static String INTERNAL_PROBLEM = "Unexpected internal problem.";
+	public final static String INTERNAL_VALUE_SAVE = "An exception occurred while trying to save the given &0.";
+	public final static String INTERNAL_VALUE_LOAD = "An exception occurred while trying to load the &0 of the given &1.";
 	public final static String INTERNAL_ATTRIBUTE_WRONG_TYPE = "A value of the requested type is not stored. The currently stored value has the type &0.";
 	public final static String INTERNAL_LOCKING_GENERAL = "Exclusive access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification.";
 	public final static String INTERNAL_LOCKING_CREATION_FAILURE = "A new &0 could not be created because there was a deep lock on the parent object.";

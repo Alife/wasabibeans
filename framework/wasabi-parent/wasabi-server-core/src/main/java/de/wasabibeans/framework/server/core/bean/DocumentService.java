@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -49,11 +50,13 @@ import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
+import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 
 /**
@@ -63,6 +66,9 @@ import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 @Stateless(name = "DocumentService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class DocumentService extends ObjectService implements DocumentServiceLocal, DocumentServiceRemote {
+
+	@EJB
+	SharedFilterBean sharedFilterBean;
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
@@ -91,7 +97,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
-		return TransferManager.convertValue2DTO(DocumentServiceImpl.getContent(documentNode), optLockId);
+		return TransferManager.convertValue2DTO(DocumentServiceImpl.getContentPiped(documentNode, null), optLockId);
 	}
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
@@ -105,12 +111,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Locker.recognizeLockTokens(s, document);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
-			DocumentServiceImpl.setContent(documentNode, content, callerPrincipal);
+			DocumentServiceImpl.setContentPiped(documentNode, content, s, jms, sharedFilterBean, callerPrincipal);
 			s.save();
 			EventCreator
 					.createPropertyChangedEvent(documentNode, WasabiProperty.CONTENT, content, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (TargetDoesNotExistException tdne) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.PIPES_NOT_FOUND, tdne);
 		} catch (LockingException e) {
 			// cannot happen
 		} finally {

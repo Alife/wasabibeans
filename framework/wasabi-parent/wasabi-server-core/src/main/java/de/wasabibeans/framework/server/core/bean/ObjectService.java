@@ -75,10 +75,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	@Resource
 	protected SessionContext ctx;
 
-	protected JcrConnector jcr;
-
-	protected JmsConnector jms;
 	protected JndiConnector jndi;
+	protected JcrConnector jcr;
+	protected JmsConnector jms;
+	
 	@EJB
 	protected LockingHelperLocal locker;
 

@@ -33,6 +33,14 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+            <id>gson</id>
+            <url>http://google-gson.googlecode.com/svn/mavenrepo/</url>
+        </repository>
+        <repository>
+            <id>mandubian-mvn</id>
+            <url>http://mandubian-mvn.googlecode.com/svn/trunk/mandubian-mvn/repository</url>
+        </repository>
 
 	</repositories>
 

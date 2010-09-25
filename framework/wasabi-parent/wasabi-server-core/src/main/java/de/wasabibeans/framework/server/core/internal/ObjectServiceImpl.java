@@ -50,6 +50,14 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class ObjectServiceImpl {
 
+	public static Node get(String id, Session s) throws UnexpectedInternalProblemException {
+		try {
+			return s.getNodeByIdentifier(id);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static String getName(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getName();
@@ -245,6 +253,43 @@ public class ObjectServiceImpl {
 	 * @throws UnexpectedInternalProblemException
 	 */
 	public static NodeIterator getNodeByPropertyStringValue(String nodeType, String property, String value, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			// get the factories
+			ValueFactory vf = s.getValueFactory();
+
+			QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
+
+			// build the query components: columns, source, constraint, orderings
+			// ("SELECT columns FROM source WHERE constraints ORDER BY orderings")
+			Selector selector = qomf.selector(nodeType, "s1");
+			Constraint constraint = qomf.comparison(qomf.propertyValue("s1", property),
+					QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, qomf.literal(vf.createValue(value)));
+
+			// build the query
+			Query query = qomf.createQuery(selector, constraint, null, null);
+
+			// execute and return result
+			return query.execute().getNodes();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns all JCR nodes of the given {@code nodeType} of which the given {@code Boolean-property} has the given
+	 * {@code value}.
+	 * 
+	 * @param nodeType
+	 *            e.g. WasabiNodeType.PIPELINE
+	 * @param property
+	 *            e.g. WasabiNodeProperty.EMBEDABBLE
+	 * @param value
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getNodeByPropertyBooleanValue(String nodeType, String property, boolean value, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
 			// get the factories

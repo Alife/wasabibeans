@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -53,7 +54,9 @@ import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.TagServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
+import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Stateless
@@ -61,11 +64,13 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	private JndiConnector jndi;
 	private JcrConnector jcr;
+	private JmsConnector jms;
 
 	@PostConstruct
 	public void postConstruct() {
 		this.jndi = JndiConnector.getJNDIConnector();
 		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
 	}
 
 	@PreDestroy
@@ -114,21 +119,20 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		}
 	}
 
+	@EJB
+	SharedFilterBean sharedFilterBean;
+
 	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s,
-					WasabiConstants.ROOT_USER_NAME);
-			DocumentServiceImpl.setContent(document1Node, "document1", null);
-			DocumentServiceImpl.create("document2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
-			s.save();
-			return TransferManager.convertNode2DTO(document1Node);
-		} finally {
-			jcr.logout();
-		}
+		Session s = jcr.getJCRSessionTx();
+		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+		DocumentServiceImpl.setContentPiped(document1Node, "document1", s, jms, sharedFilterBean,
+				WasabiConstants.ROOT_USER_NAME);
+		DocumentServiceImpl.create("document2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+		s.save();
+		return TransferManager.convertNode2DTO(document1Node);
 	}
 
 	@Override

@@ -26,6 +26,7 @@ import java.util.Vector;
 
 import javax.ejb.Remote;
 
+import de.wasabibeans.framework.server.core.dto.WasabiPipelineDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
@@ -33,6 +34,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
@@ -95,5 +97,11 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException;
+
+	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException;
+
+	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, TargetDoesNotExistException;
 
 }

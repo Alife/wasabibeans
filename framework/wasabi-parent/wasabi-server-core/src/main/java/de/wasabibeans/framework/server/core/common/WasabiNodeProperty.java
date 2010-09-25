@@ -41,6 +41,7 @@ public class WasabiNodeProperty {
 	// properties of wasabi:room
 	public static final String ROOMS = WasabiConstants.JCR_NS_PREFIX + ":rooms";
 	public static final String PRESENT_USERS = WasabiConstants.JCR_NS_PREFIX + ":presentUsers";
+	public static final String PIPELINE = WasabiConstants.JCR_NS_PREFIX + ":pipeline";
 
 	// properties of wasabi:identity
 	public static final String DISPLAY_NAME = WasabiConstants.JCR_NS_PREFIX + ":displayName";
@@ -55,23 +56,37 @@ public class WasabiNodeProperty {
 	public static final String ACTIVE = WasabiConstants.JCR_NS_PREFIX + ":active";
 	public static final String MEMBERSHIPS = WasabiConstants.JCR_NS_PREFIX + ":memberships";
 	public static final String WHEREABOUTS = WasabiConstants.JCR_NS_PREFIX + ":whereabouts";
-	
+
 	// properties of wasabi:attribute
 	public static final String VALUE = WasabiConstants.JCR_NS_PREFIX + ":value";
 	public static final String TYPE = WasabiConstants.JCR_NS_PREFIX + ":type";
 
 	// properties of wasabi:document
 	public static final String CONTENT = WasabiConstants.JCR_NS_PREFIX + ":content";
+	public static final String CONTENT_REFS = WasabiConstants.JCR_NS_PREFIX + ":contentrefs";
 
 	// properties of wasabi:link
 	public static final String DESTINATION = WasabiConstants.JCR_NS_PREFIX + ":destination";
 
-	// properties of wasabi:tag
+	// properties of wasabi:pipeline
+	public static final String FILTER = WasabiConstants.JCR_NS_PREFIX + ":filter";
+	public static final String EMBEDDABLE = WasabiConstants.JCR_NS_PREFIX + ":embeddable";
+
+	// properties of wasabiStructure:tag
 	public static final String TEXT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":text";
 
-	// properties of wasabi:objectref
+	// properties of wasabiStructure:objectref
 	public static final String REFERENCED_OBJECT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":referencedObject";
-	
+
+	// properties of wasabiStructure:contentref
+	public static final String FILTER_CLASS = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":filterClass";
+	public static final String REF = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":ref";
+	public static final String DOCUMENT = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":document";
+	public static final String MIME_TYPE = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":mimeType";
+	public static final String JSONDATA = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":jsonData";
+	public static final String SIZE = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":size";
+	public static final String IS_CONTENT_AVAILABLE = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":isContentAvailable";
+
 	// properties of versionable wasabi node types
 	public static final String VERSION_COMMENT = WasabiConstants.JCR_NS_PREFIX + ":versionComment";
 }
