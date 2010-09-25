@@ -188,6 +188,8 @@ public class WasabiManager {
 						WasabiConstants.ADMIN_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.addMember(adminGroup, rootUser);
 				GroupServiceImpl.addMember(adminGroup, adminUser);
+				// root for wasabi pipelines
+				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_PIPELINES, WasabiNodeType.OBJECT_COLLECTION);
 				logger.info("Resetting wasabi content: Initial wasabi content created.");
 			}
 

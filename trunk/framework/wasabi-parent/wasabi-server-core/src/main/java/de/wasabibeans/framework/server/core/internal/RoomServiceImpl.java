@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -42,6 +43,7 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class RoomServiceImpl {
@@ -233,5 +235,28 @@ public class RoomServiceImpl {
 	public static void rename(Node roomNode, String name, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		ObjectServiceImpl.rename(roomNode, name, callerPrincipal);
+	}
+
+	// ------------------------------------- Wasabi Pipes -----------------------------------------------------
+
+	public static void setPipeline(Node roomNode, Node pipelineNode) throws UnexpectedInternalProblemException {
+		try {
+			roomNode.setProperty(WasabiNodeProperty.PIPELINE, pipelineNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getPipeline(Node roomNode) throws TargetDoesNotExistException,
+			UnexpectedInternalProblemException {
+		try {
+			return roomNode.getProperty(WasabiNodeProperty.PIPELINE).getNode();
+		} catch (PathNotFoundException pnfe) {
+			return null;
+		} catch (ItemNotFoundException infe) {
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 }

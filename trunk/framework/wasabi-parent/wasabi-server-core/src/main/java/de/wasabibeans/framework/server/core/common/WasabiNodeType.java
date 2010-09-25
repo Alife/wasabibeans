@@ -32,8 +32,10 @@ public class WasabiNodeType {
 	public static final String DOCUMENT = WasabiConstants.JCR_NS_PREFIX + ":document";
 	public static final String LINK = WasabiConstants.JCR_NS_PREFIX + ":link";
 	public static final String ATTRIBUTE = WasabiConstants.JCR_NS_PREFIX + ":attribute";
+	public static final String PIPELINE = WasabiConstants.JCR_NS_PREFIX + ":pipeline";
 
 	// node types for structuring
+	public static final String CONTENT_REF = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":contentref";
 	public static final String TAG = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tag";
 	public static final String TAGS = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tags";
 	public static final String OBJECT_COLLECTION = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":objectCollection";

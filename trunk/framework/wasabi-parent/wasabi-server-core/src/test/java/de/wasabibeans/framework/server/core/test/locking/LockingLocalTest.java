@@ -57,6 +57,10 @@ import de.wasabibeans.framework.server.core.local.UserServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
+import de.wasabibeans.framework.server.core.pipes.auth.AuthTokenDelegate;
+import de.wasabibeans.framework.server.core.pipes.filter.Filter;
+import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterField;
+import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSource;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.DummyDTO;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
@@ -96,6 +100,10 @@ public class LockingLocalTest extends Arquillian {
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
+				.addPackage(Filter.class.getPackage()) // pipes.filter
+				.addPackage(FilterField.class.getPackage()) // pipes.filter.annotation
+				.addPackage(DocumentSource.class.getPackage()) // pipes.filter.impl
+				.addPackage(AuthTokenDelegate.class.getPackage()) // pipes.auth
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote

@@ -41,6 +41,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
+import de.wasabibeans.framework.server.core.dto.WasabiPipelineDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
@@ -51,6 +52,7 @@ import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
@@ -504,5 +506,28 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		} finally {
 			Locker.releaseLock(roomNode, room, s, locker);
 		}
+	}
+
+	@Override
+	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSessionTx();
+		try {
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
+			Locker.recognizeLockTokens(s, room, pipeline);
+			RoomServiceImpl.setPipeline(roomNode, pipelineNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, TargetDoesNotExistException {
+		Session s = jcr.getJCRSessionTx();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		return TransferManager.convertNode2DTO(RoomServiceImpl.getPipeline(roomNode));
 	}
 }

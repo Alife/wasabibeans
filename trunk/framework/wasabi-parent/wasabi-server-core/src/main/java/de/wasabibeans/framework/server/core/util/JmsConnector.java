@@ -33,12 +33,13 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public class JmsConnector {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(JmsConnector.class);
-	
+
 	private JndiConnector jndi;
 
 	private ConnectionFactory jmsConnectionFactory;
 	private Connection jmsConnection;
 	private Queue allocatorQueue;
+	private Queue pipelineQueue;
 
 	public static JmsConnector getJmsConnector(JndiConnector jndi) {
 		return new JmsConnector(jndi);
@@ -71,6 +72,13 @@ public class JmsConnector {
 			this.allocatorQueue = (Queue) jndi.lookup(WasabiConstants.JMS_QUEUE_ALLOCATOR);
 		}
 		return this.allocatorQueue;
+	}
+
+	public Queue getPipelineQueue() throws UnexpectedInternalProblemException {
+		if (this.pipelineQueue == null) {
+			this.pipelineQueue = (Queue) jndi.lookup(WasabiConstants.JMS_QUEUE_PIPELINE);
+		}
+		return this.pipelineQueue;
 	}
 
 	public void close() {

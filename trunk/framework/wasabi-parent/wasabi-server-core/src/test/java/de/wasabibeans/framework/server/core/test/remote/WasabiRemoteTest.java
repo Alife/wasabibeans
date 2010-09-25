@@ -42,6 +42,10 @@ import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
+import de.wasabibeans.framework.server.core.pipes.auth.AuthTokenDelegate;
+import de.wasabibeans.framework.server.core.pipes.filter.Filter;
+import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterField;
+import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSource;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
 import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
 import de.wasabibeans.framework.server.core.remote.AuthorizationServiceRemote;
@@ -94,6 +98,10 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
+				.addPackage(Filter.class.getPackage()) // pipes.filter
+				.addPackage(FilterField.class.getPackage()) // pipes.filter.annotation
+				.addPackage(DocumentSource.class.getPackage()) // pipes.filter.impl
+				.addPackage(AuthTokenDelegate.class.getPackage()) // pipes.auth
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
 				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote

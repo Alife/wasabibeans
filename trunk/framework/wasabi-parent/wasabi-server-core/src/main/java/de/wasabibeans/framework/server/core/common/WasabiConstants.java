@@ -43,6 +43,9 @@ public interface WasabiConstants {
 	public final static String JMS_EVENT_USER = "event_user";
 	public final static int JMS_PERMISSION_CACHE_TIME = 10;
 	public final static String JMS_RESOURCE_ADAPTER = "jms-ra.rar";
+	
+	/* JMS for asynchronous pipelines */
+	public final static String JMS_QUEUE_PIPELINE = "queue/pipeline";
 
 	/* Enumerations */
 	public enum SortType {
@@ -76,6 +79,7 @@ public interface WasabiConstants {
 	public final static String JCR_NODETYPES_RESOURCE_PATH = "wasabi_nodetypes.cnd";
 	public final static String JCR_ROOT_FOR_USERS_NAME = JCR_NS_PREFIX + ":users";
 	public final static String JCR_ROOT_FOR_GROUPS_NAME = JCR_NS_PREFIX + ":groups";
+	public final static String JCR_ROOT_FOR_PIPELINES = JCR_NS_PREFIX + ":pipelines";
 	public final static String JCR_LOGIN = "wasabi";
 
 	/* DTO */
