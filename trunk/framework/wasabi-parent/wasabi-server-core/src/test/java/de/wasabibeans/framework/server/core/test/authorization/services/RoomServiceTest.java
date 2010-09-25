@@ -79,6 +79,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting GRANT as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getEnvironmentTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
 		System.out.print("Deactivating inheritance for getEnvironmentTestRoom... ");
 		aclService().deactivateInheritance(getEnvironmentTestRoom);
 		System.out.println("done.");
@@ -150,6 +154,14 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting GRANT as userRight for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getRoomsTestRoom... ");
+		aclService().create(getRoomsTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
 		displayACLEntry(getRoomsTestRoom, "getRoomsTestRoom");
 
 		System.out.print("Deactivating inheritance for getRoomsTestRoom... ");
@@ -158,10 +170,6 @@ public class RoomServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Setting INSERT as userRight for getRoomsTestRoom... ");
 		aclService().create(getRoomsTestRoom, user, WasabiPermission.INSERT, true);
-		System.out.println("done.");
-
-		System.out.print("Setting READ as userRight for getRoomsTestRoom... ");
-		aclService().create(getRoomsTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
 		displayACLEntry(getRoomsTestRoom, "getRoomsTestRoom");
@@ -334,15 +342,19 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting GRANT as userRight for getEnvironmentTestRoom... ");
+		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
 		System.out.print("Deactivating inheritance for getRoomsWithDepthTestRoom... ");
 		aclService().deactivateInheritance(getRoomsWithDepthTestRoom);
 		System.out.println("done.");
 
-		System.out.print("Setting INSERT as userRight for getEnvironmentTestRoom... ");
+		System.out.print("Setting INSERT as userRight for getRoomsWithDepthTestRoom... ");
 		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
 
-		System.out.print("Setting READ as userRight for getEnvironmentTestRoom... ");
+		System.out.print("Setting READ as userRight for getRoomsWithDepthTestRoom... ");
 		aclService().create(getRoomsWithDepthTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
@@ -456,6 +468,14 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting GRANT as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting GRANT as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
 		System.out.print("Deactivating inheritance for moveTestRoom1... ");
 		aclService().deactivateInheritance(moveTestRoom1);
 		System.out.println("done.");
@@ -463,9 +483,6 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for moveTestRoom2... ");
 		aclService().deactivateInheritance(moveTestRoom2);
 		System.out.println("done.");
-
-		displayACLEntry(moveTestRoom1, "moveTestRoom1");
-		displayACLEntry(moveTestRoom2, "moveTestRoom2");
 
 		System.out.print("Setting INSERT as userRight for moveTestRoom1... ");
 		aclService().create(moveTestRoom1, user, WasabiPermission.INSERT, true);
@@ -482,6 +499,9 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		System.out.print("Setting EXECUTE as userRight for moveTestRoom2... ");
 		aclService().create(moveTestRoom2, user, WasabiPermission.EXECUTE, true);
 		System.out.println("done.");
+
+		displayACLEntry(moveTestRoom1, "moveTestRoom1");
+		displayACLEntry(moveTestRoom2, "moveTestRoom2");
 
 		System.out.print("Creating moveRoom at moveTestRoom... ");
 		WasabiRoomDTO moveRoom = null;
@@ -564,14 +584,16 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Deactivating inheritance for removeTestRoom... ");
-		aclService().deactivateInheritance(removeTestRoom);
+		System.out.print("Setting VIEW, INSERT, READ and GRANT as userRight for removeTestRoom... ");
+		aclService().create(
+				removeTestRoom,
+				user,
+				new int[] { WasabiPermission.INSERT, WasabiPermission.VIEW, WasabiPermission.READ,
+						WasabiPermission.GRANT }, new boolean[] { true, true, true, true });
 		System.out.println("done.");
 
-		System.out.print("Setting VIEW and INSERT and READ as userRight for removeTestRoom... ");
-		aclService().create(removeTestRoom, user,
-				new int[] { WasabiPermission.INSERT, WasabiPermission.VIEW, WasabiPermission.READ },
-				new boolean[] { true, true, true });
+		System.out.print("Deactivating inheritance for removeTestRoom... ");
+		aclService().deactivateInheritance(removeTestRoom);
 		System.out.println("done.");
 
 		displayACLEntry(removeTestRoom, "removeTestRoom");
@@ -666,6 +688,10 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.print("Setting GRANT as userRight for renameTestRoom... ");
+		aclService().create(renameTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
 
 		System.out.print("Deactivating inheritance for renameTestRoom... ");
 		aclService().deactivateInheritance(renameTestRoom);
