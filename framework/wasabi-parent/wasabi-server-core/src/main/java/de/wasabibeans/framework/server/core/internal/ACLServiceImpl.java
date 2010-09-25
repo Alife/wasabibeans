@@ -808,15 +808,13 @@ public class ACLServiceImpl {
 					ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 					List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
 
-					String[] result = new String[results.size() + 1];
+					String[] result = new String[results.size()];
 					int i = 0;
 
 					for (WasabiACLEntry wasabiACLEntry : results) {
 						result[i] = wasabiACLEntry.getInheritance_Id();
 						i++;
 					}
-
-					result[i] = objectUUID;
 
 					resetInheritance(objectNode, result, s);
 				} catch (SQLException e) {
