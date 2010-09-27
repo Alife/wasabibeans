@@ -666,8 +666,9 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void reset(Node wasabiObjectNode, Session s) throws UnexpectedInternalProblemException {
-		resetChildren(wasabiObjectNode, s);
+	public static void reset(Node objectNode, Session s) throws UnexpectedInternalProblemException {
+		setInheritance(objectNode, true, s);
+		resetChildren(objectNode, s);
 	}
 
 	private static void resetChildren(Node wasabiObjectNode, Session s) throws UnexpectedInternalProblemException {
@@ -679,9 +680,9 @@ public class ACLServiceImpl {
 			for (Node node : Nodes) {
 				// clean ACLEntries
 				String objectUUID = ObjectServiceImpl.getUUID(node);
-				String deleteRight = "DELETE FROM wasabi_rights WHERE object_id=?";
+				String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
 				try {
-					run.update(deleteRight, objectUUID);
+					run.update(deleteRights, objectUUID);
 				} catch (SQLException e) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 				}
