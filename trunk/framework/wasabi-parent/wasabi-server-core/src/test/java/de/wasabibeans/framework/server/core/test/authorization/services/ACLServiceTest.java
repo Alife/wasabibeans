@@ -362,6 +362,8 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.println("===========================");
 	}
 
 	@Test
@@ -420,6 +422,26 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getAclEntriesByIdentityTest() throws WasabiException {
+		System.out.println("=== getAclEntriesByIdentityTest() ===");
+
+		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getCLlEntriesByIdentityTest() throws WasabiException {
+		System.out.println("=== getACLEntriesByIdentityTest() ===");
+
+		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
+
+		System.out.println("===========================");
 	}
 
 	@BeforeMethod

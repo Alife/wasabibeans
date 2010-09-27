@@ -78,7 +78,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	protected JndiConnector jndi;
 	protected JcrConnector jcr;
 	protected JmsConnector jms;
-	
+
 	@EJB
 	protected LockingHelperLocal locker;
 
@@ -96,7 +96,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 						WasabiPermission.READ }, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.exists()",
-							"VIEW or READ"));
+							"VIEW or READ", "object"));
 			/* Authorization - End */
 
 			s.getNodeByIdentifier(object.getId());
@@ -121,7 +121,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
-						"VIEW or READ"));
+						"VIEW or READ", "object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -141,7 +141,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedOn()",
-						"VIEW or READ"));
+						"VIEW or READ", "object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -161,7 +161,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedBy()",
-						"VIEW or READ"));
+						"VIEW or READ", "object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -181,7 +181,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
-						"VIEW or READ"));
+						"VIEW or READ", "object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -202,7 +202,9 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 					&& !Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode)))
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 						WasabiPermission.READ }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION);
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
+							"VIEW or READ", "object"));
 				else if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
 					Certificate.set(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode), true);
 		/* Authorization - End */
@@ -326,7 +328,8 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getUUID()", "READ"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getUUID()", "READ",
+						"object"));
 		/* Authorization - End */
 
 		return ObjectServiceImpl.getUUID(objectNode);
@@ -360,7 +363,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedBy()",
-							"GRANT"));
+							"GRANT", "object"));
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);
@@ -392,7 +395,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedOn()",
-							"GRANT"));
+							"GRANT", "object"));
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);
@@ -424,7 +427,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedBy()",
-							"GRANT"));
+							"GRANT", "object"));
 			/* Authorization - End */
 
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -457,7 +460,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedOn()",
-							"GRANT"));
+							"GRANT", "object"));
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);

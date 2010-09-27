@@ -88,7 +88,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 						WasabiPermission.WRITE }, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.create()",
-							"INSERT or WRITE"));
+							"INSERT or WRITE", "environment"));
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, environment);
@@ -113,7 +113,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getEnvironment()", "VIEW"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getEnvironment()", "VIEW",
+						"room"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
@@ -137,7 +138,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getRoomByName()", "VIEW"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getRoomByName()", "VIEW",
+						"room"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(RoomServiceImpl.getRoomByName(roomNode, name), room);
@@ -417,11 +419,14 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s)
-						|| !WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
-								WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE", "room"));
+				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()",
+							"INSERT or WRITE", "newEnvironment"));
 			}
 			/* Authorization - End */
 
@@ -451,10 +456,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.remove()", "WRITE"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.remove()", "WRITE",
+							"room"));
 				else
 					WasabiRoomACL.remove(roomNode, callerPrincipal, s);
 			}
@@ -490,7 +495,8 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.rename()", "WRITE"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.rename()", "WRITE",
+							"room"));
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, room);
