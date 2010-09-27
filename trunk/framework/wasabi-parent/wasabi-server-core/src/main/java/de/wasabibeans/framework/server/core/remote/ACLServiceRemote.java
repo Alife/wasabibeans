@@ -94,6 +94,10 @@ public interface ACLServiceRemote {
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO wasabiLocation,
+			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException;
+
 	@Deprecated
 	public WasabiIdentityDTO getIdentity(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
