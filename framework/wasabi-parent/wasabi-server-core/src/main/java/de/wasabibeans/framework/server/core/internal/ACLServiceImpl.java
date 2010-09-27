@@ -605,7 +605,8 @@ public class ACLServiceImpl {
 
 			String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
 
-			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights WHERE `location_id`=? AND `wasabi_type`=?";
+			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights "
+					+ "WHERE `location_id`=? AND `wasabi_type`=?";
 
 			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
 					WasabiACLEntryTemplate.class);
@@ -732,6 +733,8 @@ public class ACLServiceImpl {
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 			objectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
 			Node parentNode = objectNode.getParent().getParent();
+
+			objectNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean();
 
 			if (inheritance == true) {
 
