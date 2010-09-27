@@ -346,6 +346,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.println("===========================");
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void getACLEntriesTest() throws WasabiException {
 		System.out.println("=== getACLEntriesTest() ===");
@@ -672,6 +673,241 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		try {
 			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
 			System.out.println("Inheritance = " + ihtc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeDefaultTest() throws WasabiException {
+		System.out.println("=== removeDefaultTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeDefaultTestRoom at usersHome... ");
+		WasabiRoomDTO removeDefaultTestRoom = null;
+		try {
+			removeDefaultTestRoom = roomService().create("removeDefaultTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, READ, INSERT as userRight for removeDefaultTestRoom... ");
+		aclService().create(removeDefaultTestRoom, user,
+				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
+				new boolean[] { true, true, true });
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for removeDefaultTestRoom... ");
+		aclService().deactivateInheritance(removeDefaultTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
+		aclService().createDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
+		aclService().createDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
+		aclService().removeDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Delete GRANT as userRight for removeDefaultTestRoom... ");
+		aclService().remove(removeDefaultTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		System.out.print("Removing TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
+		try {
+			aclService().removeDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeTest() throws WasabiException {
+		System.out.println("=== removeTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeTestRoom at usersHome... ");
+		WasabiRoomDTO removeTestRoom = null;
+		try {
+			removeTestRoom = roomService().create("removeTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		displayACLEntry(removeTestRoom, "removeTestRoom");
+
+		System.out.print("Deactivating inheritance for removeTestRoom... ");
+		aclService().deactivateInheritance(removeTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Delete GRANT as userRight for removeTestRoom... ");
+		aclService().remove(removeTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		displayACLEntry(removeTestRoom, "removeTestRoom");
+
+		System.out.print("Delete READ as userRight for removeTestRoom... ");
+		try {
+			aclService().remove(removeTestRoom, user, WasabiPermission.READ);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void resetTest() throws WasabiException {
+		System.out.println("=== resetTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating resetTestRoom at usersHome... ");
+		WasabiRoomDTO resetTestRoom = null;
+		try {
+			resetTestRoom = roomService().create("resetTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for resetTestRoom... ");
+		aclService().create(resetTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for resetTestRoom... ");
+		aclService().deactivateInheritance(resetTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for resetTestRoom... ");
+		aclService().create(resetTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for resetTestRoom... ");
+		aclService().create(resetTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom at resetTestRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", resetTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting READ as userRight for someRoom... ");
+		aclService().create(someRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someSubRoom at someRoom... ");
+		WasabiRoomDTO someSubRoom = null;
+		try {
+			someSubRoom = roomService().create("someSubRoom", someRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting READ as userRight for someSubRoom... ");
+		aclService().create(someSubRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		displayACLEntry(resetTestRoom, "resetTestRoom");
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
+		System.out.print("Try to use reset() at resetTestRoom... ");
+		try {
+			aclService().reset(resetTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(resetTestRoom, "resetTestRoom");
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
+		System.out.print("Set GRANT with forbiddance as userRight for resetTestRoom... ");
+		aclService().create(resetTestRoom, user, WasabiPermission.GRANT, false);
+		System.out.println("done.");
+
+		System.out.print("Try to use reset() at resetTestRoom... ");
+		try {
+			aclService().reset(resetTestRoom);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

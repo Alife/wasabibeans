@@ -122,16 +122,22 @@ public interface ACLServiceRemote {
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
-	@Deprecated
 	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
 			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
+
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
 			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException;
+
+	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int[] permission,
+			long startTime[], long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
