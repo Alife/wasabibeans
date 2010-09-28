@@ -139,11 +139,10 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ }, s))
+			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"DocumentService.getDocumentByName()", "VIEW or READ", "document"));
+						"DocumentService.getDocumentByName()", "VIEW", "document"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(documentNode, location);
