@@ -464,16 +464,16 @@ public class ACLServiceImpl {
 
 	}
 
-	private static Vector<Node> getChildren(Node objectNode, Session s) {
+	public static Vector<Node> getChildren(Node objectNode) {
 		Vector<Node> result = new Vector<Node>();
 
 		Node parentNode = objectNode;
 
-		NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS, s);
-		NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS, s);
-		NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS, s);
-		NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS, s);
-		NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES, s);
+		NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
+		NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
+		NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
+		NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
+		NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
 
 		while (iteratorRooms != null && iteratorRooms.hasNext()) {
 			Node aNode = iteratorRooms.nextNode();
@@ -503,7 +503,7 @@ public class ACLServiceImpl {
 		return result;
 	}
 
-	private static NodeIterator getChildrenNodes(Node parentNode, String nodeType, Session s) {
+	private static NodeIterator getChildrenNodes(Node parentNode, String nodeType) {
 		try {
 			NodeIterator iteratorRooms = parentNode.getNode(nodeType).getNodes();
 			return iteratorRooms;
@@ -521,11 +521,11 @@ public class ACLServiceImpl {
 			Node parentNode = s.getNodeByIdentifier(parentId);
 			String name = parentNode.getName();
 
-			NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS, s);
-			NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS, s);
-			NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS, s);
-			NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS, s);
-			NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES, s);
+			NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
+			NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
+			NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
+			NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
+			NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
 
 			while (iteratorRooms != null && iteratorRooms.hasNext()) {
 				Node aNode = iteratorRooms.nextNode();
@@ -674,7 +674,7 @@ public class ACLServiceImpl {
 	private static void resetChildren(Node wasabiObjectNode, Session s) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		Vector<Node> Nodes = getChildren(wasabiObjectNode, s);
+		Vector<Node> Nodes = getChildren(wasabiObjectNode);
 
 		if (!Nodes.isEmpty()) {
 			for (Node node : Nodes) {
@@ -702,7 +702,7 @@ public class ACLServiceImpl {
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 			String parentId = ObjectServiceImpl.getUUID(wasabiObjectNode);
-			Vector<Node> Nodes = getChildren(wasabiObjectNode, s);
+			Vector<Node> Nodes = getChildren(wasabiObjectNode);
 
 			String inheritanceQuery = " (";
 			for (int i = 0; i < inheritance_ids.length; i++) {
@@ -792,7 +792,7 @@ public class ACLServiceImpl {
 
 						// Look child nodes and set entries if inheritance is true
 						Vector<Node> childreenNodes = new Vector<Node>();
-						childreenNodes = getChildren(objectNode, s);
+						childreenNodes = getChildren(objectNode);
 
 						for (Node node : childreenNodes) {
 							if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
