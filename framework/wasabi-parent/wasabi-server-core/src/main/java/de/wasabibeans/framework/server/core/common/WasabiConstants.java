@@ -30,6 +30,7 @@ public interface WasabiConstants {
 	public final static String ADMIN_USER_PASSWORD = "meerrettich";
 	public final static String ADMINS_GROUP_NAME = "admins";
 	public final static String WASABI_GROUP_NAME = "wasabi";
+	public final static String PAF_GROUP_NAME = "pafuser";
 
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;

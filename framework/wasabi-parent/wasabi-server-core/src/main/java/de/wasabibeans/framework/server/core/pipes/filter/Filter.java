@@ -42,8 +42,6 @@ import javax.jms.JMSException;
 import org.json.JSONException;
 import org.json.JSONWriter;
 
-import com.google.inject.Inject;
-
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.FilterServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -109,7 +107,6 @@ public abstract class Filter implements Serializable, Cloneable {
 			this.callerPrincipal = callerPrincipal;
 		}
 
-		@Inject
 		public DocumentInfo(Node documentNode, String callerPrincipal) throws UnexpectedInternalProblemException {
 			this(ObjectServiceImpl.getUUID(documentNode), ObjectServiceImpl.getName(documentNode),
 					getMimeType(documentNode), callerPrincipal);

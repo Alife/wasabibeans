@@ -179,6 +179,8 @@ public class WasabiManager {
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.OBJECT_COLLECTION);
 				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, s,
 						WasabiConstants.ROOT_USER_NAME);
+				Node pafUserGroup = GroupServiceImpl.create(WasabiConstants.PAF_GROUP_NAME, null, s,
+						WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, s, WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi users and initial users
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME, WasabiNodeType.OBJECT_COLLECTION);
@@ -188,6 +190,8 @@ public class WasabiManager {
 						WasabiConstants.ADMIN_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
 				GroupServiceImpl.addMember(adminGroup, rootUser);
 				GroupServiceImpl.addMember(adminGroup, adminUser);
+				GroupServiceImpl.addMember(pafUserGroup, rootUser);
+				GroupServiceImpl.addMember(pafUserGroup, adminUser);
 				// root for wasabi pipelines
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_PIPELINES, WasabiNodeType.OBJECT_COLLECTION);
 				logger.info("Resetting wasabi content: Initial wasabi content created.");

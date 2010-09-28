@@ -21,10 +21,8 @@
 
 package de.wasabibeans.framework.server.core.bean;
 
-import java.util.Map;
 import java.util.Vector;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -32,7 +30,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jms.JMSException;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -46,17 +43,11 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.FilterServiceImpl;
 import de.wasabibeans.framework.server.core.local.FilterServiceLocal;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
-import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
-import de.wasabibeans.framework.server.core.pipes.filter.Wire;
-import de.wasabibeans.framework.server.core.pipes.filter.impl.EmbeddedFilter;
 
 @SecurityDomain("wasabi")
 @Stateless(name = "FilterService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class FilterService extends ObjectService implements FilterServiceLocal {
-
-	@EJB
-	private SharedFilterBean sharedFilterBean;
 
 	@Override
 	public WasabiPipelineDTO create(String name, Filter filter) throws UnexpectedInternalProblemException,
