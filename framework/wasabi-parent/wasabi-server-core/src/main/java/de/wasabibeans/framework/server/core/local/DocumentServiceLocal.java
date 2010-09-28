@@ -35,6 +35,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -47,13 +48,13 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 
 	public WasabiDocumentDTO create(String name, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, DocumentContentException;
+			ObjectDoesNotExistException, DocumentContentException, NoPermissionException;
 
 	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public Collection<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
@@ -113,5 +114,5 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 }
