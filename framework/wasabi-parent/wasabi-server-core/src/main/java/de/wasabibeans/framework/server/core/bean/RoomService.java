@@ -107,18 +107,19 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSessionTx();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node environmentNode = RoomServiceImpl.getEnvironment(roomNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getEnvironment()", "VIEW",
-						"room"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getEnvironment()",
+						"VIEW or READ"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
-		return TransferManager.convertValue2DTO(RoomServiceImpl.getEnvironment(roomNode), optLockId);
+		return TransferManager.convertValue2DTO(environmentNode, optLockId);
 	}
 
 	@Override
@@ -132,17 +133,18 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Session s = jcr.getJCRSessionTx();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node roomByNameNode = RoomServiceImpl.getRoomByName(roomNode, name);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+			if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getRoomByName()", "VIEW",
-						"room"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
+						"VIEW or READ"));
 		/* Authorization - End */
 
-		return TransferManager.convertNode2DTO(RoomServiceImpl.getRoomByName(roomNode, name), room);
+		return TransferManager.convertNode2DTO(roomByNameNode, room);
 	}
 
 	@Override
