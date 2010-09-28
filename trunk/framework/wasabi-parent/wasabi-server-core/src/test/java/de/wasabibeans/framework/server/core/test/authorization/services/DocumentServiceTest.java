@@ -235,6 +235,92 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void getDocumentsTest() throws WasabiException {
+		System.out.println("=== getDocumentsTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getDocumentsRoom at usersHome... ");
+		WasabiRoomDTO getDocumentsRoom = null;
+		try {
+			getDocumentsRoom = roomService().create("getDocumentsRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getDocumentsRoom... ");
+		aclService().create(getDocumentsRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getDocumentsRoom... ");
+		aclService().create(getDocumentsRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getDocumentsRoom... ");
+		aclService().deactivateInheritance(getDocumentsRoom);
+		System.out.println("done.");
+
+		System.out.print("Creating document testDoc1 at getDocumentsRoom... ");
+		WasabiDocumentDTO testDoc1 = null;
+		try {
+			testDoc1 = documentService().create("testDoc1", getDocumentsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating document testDoc2 at getDocumentsRoom... ");
+		WasabiDocumentDTO testDoc2 = null;
+		try {
+			testDoc2 = documentService().create("testDoc2", getDocumentsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating document testDoc3 at getDocumentsRoom... ");
+		WasabiDocumentDTO testDoc3 = null;
+		try {
+			testDoc3 = documentService().create("testDoc3", getDocumentsRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting documents at getDocumentsRoom... ");
+		try {
+			Vector<WasabiDocumentDTO> docs = documentService().getDocuments(getDocumentsRoom);
+			for (WasabiDocumentDTO wasabiDocumentDTO : docs)
+				System.out.println(objectService().getName(wasabiDocumentDTO).getValue());
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for testDoc1... ");
+		aclService().create(testDoc1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as userRight for testDoc3... ");
+		aclService().create(testDoc3, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Getting documents at getDocumentsRoom... ");
+		try {
+			Vector<WasabiDocumentDTO> docs = documentService().getDocuments(getDocumentsRoom);
+			for (WasabiDocumentDTO wasabiDocumentDTO : docs)
+				System.out.println(objectService().getName(wasabiDocumentDTO).getValue());
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void setContentTest() throws WasabiException {
 		System.out.println("=== setContentTest() ===");
 
