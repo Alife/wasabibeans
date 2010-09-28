@@ -86,7 +86,7 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
 
 	public WasabiValueDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
