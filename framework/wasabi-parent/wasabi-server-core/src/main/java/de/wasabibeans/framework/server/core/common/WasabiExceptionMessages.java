@@ -89,6 +89,7 @@ public class WasabiExceptionMessages {
 	/* Authorization */
 	public final static String AUTHORIZATION_NO_PERMISSION = "You don't have the permission to access: &0 requires &1 permission at parameter &2.";
 	public final static String AUTHORIZATION_NO_PERMISSION_RETURN = "You don't have the permission to access: &0 requires &1 permission at requested data.";
+	public final static String AUTHORIZATION_NO_PERMISSION_EXISTS = "You don't have the permission to access or object does not exist.";
 	
 	/* Versioning */
 	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
