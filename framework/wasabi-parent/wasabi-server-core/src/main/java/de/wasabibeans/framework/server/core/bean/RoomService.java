@@ -111,11 +111,11 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ }, s))
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW,
+					 s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getEnvironment()",
-						"VIEW or READ"));
+						"VIEW"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(roomNode);
@@ -137,11 +137,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ }, s))
+			if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
-						"VIEW or READ"));
+						"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(roomByNameNode, room);
