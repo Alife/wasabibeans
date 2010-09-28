@@ -21,6 +21,7 @@
 
 package de.wasabibeans.framework.server.core.test.authorization.services;
 
+import java.util.Date;
 import java.util.Vector;
 
 import org.jboss.arquillian.api.Run;
@@ -211,7 +212,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Try to get document testDoc1 at getDocumentByNameRoom... ");
+		System.out.print("Try to get document testDoc at getDocumentByNameRoom... ");
 		try {
 			documentService().getDocumentByName(getDocumentByNameRoom, "testDoc");
 			System.out.println("done.");
@@ -226,6 +227,72 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		System.out.print("Try to get document testDoc1 at getDocumentByNameRoom... ");
 		try {
 			documentService().getDocumentByName(getDocumentByNameRoom, "testDoc");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getDocumentsByCreationDateTest() throws WasabiException {
+		System.out.println("=== getDocumentsByCreationDateTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getDocumentsByCreationDateRoom at usersHome... ");
+		WasabiRoomDTO getDocumentsByCreationDateRoom = null;
+		try {
+			getDocumentsByCreationDateRoom = roomService().create("getDocumentsByCreationDateRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getDocumentsByCreationDateRoom... ");
+		aclService().create(getDocumentsByCreationDateRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getDocumentsByCreationDateRoom... ");
+		aclService().create(getDocumentsByCreationDateRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getDocumentsByCreationDateRoom... ");
+		aclService().deactivateInheritance(getDocumentsByCreationDateRoom);
+		System.out.println("done.");
+
+		System.out.print("Creating document testDoc at getDocumentsByCreationDateRoom... ");
+		WasabiDocumentDTO testDoc = null;
+		try {
+			testDoc = documentService().create("testDoc", getDocumentsByCreationDateRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Try to get document testDoc at getDocumentsByCreationDateRoom... ");
+		try {
+			Vector<WasabiDocumentDTO> docs = documentService().getDocumentsByCreationDate(
+					getDocumentsByCreationDateRoom, new Date(0), new Date(2000000000));
+			for (WasabiDocumentDTO wasabiDocumentDTO : docs)
+				System.out.println(objectService().getName(wasabiDocumentDTO).getValue());
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for getDocumentsByCreationDateRoom... ");
+		aclService().create(getDocumentsByCreationDateRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Try to get document testDoc at getDocumentsByCreationDateRoom... ");
+		try {
+			Vector<WasabiDocumentDTO> docs = documentService().getDocumentsByCreationDate(
+					getDocumentsByCreationDateRoom, new Date(0), new Date(2000000000));
+			for (WasabiDocumentDTO wasabiDocumentDTO : docs)
+				System.out.println(objectService().getName(wasabiDocumentDTO).getValue());
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

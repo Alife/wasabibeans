@@ -180,9 +180,23 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -192,9 +206,24 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate, depth)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate, endDate,
+					depth))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -204,9 +233,21 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();) {
+				Node documentNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();)
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return documents;
 	}
 
@@ -217,9 +258,23 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -229,9 +284,24 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate, endDate)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl
+					.getDocumentsByModificationDate(environmentNode, startDate, endDate))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -241,10 +311,24 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate, endDate,
-				depth)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate,
+					endDate, depth))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -254,9 +338,21 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();) {
+				Node documentNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();)
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return documents;
 	}
 
@@ -267,9 +363,23 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (Node document : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode)) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node document : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode))
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
+
 		return documents;
 	}
 
@@ -279,18 +389,44 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		for (NodeIterator ni = DocumentServiceImpl.getDocumentsOrderedByCreationDate(locationNode, order); ni.hasNext();) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = DocumentServiceImpl.getDocumentsOrderedByCreationDate(locationNode, order); ni
+					.hasNext();)
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+
 		return documents;
 	}
 
 	public WasabiValueDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node environmentNode = DocumentServiceImpl.getEnvironment(documentNode);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "DocumentService.getEnvironment()",
+						"VIEW"));
+		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
-		return TransferManager.convertValue2DTO(DocumentServiceImpl.getEnvironment(documentNode), optLockId);
+		return TransferManager.convertValue2DTO(environmentNode, optLockId);
 	}
 
 	@Override
