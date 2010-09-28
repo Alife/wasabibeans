@@ -54,6 +54,7 @@ import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
@@ -87,16 +88,21 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			Node objectNode = null;
+			try {
+				objectNode = TransferManager.convertDTO2Node(object, s);
+			} catch (WasabiException np) {
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_EXISTS));
+			}
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
 						WasabiPermission.READ }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.exists()",
-							"VIEW or READ", "object"));
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_EXISTS));
 			/* Authorization - End */
 
 			s.getNodeByIdentifier(object.getId());
