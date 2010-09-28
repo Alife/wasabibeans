@@ -40,6 +40,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
@@ -111,15 +112,15 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		
+
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.READ, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.getContent()",
-						"READ", "document"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.getContent()", "READ",
+						"document"));
 		/* Authorization - End */
-		
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
 		return TransferManager.convertValue2DTO(DocumentServiceImpl.getContentPiped(documentNode, null), optLockId);
 	}
@@ -135,15 +136,16 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node documentNode = DocumentServiceImpl.getDocumentByName(locationNode, name);
-		
+
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, new int[] { WasabiPermission.VIEW, WasabiPermission.READ }, s))
+			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ }, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "DocumentService.getDocumentByName()",
-						"VIEW or READ", "document"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+						"DocumentService.getDocumentByName()", "VIEW or READ", "document"));
 		/* Authorization - End */
-		
+
 		return TransferManager.convertNode2DTO(documentNode, location);
 	}
 
@@ -152,9 +154,23 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
-		NodeIterator ni = DocumentServiceImpl.getDocuments(locationNode);
-		while (ni.hasNext()) {
-			documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+			for (String id : authorizedDocuments) {
+				Node doc = DocumentServiceImpl.getDocumentById(id, s);
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
+			}
+		}
+		/* Authorization - End */
+		else {
+			NodeIterator ni = DocumentServiceImpl.getDocuments(locationNode);
+			while (ni.hasNext()) {
+				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+			}
 		}
 		return documents;
 	}
@@ -384,7 +400,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
-			
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
@@ -392,7 +408,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.setContent()",
 							"WRITE", "document"));
 			/* Authorization - End */
-			
+
 			Locker.recognizeLockTokens(s, document);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
