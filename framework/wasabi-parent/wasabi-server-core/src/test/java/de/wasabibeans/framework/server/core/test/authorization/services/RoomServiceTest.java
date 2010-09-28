@@ -592,8 +592,24 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting INSERT as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Moving moveRoom from moveTestRoom1 to moveTestRoom2... ");
+		try {
+			roomService().move(moveRoom, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
 		System.out.print("Setting WRITE as userRight for moveTestRoom1... ");
 		aclService().create(moveTestRoom1, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE as forbiddance userRight for someRoom... ");
+		aclService().create(someRoom, user, WasabiPermission.WRITE, false);
 		System.out.println("done.");
 
 		displayACLEntry(moveTestRoom1, "moveTestRoom1");
@@ -607,8 +623,8 @@ public class RoomServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting INSERT as userRight for moveTestRoom2... ");
-		aclService().create(moveTestRoom2, user, WasabiPermission.INSERT, true);
+		System.out.print("Delete WRITE as forbiddance userRight for someRoom... ");
+		aclService().remove(someRoom, user, WasabiPermission.WRITE);
 		System.out.println("done.");
 
 		System.out.print("Moving moveRoom from moveTestRoom1 to moveTestRoom2... ");

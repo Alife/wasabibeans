@@ -41,6 +41,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
@@ -55,7 +56,7 @@ public class WasabiAuthorizer {
 			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
-			
+
 			return checkRights(objectUUID, userUUID, userNode, permission, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -69,6 +70,30 @@ public class WasabiAuthorizer {
 				return true;
 		}
 		return false;
+	}
+
+	private static int authorizeChild(Node objectNode, String callerPrincipal, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		int sum = 0;
+		if (authorize(objectNode, callerPrincipal, permission, s)) {
+			Vector<Node> childreen = ACLServiceImpl.getChildren(objectNode);
+
+			for (Node node : childreen) {
+				sum = sum + authorizeChild(node, callerPrincipal, permission, s);
+				if (sum > 0)
+					return sum;
+			}
+		} else
+			return 1;
+		return sum;
+	}
+
+	public static boolean authorizeChildreen(Node objectNode, String callerPrincipal, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		if (authorizeChild(objectNode, callerPrincipal, permission, s) > 0)
+			return false;
+		else
+			return true;
 	}
 
 	public static Vector<String> authorizePermission(Node objectNode, String callerPrincipal, int permission,
