@@ -465,7 +465,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		displayACLEntry(attr, "attr");
 
 		System.out.print("Moving testDoc at moveTestRoom2... ");
@@ -502,6 +502,131 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 
 		displayACLEntry(testDoc, "testDoc");
 		displayACLEntry(attr, "attr");
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeTest() throws WasabiException {
+		System.out.println("=== removeTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeTestRoom1 at usersHome... ");
+		WasabiRoomDTO removeTestRoom1 = null;
+		try {
+			removeTestRoom1 = roomService().create("removeTestRoom1", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for removeTestRoom1... ");
+		aclService().create(removeTestRoom1, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for removeTestRoom1... ");
+		aclService().deactivateInheritance(removeTestRoom1);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for removeTestRoom1... ");
+		aclService().create(removeTestRoom1, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for removeTestRoom1... ");
+		aclService().create(removeTestRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+		
+		System.out.print("Setting VIEW as userRight for removeTestRoom1... ");
+		aclService().create(removeTestRoom1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Creating document testDoc at removeTestRoom1... ");
+		WasabiDocumentDTO testDoc = null;
+		try {
+			testDoc = documentService().create("testDoc", removeTestRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating attribute at testDoc ... ");
+		WasabiAttributeDTO attr = null;
+		try {
+			attr = attributeService().create("attr", "trallala", testDoc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing testDoc ... ");
+		try {
+			documentService().remove(testDoc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for testDoc... ");
+		aclService().create(testDoc, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE with forbiddance as userRight for attr... ");
+		aclService().create(attr, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Removing testDoc ... ");
+		try {
+			documentService().remove(testDoc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Checking if testDoc exists:");
+		try {
+		System.out.println(objectService().exists(testDoc));
+		System.out.println("done.");
+	} catch (Exception e) {
+		System.out.println(e.getMessage());
+	}
+
+		System.out.print("Checking if testDoc exists:");
+		try {
+		System.out.println(objectService().exists(attr));
+		System.out.println("done.");
+	} catch (Exception e) {
+		System.out.println(e.getMessage());
+	}
+
+		System.out.print("Removing WRITE with forbiddance as userRight for attr... ");
+		aclService().remove(attr, user, WasabiPermission.WRITE);
+		System.out.println("done.");
+
+		System.out.print("Removing testDoc ... ");
+		try {
+			documentService().remove(testDoc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Checking if testDoc exists:");
+		try {
+			System.out.println(objectService().exists(testDoc));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Checking if testDoc exists:");
+		try {
+			System.out.println(objectService().exists(attr));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 
 		System.out.println("===========================");
 	}

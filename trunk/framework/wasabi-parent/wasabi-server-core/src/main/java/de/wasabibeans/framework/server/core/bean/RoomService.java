@@ -465,12 +465,12 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 					WasabiRoomACL.remove(roomNode, callerPrincipal, s);
 			}
 			/* Authorization - End */
-
 			else {
 				// TODO special case for events due to recursive deletion of subtree
 				EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
 				RoomServiceImpl.remove(roomNode);
 			}
+			
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

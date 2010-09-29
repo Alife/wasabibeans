@@ -37,6 +37,7 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.authorization.WasabiDocumentACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -470,7 +471,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
-			
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
 				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
@@ -483,8 +484,8 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
 							"room and sub objects"));
 			}
-			/* Authorization - End */			
-			
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, document, newEnvironment);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
@@ -501,14 +502,29 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	}
 
 	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException {
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, document);
-			DocumentServiceImpl.remove(documentNode);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
+							"document"));
+				else
+					WasabiDocumentACL.remove(documentNode, callerPrincipal, s);
+			}
+			/* Authorization - End */
+			else {
+				// TODO special case for events due to recursive deletion of subtree
+				EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
+				DocumentServiceImpl.remove(documentNode);
+			}
+
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
