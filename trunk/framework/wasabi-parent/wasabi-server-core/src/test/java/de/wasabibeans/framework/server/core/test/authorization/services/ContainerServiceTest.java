@@ -384,6 +384,162 @@ public class ContainerServiceTest extends WasabiRemoteTest {
 		System.out.println("===========================");
 	}
 
+	@Test
+	public void getContainerByNameTest() throws WasabiException {
+		System.out.println("=== getContainerByNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getContainerByNameTestRoom at usersHome... ");
+		WasabiRoomDTO getContainerByNameTestRoom = null;
+		try {
+			getContainerByNameTestRoom = roomService().create("getContainerByNameTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getContainerByNameTestRoom... ");
+		aclService().create(getContainerByNameTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getContainerByNameTestRoom... ");
+		aclService().create(getContainerByNameTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getContainerByNameTestRoom... ");
+		aclService().create(getContainerByNameTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getContainerByNameTestRoom... ");
+		aclService().deactivateInheritance(getContainerByNameTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Creating container someContainer at getContainerByNameTestRoom... ");
+		WasabiContainerDTO someContainer = null;
+		try {
+			someContainer = containerService().create("someContainer", getContainerByNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Using getContainerByName to get someContainer ... ");
+		try {
+			containerService().getContainerByName(getContainerByNameTestRoom, "someContainer");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for getContainerByNameTestRoom... ");
+		aclService().create(getContainerByNameTestRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Using getContainerByName to get someContainer ... ");
+		try {
+			containerService().getContainerByName(getContainerByNameTestRoom, "someContainer");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getContainers() throws WasabiException {
+		System.out.println("=== getContainers() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getContainersRoom at usersHome... ");
+		WasabiRoomDTO getContainersRoom = null;
+		try {
+			getContainersRoom = roomService().create("getContainersRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getContainersRoom... ");
+		aclService().create(getContainersRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getContainersRoom... ");
+		aclService().create(getContainersRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getContainersRoom... ");
+		aclService().create(getContainersRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getContainersRoom... ");
+		aclService().deactivateInheritance(getContainersRoom);
+		System.out.println("done.");
+
+		System.out.print("Creating container someContainer1 at getContainersRoom... ");
+		WasabiContainerDTO someContainer1 = null;
+		try {
+			someContainer1 = containerService().create("someContainer1", getContainersRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating container someContainer2 at getContainersRoom... ");
+		WasabiContainerDTO someContainer2 = null;
+		try {
+			someContainer2 = containerService().create("someContainer2", getContainersRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating container someContainer3 at getContainersRoom... ");
+		WasabiContainerDTO someContainer3 = null;
+		try {
+			someContainer3 = containerService().create("someContainer3", getContainersRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Display all conterains with VIEW at getContainersRoom");
+		try {
+			Vector<WasabiContainerDTO> containers = containerService().getContainers(getContainersRoom);
+			for (WasabiContainerDTO wasabiContainerDTO : containers) {
+				System.out.println(objectService().getName(wasabiContainerDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for someContainer1... ");
+		aclService().create(someContainer1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as userRight for someContainer3... ");
+		aclService().create(someContainer3, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Display all conterains with VIEW at getContainersRoom");
+		try {
+			Vector<WasabiContainerDTO> containers = containerService().getContainers(getContainersRoom);
+			for (WasabiContainerDTO wasabiContainerDTO : containers) {
+				System.out.println(objectService().getName(wasabiContainerDTO).getValue());
+			}
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
 		// initialize test

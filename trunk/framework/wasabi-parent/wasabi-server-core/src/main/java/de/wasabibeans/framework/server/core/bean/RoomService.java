@@ -302,11 +302,9 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.ROOM, s);
-			for (Node room : RoomServiceImpl.getRoomsByCreator(creatorNode, environmentNode))
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(room)))
-					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room, environment));
+			for (Node roomNode : RoomServiceImpl.getRoomsByCreator(creatorNode, environmentNode))
+				if (WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(roomNode));
 		}
 		/* Authorization - End */
 		else
@@ -399,11 +397,9 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.ROOM, s);
-			for (Node room : RoomServiceImpl.getRoomsByModifier(modifierNode, environmentNode))
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(room)))
-					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room, environment));
+			for (Node roomNode : RoomServiceImpl.getRoomsByModifier(modifierNode, environmentNode))
+				if (WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.VIEW, s))
+					rooms.add((WasabiRoomDTO) TransferManager.convertNode2DTO(roomNode));
 		}
 		/* Authorization - End */
 		else

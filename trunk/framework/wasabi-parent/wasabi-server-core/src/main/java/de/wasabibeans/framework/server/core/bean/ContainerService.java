@@ -39,6 +39,7 @@ import de.wasabibeans.framework.server.core.authorization.WasabiContainerACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
@@ -54,6 +55,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ContainerServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.ContainerServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.ContainerServiceRemote;
@@ -101,7 +103,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public WasabiContainerDTO getContainerByName(WasabiLocationDTO location, String name)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -109,7 +111,18 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
-		return TransferManager.convertNode2DTO(ContainerServiceImpl.getContainerByName(locationNode, name), location);
+		Node containerNode = ContainerServiceImpl.getContainerByName(locationNode, name);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+						"ContainerService.getContainerByName()", "VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(containerNode, location);
 	}
 
 	@Override
@@ -118,9 +131,22 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (NodeIterator ni = ContainerServiceImpl.getContainers(locationNode); ni.hasNext();) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			for (String string : authorizedRooms) {
+				Node aNode = RoomServiceImpl.getRoomById(string, s);
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(aNode, location));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = ContainerServiceImpl.getContainers(locationNode); ni.hasNext();)
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+
 		return containers;
 	}
 
@@ -130,9 +156,23 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+
+			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
+				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -142,10 +182,24 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate,
-				depth)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+
+			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
+				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate,
+					depth))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -155,9 +209,21 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();) {
+				Node containerNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();)
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return containers;
 	}
 
@@ -168,9 +234,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (Node containerNode : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode))
+				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -180,9 +256,23 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate, endDate)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+					endDate))
+				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+					endDate))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -192,10 +282,23 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate, endDate,
-				depth)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+					endDate, depth))
+				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+					endDate, depth))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -205,9 +308,21 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();) {
+				Node containerNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();)
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return containers;
 	}
 
@@ -218,9 +333,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (Node containerNode : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode))
+				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
@@ -230,19 +355,41 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
-		for (Node container : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern)) {
-			containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			for (Node containerNode : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern))
+				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node container : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern))
+				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+
 		return containers;
 	}
 
 	@Override
 	public WasabiValueDTO getEnvironment(WasabiContainerDTO container) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node containerNode = TransferManager.convertDTO2Node(container, s);
+		Node environmentNode = ContainerServiceImpl.getEnvironment(containerNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+						"ContainerService.getEnvironment()", "VIEW"));
+		/* Authorization - End */
 		Long optLockId = ObjectServiceImpl.getOptLockId(containerNode);
-		return TransferManager.convertValue2DTO(ContainerServiceImpl.getEnvironment(containerNode), optLockId);
+		return TransferManager.convertValue2DTO(environmentNode, optLockId);
 	}
 
 	@Override
