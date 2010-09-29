@@ -51,17 +51,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.JsonParseException;
 
-import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.authorization.WasabiDocumentACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
-import de.wasabibeans.framework.server.core.common.WasabiPermission;
-import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
-import de.wasabibeans.framework.server.core.dto.TransferManager;
-import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;

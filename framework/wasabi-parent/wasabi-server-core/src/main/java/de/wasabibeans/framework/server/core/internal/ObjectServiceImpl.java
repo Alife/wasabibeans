@@ -40,6 +40,8 @@ import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiObjectACL;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -103,6 +105,11 @@ public class ObjectServiceImpl {
 	public static void remove(Node objectNode) throws UnexpectedInternalProblemException,
 			ConcurrentModificationException {
 		try {
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE) 
+				WasabiObjectACL.removeACLEntriesRecursive(objectNode);
+			/* ACL Environment - End */
+			
 			objectNode.remove();
 		} catch (LockException le) {
 			try {

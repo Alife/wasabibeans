@@ -23,8 +23,6 @@ package de.wasabibeans.framework.server.core.authorization;
 
 import java.sql.SQLException;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.dbutils.QueryRunner;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -33,8 +31,7 @@ import de.wasabibeans.framework.server.core.util.SqlConnector;
 
 public class WasabiObjectSQL {
 
-	public static void SqlQueryForRemove(String objectUUID) throws UnexpectedInternalProblemException,
-			RepositoryException {
+	public static void SqlQueryForRemove(String objectUUID) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 		String deleteEntryQuery = "DELETE FROM wasabi_rights WHERE `object_id`=?";

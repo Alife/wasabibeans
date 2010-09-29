@@ -34,6 +34,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 
 public class WasabiObjectACL {
@@ -127,5 +128,14 @@ public class WasabiObjectACL {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 		return 1;
+	}
+
+	public static void removeACLEntriesRecursive(Node objectNode) throws UnexpectedInternalProblemException {
+		Vector<Node> childreen = ACLServiceImpl.getChildren(objectNode);
+		if (childreen.size() == 0)
+			WasabiObjectSQL.SqlQueryForRemove(ObjectServiceImpl.getUUID(objectNode));
+		else
+			for (Node node : childreen)
+				removeACLEntriesRecursive(node);
 	}
 }
