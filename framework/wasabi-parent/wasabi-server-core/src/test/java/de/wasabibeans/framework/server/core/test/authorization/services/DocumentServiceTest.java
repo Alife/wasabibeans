@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -383,6 +384,124 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void moveTest() throws WasabiException {
+		System.out.println("=== moveTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating moveTestRoom1 at usersHome... ");
+		WasabiRoomDTO moveTestRoom1 = null;
+		try {
+			moveTestRoom1 = roomService().create("moveTestRoom1", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating moveTestRoom2 at usersHome... ");
+		WasabiRoomDTO moveTestRoom2 = null;
+		try {
+			moveTestRoom2 = roomService().create("moveTestRoom2", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting GRANT as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for moveTestRoom1... ");
+		aclService().deactivateInheritance(moveTestRoom1);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for moveTestRoom2... ");
+		aclService().deactivateInheritance(moveTestRoom2);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		displayACLEntry(moveTestRoom1, "moveTestRoom1");
+		displayACLEntry(moveTestRoom2, "moveTestRoom2");
+
+		System.out.print("Creating document testDoc at moveTestRoom1... ");
+		WasabiDocumentDTO testDoc = null;
+		try {
+			testDoc = documentService().create("testDoc", moveTestRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating attribute at testDoc ... ");
+		WasabiAttributeDTO attr = null;
+		try {
+			attr = attributeService().create("attr", "trallala", testDoc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		displayACLEntry(attr, "attr");
+
+		System.out.print("Moving testDoc at moveTestRoom2... ");
+		try {
+			documentService().move(testDoc, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting INSERT as userRight for moveTestRoom2... ");
+		aclService().create(moveTestRoom2, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Moving testDoc at moveTestRoom2... ");
+		try {
+			documentService().move(testDoc, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for moveTestRoom1... ");
+		aclService().create(moveTestRoom1, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Moving testDoc at moveTestRoom2... ");
+		try {
+			documentService().move(testDoc, moveTestRoom2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(testDoc, "testDoc");
+		displayACLEntry(attr, "attr");
 
 		System.out.println("===========================");
 	}

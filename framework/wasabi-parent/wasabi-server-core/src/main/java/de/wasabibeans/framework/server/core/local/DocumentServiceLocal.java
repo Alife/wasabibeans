@@ -90,27 +90,27 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException;
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
