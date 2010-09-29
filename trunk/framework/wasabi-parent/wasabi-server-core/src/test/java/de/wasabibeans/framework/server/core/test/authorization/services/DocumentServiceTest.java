@@ -389,6 +389,90 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void hasDocumentsCreatedBefore() throws WasabiException {
+		System.out.println("=== hasDocumentsCreatedBefore() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating hasDocumentsCreatedBeforeTestRoom at usersHome... ");
+		WasabiRoomDTO hasDocumentsCreatedBeforeTestRoom = null;
+		try {
+			hasDocumentsCreatedBeforeTestRoom = roomService().create("hasDocumentsCreatedBeforeTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for hasDocumentsCreatedBeforeTestRoom... ");
+		aclService().create(hasDocumentsCreatedBeforeTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for hasDocumentsCreatedBeforeTestRoom... ");
+		aclService().create(hasDocumentsCreatedBeforeTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for hasDocumentsCreatedBeforeTestRoom... ");
+		aclService().deactivateInheritance(hasDocumentsCreatedBeforeTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Creating document testDoc1 at hasDocumentsCreatedBeforeTestRoom... ");
+		WasabiDocumentDTO testDoc1 = null;
+		try {
+			testDoc1 = documentService().create("testDoc1", hasDocumentsCreatedBeforeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating document testDoc2 at hasDocumentsCreatedBeforeTestRoom... ");
+		WasabiDocumentDTO testDoc2 = null;
+		try {
+			testDoc2 = documentService().create("testDoc2", hasDocumentsCreatedBeforeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating document testDoc3 at hasDocumentsCreatedBeforeTestRoom... ");
+		WasabiDocumentDTO testDoc3 = null;
+		try {
+			testDoc3 = documentService().create("testDoc3", hasDocumentsCreatedBeforeTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Using hasDocumentsCreatedBefore at hasDocumentsCreatedBeforeTestRoom: ");
+		try {
+			System.out.println(documentService().hasDocumentsCreatedBefore(hasDocumentsCreatedBeforeTestRoom,
+					java.lang.System.currentTimeMillis()));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for testDoc1... ");
+		aclService().create(testDoc1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as userRight for testDoc3... ");
+		aclService().create(testDoc3, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.println("Using hasDocumentsCreatedBefore at hasDocumentsCreatedBeforeTestRoom: ");
+		try {
+			System.out.println(documentService().hasDocumentsCreatedBefore(hasDocumentsCreatedBeforeTestRoom,
+					java.lang.System.currentTimeMillis()));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void moveTest() throws WasabiException {
 		System.out.println("=== moveTest() ===");
 
@@ -662,7 +746,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		System.out.print("Setting READ as userRight for renameTestRoom1... ");
 		aclService().create(renameTestRoom1, user, WasabiPermission.READ, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Setting VIEW as userRight for renameTestRoom1... ");
 		aclService().create(renameTestRoom1, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
@@ -675,7 +759,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Renaming document testDoc to renameTestDoc... ");
 		try {
 			documentService().rename(testDoc, "renameTestDoc", null);
@@ -683,11 +767,11 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting WRITE as userRight for renameTestRoom1... ");
 		aclService().create(renameTestRoom1, user, WasabiPermission.WRITE, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Renaming document testDoc to renameTestDoc... ");
 		try {
 			documentService().rename(testDoc, "renameTestDoc", null);

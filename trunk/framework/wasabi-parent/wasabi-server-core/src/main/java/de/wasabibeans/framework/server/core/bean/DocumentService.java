@@ -435,7 +435,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-		return DocumentServiceImpl.hasDocumentsCreatedAfter(environmentNode, timestamp);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			return !getDocumentsByCreationDate(environment, new Date(timestamp), null).isEmpty();
+		}
+		/* Authorization - End */
+		else
+			return DocumentServiceImpl.hasDocumentsCreatedAfter(environmentNode, timestamp);
 	}
 
 	@Override
@@ -443,7 +450,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-		return DocumentServiceImpl.hasDocumentsCreatedBefore(environmentNode, timestamp);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			return !getDocumentsByCreationDate(environment, null, new Date(timestamp)).isEmpty();
+		}
+		/* Authorization - End */
+		else
+			return DocumentServiceImpl.hasDocumentsCreatedBefore(environmentNode, timestamp);
 	}
 
 	@Override
@@ -451,7 +465,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-		return DocumentServiceImpl.hasDocumentsModifiedAfter(environmentNode, timestamp);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			return !getDocumentsByModificationDate(environment, new Date(timestamp), null).isEmpty();
+		}
+		/* Authorization - End */
+		else
+			return DocumentServiceImpl.hasDocumentsModifiedAfter(environmentNode, timestamp);
 	}
 
 	@Override
@@ -459,7 +480,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-		return DocumentServiceImpl.hasDocumentsModifiedBefore(environmentNode, timestamp);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			return !getDocumentsByModificationDate(environment, null, new Date(timestamp)).isEmpty();
+		}
+		/* Authorization - End */
+		else
+			return DocumentServiceImpl.hasDocumentsModifiedBefore(environmentNode, timestamp);
 	}
 
 	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
