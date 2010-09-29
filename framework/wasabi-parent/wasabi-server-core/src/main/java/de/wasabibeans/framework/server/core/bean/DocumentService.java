@@ -532,7 +532,8 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	}
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -543,6 +544,15 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			documentNode = TransferManager.convertDTO2Node(document, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.rename()", "WRITE",
+							"document"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, document);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
