@@ -49,8 +49,9 @@ public class WasabiObjectACL {
 		try {
 			int childNodes = 0;
 			Vector<Node> childreenNodes = new Vector<Node>();
+			String objectType = objectNode.getPrimaryNodeType().getName();
 
-			if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)) {
+			if (objectType.equals(WasabiNodeType.ROOM)) {
 				NodeIterator RoomChildreen = objectNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
 				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
 				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
@@ -71,7 +72,7 @@ public class WasabiObjectACL {
 
 				while (DocumentChildreen.hasNext())
 					childreenNodes.add(DocumentChildreen.nextNode());
-			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
+			} else if (objectType.equals(WasabiNodeType.CONTAINER)) {
 				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
 				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
 				NodeIterator LinkChildreen = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
@@ -88,7 +89,7 @@ public class WasabiObjectACL {
 
 				while (DocumentChildreen.hasNext())
 					childreenNodes.add(DocumentChildreen.nextNode());
-			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.DOCUMENT)) {
+			} else if (objectType.equals(WasabiNodeType.DOCUMENT)) {
 				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
 
 				while (AttributeChildreen.hasNext())
@@ -103,8 +104,16 @@ public class WasabiObjectACL {
 			if (childreenNodes.size() == 0) {
 				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
 					String objectUUID = objectNode.getIdentifier();
+					
+					//Remove database rows with object UUID
 					WasabiObjectSQL.SqlQueryForRemove(objectUUID);
-					WasabiRoomSQL.SQLQueryForRemove(objectUUID);
+					
+					//Remove database rows (templates) where location (room or container) is object UUID
+					if (objectType.equals(WasabiNodeType.ROOM))
+						WasabiRoomSQL.SQLQueryForRemove(objectUUID);
+					if (objectType.equals(WasabiNodeType.CONTAINER))
+						WasabiContainerSQL.SQLQueryForRemove(objectUUID);
+					
 					ObjectServiceImpl.remove(objectNode);
 
 					return 0;
