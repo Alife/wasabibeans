@@ -80,7 +80,7 @@ public interface ContainerServiceRemote extends ObjectServiceRemote {
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
 
 	public WasabiValueDTO getEnvironment(WasabiContainerDTO container) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public void move(WasabiContainerDTO container, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
