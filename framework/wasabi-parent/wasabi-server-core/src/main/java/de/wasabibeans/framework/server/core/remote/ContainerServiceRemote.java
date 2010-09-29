@@ -43,10 +43,11 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface ContainerServiceRemote extends ObjectServiceRemote {
 
 	public WasabiContainerDTO create(String name, WasabiLocationDTO environment) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException;
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public WasabiContainerDTO getContainerByName(WasabiLocationDTO location, String name)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
 	public Vector<WasabiContainerDTO> getContainers(WasabiLocationDTO location) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException;
@@ -83,12 +84,12 @@ public interface ContainerServiceRemote extends ObjectServiceRemote {
 
 	public void move(WasabiContainerDTO container, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void remove(WasabiContainerDTO container) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException;
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiContainerDTO container, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 }

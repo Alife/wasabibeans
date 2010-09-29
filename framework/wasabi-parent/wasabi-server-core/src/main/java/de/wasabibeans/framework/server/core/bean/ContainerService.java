@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.authorization.WasabiContainerACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -67,7 +68,8 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public WasabiContainerDTO create(String name, WasabiLocationDTO environment) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException {
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -77,7 +79,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
@@ -86,7 +88,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.create()",
 							"INSERT or WRITE", "environment"));
 			/* Authorization - End */
-			
+
 			Locker.recognizeLockTokens(s, environment);
 			Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
@@ -246,17 +248,32 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public void move(WasabiContainerDTO container, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Node containerNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()", "WRITE",
+							"container and sub objects"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, container, newEnvironment);
 			Locker.acquireLock(containerNode, container, false, s, locker);
 			Locker.checkOptLockId(containerNode, container, optLockId);
-			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal);
+			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
@@ -270,14 +287,29 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 	@Override
 	public void remove(WasabiContainerDTO container) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
-			EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, container);
-			ContainerServiceImpl.remove(containerNode);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
+							"container"));
+				else
+					WasabiContainerACL.remove(containerNode, callerPrincipal, s);
+			}
+			/* Authorization - End */
+			else {
+				// TODO special case for events due to recursive deletion of subtree
+				EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
+				ContainerServiceImpl.remove(containerNode);
+			}
+
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -287,7 +319,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public void rename(WasabiContainerDTO container, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -298,6 +330,15 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			containerNode = TransferManager.convertDTO2Node(container, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.rename()", "WRITE",
+							"container"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, container);
 			Locker.acquireLock(containerNode, container, false, s, locker);
 			Locker.checkOptLockId(containerNode, container, optLockId);
