@@ -87,6 +87,11 @@ public class WasabiObjectACL {
 
 				while (DocumentChildreen.hasNext())
 					childreenNodes.add(DocumentChildreen.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.DOCUMENT)) {
+				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+
+				while (AttributeChildreen.hasNext())
+					childreenNodes.add(AttributeChildreen.nextNode());
 			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ATTRIBUTE)) {
 				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
 
