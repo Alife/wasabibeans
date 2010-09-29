@@ -64,66 +64,6 @@ public class RoomServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getRoomByNameTest() throws WasabiException {
-		System.out.println("=== getRoomByNameTest() ===");
-
-		WasabiUserDTO user = userService().getUserByName("user");
-		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-
-		System.out.print("Creating getRoomByNameTestRoom at usersHome... ");
-		WasabiRoomDTO getRoomByNameTestRoom = null;
-		try {
-			getRoomByNameTestRoom = roomService().create("getRoomByNameTestRoom", usersHome);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Setting GRANT as userRight for getRoomByNameTestRoom... ");
-		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.GRANT, true);
-		System.out.println("done.");
-
-		System.out.print("Deactivating inheritance for getRoomByNameTestRoom... ");
-		aclService().deactivateInheritance(getRoomByNameTestRoom);
-		System.out.println("done.");
-
-		System.out.print("Setting INSERT as userRight for getRoomByNameTestRoom... ");
-		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.INSERT, true);
-		System.out.println("done.");
-
-		System.out.print("Creating someRoom at getRoomByNameHome... ");
-		WasabiRoomDTO someRoom = null;
-		try {
-			someRoom = roomService().create("someRoom", getRoomByNameTestRoom);
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Getting someRoom by using getRoomByName... ");
-		try {
-			roomService().getRoomByName(getRoomByNameTestRoom, "someRoom");
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.print("Setting VIEW as userRight for getRoomByNameTestRoom... ");
-		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.VIEW, true);
-		System.out.println("done.");
-
-		System.out.print("Getting someRoom by using getRoomByName... ");
-		try {
-			roomService().getRoomByName(getRoomByNameTestRoom, "someRoom");
-			System.out.println("done.");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		System.out.println("===========================");
-	}
-
-	@Test
 	public void getEnvironmentTest() throws WasabiException {
 		System.out.println("=== getEnvironmentTest() ===");
 
@@ -175,6 +115,66 @@ public class RoomServiceTest extends WasabiRemoteTest {
 		System.out.print("Getting environment of someRoom... ");
 		try {
 			roomService().getEnvironment(someRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getRoomByNameTest() throws WasabiException {
+		System.out.println("=== getRoomByNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getRoomByNameTestRoom at usersHome... ");
+		WasabiRoomDTO getRoomByNameTestRoom = null;
+		try {
+			getRoomByNameTestRoom = roomService().create("getRoomByNameTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getRoomByNameTestRoom... ");
+		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getRoomByNameTestRoom... ");
+		aclService().deactivateInheritance(getRoomByNameTestRoom);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for getRoomByNameTestRoom... ");
+		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom at getRoomByNameHome... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", getRoomByNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting someRoom by using getRoomByName... ");
+		try {
+			roomService().getRoomByName(getRoomByNameTestRoom, "someRoom");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for getRoomByNameTestRoom... ");
+		aclService().create(getRoomByNameTestRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Getting someRoom by using getRoomByName... ");
+		try {
+			roomService().getRoomByName(getRoomByNameTestRoom, "someRoom");
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

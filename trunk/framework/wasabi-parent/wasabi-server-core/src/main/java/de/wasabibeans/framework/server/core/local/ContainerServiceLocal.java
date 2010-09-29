@@ -31,6 +31,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -42,7 +43,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface ContainerServiceLocal extends ObjectServiceLocal {
 
 	public WasabiContainerDTO create(String name, WasabiLocationDTO environment) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException;
+			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException;
 
 	public WasabiContainerDTO getContainerByName(WasabiLocationDTO location, String name)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException;
