@@ -32,6 +32,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiContainerACL;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -47,6 +49,14 @@ public class ContainerServiceImpl {
 			Node containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
 					WasabiNodeType.CONTAINER);
 			ObjectServiceImpl.created(containerNode, s, callerPrincipal, true);
+
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE) {
+				WasabiContainerACL.ACLEntryForCreate(containerNode, s);
+				WasabiContainerACL.ACLEntryTemplateForCreate(containerNode, environmentNode, callerPrincipal, s);
+			}
+			/* ACL Environment - End */
+
 			return containerNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
