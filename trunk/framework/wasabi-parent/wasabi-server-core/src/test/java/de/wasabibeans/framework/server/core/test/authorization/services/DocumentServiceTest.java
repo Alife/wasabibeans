@@ -537,7 +537,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		System.out.print("Setting READ as userRight for removeTestRoom1... ");
 		aclService().create(removeTestRoom1, user, WasabiPermission.READ, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Setting VIEW as userRight for removeTestRoom1... ");
 		aclService().create(removeTestRoom1, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
@@ -586,19 +586,19 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Checking if testDoc exists:");
 		try {
-		System.out.println(objectService().exists(testDoc));
-		System.out.println("done.");
-	} catch (Exception e) {
-		System.out.println(e.getMessage());
-	}
+			System.out.println(objectService().exists(testDoc));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 
 		System.out.print("Checking if testDoc exists:");
 		try {
-		System.out.println(objectService().exists(attr));
-		System.out.println("done.");
-	} catch (Exception e) {
-		System.out.println(e.getMessage());
-	}
+			System.out.println(objectService().exists(attr));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 
 		System.out.print("Removing WRITE with forbiddance as userRight for attr... ");
 		aclService().remove(attr, user, WasabiPermission.WRITE);
@@ -623,6 +623,74 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 		System.out.print("Checking if testDoc exists:");
 		try {
 			System.out.println(objectService().exists(attr));
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void renameTest() throws WasabiException {
+		System.out.println("=== renameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating renameTestRoom1 at usersHome... ");
+		WasabiRoomDTO renameTestRoom1 = null;
+		try {
+			renameTestRoom1 = roomService().create("renameTestRoom1", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for renameTestRoom1... ");
+		aclService().create(renameTestRoom1, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for renameTestRoom1... ");
+		aclService().deactivateInheritance(renameTestRoom1);
+		System.out.println("done.");
+
+		System.out.print("Setting INSERT as userRight for renameTestRoom1... ");
+		aclService().create(renameTestRoom1, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for renameTestRoom1... ");
+		aclService().create(renameTestRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+		
+		System.out.print("Setting VIEW as userRight for renameTestRoom1... ");
+		aclService().create(renameTestRoom1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Creating document testDoc at renameTestRoom1... ");
+		WasabiDocumentDTO testDoc = null;
+		try {
+			testDoc = documentService().create("testDoc", renameTestRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Renaming document testDoc to renameTestDoc... ");
+		try {
+			documentService().rename(testDoc, "renameTestDoc", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		System.out.print("Setting WRITE as userRight for renameTestRoom1... ");
+		aclService().create(renameTestRoom1, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+		
+		System.out.print("Renaming document testDoc to renameTestDoc... ");
+		try {
+			documentService().rename(testDoc, "renameTestDoc", null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
