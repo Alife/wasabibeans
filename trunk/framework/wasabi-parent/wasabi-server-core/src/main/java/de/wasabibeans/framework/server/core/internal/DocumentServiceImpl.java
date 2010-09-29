@@ -395,12 +395,17 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void move(Node documentNode, Node newEnvironmentNode, String callerPrincipal)
+	public static void move(Node documentNode, Node newEnvironmentNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			documentNode.getSession().move(documentNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/" + documentNode.getName());
 			ObjectServiceImpl.modified(documentNode, documentNode.getSession(), callerPrincipal, false);
+
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiDocumentACL.ACLEntryForMove(documentNode, s);
+			/* ACL Environment - End */
 		} catch (ItemExistsException iee) {
 			try {
 				String name = documentNode.getName();

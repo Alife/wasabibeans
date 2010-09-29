@@ -47,6 +47,17 @@ public class WasabiDocumentACL {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+	
+	public static void ACLEntryForMove(Node documentNode, Session s) throws UnexpectedInternalProblemException {
+		try {
+			String[] inheritance_ids = WasabiDocumentSQL.SQLQueryForMove(documentNode.getIdentifier());
+			ACLServiceImpl.resetInheritance(documentNode, inheritance_ids, s);
+			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+				ACLServiceImpl.setInheritance(documentNode, true, s);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
 
 	public static void ACLEntryTemplateForCreate(Node documentNode, Node environmentNode, String callerPrincipal,
 			Session s) throws UnexpectedInternalProblemException {
