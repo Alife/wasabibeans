@@ -30,6 +30,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -44,6 +46,7 @@ import de.wasabibeans.framework.server.core.remote.LockingServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
+@SecurityDomain("wasabi")
 @Stateless(name = "LockingService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class LockingService implements LockingServiceLocal, LockingServiceRemote {
