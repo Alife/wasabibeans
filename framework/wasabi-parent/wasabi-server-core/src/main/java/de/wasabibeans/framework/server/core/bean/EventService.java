@@ -32,6 +32,8 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions;
@@ -41,6 +43,7 @@ import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
+@SecurityDomain("wasabi")
 @Stateless(name = "EventService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class EventService implements EventServiceLocal, EventServiceRemote {

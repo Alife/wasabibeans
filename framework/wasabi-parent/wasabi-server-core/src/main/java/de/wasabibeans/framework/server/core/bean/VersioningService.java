@@ -16,6 +16,8 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
@@ -34,6 +36,7 @@ import de.wasabibeans.framework.server.core.remote.VersioningServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
+@SecurityDomain("wasabi")
 @Stateless(name = "VersioningService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote {
