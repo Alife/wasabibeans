@@ -42,6 +42,8 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAttributeACL;
+import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -63,6 +65,13 @@ public class AttributeServiceImpl {
 			setValue(attributeNode, value, null);
 			ObjectServiceImpl.created(attributeNode, s, callerPrincipal, true);
 
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE) {
+				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s);
+				WasabiAttributeACL.ACLEntryTemplateForCreate(attributeNode, affiliationNode, callerPrincipal, s);
+			}
+			/* ACL Environment - End */
+			
 			return attributeNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
