@@ -50,6 +50,10 @@ public interface RoomServiceLocal extends ObjectServiceLocal {
 	public WasabiValueDTO getEnvironment(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
+	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, TargetDoesNotExistException,
+			NoPermissionException;
+
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
@@ -99,9 +103,7 @@ public interface RoomServiceLocal extends ObjectServiceLocal {
 			NoPermissionException;
 
 	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
-
-	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, TargetDoesNotExistException;
+			ObjectDoesNotExistException,
+			NoPermissionException;
 
 }

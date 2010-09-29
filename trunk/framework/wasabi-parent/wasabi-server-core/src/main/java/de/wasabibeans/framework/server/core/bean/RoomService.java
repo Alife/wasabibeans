@@ -122,6 +122,25 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
+	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException {
+		Session s = jcr.getJCRSessionTx();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.getPipeline()", "GRANT",
+						"room"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(RoomServiceImpl.getPipeline(roomNode));
+	}
+
+	@Override
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
@@ -470,7 +489,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 				EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
 				RoomServiceImpl.remove(roomNode);
 			}
-			
+
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -517,24 +536,26 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 
 	@Override
 	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.setPipeline()", "GRANT",
+							"room"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, room, pipeline);
 			RoomServiceImpl.setPipeline(roomNode, pipelineNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-	}
-
-	@Override
-	public WasabiPipelineDTO getPipeline(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, TargetDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
-		Node roomNode = TransferManager.convertDTO2Node(room, s);
-		return TransferManager.convertNode2DTO(RoomServiceImpl.getPipeline(roomNode));
 	}
 }
