@@ -517,7 +517,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			Locker.recognizeLockTokens(s, document, newEnvironment);
 			Locker.acquireLock(documentNode, document, false, s, locker);
 			Locker.checkOptLockId(documentNode, document, optLockId);
-			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal);
+			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
