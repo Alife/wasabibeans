@@ -406,6 +406,7 @@ public class DocumentServiceImpl {
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiDocumentACL.ACLEntryForMove(documentNode, s);
 			/* ACL Environment - End */
+			
 		} catch (ItemExistsException iee) {
 			try {
 				String name = documentNode.getName();

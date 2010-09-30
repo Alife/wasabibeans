@@ -34,7 +34,12 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAttributeACL;
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -44,6 +49,7 @@ import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -65,7 +71,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	@Override
 	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			AttributeValueException, ConcurrentModificationException {
+			AttributeValueException, ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -75,6 +81,16 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+							"INSERT or WRITE", "affiliation"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, affiliation);
 			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, callerPrincipal);
 			s.save();
@@ -88,7 +104,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	@Override
 	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -99,6 +115,16 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
 			Node valueNode = TransferManager.convertDTO2Node(value, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+							"INSERT or WRITE", "affiliation"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, affiliation);
 			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, callerPrincipal);
 			s.save();
@@ -111,16 +137,27 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 	@Override
 	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
-		return TransferManager.convertValue2DTO(AttributeServiceImpl.getAffiliation(attributeNode), optLockId);
+		Node affiliationNode = AttributeServiceImpl.getAffiliation(attributeNode);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+						"AttributeService.getAffiliation()", "READ"));
+		/* Authorization - End */
+
+		return TransferManager.convertValue2DTO(affiliationNode, optLockId);
 	}
 
 	@Override
 	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -128,15 +165,18 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		return TransferManager.convertNode2DTO(AttributeServiceImpl.getAttributeByName(objectNode, name), object);
-	}
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = AttributeServiceImpl.getAttributeByName(objectNode, name);
 
-	@Override
-	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
-		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-		return AttributeServiceImpl.getAttributeType(attributeNode);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+						"AttributeService.getAttributeByName()", "VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(attributeNode, object);
 	}
 
 	@Override
@@ -145,16 +185,49 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		Vector<WasabiAttributeDTO> attributes = new Vector<WasabiAttributeDTO>();
-		NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
-		while (ni.hasNext()) {
-			attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(objectNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.ATTRIBUTE, s);
+			for (String id : authorizedDocuments) {
+				Node doc = AttributeServiceImpl.getAttributeById(id, s);
+				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(doc, object));
+			}
 		}
+		/* Authorization - End */
+		else {
+			NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
+			while (ni.hasNext())
+				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
+		}
+
 		return attributes;
 	}
 
 	@Override
+	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException {
+		Session s = jcr.getJCRSessionTx();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getAttributeType()",
+						"READ", "attribute"));
+		/* Authorization - End */
+
+		return AttributeServiceImpl.getAttributeType(attributeNode);
+	}
+
+	@Override
 	public <T extends Serializable> WasabiValueDTO getValue(Class<T> type, WasabiAttributeDTO attribute)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException,
+			NoPermissionException {
 		if (type == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"type"));
@@ -162,15 +235,35 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		Session s = jcr.getJCRSessionTx();
 		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getValue()", "READ",
+						"attribute"));
+		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
 		return TransferManager.convertValue2DTO(AttributeServiceImpl.getValue(type, attributeNode), optLockId);
 	}
 
 	@Override
 	public WasabiValueDTO getWasabiValue(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException {
+			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getWasabiValue()",
+						"READ", "attribute"));
+		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
 		return TransferManager.convertValue2DTO(AttributeServiceImpl.getWasabiValue(attributeNode), optLockId);
 	}
@@ -178,17 +271,32 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	@Override
 	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Node attributeNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(newAffiliationNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
+							"room and sub objects"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, attribute, newAffiliation);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
-			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal);
+			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(attributeNode, newAffiliationNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
@@ -202,14 +310,29 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 	@Override
 	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, attribute);
-			AttributeServiceImpl.remove(attributeNode);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
+							"document"));
+				else
+					WasabiAttributeACL.remove(attributeNode, callerPrincipal, s);
+			}
+			/* Authorization - End */
+			else {
+				// TODO special case for events due to recursive deletion of subtree
+				EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
+				AttributeServiceImpl.remove(attributeNode);
+			}
+
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -219,7 +342,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	@Override
 	public void rename(WasabiAttributeDTO attribute, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectAlreadyExistsException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -230,6 +353,15 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.rename()", "WRITE",
+							"attribute"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
@@ -248,12 +380,21 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	@Override
 	public void setValue(WasabiAttributeDTO attribute, Serializable value, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Node attributeNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setValue()",
+							"WRITE", "attribute"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
@@ -271,7 +412,8 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 	@Override
 	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value, Long optLockId)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException {
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
+			NoPermissionException {
 		Node attributeNode = null;
 		Session s = jcr.getJCRSessionTx();
 		try {
@@ -281,6 +423,15 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			if (value != null) {
 				valueNode = TransferManager.convertDTO2Node(value, s);
 			}
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setWasabiValue()",
+							"WRITE", "attribute"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, attribute);
 			Locker.acquireLock(attributeNode, attribute, false, s, locker);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);

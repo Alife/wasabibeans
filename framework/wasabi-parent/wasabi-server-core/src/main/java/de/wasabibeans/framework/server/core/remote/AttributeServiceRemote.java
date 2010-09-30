@@ -31,6 +31,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -44,46 +45,48 @@ public interface AttributeServiceRemote extends ObjectServiceRemote {
 
 	public WasabiAttributeDTO create(String name, Serializable value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			AttributeValueException, ConcurrentModificationException;
+			AttributeValueException, ConcurrentModificationException, NoPermissionException;
 
 	public WasabiAttributeDTO create(String name, WasabiObjectDTO value, WasabiObjectDTO affiliation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
-			AttributeValueException, ConcurrentModificationException;
+			AttributeValueException, ConcurrentModificationException, NoPermissionException;
 
 	public WasabiValueDTO getAffiliation(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiAttributeDTO> getAttributes(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
 	public String getAttributeType(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public <T extends Serializable> WasabiValueDTO getValue(Class<T> type, WasabiAttributeDTO attribute)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException,
+			NoPermissionException;
 
 	public WasabiValueDTO getWasabiValue(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException;
+			TargetDoesNotExistException, AttributeValueException, ObjectDoesNotExistException, NoPermissionException;
 
 	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException;
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiAttributeDTO attribute, String name, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectAlreadyExistsException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void setValue(WasabiAttributeDTO attribute, Serializable value, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value, Long optLockId)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException;
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
+			NoPermissionException;
 
 }
