@@ -32,6 +32,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
@@ -41,6 +42,17 @@ public class WasabiAttributeACL {
 
 	public static void ACLEntryForCreate(Node attributeNode, Session s) throws UnexpectedInternalProblemException {
 		try {
+			if (attributeNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+				ACLServiceImpl.setInheritance(attributeNode, true, s);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+	
+	public static void ACLEntryForMove(Node attributeNode, Session s) throws UnexpectedInternalProblemException {
+		try {
+			String[] inheritance_ids = WasabiAttributeSQL.SQLQueryForMove(attributeNode.getIdentifier());
+			ACLServiceImpl.resetInheritance(attributeNode, inheritance_ids, s);
 			if (attributeNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(attributeNode, true, s);
 		} catch (RepositoryException re) {
@@ -84,5 +96,10 @@ public class WasabiAttributeACL {
 				}
 			}
 		}
+	}
+
+	public static void remove(Node attributeNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		WasabiObjectACL.remove(attributeNode, callerPrincipal, s);
 	}
 }
