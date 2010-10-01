@@ -40,6 +40,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
@@ -174,6 +175,7 @@ public class WasabiManager {
 				Node workspaceRoot = s.getRootNode();
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
+				ObjectServiceImpl.created(wasabiRoot, s, null, true);
 				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, s, WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi groups and initial groups
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.OBJECT_COLLECTION);

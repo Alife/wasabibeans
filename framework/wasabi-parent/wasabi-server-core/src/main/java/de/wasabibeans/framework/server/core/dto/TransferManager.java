@@ -37,6 +37,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
@@ -60,6 +61,7 @@ public class TransferManager {
 					+ wasabiObjectName);
 			dto = clazz.newInstance();
 			dto.setId(wasabiObject.getIdentifier());
+			dto.setOptLockId(ObjectServiceImpl.getOptLockId(wasabiObject));
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (Exception e) {

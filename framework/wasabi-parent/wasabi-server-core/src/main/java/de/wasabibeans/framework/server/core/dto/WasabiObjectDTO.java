@@ -37,7 +37,8 @@ public abstract class WasabiObjectDTO implements Serializable {
 
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected String id;
-	
+
+	protected Long optLockId;
 	protected String lockToken;
 	protected boolean deepLock;
 
@@ -52,15 +53,23 @@ public abstract class WasabiObjectDTO implements Serializable {
 	protected void setId(String id) {
 		this.id = id;
 	}
-	
+
+	protected void setOptLockId(Long optLockId) {
+		this.optLockId = optLockId;
+	}
+
+	public Long getOptLockId() {
+		return optLockId;
+	}
+
 	public String getLockToken() {
 		return lockToken;
 	}
-	
+
 	public boolean isDeepLock() {
 		return deepLock;
 	}
-	
+
 	protected void setLockToken(String lockToken, boolean isDeep) {
 		this.lockToken = lockToken;
 		this.deepLock = isDeep;
