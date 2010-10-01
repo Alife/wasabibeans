@@ -48,7 +48,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -425,11 +424,11 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
-		Node roomNode = null;
+		String lockToken = Locker.acquireServiceCallLock(room, optLockId, locker, tm);
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			roomNode = TransferManager.convertDTO2Node(room, s);
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
 			/* Authorization - Begin */
@@ -447,17 +446,13 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, room, newEnvironment);
-			Locker.acquireLock(roomNode, room, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(roomNode, room, optLockId);
 			RoomServiceImpl.move(roomNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(roomNode, room, s, locker);
 		}
 	}
 
@@ -501,11 +496,11 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 					"name"));
 		}
 
-		Node roomNode = null;
+		String lockToken = Locker.acquireServiceCallLock(room, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			roomNode = TransferManager.convertDTO2Node(room, s);
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -516,17 +511,13 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, room);
-			Locker.acquireLock(roomNode, room, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(roomNode, room, optLockId);
 			RoomServiceImpl.rename(roomNode, name, callerPrincipal);
 			EventCreator.createPropertyChangedEvent(roomNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(roomNode, room, s, locker);
 		}
 	}
 

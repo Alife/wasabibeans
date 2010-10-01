@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -25,13 +24,10 @@ import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiVersionDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.VersioningServiceImpl;
 import de.wasabibeans.framework.server.core.local.VersioningServiceLocal;
-import de.wasabibeans.framework.server.core.locking.Locker;
-import de.wasabibeans.framework.server.core.locking.LockingHelperLocal;
 import de.wasabibeans.framework.server.core.remote.VersioningServiceRemote;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -40,9 +36,6 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @Stateless(name = "VersioningService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote {
-
-	@EJB
-	private LockingHelperLocal locker;
 
 	protected JndiConnector jndi;
 	protected JcrConnector jcr;
@@ -104,10 +97,9 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ObjectDoesNotExistException
 	 * @throws ConcurrentModificationException
-	 * @throws LockingException
 	 */
 	public void createVersion(WasabiObjectDTO dto, String comment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException, LockingException {
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
@@ -119,15 +111,10 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			// get unique version label (that is, unique in the version histories of the affected nodes)
 			// timestamp
 			String label = "" + Calendar.getInstance().getTimeInMillis();
-			// acquire deep lock
-			Locker.recognizeLockTokens(s, dto);
-			Locker.acquireLock(node, dto, true, s, locker);
 			// create versions for entire subtree
 			VersioningServiceImpl.createVersionRecursively(node, label, comment, s.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			Locker.releaseLock(node, dto, s, locker);
 		}
 	}
 
@@ -143,10 +130,9 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ObjectDoesNotExistException
 	 * @throws ConcurrentModificationException
-	 * @throws LockingException
 	 */
 	public void restoreVersion(WasabiObjectDTO dto, String versionLabel) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException, LockingException {
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		if (!(dto instanceof WasabiLocationDTO || dto instanceof WasabiDocumentDTO)) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
@@ -155,15 +141,10 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		Session s = jcr.getJCRSessionTx();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
-			// acquire deep lock
-			Locker.recognizeLockTokens(s, dto);
-			Locker.acquireLock(node, dto, true, s, locker);
 			// restore versions for entire subtree
 			VersioningServiceImpl.restoreVersionRecursively(node, versionLabel, s.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} finally {
-			Locker.releaseLock(node, dto, s, locker);
 		}
 	}
 }

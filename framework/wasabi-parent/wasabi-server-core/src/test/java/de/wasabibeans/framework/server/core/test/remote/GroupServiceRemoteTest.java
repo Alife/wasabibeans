@@ -125,7 +125,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	@Test
 	public void get1TopLevelGroupsTest() throws Exception {
 		Vector<WasabiGroupDTO> topgroups = groupService().getTopLevelGroups();
-		AssertJUnit.assertEquals(3, topgroups.size());
+		AssertJUnit.assertEquals(4, topgroups.size());
 		int hitcount = 0;
 		for (WasabiGroupDTO subgroup : topgroups) {
 			if (groupService().getName(subgroup).getValue().equals("group1")
@@ -171,8 +171,8 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	@Test
 	public void get1AllGroupsTest() throws Exception {
 		Vector<WasabiGroupDTO> allgroups = groupService().getAllGroups();
-		// wasabi, admins, group1, group1_1, group1_2, group1_1_1, group1_1_2
-		AssertJUnit.assertEquals(7, allgroups.size());
+		// wasabi, admins, pafuser, group1, group1_1, group1_2, group1_1_1, group1_1_2
+		AssertJUnit.assertEquals(8, allgroups.size());
 		AssertJUnit.assertTrue(allgroups.contains(group1_1));
 	}
 
@@ -249,7 +249,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		subgroups1 = groupService().getSubGroups(group1);
 		Vector<WasabiGroupDTO> topgroups = groupService().getTopLevelGroups();
 		AssertJUnit.assertEquals(2, subgroups1.size());
-		AssertJUnit.assertEquals(4, topgroups.size());
+		AssertJUnit.assertEquals(5, topgroups.size());
 		AssertJUnit.assertFalse(subgroups1.contains(group1_1_2));
 		AssertJUnit.assertTrue(topgroups.contains(group1_1_2));
 	}

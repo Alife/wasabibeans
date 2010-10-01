@@ -37,6 +37,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.transaction.TransactionManager;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -50,7 +51,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -82,6 +82,27 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 	@EJB
 	protected LockingHelperLocal locker;
+
+	protected TransactionManager tm;
+
+	protected TransactionManager getTransactionManager() throws UnexpectedInternalProblemException {
+		if (tm == null) {
+			tm = (TransactionManager) jndi.lookup("java:/TransactionManager");
+		}
+		return tm;
+	}
+
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
+	}
 
 	@Override
 	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
@@ -332,26 +353,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 		return ObjectServiceImpl.getUUID(objectNode);
 	}
 
-	@PostConstruct
-	public void postConstruct() {
-		this.jndi = JndiConnector.getJNDIConnector();
-		this.jcr = JcrConnector.getJCRConnector(jndi);
-		this.jms = JmsConnector.getJmsConnector(jndi);
-	}
-
-	@PreDestroy
-	public void preDestroy() {
-		jndi.close();
-	}
-
 	@Override
 	public void setCreatedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
-		Node objectNode = null;
+		String lockToken = Locker.acquireServiceCallLock(object, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
-			objectNode = TransferManager.convertDTO2Node(object, s);
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 
@@ -364,16 +373,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);
-			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedBy(objectNode, userNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(objectNode, object, s, locker);
 		}
 	}
 
@@ -381,11 +386,11 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	public void setCreatedOn(WasabiObjectDTO object, Date creationTime, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
 			NoPermissionException {
-		Node objectNode = null;
+		String lockToken = Locker.acquireServiceCallLock(object, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			objectNode = TransferManager.convertDTO2Node(object, s);
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -396,16 +401,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);
-			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setCreatedOn(objectNode, creationTime);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(objectNode, object, s, locker);
 		}
 	}
 
@@ -413,10 +414,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	public void setModifiedBy(WasabiObjectDTO object, WasabiUserDTO user, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
-		Node objectNode = null;
+		String lockToken = Locker.acquireServiceCallLock(object, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
-			objectNode = TransferManager.convertDTO2Node(object, s);
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 			/* Authorization - Begin */
@@ -429,16 +430,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Locker.recognizeLockTokens(s, object);
-			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedBy(objectNode, userNode);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(objectNode, object, s, locker);
 		}
 	}
 
@@ -446,10 +443,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 	public void setModifiedOn(WasabiObjectDTO object, Date modificationTime, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
 			NoPermissionException {
-		Node objectNode = null;
+		String lockToken = Locker.acquireServiceCallLock(object, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
-			objectNode = TransferManager.convertDTO2Node(object, s);
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 
 			/* Authorization - Begin */
@@ -461,16 +458,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote {
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, object);
-			Locker.acquireLock(objectNode, object, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(objectNode, object, optLockId);
 			ObjectServiceImpl.setModifiedOn(objectNode, modificationTime);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(objectNode, object, s, locker);
 		}
 	}
 }

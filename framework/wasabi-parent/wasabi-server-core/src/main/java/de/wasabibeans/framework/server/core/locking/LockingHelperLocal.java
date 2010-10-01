@@ -17,7 +17,7 @@ public interface LockingHelperLocal {
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException;
 
-	public void releaseLock(String nodePath, String lockToken) throws AccessDeniedException, LockException,
+	public void releaseLock(String nodeId, String lockToken) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException;
 }
