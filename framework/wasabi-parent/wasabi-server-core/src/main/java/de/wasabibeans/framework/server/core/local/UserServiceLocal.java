@@ -30,6 +30,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -42,65 +43,70 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, ConcurrentModificationException;
+			ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException;
+
+	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException;
 
 	public String getCurrentUser() throws UnexpectedInternalProblemException;
 
 	public WasabiValueDTO getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, TargetDoesNotExistException;
+			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, TargetDoesNotExistException;
+			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
-	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException;
+	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException,
+			NoPermissionException;
 
 	public WasabiUserDTO getUserByName(WasabiRoomDTO room, String userName) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiUserDTO> getUsers(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException;
-
-	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException;
-
-	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException;
-
-	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException;
 
 	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
 
+	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ConcurrentModificationException;
+
+	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException, NoPermissionException;
+
 	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException;
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException;
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 }

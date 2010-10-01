@@ -37,6 +37,7 @@ import javax.jcr.query.QueryManager;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiAttributeDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiContainerDTO;
@@ -45,6 +46,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.AttributeServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ContainerServiceImpl;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
@@ -62,95 +64,129 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @Stateless
 public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
-	private JndiConnector jndi;
 	private JcrConnector jcr;
 	private JmsConnector jms;
-
-	@PostConstruct
-	public void postConstruct() {
-		this.jndi = JndiConnector.getJNDIConnector();
-		this.jcr = JcrConnector.getJCRConnector(jndi);
-		this.jms = JmsConnector.getJmsConnector(jndi);
-	}
-
-	@PreDestroy
-	public void preDestroy() {
-		jndi.close();
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void initDatabase() {
-		WasabiManager.initDatabase();
-
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public WasabiRoomDTO initRepository() throws Exception {
-		return TransferManager.convertNode2DTO(WasabiManager.initRepository(null, true));
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public WasabiRoomDTO initRoomServiceTest() throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
-			s.save();
-			return TransferManager.convertNode2DTO(room1Node);
-		} finally {
-			jcr.logout();
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public WasabiUserDTO initUserServiceTest() throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Node user1Node = UserServiceImpl.create("user1", "user1", s, "user");
-			UserServiceImpl.create("user2", "user2", s, "user");
-			s.save();
-			return TransferManager.convertNode2DTO(user1Node);
-		} finally {
-			jcr.logout();
-		}
-	}
+	private JndiConnector jndi;
 
 	@EJB
 	SharedFilterBean sharedFilterBean;
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
-		Session s = jcr.getJCRSessionTx();
-		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
-		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
-		DocumentServiceImpl.setContentPiped(document1Node, "document1", s, jms, sharedFilterBean,
-				WasabiConstants.ROOT_USER_NAME);
-		DocumentServiceImpl.create("document2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
-		s.save();
-		return TransferManager.convertNode2DTO(document1Node);
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public <V> V call(Callable<V> callable) throws Exception {
+		return callable.call();
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public WasabiGroupDTO initGroupServiceTest() throws Exception {
+	public Vector<String> createManyNodes(int number) throws Exception {
 		Session s = jcr.getJCRSessionNoTx();
 		try {
-			Node group1Node = GroupServiceImpl.create("group1", null, s, WasabiConstants.ROOT_USER_NAME);
-			Node group1_1Node = GroupServiceImpl.create("group1_1", group1Node, s, WasabiConstants.ROOT_USER_NAME);
-			Node user1 = UserServiceImpl.create("user1", "user1", s, WasabiConstants.ROOT_USER_NAME);
-			Node user2 = UserServiceImpl.create("user2", "user2", s, WasabiConstants.ROOT_USER_NAME);
-			GroupServiceImpl.addMember(group1_1Node, user1);
-			GroupServiceImpl.addMember(group1_1Node, user2);
-			GroupServiceImpl.create("group1_2", group1Node, s, WasabiConstants.ROOT_USER_NAME);
-			GroupServiceImpl.create("group1_1_1", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
-			GroupServiceImpl.create("group1_1_2", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
+			Vector<String> nodeIds = new Vector<String>();
+			Node testroot = s.getRootNode().addNode("LookupTest");
+			Node aNode;
+			for (int i = 0; i < number; i++) {
+				aNode = testroot.addNode("Node" + i);
+				if (i % 2 == 0) {
+					nodeIds.add(aNode.getIdentifier());
+				}
+			}
 			s.save();
-			return TransferManager.convertNode2DTO(group1_1Node);
+			return nodeIds;
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getChildrenByFilter(String parentId) throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Vector<String> result = new Vector<String>();
+
+			Long startTime = System.currentTimeMillis();
+			Node parentNode = s.getNodeByIdentifier(parentId);
+			NodeIterator ni = parentNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
+			while (ni.hasNext()) {
+				Node aNode = ni.nextNode();
+				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean()) {
+					result.add(aNode.getName());
+				}
+			}
+			Long endTime = System.currentTimeMillis() - startTime;
+
+			result.add("ByFilter: " + endTime + "ms");
+			return result;
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getChildrenByQuery(String parentId) throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Vector<String> result = new Vector<String>();
+
+			// prepare query
+			QueryManager qm = s.getWorkspace().getQueryManager();
+			String xpathQuery = "//*[@jcr:uuid='" + parentId + "']/*/*[@" + WasabiNodeProperty.INHERITANCE + "='true']";
+			result.add("Executed query: " + xpathQuery);
+			Query query = qm.createQuery(xpathQuery, Query.XPATH);
+
+			// execute and return result
+			Long startTime = System.currentTimeMillis();
+			NodeIterator ni = query.execute().getNodes();
+			Long endTime = System.currentTimeMillis() - startTime;
+			while (ni.hasNext()) {
+				result.add(ni.nextNode().getName());
+			}
+			result.add("ByQuery: " + endTime + "ms");
+			return result;
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Vector<String> ids = new Vector<String>();
+			Long startTime = System.currentTimeMillis();
+			NodeIterator ni = s.getRootNode().getNode("LookupTest").getNodes();
+			Node aNode;
+			int index;
+			while (ni.hasNext()) {
+				aNode = ni.nextNode();
+				index = nodeIds.indexOf(aNode.getIdentifier());
+				if (index >= 0) {
+					ids.add(aNode.getIdentifier());
+					nodeIds.remove(index);
+				}
+			}
+			ids.add("ByIdFilter: " + (System.currentTimeMillis() - startTime) + "ms");
+			return ids;
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Vector<String> ids = new Vector<String>();
+			Long startTime = System.currentTimeMillis();
+			Node aNode;
+			for (String id : nodeIds) {
+				aNode = s.getNodeByIdentifier(id);
+				ids.add(aNode.getIdentifier());
+			}
+			ids.add("ByIdLookup: " + (System.currentTimeMillis() - startTime) + "ms");
+			return ids;
 		} finally {
 			jcr.logout();
 		}
@@ -192,6 +228,47 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void initDatabase() {
+		WasabiManager.initDatabase();
+
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public WasabiDocumentDTO initDocumentServiceTest() throws Exception {
+		Session s = jcr.getJCRSessionTx();
+		Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+		Node document1Node = DocumentServiceImpl.create("document1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+		DocumentServiceImpl.setContentPiped(document1Node, "document1", s, jms, sharedFilterBean,
+				WasabiConstants.ROOT_USER_NAME);
+		DocumentServiceImpl.create("document2", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+		s.save();
+		return TransferManager.convertNode2DTO(document1Node);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiGroupDTO initGroupServiceTest() throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Node group1Node = GroupServiceImpl.create("group1", null, s, WasabiConstants.ROOT_USER_NAME);
+			Node group1_1Node = GroupServiceImpl.create("group1_1", group1Node, s, WasabiConstants.ROOT_USER_NAME);
+			Node user1 = UserServiceImpl.create("user1", "user1", s, WasabiConstants.ROOT_USER_NAME);
+			Node user2 = UserServiceImpl.create("user2", "user2", s, WasabiConstants.ROOT_USER_NAME);
+			GroupServiceImpl.addMember(group1_1Node, user1);
+			GroupServiceImpl.addMember(group1_1Node, user2);
+			GroupServiceImpl.create("group1_2", group1Node, s, WasabiConstants.ROOT_USER_NAME);
+			GroupServiceImpl.create("group1_1_1", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
+			GroupServiceImpl.create("group1_1_2", group1_1Node, s, WasabiConstants.ROOT_USER_NAME);
+			s.save();
+			return TransferManager.convertNode2DTO(group1_1Node);
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiLinkDTO initLinkServiceTest() throws Exception {
 		Session s = jcr.getJCRSessionNoTx();
 		try {
@@ -201,6 +278,26 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			LinkServiceImpl.create("link2", wasabiRootNode, wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
 			s.save();
 			return TransferManager.convertNode2DTO(link1Node);
+		} finally {
+			jcr.logout();
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiRoomDTO initRepository() throws Exception {
+		return TransferManager.convertNode2DTO(WasabiManager.initRepository(null, true));
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public WasabiRoomDTO initRoomServiceTest() throws Exception {
+		Session s = jcr.getJCRSessionNoTx();
+		try {
+			Node wasabiRootNode = s.getRootNode().getNode(WasabiConstants.ROOT_ROOM_NAME);
+			Node room1Node = RoomServiceImpl.create("room1", wasabiRootNode, s, WasabiConstants.ROOT_USER_NAME);
+			s.save();
+			return TransferManager.convertNode2DTO(room1Node);
 		} finally {
 			jcr.logout();
 		}
@@ -225,131 +322,38 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	public void initTestUser() throws Exception {
 		Session s = jcr.getJCRSessionNoTx();
 		try {
-			UserServiceImpl.create("user", "user", s, WasabiConstants.ROOT_USER_NAME);
+			Node user = UserServiceImpl.create("user", "user", s, WasabiConstants.ROOT_USER_NAME);
+			ACLServiceImpl.create(GroupServiceImpl.getWasabiGroup(s), user, new int[] { WasabiPermission.GRANT },
+					new boolean[] { true }, 0, 0, s);
 			s.save();
 		} finally {
 			jcr.logout();
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public <V> V call(Callable<V> callable) throws Exception {
-		return callable.call();
-	}
-
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public Vector<String> createManyNodes(int number) throws Exception {
+	public WasabiUserDTO initUserServiceTest() throws Exception {
 		Session s = jcr.getJCRSessionNoTx();
 		try {
-			Vector<String> nodeIds = new Vector<String>();
-			Node testroot = s.getRootNode().addNode("LookupTest");
-			Node aNode;
-			for (int i = 0; i < number; i++) {
-				aNode = testroot.addNode("Node" + i);
-				if (i % 2 == 0) {
-					nodeIds.add(aNode.getIdentifier());
-				}
-			}
+			Node user1Node = UserServiceImpl.create("user1", "user1", s, "user");
+			UserServiceImpl.create("user2", "user2", s, "user");
 			s.save();
-			return nodeIds;
+			return TransferManager.convertNode2DTO(user1Node);
 		} finally {
 			jcr.logout();
 		}
 	}
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Vector<String> ids = new Vector<String>();
-			Long startTime = System.currentTimeMillis();
-			Node aNode;
-			for (String id : nodeIds) {
-				aNode = s.getNodeByIdentifier(id);
-				ids.add(aNode.getIdentifier());
-			}
-			ids.add("ByIdLookup: " + (System.currentTimeMillis() - startTime) + "ms");
-			return ids;
-		} finally {
-			jcr.logout();
-		}
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
 	}
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Vector<String> ids = new Vector<String>();
-			Long startTime = System.currentTimeMillis();
-			NodeIterator ni = s.getRootNode().getNode("LookupTest").getNodes();
-			Node aNode;
-			int index;
-			while (ni.hasNext()) {
-				aNode = ni.nextNode();
-				index = nodeIds.indexOf(aNode.getIdentifier());
-				if (index >= 0) {
-					ids.add(aNode.getIdentifier());
-					nodeIds.remove(index);
-				}
-			}
-			ids.add("ByIdFilter: " + (System.currentTimeMillis() - startTime) + "ms");
-			return ids;
-		} finally {
-			jcr.logout();
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public Vector<String> getChildrenByQuery(String parentId) throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Vector<String> result = new Vector<String>();
-
-			// prepare query
-			QueryManager qm = s.getWorkspace().getQueryManager();
-			String xpathQuery = "//*[@jcr:uuid='" + parentId + "']/*/*[@" + WasabiNodeProperty.INHERITANCE + "='true']";
-			result.add("Executed query: " + xpathQuery);
-			Query query = qm.createQuery(xpathQuery, Query.XPATH);
-
-			// execute and return result
-			Long startTime = System.currentTimeMillis();
-			NodeIterator ni = query.execute().getNodes();
-			Long endTime = System.currentTimeMillis() - startTime;
-			while (ni.hasNext()) {
-				result.add(ni.nextNode().getName());
-			}
-			result.add("ByQuery: " + endTime + "ms");
-			return result;
-		} finally {
-			jcr.logout();
-		}
-	}
-
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public Vector<String> getChildrenByFilter(String parentId) throws Exception {
-		Session s = jcr.getJCRSessionNoTx();
-		try {
-			Vector<String> result = new Vector<String>();
-
-			Long startTime = System.currentTimeMillis();
-			Node parentNode = s.getNodeByIdentifier(parentId);
-			NodeIterator ni = parentNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
-			while (ni.hasNext()) {
-				Node aNode = ni.nextNode();
-				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean()) {
-					result.add(aNode.getName());
-				}
-			}
-			Long endTime = System.currentTimeMillis() - startTime;
-
-			result.add("ByFilter: " + endTime + "ms");
-			return result;
-		} finally {
-			jcr.logout();
-		}
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 }
