@@ -78,6 +78,24 @@ public class UserServiceImpl {
 		}
 	}
 
+	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
+		try {
+			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).addNode(roomNode.getIdentifier(),
+					WasabiNodeType.OBJECT_REF);
+			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
+		} catch (ItemExistsException iee) {
+			// do nothing, user is already present in room
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static NodeIterator getAllUsers(Session s) throws UnexpectedInternalProblemException {
 		try {
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
@@ -147,12 +165,9 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static Node getUserByName(String userName, Session s) throws UnexpectedInternalProblemException {
+	public static Node getUserById(String id, Session s) throws UnexpectedInternalProblemException {
 		try {
-			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
-			return rootOfUsersNode.getNode(userName);
-		} catch (PathNotFoundException e) {
-			return null;
+			return s.getNodeByIdentifier(id);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -169,6 +184,17 @@ public class UserServiceImpl {
 				return userNode;
 			}
 			// user exists but is not present in room
+			return null;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getUserByName(String userName, Session s) throws UnexpectedInternalProblemException {
+		try {
+			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
+			return rootOfUsersNode.getNode(userName);
+		} catch (PathNotFoundException e) {
 			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -200,19 +226,19 @@ public class UserServiceImpl {
 				displayName, s);
 	}
 
-	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	/**
+	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
+	 * wasabi:room-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:room-nodes (this is
+	 * due to efficiency reasons).
+	 * 
+	 * @param userNode
+	 *            the node representing a wasabi-user
+	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static NodeIterator getWhereabouts(Node userNode) throws UnexpectedInternalProblemException {
 		try {
-			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
-					WasabiNodeType.OBJECT_REF);
-			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
-			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).addNode(roomNode.getIdentifier(),
-					WasabiNodeType.OBJECT_REF);
-			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
-		} catch (ItemExistsException iee) {
-			// do nothing, user is already present in room
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
+			return userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNodes();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -229,24 +255,6 @@ public class UserServiceImpl {
 			// do nothing, user not present
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	/**
-	 * Returns a {@code NodeIterator} containing nodes of type wasabi:objectref that point to the actual
-	 * wasabi:room-nodes. So the returned {@code NodeIterator} does NOT contain the actual wasabi:room-nodes (this is
-	 * due to efficiency reasons).
-	 * 
-	 * @param userNode
-	 *            the node representing a wasabi-user
-	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
-	 * @throws UnexpectedInternalProblemException
-	 */
-	public static NodeIterator getWhereabouts(Node userNode) throws UnexpectedInternalProblemException {
-		try {
-			return userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNodes();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

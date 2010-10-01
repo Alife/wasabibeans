@@ -65,8 +65,52 @@ public class UserServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void createTag() throws WasabiException {
-		System.out.println("=== createTag() ===");
+	public void getDisplayName() throws WasabiException {
+		System.out.println("=== getDisplayName() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting display name of user newUser...");
+		try {
+			userService().getDisplayName(newUser);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Getting display name of user newUser...");
+		try {
+			userService().getDisplayName(newUser);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void createTest() throws WasabiException {
+		System.out.println("=== createTest() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -88,6 +132,74 @@ public class UserServiceTest extends WasabiRemoteTest {
 		try {
 			userService().create("newUser", "password");
 			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getAllUsers() throws WasabiException {
+		System.out.println("=== getAllUsers() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating user user1...");
+		WasabiUserDTO user1 = null;
+		try {
+			user1 = userService().create("user1", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating user user2...");
+		WasabiUserDTO user2 = null;
+		try {
+			user2 = userService().create("user2", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating user user3...");
+		WasabiUserDTO user3 = null;
+		try {
+			user3 = userService().create("user3", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting all users...");
+		try {
+			Vector<WasabiUserDTO> users = userService().getAllUsers();
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing VIEW as userRight for user1... ");
+		aclService().remove(user1, user, WasabiPermission.VIEW);
+		System.out.println("done.");
+
+		System.out.print("Removing VIEW as userRight for user3... ");
+		aclService().remove(user3, user, WasabiPermission.VIEW);
+		System.out.println("done.");
+
+		System.out.println("Getting all users...");
+		try {
+			Vector<WasabiUserDTO> users = userService().getAllUsers();
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
