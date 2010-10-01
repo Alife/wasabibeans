@@ -90,7 +90,8 @@ public class FileSystemSink extends AnnotationBasedFilter implements ContentStor
 			// Close the file
 			wChannel.close();
 			DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this, file
-					.getPath(), document.getContentType().toString(), (long) buffer.length, true);
+					.getPath(), document.getContentType().toString(), (long) buffer.length, true, document
+					.getCallerPrincipal());
 			s.save();
 		} catch (IOException e) {
 			throw new RuntimeException(e);

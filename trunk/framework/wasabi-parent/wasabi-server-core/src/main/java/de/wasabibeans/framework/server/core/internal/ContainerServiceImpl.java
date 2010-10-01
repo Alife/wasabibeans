@@ -33,7 +33,6 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiContainerACL;
-import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -210,12 +209,12 @@ public class ContainerServiceImpl {
 			containerNode.getSession().move(containerNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.CONTAINERS + "/" + containerNode.getName());
 			ObjectServiceImpl.modified(containerNode, containerNode.getSession(), callerPrincipal, false);
-			
+
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiContainerACL.ACLEntryForMove(containerNode, s);
 			/* ACL Environment - End */
-			
+
 		} catch (ItemExistsException iee) {
 			try {
 				String name = containerNode.getName();

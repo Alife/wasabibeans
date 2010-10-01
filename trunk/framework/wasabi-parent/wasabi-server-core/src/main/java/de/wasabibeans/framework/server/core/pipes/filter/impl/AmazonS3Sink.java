@@ -105,7 +105,8 @@ public class AmazonS3Sink extends AnnotationBasedFilter implements Sink, Content
 			s3Service.putObject(s3Bucket, s3Object);
 
 			DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this, document
-					.getName(), document.getContentType().toString(), (long) buffer.length, true);
+					.getName(), document.getContentType().toString(), (long) buffer.length, true, document
+					.getCallerPrincipal());
 			s.save();
 		} catch (S3ServiceException e) {
 			throw new RuntimeException(e);

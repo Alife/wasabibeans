@@ -126,7 +126,7 @@ public class FlickrSink extends AnnotationBasedFilter implements ContentStore, S
 			for (Size size : sizes) {
 				DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this, size
 						.getSource(), document.getContentType().toString(), (long) new URL(size.getSource())
-						.openConnection().getContentLength(), true);
+						.openConnection().getContentLength(), true, document.getCallerPrincipal());
 			}
 			s.save();
 		} catch (FlickrException e) {

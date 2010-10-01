@@ -56,7 +56,7 @@ public class DocumentSink extends AnnotationBasedFilter implements ContentStore,
 			Node documentNode = ObjectServiceImpl.get(document.getDocumentNodeId(), s);
 			DocumentServiceImpl.setContent(documentNode, buffer, document.getCallerPrincipal());
 			DocumentServiceImpl.addContentRef(documentNode, this, document.getName(), document.getContentType()
-					.toString(), (long) buffer.length, true);
+					.toString(), (long) buffer.length, true, document.getCallerPrincipal());
 			s.save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
