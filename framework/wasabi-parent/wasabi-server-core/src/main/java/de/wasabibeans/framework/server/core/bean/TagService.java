@@ -33,12 +33,16 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.TagServiceImpl;
@@ -56,7 +60,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 	@Override
 	public void addTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException {
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		if (tag == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"tag"));
@@ -65,8 +69,18 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.COMMENT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.addTag()", "COMMENT",
+							"object"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
-			TagServiceImpl.addTag(objectNode, tag, s, ctx.getCallerPrincipal().getName());
+			TagServiceImpl.addTag(objectNode, tag, s, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -75,10 +89,20 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 	@Override
 	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.clearTags()", "WRITE",
+							"object"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
 			TagServiceImpl.clearTags(objectNode);
 			s.save();
@@ -98,9 +122,19 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> result = new Vector<WasabiDocumentDTO>();
-		for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags)) {
-			result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags))
+				if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+					result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags))
+				result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
+
 		return result;
 	}
 
@@ -110,6 +144,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
+		// TODO: ACL Support
 	}
 
 	@Override
@@ -121,23 +156,42 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		Session s = jcr.getJCRSessionTx();
 		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
-		for (Node node : TagServiceImpl.getObjectsByTag(tag, s)) {
-			result.add(TransferManager.convertNode2DTO(node));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (Node node : TagServiceImpl.getObjectsByTag(tag, s))
+				if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+					result.add(TransferManager.convertNode2DTO(node));
 		}
+		/* Authorization - End */
+		else
+			for (Node node : TagServiceImpl.getObjectsByTag(tag, s))
+				result.add(TransferManager.convertNode2DTO(node));
+
 		return result;
 	}
 
 	@Override
 	public Vector<String> getTags(WasabiObjectDTO object) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.getTags()", "VIEW", "object"));
+		/* Authorization - End */
+
 		return TagServiceImpl.getTags(objectNode);
 	}
 
 	@Override
 	public void removeTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException {
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		if (tag == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"tag"));
@@ -146,6 +200,16 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		Session s = jcr.getJCRSessionTx();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.removeTag()", "WRITE",
+							"object"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, object);
 			TagServiceImpl.removeTag(objectNode, tag);
 			s.save();
