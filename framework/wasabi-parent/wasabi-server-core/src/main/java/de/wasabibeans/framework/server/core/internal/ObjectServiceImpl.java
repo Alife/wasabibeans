@@ -106,10 +106,10 @@ public class ObjectServiceImpl {
 			ConcurrentModificationException {
 		try {
 			/* ACL Environment - Begin */
-			if (WasabiConstants.ACL_ENTRY_ENABLE) 
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiObjectACL.removeACLEntriesRecursive(objectNode);
 			/* ACL Environment - End */
-			
+
 			objectNode.remove();
 		} catch (LockException le) {
 			try {
@@ -703,11 +703,6 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static boolean isRightsActive(Node objectNode) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	public static void setCreatedBy(Node objectNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, userNode);
@@ -769,11 +764,11 @@ public class ObjectServiceImpl {
 	}
 
 	/**
-	 * Sets the wasabi:createdOn, wasabi:createdBy, wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:version properties
-	 * for the given {@code objectNode}. If the the given {@code callerPrincipal} is {@code null} and the given {@code
-	 * nullEntryEnabled} is {@code true}, the properties wasabi:createdBy and wasabi:modifiedBy will be set to {@code
-	 * null}. If the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled} is {@code
-	 * false}, none of the properties will be set.
+	 * Sets the wasabi:createdOn, wasabi:createdBy, wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:optLockId
+	 * properties for the given {@code objectNode}. If the the given {@code callerPrincipal} is {@code null} and the
+	 * given {@code nullEntryEnabled} is {@code true}, the properties wasabi:createdBy and wasabi:modifiedBy will be set
+	 * to {@code null}. If the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled}
+	 * is {@code false}, none of the properties will be set.
 	 * 
 	 * @param objectNode
 	 * @param s
@@ -800,10 +795,10 @@ public class ObjectServiceImpl {
 	}
 
 	/**
-	 * Sets the wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:version properties for the given {@code objectNode}. If
-	 * the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled} is {@code true}, the
-	 * property wasabi:modifiedBy will be set to {@code null}. If the the given {@code callerPrincipal} is {@code null}
-	 * and the given {@code nullEntryEnabled} is {@code false}, none of the properties will be set.
+	 * Sets the wasabi:modifiedOn, wasabi:modifiedBy, and wasabi:optLockId properties for the given {@code objectNode}.
+	 * If the the given {@code callerPrincipal} is {@code null} and the given {@code nullEntryEnabled} is {@code true},
+	 * the property wasabi:modifiedBy will be set to {@code null}. If the the given {@code callerPrincipal} is {@code
+	 * null} and the given {@code nullEntryEnabled} is {@code false}, none of the properties will be set.
 	 * 
 	 * @param objectNode
 	 * @param s
@@ -823,11 +818,11 @@ public class ObjectServiceImpl {
 		}
 		ObjectServiceImpl.setModifiedOn(objectNode, Calendar.getInstance().getTime());
 		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
-		long currentVersion = ObjectServiceImpl.getOptLockId(objectNode);
-		ObjectServiceImpl.setOptLockId(objectNode, ++currentVersion);
-	}
-
-	public static void setRightsActive(Node objectNode, boolean rightsActive) {
-		// TODO Auto-generated method stub
+		long newOptLockId = ObjectServiceImpl.getOptLockId(objectNode) + 1;
+		if (newOptLockId < 0) {
+			// do not use values < 0 (after Long.MAX_VALUE has been reached)
+			newOptLockId = 0;
+		}
+		ObjectServiceImpl.setOptLockId(objectNode, newOptLockId);
 	}
 }

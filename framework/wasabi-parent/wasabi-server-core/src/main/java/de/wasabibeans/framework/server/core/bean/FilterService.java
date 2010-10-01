@@ -63,7 +63,8 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		Session s = jcr.getJCRSessionTx();
 		try {
-			Node pipelineNode = FilterServiceImpl.create(name, filter, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node pipelineNode = FilterServiceImpl.create(name, filter, s, callerPrincipal);
 			s.save();
 			return TransferManager.convertNode2DTO(pipelineNode);
 		} catch (RepositoryException re) {
@@ -85,7 +86,8 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		Session s = jcr.getJCRSessionTx();
 		try {
-			FilterServiceImpl.updateOrCreate(name, filter, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			FilterServiceImpl.updateOrCreate(name, filter, s, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

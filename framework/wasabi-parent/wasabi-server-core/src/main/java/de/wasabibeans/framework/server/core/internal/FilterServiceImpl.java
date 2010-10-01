@@ -79,13 +79,14 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class FilterServiceImpl {
 
-	public static Node create(String name, Filter filter, Session s) throws ObjectAlreadyExistsException,
-			UnexpectedInternalProblemException {
+	public static Node create(String name, Filter filter, Session s, String callerPrincipal)
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
 		try {
 			Node rootOfPipelinesNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node pipelineNode = rootOfPipelinesNode.addNode(name, WasabiNodeType.PIPELINE);
 			pipelineNode.setProperty(WasabiNodeProperty.EMBEDDABLE, filter instanceof EmbeddedFilter);
-			setFilter(pipelineNode, filter, s);
+			setFilter(pipelineNode, filter, s, null);
+			ObjectServiceImpl.created(pipelineNode, s, callerPrincipal, true);
 
 			return pipelineNode;
 		} catch (ItemExistsException iee) {
@@ -96,14 +97,14 @@ public class FilterServiceImpl {
 		}
 	}
 
-	public static void updateOrCreate(String name, Filter filter, Session s) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+	public static void updateOrCreate(String name, Filter filter, Session s, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		Node pipelineNode = getPipeline(name, s);
 
 		if (pipelineNode != null) {
-			setFilter(pipelineNode, filter, s);
+			setFilter(pipelineNode, filter, s, callerPrincipal);
 		} else {
-			create(name, filter, s);
+			create(name, filter, s, callerPrincipal);
 		}
 	}
 
@@ -115,7 +116,8 @@ public class FilterServiceImpl {
 		}
 	}
 
-	public static void setFilter(Node pipelineNode, Filter filter, Session s) throws UnexpectedInternalProblemException {
+	public static void setFilter(Node pipelineNode, Filter filter, Session s, String callerPrincipal)
+			throws UnexpectedInternalProblemException {
 		try {
 			// convert filter to inputstream
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -126,6 +128,7 @@ public class FilterServiceImpl {
 			ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
 			// store the filter
 			pipelineNode.setProperty(WasabiNodeProperty.FILTER, s.getValueFactory().createBinary(in));
+			ObjectServiceImpl.modified(pipelineNode, s, callerPrincipal, false);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {

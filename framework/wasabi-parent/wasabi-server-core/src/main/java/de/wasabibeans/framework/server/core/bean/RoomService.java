@@ -539,7 +539,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, room, pipeline);
-			RoomServiceImpl.setPipeline(roomNode, pipelineNode);
+			RoomServiceImpl.setPipeline(roomNode, pipelineNode, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

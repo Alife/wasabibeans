@@ -239,9 +239,11 @@ public class RoomServiceImpl {
 
 	// ------------------------------------- Wasabi Pipes -----------------------------------------------------
 
-	public static void setPipeline(Node roomNode, Node pipelineNode) throws UnexpectedInternalProblemException {
+	public static void setPipeline(Node roomNode, Node pipelineNode, String callerPrincipal)
+			throws UnexpectedInternalProblemException {
 		try {
 			roomNode.setProperty(WasabiNodeProperty.PIPELINE, pipelineNode);
+			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

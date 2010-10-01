@@ -149,7 +149,7 @@ public class YouTubeSink extends AnnotationBasedFilter implements ContentStore, 
 			VideoEntry createdEntry = myService.insert(new URL(uploadUrl), newEntry);
 
 			DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this,
-					createdEntry.getHtmlLink().getHref(), null, null, false);
+					createdEntry.getHtmlLink().getHref(), null, null, false, document.getCallerPrincipal());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (ServiceException e) {
