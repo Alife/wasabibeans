@@ -44,6 +44,15 @@ public class WasabiObjectACL {
 		removeRecursive(objectNode, callerPrincipal, s);
 	}
 
+	public static void removeACLEntriesRecursive(Node objectNode) throws UnexpectedInternalProblemException {
+		Vector<Node> childreen = ACLServiceImpl.getChildren(objectNode);
+		if (childreen.size() == 0)
+			WasabiObjectSQL.SqlQueryForRemove(ObjectServiceImpl.getUUID(objectNode));
+		else
+			for (Node node : childreen)
+				removeACLEntriesRecursive(node);
+	}
+
 	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
@@ -137,14 +146,5 @@ public class WasabiObjectACL {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 		return 1;
-	}
-
-	public static void removeACLEntriesRecursive(Node objectNode) throws UnexpectedInternalProblemException {
-		Vector<Node> childreen = ACLServiceImpl.getChildren(objectNode);
-		if (childreen.size() == 0)
-			WasabiObjectSQL.SqlQueryForRemove(ObjectServiceImpl.getUUID(objectNode));
-		else
-			for (Node node : childreen)
-				removeACLEntriesRecursive(node);
 	}
 }

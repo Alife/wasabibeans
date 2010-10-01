@@ -33,6 +33,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiLinkACL;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -50,6 +52,13 @@ public class LinkServiceImpl {
 			Node linkNode = environmentNode.addNode(WasabiNodeProperty.LINKS + "/" + name, WasabiNodeType.LINK);
 			setDestination(linkNode, destinationNode, null);
 			ObjectServiceImpl.created(linkNode, s, callerPrincipal, true);
+
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE) {
+				WasabiLinkACL.ACLEntryForCreate(linkNode, s);
+				WasabiLinkACL.ACLEntryTemplateForCreate(linkNode, environmentNode, callerPrincipal, s);
+			}
+			/* ACL Environment - End */
 
 			return linkNode;
 		} catch (ItemExistsException iee) {
@@ -78,6 +87,14 @@ public class LinkServiceImpl {
 
 	public static Node getEnvironment(Node linkNode) throws UnexpectedInternalProblemException {
 		return ObjectServiceImpl.getEnvironment(linkNode);
+	}
+
+	public static Node getLinkById(String id, Session s) throws UnexpectedInternalProblemException {
+		try {
+			return s.getNodeByIdentifier(id);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static Node getLinkByName(Node locationNode, String name) throws UnexpectedInternalProblemException {
@@ -156,12 +173,18 @@ public class LinkServiceImpl {
 		return ObjectServiceImpl.getNodesOrderedByCreationDate(locationNode, WasabiNodeProperty.LINKS, order);
 	}
 
-	public static void move(Node linkNode, Node newEnvironmentNode, String callerPrincipal)
+	public static void move(Node linkNode, Node newEnvironmentNode, String callerPrincipal, Session s)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
 		try {
 			linkNode.getSession().move(linkNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.LINKS + "/" + linkNode.getName());
 			ObjectServiceImpl.modified(linkNode, linkNode.getSession(), callerPrincipal, false);
+
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiLinkACL.ACLEntryForMove(linkNode, s);
+			/* ACL Environment - End */
+
 		} catch (ItemExistsException iee) {
 			try {
 				String name = linkNode.getName();

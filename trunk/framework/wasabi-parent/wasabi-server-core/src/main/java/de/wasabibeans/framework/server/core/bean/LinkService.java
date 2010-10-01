@@ -34,7 +34,12 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.authorization.WasabiLinkACL;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
@@ -45,6 +50,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -66,7 +72,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	@Override
 	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -77,6 +83,16 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.create()",
+							"INSERT or WRITE", "environment"));
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, environment);
 			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, callerPrincipal);
 			s.save();
@@ -89,25 +105,46 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 	@Override
 	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException, ObjectDoesNotExistException {
+			TargetDoesNotExistException, ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node linkNode = TransferManager.convertDTO2Node(link, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.getDestination()", "READ",
+						"document"));
+		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
 		return TransferManager.convertValue2DTO(LinkServiceImpl.getDestination(linkNode), optLockId);
 	}
 
 	@Override
 	public WasabiValueDTO getEnvironment(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		Node linkNode = TransferManager.convertDTO2Node(link, s);
 		Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
-		return TransferManager.convertValue2DTO(LinkServiceImpl.getEnvironment(linkNode), optLockId);
+		Node environmentNode = LinkServiceImpl.getEnvironment(linkNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getEnvironment()",
+						"VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertValue2DTO(environmentNode, optLockId);
 	}
 
 	@Override
 	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -115,7 +152,18 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
-		return TransferManager.convertNode2DTO(LinkServiceImpl.getLinkByName(locationNode, name), location);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node linkNode = LinkServiceImpl.getLinkByName(locationNode, name);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getLinkByName()",
+						"VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(linkNode, location);
 	}
 
 	@Override
@@ -124,9 +172,22 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (String id : authorizedLinks) {
+				Node link = LinkServiceImpl.getLinkById(id, s);
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, location));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();)
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+
 		return links;
 	}
 
@@ -136,9 +197,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -148,9 +221,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -160,9 +245,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
+				Node linkNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();)
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return links;
 	}
 
@@ -173,9 +270,20 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		return links;
 	}
 
@@ -185,9 +293,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -197,9 +317,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -209,9 +341,20 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
+				Node linkNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
+			}
 		}
+		/* Authorization - End */
+		for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();)
+			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return links;
 	}
 
@@ -222,9 +365,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode)) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+					WasabiPermission.VIEW, WasabiType.LINK, s);
+			for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode))
+				if (authorizedLinks.contains(link))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
+		/* Authorization - End */
+		else
+			for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode))
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -234,26 +389,53 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Session s = jcr.getJCRSessionTx();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiLinkDTO> links = new Vector<WasabiLinkDTO>();
-		for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
-			links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
+				Node linkNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode, location));
+			}
 		}
+		/* Authorization - End */
+		else
+			for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();)
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
+
 		return links;
 	}
 
 	@Override
 	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()", "WRITE",
+							"link and sub objects"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, link, newEnvironment);
 			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
-			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal);
+			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal, s);
 			EventCreator.createMovedEvent(linkNode, newEnvironmentNode, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
@@ -263,14 +445,29 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 	@Override
 	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
-			EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, link);
-			LinkServiceImpl.remove(linkNode);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
+							"document"));
+				else {
+					EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
+					WasabiLinkACL.remove(linkNode, callerPrincipal, s);
+				}
+			}
+			/* Authorization - End */
+			else {
+				EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
+				LinkServiceImpl.remove(linkNode);
+			}
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -279,7 +476,8 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 	@Override
 	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException {
+			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -290,6 +488,16 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
+							"link"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, link);
 			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
@@ -303,7 +511,8 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 	@Override
 	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException {
 		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
@@ -313,6 +522,16 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			if (object != null) {
 				objectNode = TransferManager.convertDTO2Node(object, s);
 			}
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.setDestination()",
+							"WRITE", "link"));
+			}
+			/* Authorization - End */
+
 			Locker.recognizeLockTokens(s, link);
 			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
