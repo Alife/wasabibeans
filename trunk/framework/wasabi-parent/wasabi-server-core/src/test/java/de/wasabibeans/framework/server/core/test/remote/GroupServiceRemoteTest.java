@@ -349,7 +349,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		WasabiGroupDTO group1 = groupService().getGroupByName("group1");
 		WasabiGroupDTO group1_1_1 = groupService().getGroupByName("group1_1_1");
 		groupService().addMember(group1_1_1, user3);
-		groupService().remove(group1_1);
+		groupService().remove(group1_1, null);
 		Vector<WasabiGroupDTO> subgroups1 = groupService().getSubGroups(group1);
 		AssertJUnit.assertEquals(1, subgroups1.size());
 		AssertJUnit.assertFalse(subgroups1.contains(subgroups1));

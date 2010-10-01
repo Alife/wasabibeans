@@ -153,7 +153,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		containerService().remove(container1);
+		containerService().remove(container1, null);
 		Vector<WasabiContainerDTO> containers = containerService().getContainers(rootRoom);
 		AssertJUnit.assertFalse(containers.contains(container1));
 		AssertJUnit.assertEquals(2, containers.size());

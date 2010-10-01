@@ -104,7 +104,7 @@ public interface DocumentServiceRemote extends ObjectServiceRemote {
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException;
 
-	public void remove(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
+	public void remove(WasabiDocumentDTO document, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId)

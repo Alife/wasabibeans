@@ -74,7 +74,7 @@ public interface AttributeServiceRemote extends ObjectServiceRemote {
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException;
 
-	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+	public void remove(WasabiAttributeDTO attribute, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiAttributeDTO attribute, String name, Long optLockId)

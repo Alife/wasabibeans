@@ -314,18 +314,20 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			EventCreator.createMovedEvent(groupNode, newParentGroupNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	@Override
-	public void remove(WasabiGroupDTO group) throws ObjectDoesNotExistException, UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public void remove(WasabiGroupDTO group, Long optLockId) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ConcurrentModificationException {
+		String lockToken = Locker.acquireServiceCallLock(group, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
 			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, group);
+			Locker.recognizeLockToken(s, lockToken);
 			GroupServiceImpl.remove(groupNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -373,7 +375,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	@Override
@@ -397,6 +399,6 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 }

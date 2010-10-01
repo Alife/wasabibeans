@@ -713,7 +713,7 @@ public class RoomServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing removeTestRoom... ");
 		try {
-			roomService().remove(removeTestRoom);
+			roomService().remove(removeTestRoom, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

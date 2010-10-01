@@ -457,13 +457,15 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException, ConcurrentModificationException {
+	public void remove(WasabiRoomDTO room, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
+		String lockToken = Locker.acquireServiceCallLock(room, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Locker.recognizeLockTokens(s, room);
+			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
@@ -522,8 +524,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	}
 
 	@Override
-	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
+	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException,
+			ConcurrentModificationException {
+		String lockToken = Locker.acquireServiceCallLock(pipeline, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
@@ -539,6 +543,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, room, pipeline);
+			Locker.recognizeLockToken(s, lockToken);
 			RoomServiceImpl.setPipeline(roomNode, pipelineNode, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {

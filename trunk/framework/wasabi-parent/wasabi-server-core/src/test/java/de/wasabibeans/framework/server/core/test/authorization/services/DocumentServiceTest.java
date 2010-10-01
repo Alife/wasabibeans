@@ -646,7 +646,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing testDoc ... ");
 		try {
-			documentService().remove(testDoc);
+			documentService().remove(testDoc, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -662,7 +662,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing testDoc ... ");
 		try {
-			documentService().remove(testDoc);
+			documentService().remove(testDoc, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -690,7 +690,7 @@ public class DocumentServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing testDoc ... ");
 		try {
-			documentService().remove(testDoc);
+			documentService().remove(testDoc, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

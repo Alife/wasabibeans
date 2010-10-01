@@ -444,13 +444,15 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	}
 
 	@Override
-	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException, NoPermissionException {
+	public void remove(WasabiLinkDTO link, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
+		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			Locker.recognizeLockTokens(s, link);
+			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

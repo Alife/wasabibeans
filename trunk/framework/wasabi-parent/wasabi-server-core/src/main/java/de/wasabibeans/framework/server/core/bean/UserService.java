@@ -484,14 +484,16 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public void remove(WasabiUserDTO user) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException {
+	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ConcurrentModificationException {
+		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
 			Locker.recognizeLockTokens(s, user);
+			Locker.recognizeLockToken(s, lockToken);
 			UserServiceImpl.remove(userNode);
 			s.save();
 		} catch (RepositoryException re) {

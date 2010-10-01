@@ -516,13 +516,15 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		}
 	}
 
-	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
+	public void remove(WasabiDocumentDTO document, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
+		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
 			Locker.recognizeLockTokens(s, document);
+			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

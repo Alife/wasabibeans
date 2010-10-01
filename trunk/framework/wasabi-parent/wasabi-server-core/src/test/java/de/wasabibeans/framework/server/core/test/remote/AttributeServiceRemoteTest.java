@@ -209,7 +209,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		attributeService().remove(attribute1);
+		attributeService().remove(attribute1, null);
 		Vector<WasabiAttributeDTO> attributes = attributeService().getAttributes(rootRoom);
 		AssertJUnit.assertFalse(attributes.contains(attribute1));
 		AssertJUnit.assertEquals(1, attributes.size());

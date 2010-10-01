@@ -219,7 +219,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		documentService().remove(document1);
+		documentService().remove(document1, null);
 		Vector<WasabiDocumentDTO> documents = documentService().getDocuments(rootRoom);
 		AssertJUnit.assertFalse(documents.contains(document1));
 		AssertJUnit.assertEquals(1, documents.size());

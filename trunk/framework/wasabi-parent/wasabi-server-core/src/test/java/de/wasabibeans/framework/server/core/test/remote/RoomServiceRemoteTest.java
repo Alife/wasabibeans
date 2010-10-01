@@ -185,7 +185,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
-		roomService().remove(room2);
+		roomService().remove(room2, null);
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertFalse(rooms.contains(room2));
 		AssertJUnit.assertEquals(2, rooms.size());
