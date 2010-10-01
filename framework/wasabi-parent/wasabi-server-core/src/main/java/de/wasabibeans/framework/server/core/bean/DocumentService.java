@@ -501,7 +501,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 				if (!WasabiAuthorizer.authorizeChildreen(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
-							"room and sub objects"));
+							"document and sub objects"));
 			}
 			/* Authorization - End */
 
@@ -513,7 +513,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
@@ -576,7 +576,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
@@ -607,6 +607,6 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (TargetDoesNotExistException tdne) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.PIPES_NOT_FOUND, tdne);
-		} 
+		}
 	}
 }

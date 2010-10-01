@@ -33,6 +33,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -46,16 +47,16 @@ public interface LinkServiceLocal extends ObjectServiceLocal {
 
 	public WasabiLinkDTO create(String name, WasabiObjectDTO destination, WasabiLocationDTO environment)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public WasabiValueDTO getDestination(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException, ObjectDoesNotExistException;
+			TargetDoesNotExistException, ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiValueDTO getEnvironment(WasabiLinkDTO link) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public Vector<WasabiLinkDTO> getLinks(WasabiLocationDTO location) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException;
@@ -89,14 +90,16 @@ public interface LinkServiceLocal extends ObjectServiceLocal {
 
 	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException;
+			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException;
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
+			NoPermissionException;
 }
