@@ -59,7 +59,7 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
