@@ -35,7 +35,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
-import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -69,15 +68,15 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 	}
 
 	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException, ObjectDoesNotExistException, LockingException {
+			ObjectDoesNotExistException, LockingException {
 		Session s = jcr.getJCRSessionTx();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		Locker.recognizeLockTokens(s, object);
-		String lockToken = Locker.acquireLock(objectNode, object, isDeep, s, locker);
+		String lockToken = Locker.acquireLock(objectNode, object, isDeep, locker);
 		return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
 	}
 
-	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException {
+	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		if (object == null) {
 			return null;
 		}
@@ -85,7 +84,10 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_LOCKING_TOKEN_NULL);
 		}
 
-		Locker.releaseLock(object.getId(), object.getLockToken(), locker);
+		Session s = jcr.getJCRSessionTx();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		Locker.recognizeLockTokens(s, object);
+		Locker.releaseLock(objectNode, s);
 		return TransferManager.removeLockToken(object);
 	}
 }

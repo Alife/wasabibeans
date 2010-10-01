@@ -48,7 +48,6 @@ import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -272,11 +271,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	public void move(WasabiAttributeDTO attribute, WasabiObjectDTO newAffiliation, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Node attributeNode = null;
+		String lockToken = Locker.acquireServiceCallLock(attribute, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
 
 			/* Authorization - Begin */
@@ -294,17 +293,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, attribute, newAffiliation);
-			Locker.acquireLock(attributeNode, attribute, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(attributeNode, newAffiliationNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(attributeNode, attribute, s, locker);
 		}
 	}
 
@@ -348,11 +343,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 					"name"));
 		}
 
-		Node attributeNode = null;
+		String lockToken = Locker.acquireServiceCallLock(attribute, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -363,17 +358,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, attribute);
-			Locker.acquireLock(attributeNode, attribute, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.rename(attributeNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(attributeNode, attribute, s, locker);
 		}
 	}
 
@@ -381,11 +372,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	public void setValue(WasabiAttributeDTO attribute, Serializable value, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Node attributeNode = null;
+		String lockToken = Locker.acquireServiceCallLock(attribute, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -396,17 +387,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, attribute);
-			Locker.acquireLock(attributeNode, attribute, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.setValue(attributeNode, value, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, value, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(attributeNode, attribute, s, locker);
 		}
 	}
 
@@ -414,11 +401,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	public void setWasabiValue(WasabiAttributeDTO attribute, WasabiObjectDTO value, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			NoPermissionException {
-		Node attributeNode = null;
+		String lockToken = Locker.acquireServiceCallLock(attribute, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Node valueNode = null;
 			if (value != null) {
 				valueNode = TransferManager.convertDTO2Node(value, s);
@@ -433,7 +420,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, attribute);
-			Locker.acquireLock(attributeNode, attribute, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, callerPrincipal);
 			s.save();
@@ -441,10 +428,6 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 					callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(attributeNode, attribute, s, locker);
 		}
 	}
 }

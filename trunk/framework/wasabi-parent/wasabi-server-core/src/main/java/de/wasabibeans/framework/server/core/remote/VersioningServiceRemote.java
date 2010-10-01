@@ -7,7 +7,6 @@ import javax.ejb.Remote;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiVersionDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -18,8 +17,8 @@ public interface VersioningServiceRemote {
 			ObjectDoesNotExistException;
 
 	public void createVersion(WasabiObjectDTO dto, String comment) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException, LockingException;
+			ObjectDoesNotExistException, ConcurrentModificationException;
 
 	public void restoreVersion(WasabiObjectDTO dto, String versionLabel) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException, LockingException;
+			ObjectDoesNotExistException, ConcurrentModificationException;
 }

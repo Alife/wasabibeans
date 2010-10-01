@@ -52,7 +52,6 @@ import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -485,11 +484,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
-		Node documentNode = null;
+		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			documentNode = TransferManager.convertDTO2Node(document, s);
+			Node documentNode = TransferManager.convertDTO2Node(document, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
 			/* Authorization - Begin */
@@ -507,18 +506,14 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, document, newEnvironment);
-			Locker.acquireLock(documentNode, document, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(documentNode, document, s, locker);
-		}
+		} 
 	}
 
 	public void remove(WasabiDocumentDTO document) throws ObjectDoesNotExistException,
@@ -559,11 +554,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 					"name"));
 		}
 
-		Node documentNode = null;
+		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			documentNode = TransferManager.convertDTO2Node(document, s);
+			Node documentNode = TransferManager.convertDTO2Node(document, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -574,28 +569,24 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, document);
-			Locker.acquireLock(documentNode, document, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.rename(documentNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(documentNode, document, s, locker);
-		}
+		} 
 	}
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
 			ConcurrentModificationException, NoPermissionException {
-		Node documentNode = null;
+		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			documentNode = TransferManager.convertDTO2Node(document, s);
+			Node documentNode = TransferManager.convertDTO2Node(document, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -606,7 +597,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, document);
-			Locker.acquireLock(documentNode, document, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.setContentPiped(documentNode, content, s, jms, sharedFilterBean, callerPrincipal);
 			s.save();
@@ -616,10 +607,6 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (TargetDoesNotExistException tdne) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.PIPES_NOT_FOUND, tdne);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(documentNode, document, s, locker);
-		}
+		} 
 	}
 }

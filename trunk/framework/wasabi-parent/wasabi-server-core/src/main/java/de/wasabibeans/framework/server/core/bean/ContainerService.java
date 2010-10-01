@@ -48,7 +48,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -396,11 +395,11 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	public void move(WasabiContainerDTO container, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Node containerNode = null;
+		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			containerNode = TransferManager.convertDTO2Node(container, s);
+			Node containerNode = TransferManager.convertDTO2Node(container, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
 			/* Authorization - Begin */
@@ -418,18 +417,14 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, container, newEnvironment);
-			Locker.acquireLock(containerNode, container, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(containerNode, container, s, locker);
-		}
+		} 
 	}
 
 	@Override
@@ -472,11 +467,11 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 					"name"));
 		}
 
-		Node containerNode = null;
+		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			containerNode = TransferManager.convertDTO2Node(container, s);
+			Node containerNode = TransferManager.convertDTO2Node(container, s);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -487,17 +482,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			/* Authorization - End */
 
 			Locker.recognizeLockTokens(s, container);
-			Locker.acquireLock(containerNode, container, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.rename(containerNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(containerNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(containerNode, container, s, locker);
-		}
+		} 
 	}
 }

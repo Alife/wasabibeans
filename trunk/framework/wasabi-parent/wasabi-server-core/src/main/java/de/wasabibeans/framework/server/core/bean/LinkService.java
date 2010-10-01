@@ -45,7 +45,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.event.WasabiProperty;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
@@ -245,24 +244,20 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	public void move(WasabiLinkDTO link, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
-		Node linkNode = null;
+		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			linkNode = TransferManager.convertDTO2Node(link, s);
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 			Locker.recognizeLockTokens(s, link, newEnvironment);
-			Locker.acquireLock(linkNode, link, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal);
 			EventCreator.createMovedEvent(linkNode, newEnvironmentNode, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(linkNode, link, s, locker);
 		}
 	}
 
@@ -290,41 +285,36 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 					"name"));
 		}
 
-		Node linkNode = null;
+		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			linkNode = TransferManager.convertDTO2Node(link, s);
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			Locker.recognizeLockTokens(s, link);
-			Locker.acquireLock(linkNode, link, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.rename(linkNode, name, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(linkNode, link, s, locker);
 		}
-
 	}
 
 	@Override
 	public void setDestination(WasabiLinkDTO link, WasabiObjectDTO object, Long optLockId)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
-		Node linkNode = null;
+		String lockToken = Locker.acquireServiceCallLock(link, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			linkNode = TransferManager.convertDTO2Node(link, s);
+			Node linkNode = TransferManager.convertDTO2Node(link, s);
 			Node objectNode = null;
 			if (object != null) {
 				objectNode = TransferManager.convertDTO2Node(object, s);
 			}
 			Locker.recognizeLockTokens(s, link);
-			Locker.acquireLock(linkNode, link, false, s, locker);
+			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(linkNode, link, optLockId);
 			LinkServiceImpl.setDestination(linkNode, objectNode, callerPrincipal);
 			s.save();
@@ -332,10 +322,6 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 					callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (LockingException e) {
-			// cannot happen
-		} finally {
-			Locker.releaseLock(linkNode, link, s, locker);
 		}
 	}
 }
