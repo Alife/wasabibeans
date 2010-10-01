@@ -273,19 +273,30 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
-	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException {
+	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException,
+			NoPermissionException {
 		if (userName == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
 		}
 
 		Session s = jcr.getJCRSessionTx();
-		return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(userName, s));
+		Node userNode = UserServiceImpl.getUserByName(userName, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getStatus()", "VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(userNode);
 	}
 
 	@Override
 	public WasabiUserDTO getUserByName(WasabiRoomDTO room, String userName) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		if (userName == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
@@ -293,7 +304,18 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		Session s = jcr.getJCRSessionTx();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
-		return TransferManager.convertNode2DTO(UserServiceImpl.getUserByName(roomNode, userName));
+		Node userNode = UserServiceImpl.getUserByName(roomNode, userName);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getUserByName()",
+						"VIEW"));
+		/* Authorization - End */
+
+		return TransferManager.convertNode2DTO(userNode);
 	}
 
 	@Override
@@ -303,6 +325,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			NodeIterator ni = UserServiceImpl.getUsers(roomNode);
 			while (ni.hasNext()) {
 				Node userRef = ni.nextNode();
@@ -317,7 +340,15 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					}
 				}
 				if (user != null) {
-					users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+
+					/* Authorization - Begin */
+					if (WasabiConstants.ACL_CHECK_ENABLE) {
+						if (WasabiAuthorizer.authorize(user, callerPrincipal, WasabiPermission.VIEW, s))
+							users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+					}
+					/* Authorization - End */
+					else
+						users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
 				}
 			}
 			return users;
