@@ -39,6 +39,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiLinkDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
@@ -66,7 +67,13 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertTrue(objectService().exists(container));
 
 		containerService().remove(container, null);
-		AssertJUnit.assertFalse(objectService().exists(container));
+
+		try {
+			objectService().exists(container);
+			AssertJUnit.fail();
+		} catch (NoPermissionException npe) {
+			// passed
+		}
 	}
 
 	@Test
