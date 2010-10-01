@@ -519,7 +519,7 @@ public class LinkServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Remove link ... ");
 		try {
-			linkService().remove(link);
+			linkService().remove(link, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -531,7 +531,7 @@ public class LinkServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Remove link ... ");
 		try {
-			linkService().remove(link);
+			linkService().remove(link, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

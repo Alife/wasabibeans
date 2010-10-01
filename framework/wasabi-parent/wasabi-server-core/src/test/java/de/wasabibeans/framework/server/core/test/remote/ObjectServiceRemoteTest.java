@@ -65,7 +65,7 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 		WasabiContainerDTO container = containerService().create("container", rootRoom);
 		AssertJUnit.assertTrue(objectService().exists(container));
 
-		containerService().remove(container);
+		containerService().remove(container, null);
 		AssertJUnit.assertFalse(objectService().exists(container));
 	}
 

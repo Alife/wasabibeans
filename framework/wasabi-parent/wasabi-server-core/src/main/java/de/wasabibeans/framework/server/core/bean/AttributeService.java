@@ -304,13 +304,15 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	}
 
 	@Override
-	public void remove(WasabiAttributeDTO attribute) throws UnexpectedInternalProblemException,
+	public void remove(WasabiAttributeDTO attribute, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
+		String lockToken = Locker.acquireServiceCallLock(attribute, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 			Locker.recognizeLockTokens(s, attribute);
+			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

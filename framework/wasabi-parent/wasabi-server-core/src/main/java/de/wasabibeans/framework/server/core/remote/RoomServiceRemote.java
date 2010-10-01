@@ -94,14 +94,15 @@ public interface RoomServiceRemote extends ObjectServiceRemote {
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException;
 
-	public void remove(WasabiRoomDTO room) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException, ConcurrentModificationException;
+	public void remove(WasabiRoomDTO room, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public void rename(WasabiRoomDTO room, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException;
 
-	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+	public void setPipeline(WasabiRoomDTO room, WasabiPipelineDTO pipeline, Long optLockId)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException;
 
 }

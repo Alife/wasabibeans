@@ -424,17 +424,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 
 	@Override
-	public void remove(WasabiContainerDTO container) throws UnexpectedInternalProblemException,
+	public void remove(WasabiContainerDTO container, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
+		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
 			Locker.recognizeLockTokens(s, container);
+			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
@@ -489,6 +491,6 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			EventCreator.createPropertyChangedEvent(containerNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} 
+		}
 	}
 }

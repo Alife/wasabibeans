@@ -92,8 +92,8 @@ public interface LinkServiceRemote extends ObjectServiceRemote {
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException;
 
-	public void remove(WasabiLinkDTO link) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException, NoPermissionException;
+	public void remove(WasabiLinkDTO link, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;
 
 	public void rename(WasabiLinkDTO link, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException,

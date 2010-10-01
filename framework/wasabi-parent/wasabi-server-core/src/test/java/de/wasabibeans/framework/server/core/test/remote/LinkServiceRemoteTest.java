@@ -173,7 +173,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		linkService().remove(link1);
+		linkService().remove(link1, null);
 		Vector<WasabiLinkDTO> links = linkService().getLinks(rootRoom);
 		AssertJUnit.assertFalse(links.contains(link1));
 		AssertJUnit.assertEquals(1, links.size());

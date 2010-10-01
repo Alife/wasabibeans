@@ -153,7 +153,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		versioningService().restoreVersion(room, theVersion.getLabel());
 		AssertJUnit.assertEquals(DOCUMENT1, documentService().getContent(document1).getValue());
 
-		documentService().remove(document2);
+		documentService().remove(document2, null);
 		AssertJUnit.assertNull(documentService().getDocumentByName(container1, DOCUMENT2));
 
 		// restore must recreate deleted wasabi-objects in the subtree

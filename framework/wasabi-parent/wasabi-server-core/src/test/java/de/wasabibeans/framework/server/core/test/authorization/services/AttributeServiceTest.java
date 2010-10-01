@@ -709,7 +709,7 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing attr2 ... ");
 		try {
-			attributeService().remove(attr2);
+			attributeService().remove(attr2, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -725,7 +725,7 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing attr2 ... ");
 		try {
-			attributeService().remove(attr2);
+			attributeService().remove(attr2, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -753,7 +753,7 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing attr2 ... ");
 		try {
-			attributeService().remove(attr2);
+			attributeService().remove(attr2, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

@@ -157,7 +157,7 @@ public class ContainerServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing container at removeTestRoom... ");
 		try {
-			containerService().remove(someContainer);
+			containerService().remove(someContainer, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -169,7 +169,7 @@ public class ContainerServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing container at removeTestRoom... ");
 		try {
-			containerService().remove(someContainer);
+			containerService().remove(someContainer, null);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

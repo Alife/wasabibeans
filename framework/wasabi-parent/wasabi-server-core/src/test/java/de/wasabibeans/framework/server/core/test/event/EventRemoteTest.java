@@ -185,7 +185,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			roomService().rename(testRoom2, "new", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			roomService().remove(testRoom2);
+			roomService().remove(testRoom2, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(testRoom2);
 
@@ -210,7 +210,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			attributeService().setWasabiValue(attribute, testRoom1, null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			attributeService().remove(attribute);
+			attributeService().remove(attribute, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(attribute);
 
@@ -227,7 +227,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			containerService().rename(container, "newName", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			containerService().remove(container);
+			containerService().remove(container, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(container);
 
@@ -248,7 +248,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			documentService().rename(document, "newDoc", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			documentService().remove(document);
+			documentService().remove(document, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(document);
 
@@ -268,7 +268,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 //			linkService().move(link, testRoom1, null);
 //			assertEvents(WasabiEventType.MOVED);
 
-			linkService().remove(link);
+			linkService().remove(link, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(link);
 
@@ -295,7 +295,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			userService().rename(user, "testUser2", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			userService().remove(user);
+			userService().remove(user, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(user);
 
@@ -324,7 +324,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			groupService().setDisplayName(group, "newGroup", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-			groupService().remove(group);
+			groupService().remove(group, null);
 			assertEvents(WasabiEventType.REMOVED);
 			unsubscribe(group);
 
@@ -379,7 +379,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			utx.begin();
 			try {
 				roomService().create("anotherTestRoom", rootRoom);
-				roomService().remove(testRoom);
+				roomService().remove(testRoom, null);
 				// provoke failure of the transaction
 				roomService().create(null, rootRoom);
 				utx.commit();

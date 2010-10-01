@@ -300,7 +300,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	public void removeTest() throws Exception {
 		userService().enter(user1, rootRoom);
 
-		userService().remove(user1);
+		userService().remove(user1, null);
 		// check that user is removed
 		Vector<WasabiUserDTO> users = userService().getAllUsers();
 		AssertJUnit.assertFalse(users.contains(user1));
