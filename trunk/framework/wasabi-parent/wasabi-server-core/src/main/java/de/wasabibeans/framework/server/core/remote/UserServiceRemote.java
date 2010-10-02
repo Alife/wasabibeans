@@ -46,7 +46,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 			ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException;
 
 	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException;
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException;
 
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException;
 
@@ -82,7 +82,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException;
 
 	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException;

@@ -494,12 +494,21 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException {
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
+							"room"));
+			/* Authorization - End */
+			
 			UserServiceImpl.enter(userNode, roomNode);
 			s.save();
 			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
@@ -530,7 +539,9 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
+			
 			while (ni.hasNext()) {
 				Node roomRef = ni.nextNode();
 				Node room = null;
@@ -544,9 +555,17 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					}
 				}
 				if (room != null) {
-					whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+					/* Authorization - Begin */
+					if (WasabiConstants.ACL_CHECK_ENABLE) {
+						if (WasabiAuthorizer.authorize(room, callerPrincipal, WasabiPermission.VIEW, s))
+							whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+					}
+					/* Authorization - End */
+					else
+						whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
 				}
 			}
+			
 			return whereabouts;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
