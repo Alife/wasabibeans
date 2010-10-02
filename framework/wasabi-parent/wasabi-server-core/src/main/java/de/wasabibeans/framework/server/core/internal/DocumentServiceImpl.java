@@ -258,7 +258,8 @@ public class DocumentServiceImpl {
 	}
 
 	public static void setContent(Node documentNode, Serializable content, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
+			ConcurrentModificationException {
 		try {
 			PipedInputStream pipedIn = new PipedInputStream();
 			PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
@@ -274,6 +275,8 @@ public class DocumentServiceImpl {
 			}
 
 			documentNode.setProperty(WasabiNodeProperty.CONTENT, toSave);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException("Object is locked", le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
@@ -321,7 +324,8 @@ public class DocumentServiceImpl {
 
 	public static void setContentPiped(Node documentNode, Serializable content, Session s, JmsConnector jms,
 			SharedFilterBean sharedFilterBean, String callerPrincipal) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException {
+			TargetDoesNotExistException, ObjectDoesNotExistException, DocumentContentException,
+			ConcurrentModificationException {
 		try {
 			Node nearestRoomNode = getNearestRoom(documentNode);
 			Node pipelineNode = RoomServiceImpl.getPipeline(nearestRoomNode);
