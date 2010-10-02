@@ -26,6 +26,10 @@ import javax.jcr.Session;
 
 import org.kohsuke.MetaInfServices;
 
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.pipes.filter.AnnotationBasedFilter;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
@@ -51,7 +55,8 @@ public class MimeFilter extends AnnotationBasedFilter implements Sink, Source {
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, byte[] buffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException {
 		try {
 			if (document.getContentType().match(mimeType)) {
 				forward(MATCH, document, buffer, s, jms, sharedFilterBean);

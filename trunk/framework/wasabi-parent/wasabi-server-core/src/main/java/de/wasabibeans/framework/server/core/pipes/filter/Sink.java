@@ -25,6 +25,10 @@ import java.io.Serializable;
 
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public interface Sink {
@@ -71,7 +75,8 @@ public interface Sink {
 	}
 
 	void filter(Wire fromWire, Filter.DocumentInfo document, byte[] byteBuffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean);
+			SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException;
 
 	boolean isAsynchronous();
 }

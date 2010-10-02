@@ -63,7 +63,9 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 import de.wasabibeans.framework.server.core.pipes.filter.FilterRegistry;
@@ -203,7 +205,8 @@ public class FilterServiceImpl {
 	}
 
 	public static void apply(Node pipelineNode, Node documentNode, Serializable content, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean, String callerPrincipal) throws UnexpectedInternalProblemException {
+			SharedFilterBean sharedFilterBean, String callerPrincipal) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException, ConcurrentModificationException {
 		getFilter(pipelineNode).filter(null, new Filter.DocumentInfo(documentNode, callerPrincipal), (byte[]) content,
 				s, jms, sharedFilterBean);
 	}

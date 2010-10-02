@@ -34,6 +34,10 @@ import javax.jcr.Session;
 
 import org.kohsuke.MetaInfServices;
 
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.pipes.filter.AnnotationBasedFilter;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
@@ -93,7 +97,8 @@ public class FfmpegFilter extends AnnotationBasedFilter implements Sink, Source 
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, final byte[] buffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException {
 		try {
 			final Process process = Runtime.getRuntime().exec(
 					command + " -i - -f " + format + " " + (parameter == null ? "" : parameter) + " -");

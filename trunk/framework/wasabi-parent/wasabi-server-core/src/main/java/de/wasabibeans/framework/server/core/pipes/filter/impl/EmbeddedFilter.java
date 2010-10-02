@@ -29,6 +29,10 @@ import javax.jcr.Session;
 import org.json.JSONException;
 import org.json.JSONWriter;
 
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
 import de.wasabibeans.framework.server.core.pipes.filter.Sink;
@@ -55,7 +59,8 @@ public class EmbeddedFilter extends Filter implements Source, Sink {
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, byte[] byteBuffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException {
 		if (fromWire.to.sink instanceof NamedSink) {
 			forward(new Output(this, ((NamedSink) fromWire.to.sink).getName()), document, byteBuffer, s, jms,
 					sharedFilterBean);

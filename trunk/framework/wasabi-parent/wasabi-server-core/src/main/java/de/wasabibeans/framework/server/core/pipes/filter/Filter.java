@@ -42,6 +42,9 @@ import javax.jms.JMSException;
 import org.json.JSONException;
 import org.json.JSONWriter;
 
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.DocumentContentException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.FilterServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -169,10 +172,12 @@ public abstract class Filter implements Serializable, Cloneable {
 	public abstract String getFilterCategory();
 
 	public abstract void filter(Wire fromWire, Filter.DocumentInfo document, byte[] byteBuffer, Session s,
-			JmsConnector jms, SharedFilterBean sharedFilterBean);
+			JmsConnector jms, SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException, ConcurrentModificationException;
 
 	protected final void forward(Source.Output output, DocumentInfo documentInfo, byte[] buffer, Session s,
-			JmsConnector jms, SharedFilterBean sharedFilterBean) {
+			JmsConnector jms, SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, DocumentContentException, ConcurrentModificationException {
 		for (Wire wire : wires) {
 			if (wire.getFrom().equals(output)) {
 				if (wire.to.sink.isAsynchronous()) {

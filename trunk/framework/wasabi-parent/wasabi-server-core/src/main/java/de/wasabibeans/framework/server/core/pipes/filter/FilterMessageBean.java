@@ -28,12 +28,10 @@ import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
-import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -75,9 +73,7 @@ public class FilterMessageBean implements MessageListener {
 
 			wire.to.sink.filter(wire, info, data, jcr.getJCRSession(), jms, sharedFilterBean);
 			sharedFilterBean.finishTask(task);
-		} catch (JMSException e) {
-			throw new RuntimeException(e);
-		} catch (UnexpectedInternalProblemException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
 			jcr.cleanup(false);
