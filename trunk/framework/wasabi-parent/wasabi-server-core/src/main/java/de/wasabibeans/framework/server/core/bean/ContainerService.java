@@ -430,6 +430,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
+			Locker.checkOptLockId(containerNode, container, optLockId);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

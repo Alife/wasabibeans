@@ -518,6 +518,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
+			Locker.checkOptLockId(documentNode, document, optLockId);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

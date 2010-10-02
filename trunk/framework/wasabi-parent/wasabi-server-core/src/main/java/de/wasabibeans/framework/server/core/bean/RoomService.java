@@ -459,6 +459,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			Locker.checkOptLockId(roomNode, room, optLockId);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {

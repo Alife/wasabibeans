@@ -319,6 +319,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			Locker.checkOptLockId(groupNode, group, optLockId);
 			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
 			GroupServiceImpl.remove(groupNode);
 			s.save();

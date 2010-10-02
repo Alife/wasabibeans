@@ -305,6 +305,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+			Locker.checkOptLockId(attributeNode, attribute, optLockId);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
