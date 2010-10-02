@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class RoomServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiRoomDTO room1;
 
 	@BeforeMethod
@@ -143,27 +144,27 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		try {
-			roomService().rename(room2, "room1", null);
+			roomService().rename(room2, "room1", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "room2"));
 			AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		}
 
-		roomService().rename(room2, "room_2", null);
+		roomService().rename(room2, "room_2", optLockId);
 		AssertJUnit.assertEquals("room_2", roomService().getName(room2).getValue());
 		AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "room_2"));
 		AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
 	}
 
-	@Test(dependsOnMethods = { "createTest" })
+	@Test//(dependsOnMethods = { "createTest" })
 	public void moveTest() throws WasabiException {
 		WasabiRoomDTO sub = roomService().create("room2", room1);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
 		try {
-			roomService().move(sub, rootRoom, null);
+			roomService().move(sub, rootRoom, optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiRoomDTO> roomsOfRoom1 = roomService().getRooms(room1);
@@ -172,7 +173,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 			AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		}
 
-		roomService().move(sub, room2, null);
+		roomService().move(sub, room2, optLockId);
 		Vector<WasabiRoomDTO> roomsOfRoom1 = roomService().getRooms(room1);
 		AssertJUnit.assertFalse(roomsOfRoom1.contains(sub));
 		AssertJUnit.assertEquals(0, roomsOfRoom1.size());
@@ -185,7 +186,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
-		roomService().remove(room2, null);
+		roomService().remove(room2, optLockId);
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertFalse(rooms.contains(room2));
 		AssertJUnit.assertEquals(2, rooms.size());
@@ -231,7 +232,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			rooms[i] = roomService().create("room" + i, room);
-			objectService().setCreatedOn(rooms[i], dates[i], null);
+			objectService().setCreatedOn(rooms[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -264,7 +265,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 				} else {
 					rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 				}
-				objectService().setCreatedOn(rooms[d][t], dates[t], null);
+				objectService().setCreatedOn(rooms[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -348,7 +349,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			rooms[i] = roomService().create("room" + i, room);
-			objectService().setModifiedOn(rooms[i], dates[i], null);
+			objectService().setModifiedOn(rooms[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -381,7 +382,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 				} else {
 					rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 				}
-				objectService().setModifiedOn(rooms[d][t], dates[t], null);
+				objectService().setModifiedOn(rooms[d][t], dates[t], optLockId);
 			}
 		}
 

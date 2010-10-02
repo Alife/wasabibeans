@@ -48,6 +48,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class LinkServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiLinkDTO link1;
 
 	@BeforeMethod
@@ -152,7 +153,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		linkService().create("link1", rootRoom, newEnvironment);
 
 		try {
-			linkService().move(link1, newEnvironment, null);
+			linkService().move(link1, newEnvironment, optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiLinkDTO> linksOfRoot = linkService().getLinks(rootRoom);
@@ -162,7 +163,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiLinkDTO link2 = linkService().getLinkByName(rootRoom, "link2");
-		linkService().move(link2, newEnvironment, null);
+		linkService().move(link2, newEnvironment, optLockId);
 		Vector<WasabiLinkDTO> linksOfRoot = linkService().getLinks(rootRoom);
 		AssertJUnit.assertFalse(linksOfRoot.contains(link2));
 		AssertJUnit.assertEquals(1, linksOfRoot.size());
@@ -173,7 +174,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		linkService().remove(link1, null);
+		linkService().remove(link1, optLockId);
 		Vector<WasabiLinkDTO> links = linkService().getLinks(rootRoom);
 		AssertJUnit.assertFalse(links.contains(link1));
 		AssertJUnit.assertEquals(1, links.size());
@@ -182,7 +183,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			linkService().rename(link1, "link2", null);
+			linkService().rename(link1, "link2", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(linkService().getLinkByName(rootRoom, "link1"));
@@ -190,7 +191,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			linkService().rename(link1, null, null);
+			linkService().rename(link1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -198,7 +199,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 			}
 		}
 
-		linkService().rename(link1, "link_2", null);
+		linkService().rename(link1, "link_2", optLockId);
 		AssertJUnit.assertEquals("link_2", linkService().getName(link1).getValue());
 		AssertJUnit.assertNotNull(linkService().getLinkByName(rootRoom, "link_2"));
 		AssertJUnit.assertEquals(2, linkService().getLinks(rootRoom).size());
@@ -208,15 +209,15 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setDestinationTest() throws Exception {
 		WasabiDocumentDTO document = documentService().create("document", rootRoom);
-		linkService().setDestination(link1, document, null);
+		linkService().setDestination(link1, document, optLockId);
 		AssertJUnit.assertEquals(document, linkService().getDestination(link1).getValue());
 
 		// test null value
-		linkService().setDestination(link1, null, null);
+		linkService().setDestination(link1, null, optLockId);
 		AssertJUnit.assertNull(linkService().getDestination(link1).getValue());
 
 		// test whether a new value can be set after null
-		linkService().setDestination(link1, rootRoom, null);
+		linkService().setDestination(link1, rootRoom, optLockId);
 		AssertJUnit.assertEquals(rootRoom, linkService().getDestination(link1).getValue());
 	}
 
@@ -231,7 +232,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			links[i] = linkService().create("link" + i, rootRoom, room);
-			objectService().setCreatedOn(links[i], dates[i], null);
+			objectService().setCreatedOn(links[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -269,7 +270,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
 				}
-				objectService().setCreatedOn(links[d][t], dates[t], null);
+				objectService().setCreatedOn(links[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -352,7 +353,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			links[i] = linkService().create("link" + i, rootRoom, room);
-			objectService().setModifiedOn(links[i], dates[i], null);
+			objectService().setModifiedOn(links[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -390,7 +391,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
 				}
-				objectService().setModifiedOn(links[d][t], dates[t], null);
+				objectService().setModifiedOn(links[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -473,7 +474,7 @@ public class LinkServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			links[i] = linkService().create("link" + i, rootRoom, room);
-			objectService().setCreatedOn(links[i], dates[i], null);
+			objectService().setCreatedOn(links[i], dates[i], optLockId);
 
 			cal.add(Calendar.SECOND, 1);
 		}

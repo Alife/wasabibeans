@@ -49,6 +49,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiDocumentDTO document1;
 
 	@BeforeMethod
@@ -136,7 +137,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 	}
 
-	@Test(dependsOnMethods = { "createTest" })
+	@Test//(dependsOnMethods = { "createTest" })
 	public void setContentTest() throws Exception {
 		WasabiDocumentDTO document = documentService().create("test", rootRoom);
 
@@ -145,24 +146,15 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		FileInputStream in = new FileInputStream(file);
 		in.read(fileBytes);
 		in.close();
-		documentService().setContent(document, fileBytes, null);
+		documentService().setContent(document, fileBytes, optLockId);
 
 		byte[] loadedBytes = documentService().getContent(document).getValue();
 		AssertJUnit.assertEquals(fileBytes, loadedBytes);
 
-		documentService().setContent(document, "Hallo", null);
+		documentService().setContent(document, "Hallo", optLockId);
 		AssertJUnit.assertEquals("Hallo", documentService().getContent(document).getValue());
 
-		try {
-			documentService().setContent(null, "Hallo", null);
-			AssertJUnit.fail();
-		} catch (EJBException e) {
-			if (!(e.getCause() instanceof IllegalArgumentException)) {
-				AssertJUnit.fail();
-			}
-		}
-
-		documentService().setContent(document, null, null);
+		documentService().setContent(document, null, optLockId);
 		AssertJUnit.assertNull(documentService().getContent(document).getValue());
 	}
 
@@ -172,7 +164,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		documentService().create("document1", newLocation);
 
 		try {
-			documentService().move(document1, newLocation, null);
+			documentService().move(document1, newLocation, optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiDocumentDTO> documentsOfRoot = documentService().getDocuments(rootRoom);
@@ -182,7 +174,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiDocumentDTO document2 = documentService().getDocumentByName(rootRoom, "document2");
-		documentService().move(document2, newLocation, null);
+		documentService().move(document2, newLocation, optLockId);
 		Vector<WasabiDocumentDTO> documentsOfRoot = documentService().getDocuments(rootRoom);
 		AssertJUnit.assertFalse(documentsOfRoot.contains(document2));
 		AssertJUnit.assertEquals(1, documentsOfRoot.size());
@@ -194,7 +186,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			documentService().rename(document1, "document2", null);
+			documentService().rename(document1, "document2", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(documentService().getDocumentByName(rootRoom, "document1"));
@@ -202,7 +194,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			documentService().rename(document1, null, null);
+			documentService().rename(document1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -210,7 +202,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 			}
 		}
 
-		documentService().rename(document1, "document_2", null);
+		documentService().rename(document1, "document_2", optLockId);
 		AssertJUnit.assertEquals("document_2", documentService().getName(document1).getValue());
 		AssertJUnit.assertNotNull(documentService().getDocumentByName(rootRoom, "document_2"));
 		AssertJUnit.assertEquals(2, documentService().getDocuments(rootRoom).size());
@@ -219,7 +211,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		documentService().remove(document1, null);
+		documentService().remove(document1, optLockId);
 		Vector<WasabiDocumentDTO> documents = documentService().getDocuments(rootRoom);
 		AssertJUnit.assertFalse(documents.contains(document1));
 		AssertJUnit.assertEquals(1, documents.size());
@@ -236,7 +228,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			documents[i] = documentService().create("link" + i, room);
-			objectService().setCreatedOn(documents[i], dates[i], null);
+			objectService().setCreatedOn(documents[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -274,7 +266,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
 				}
-				objectService().setCreatedOn(documents[d][t], dates[t], null);
+				objectService().setCreatedOn(documents[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -357,7 +349,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			documents[i] = documentService().create("link" + i, room);
-			objectService().setModifiedOn(documents[i], dates[i], null);
+			objectService().setModifiedOn(documents[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -395,7 +387,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 						rooms[d][t] = roomService().create("room" + t, rooms[d - 1][(int) (Math.random() * 5)]);
 					}
 				}
-				objectService().setModifiedOn(documents[d][t], dates[t], null);
+				objectService().setModifiedOn(documents[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -479,7 +471,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			documents[i] = documentService().create("document" + i, room);
-			objectService().setCreatedOn(documents[i], dates[i], null);
+			objectService().setCreatedOn(documents[i], dates[i], optLockId);
 
 			cal.add(Calendar.SECOND, 1);
 		}
@@ -502,7 +494,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		WasabiDocumentDTO document = documentService().create("test", room);
 
 		Calendar cal = Calendar.getInstance();
-		objectService().setCreatedOn(document, cal.getTime(), null);
+		objectService().setCreatedOn(document, cal.getTime(), optLockId);
 
 		AssertJUnit.assertTrue(documentService().hasDocumentsCreatedAfter(room, cal.getTimeInMillis()));
 
@@ -516,7 +508,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		WasabiDocumentDTO document = documentService().create("test", room);
 
 		Calendar cal = Calendar.getInstance();
-		objectService().setCreatedOn(document, cal.getTime(), null);
+		objectService().setCreatedOn(document, cal.getTime(), optLockId);
 
 		AssertJUnit.assertTrue(documentService().hasDocumentsCreatedBefore(room, cal.getTimeInMillis()));
 
@@ -530,7 +522,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		WasabiDocumentDTO document = documentService().create("test", room);
 
 		Calendar cal = Calendar.getInstance();
-		objectService().setModifiedOn(document, cal.getTime(), null);
+		objectService().setModifiedOn(document, cal.getTime(), optLockId);
 
 		AssertJUnit.assertTrue(documentService().hasDocumentsModifiedAfter(room, cal.getTimeInMillis()));
 
@@ -544,7 +536,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		WasabiDocumentDTO document = documentService().create("test", room);
 
 		Calendar cal = Calendar.getInstance();
-		objectService().setModifiedOn(document, cal.getTime(), null);
+		objectService().setModifiedOn(document, cal.getTime(), optLockId);
 
 		AssertJUnit.assertTrue(documentService().hasDocumentsModifiedBefore(room, cal.getTimeInMillis()));
 

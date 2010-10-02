@@ -45,6 +45,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiAttributeDTO attribute1;
 
 	@BeforeMethod
@@ -188,7 +189,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		attributeService().create("attribute1", 1, newAffiliation);
 
 		try {
-			attributeService().move(attribute1, newAffiliation, null);
+			attributeService().move(attribute1, newAffiliation, optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiAttributeDTO> attributesOfRoot = attributeService().getAttributes(rootRoom);
@@ -198,7 +199,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiAttributeDTO attribute2 = attributeService().getAttributeByName(rootRoom, "attribute2");
-		attributeService().move(attribute2, newAffiliation, null);
+		attributeService().move(attribute2, newAffiliation, optLockId);
 		Vector<WasabiAttributeDTO> attributesOfRoot = attributeService().getAttributes(rootRoom);
 		AssertJUnit.assertFalse(attributesOfRoot.contains(attribute2));
 		AssertJUnit.assertEquals(1, attributesOfRoot.size());
@@ -209,7 +210,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		attributeService().remove(attribute1, null);
+		attributeService().remove(attribute1, optLockId);
 		Vector<WasabiAttributeDTO> attributes = attributeService().getAttributes(rootRoom);
 		AssertJUnit.assertFalse(attributes.contains(attribute1));
 		AssertJUnit.assertEquals(1, attributes.size());
@@ -218,7 +219,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			attributeService().rename(attribute1, "attribute2", null);
+			attributeService().rename(attribute1, "attribute2", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(attributeService().getAttributeByName(rootRoom, "attribute1"));
@@ -226,7 +227,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			attributeService().rename(attribute1, null, null);
+			attributeService().rename(attribute1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -234,7 +235,7 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 			}
 		}
 
-		attributeService().rename(attribute1, "attribute_2", null);
+		attributeService().rename(attribute1, "attribute_2", optLockId);
 		AssertJUnit.assertEquals("attribute_2", attributeService().getName(attribute1).getValue());
 		AssertJUnit.assertNotNull(attributeService().getAttributeByName(rootRoom, "attribute_2"));
 		AssertJUnit.assertEquals(2, attributeService().getAttributes(rootRoom).size());
@@ -244,12 +245,12 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setValueTest() throws Exception {
 		// test a primitive value
-		attributeService().setValue(attribute1, true, null);
+		attributeService().setValue(attribute1, true, optLockId);
 		AssertJUnit.assertEquals(Boolean.class.getName(), attributeService().getAttributeType(attribute1));
 
 		// test a date value
 		Date date = new Date();
-		attributeService().setValue(attribute1, date, null);
+		attributeService().setValue(attribute1, date, optLockId);
 		AssertJUnit.assertEquals(Date.class.getName(), attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertEquals(date, attributeService().getValue(Date.class, attribute1).getValue());
 
@@ -257,17 +258,17 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 		Vector<String> vector = new Vector<String>();
 		vector.add("Look, behind you");
 		vector.add("a three-headed monkey");
-		attributeService().setValue(attribute1, vector, null);
+		attributeService().setValue(attribute1, vector, optLockId);
 		AssertJUnit.assertEquals(Vector.class.getName(), attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertEquals(vector, attributeService().getValue(Vector.class, attribute1).getValue());
 
 		// test null value
-		attributeService().setValue(attribute1, null, null);
+		attributeService().setValue(attribute1, null, optLockId);
 		AssertJUnit.assertNull(attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertNull(attributeService().getValue(String.class, attribute1).getValue());
 
 		// test whether a new value can be set after null
-		attributeService().setValue(attribute1, 3, null);
+		attributeService().setValue(attribute1, 3, optLockId);
 		AssertJUnit.assertEquals(Integer.class.getName(), attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertEquals(3, attributeService().getValue(Integer.class, attribute1).getValue());
 	}
@@ -275,17 +276,17 @@ public class AttributeServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setWasabiValueTest() throws Exception {
 		WasabiDocumentDTO document = documentService().create("document", rootRoom);
-		attributeService().setWasabiValue(attribute1, document, null);
+		attributeService().setWasabiValue(attribute1, document, optLockId);
 		AssertJUnit.assertEquals(WasabiNodeType.DOCUMENT, attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertEquals(document, attributeService().getWasabiValue(attribute1).getValue());
 
 		// test null value
-		attributeService().setWasabiValue(attribute1, null, null);
+		attributeService().setWasabiValue(attribute1, null, optLockId);
 		AssertJUnit.assertNull(attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertNull(attributeService().getWasabiValue(attribute1).getValue());
 
 		// test whether a new value can be set after null
-		attributeService().setWasabiValue(attribute1, rootRoom, null);
+		attributeService().setWasabiValue(attribute1, rootRoom, optLockId);
 		AssertJUnit.assertEquals(WasabiNodeType.ROOM, attributeService().getAttributeType(attribute1));
 		AssertJUnit.assertEquals(rootRoom, attributeService().getWasabiValue(attribute1).getValue());
 	}

@@ -1,5 +1,8 @@
 package de.wasabibeans.framework.server.core.locking;
 
+import java.lang.reflect.Method;
+
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -7,6 +10,8 @@ import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 import javax.transaction.Synchronization;
 import javax.transaction.TransactionManager;
+
+import org.apache.jackrabbit.core.lock.SessionLockManager;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -86,7 +91,22 @@ public class Locker {
 		try {
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			for (String lockToken : lockManager.getLockTokens()) {
-				lockManager.removeLockToken(lockToken);
+				try {
+					lockManager.removeLockToken(lockToken);
+				} catch (ItemNotFoundException infe) {
+					/*
+					 * This happens if the session still holds a lock-token for a node that does not exist any more. Use
+					 * a workaround to forcibly remove such a 'corrupt' lock-token from the session.
+					 */
+					try {
+						SessionLockManager slm = (SessionLockManager) lockManager;
+						Method lockTokenRemoved = slm.getClass().getDeclaredMethod("lockTokenRemoved", String.class);
+						lockTokenRemoved.setAccessible(true);
+						lockTokenRemoved.invoke(slm, lockToken);
+					} catch (Exception e) {
+						throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, e);
+					}
+				}
 			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
