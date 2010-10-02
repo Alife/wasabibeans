@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.common.WasabiConstants.hashAlgorithms;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -39,6 +40,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
+import de.wasabibeans.framework.server.core.util.HashGenerator;
 
 @Run(RunModeType.AS_CLIENT)
 public class UserServiceTest extends WasabiRemoteTest {
@@ -94,6 +96,10 @@ public class UserServiceTest extends WasabiRemoteTest {
 		aclService().create(getUserByNameWithEnvironmentTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
+		System.out.print("Setting EXECUTE as userRight for getUserByNameWithEnvironmentTestRoom... ");
+		aclService().create(getUserByNameWithEnvironmentTestRoom, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
 		System.out.print("Deactivating inheritance for getUserByNameWithEnvironmentTestRoom... ");
 		aclService().deactivateInheritance(getUserByNameWithEnvironmentTestRoom);
 		System.out.println("done.");
@@ -131,6 +137,115 @@ public class UserServiceTest extends WasabiRemoteTest {
 		try {
 			userService().getUserByName(getUserByNameWithEnvironmentTestRoom, "newUser");
 			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getUsersByDisplayNameTest() throws WasabiException {
+		System.out.println("=== getUsersByDisplayNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating createTestRoom at getUsersByDisplayNameTestRoom... ");
+		WasabiRoomDTO getUsersByDisplayNameTestRoom = null;
+		try {
+			getUsersByDisplayNameTestRoom = roomService().create("getUsersByDisplayNameTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getUsersByDisplayNameTestRoom... ");
+		aclService().create(getUsersByDisplayNameTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for getUsersByDisplayNameTestRoom... ");
+		aclService().create(getUsersByDisplayNameTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getUsersByDisplayNameTestRoom... ");
+		aclService().deactivateInheritance(getUsersByDisplayNameTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Creating user1...");
+		WasabiUserDTO user1 = null;
+		try {
+			user1 = userService().create("user1", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Creating user2...");
+		WasabiUserDTO user2 = null;
+		try {
+			user2 = userService().create("user2", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Creating user3...");
+		WasabiUserDTO user3 = null;
+		try {
+			user3 = userService().create("user3", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering getUsersByDisplayNameTestRoom by user1...");
+		try {
+			userService().enter(user1, getUsersByDisplayNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering getUsersByDisplayNameTestRoom by user2...");
+		try {
+			userService().enter(user2, getUsersByDisplayNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering getUsersByDisplayNameTestRoom by user3...");
+		try {
+			userService().enter(user3, getUsersByDisplayNameTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting users by displayName with VIEW at room getUsersByDisplayNameTestRoom...");
+		try {
+			Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user2");
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(userService().getDisplayName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user2... ");
+		aclService().create(user2, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting users with VIEW at room getUsersByDisplayNameTestRoom...");
+		try {
+			Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user2");
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(userService().getDisplayName(wasabiUserDTO).getValue());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -468,6 +583,94 @@ public class UserServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void setStartRoomTest() throws WasabiException {
+		System.out.println("=== setStartRoomTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting startRoom of newUser...");
+		try {
+			userService().setStartRoom(newUser, usersHome, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting startRoom of newUser...");
+		try {
+			userService().setStartRoom(newUser, usersHome, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setStatusTest() throws WasabiException {
+		System.out.println("=== setStatusTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting status of newUser...");
+		try {
+			userService().setStatus(newUser, false, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting status of newUser...");
+		try {
+			userService().setStatus(newUser, true, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void getMembershipsTest() throws WasabiException {
 		System.out.println("=== getMembershipsTest() ===");
 
@@ -503,6 +706,101 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Getting get memberships of newUser...");
 		try {
 			userService().getMemberships(newUser);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setDisplayNameTest() throws WasabiException {
+		System.out.println("=== setDisplayNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting displayName of newUser...");
+		try {
+			userService().setDisplayName(newUser, "blubb", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting displayName of newUser...");
+		try {
+			userService().setDisplayName(newUser, "blubb", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setPasswordTest() throws WasabiException {
+		System.out.println("=== setPasswordTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting password of newUser...");
+		try {
+			userService().setPassword(newUser, "pwd");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if password is string pwd:");
+		String pwHash = userService().getPassword(newUser);
+		if (pwHash.equals(HashGenerator.generateHash("pwd", hashAlgorithms.SHA)))
+			System.out.println("true.");
+		else
+			System.out.println("false.");
+
+		System.out.print("Setting WRITE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting password of newUser...");
+		try {
+			userService().setPassword(newUser, "pwd");
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
