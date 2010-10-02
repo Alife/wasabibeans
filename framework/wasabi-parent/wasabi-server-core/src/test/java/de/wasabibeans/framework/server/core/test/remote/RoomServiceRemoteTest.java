@@ -158,7 +158,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
 	}
 
-	@Test//(dependsOnMethods = { "createTest" })
+	@Test(dependsOnMethods = { "createTest" })
 	public void moveTest() throws WasabiException {
 		WasabiRoomDTO sub = roomService().create("room2", room1);
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);

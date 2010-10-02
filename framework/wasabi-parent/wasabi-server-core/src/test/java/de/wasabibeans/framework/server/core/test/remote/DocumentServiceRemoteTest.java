@@ -137,7 +137,7 @@ public class DocumentServiceRemoteTest extends WasabiRemoteTest {
 		}
 	}
 
-	@Test//(dependsOnMethods = { "createTest" })
+	@Test(dependsOnMethods = { "createTest" })
 	public void setContentTest() throws Exception {
 		WasabiDocumentDTO document = documentService().create("test", rootRoom);
 
