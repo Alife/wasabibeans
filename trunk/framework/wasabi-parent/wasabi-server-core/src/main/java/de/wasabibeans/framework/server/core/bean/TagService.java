@@ -47,7 +47,6 @@ import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.TagServiceImpl;
 import de.wasabibeans.framework.server.core.local.TagServiceLocal;
-import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
 
 /**
@@ -66,7 +65,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -79,7 +78,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 							"object"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, object);
 			TagServiceImpl.addTag(objectNode, tag, s, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {
@@ -90,7 +88,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -103,7 +101,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 							"object"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, object);
 			TagServiceImpl.clearTags(objectNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -119,7 +116,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tags"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> result = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -141,7 +138,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public Map<String, Integer> getMostUsedDocumentTags(WasabiLocationDTO environment, int limit)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		return TagServiceImpl.getMostUsedDocumentTags(environmentNode, limit);
 		// TODO: ACL Support
@@ -154,7 +151,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Vector<WasabiObjectDTO> result = new Vector<WasabiObjectDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -175,7 +172,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public Vector<String> getTags(WasabiObjectDTO object) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -197,7 +194,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 					"tag"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -210,7 +207,6 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 							"object"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, object);
 			TagServiceImpl.removeTag(objectNode, tag);
 			s.save();
 		} catch (RepositoryException re) {

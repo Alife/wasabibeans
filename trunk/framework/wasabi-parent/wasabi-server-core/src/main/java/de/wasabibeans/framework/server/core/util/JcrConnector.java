@@ -61,17 +61,16 @@ public class JcrConnector {
 	}
 
 	/**
-	 * Returns a new JCA handle that is connected to a JCR session. This {@code JCRConnector} instance keeps a reference
-	 * to the returned JCA handle and thus can perform a logout later on. This method is to be used outside of JTA
-	 * transactions, where JCA handles have to be logged out explicitly.
+	 * Returns a JCA handle that is connected to a JCR session.
 	 * 
 	 * @return
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public Session getJCRSessionNoTx() throws UnexpectedInternalProblemException {
+	public Session getJCRSession() throws UnexpectedInternalProblemException {
 		try {
 			if (session == null) {
-				session = getJCRSessionTx();
+				session = getJCRRepository().login(
+						new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
 			}
 			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
 			return session;
@@ -81,65 +80,17 @@ public class JcrConnector {
 	}
 
 	/**
-	 * Returns a new JCA handle that is connected to a JCR session. This {@code JCRConnector} instance does not keep a
-	 * reference to the returned JCA handle and thus cannot perform a logout later on. So this method is to be used
-	 * within JTA transactions, within which JCA handles are logged out automatically.
-	 * 
-	 * @return
-	 * @throws UnexpectedInternalProblemException
-	 */
-	public Session getJCRSessionTx() throws UnexpectedInternalProblemException {
-		try {
-			Session s = getJCRRepository().login(
-					new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
-			/*
-			 * workaround 1: there seems to be a problem when using JCA handles within transactions (which happens
-			 * within the wasabi core almost all the time). normally the cache of a JCR session (to which a JCA handle
-			 * is connected) is updated when changes of other JCR sessions are persisted. within container managed
-			 * transactions this update procedure seems to fail from to time and consequently even simple test cases
-			 * fail. i have not yet been able to pinpoint this bug in a way that would allow me create a very concise
-			 * test-case that could be handed to the jackrabbit-developers. the bug seems very similar to this one
-			 * https://issues.apache.org/jira/browse/JCR-1953, which is already marked as resolved, though.
-			 */
-			clearCache(s);
-			/*
-			 * workaround 2: the automatic logout procedure of the JCA handles does not remove existing lock-tokens from
-			 * JCR sessions. so a client could retrieve a JCR session that still holds lock-tokens from the JCA
-			 * connection pool.
-			 */
-			Locker.cleanUpLockTokens(s);
-			// logger.info("Session used: " + ((JCASessionHandle) session).getXAResource().toString());
-			return s;
-		} catch (Exception e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, e);
-		}
-	}
-
-	/**
-	 * Clears the item cache of the JCR session to which the given JCA handle {@code s} is connected.
-	 * 
-	 * @param s
-	 * @throws Exception
-	 */
-	private void clearCache(Session s) throws Exception {
-		JCASessionHandle jcaHandle = (JCASessionHandle) s;
-		SessionImpl jackrabbitSession = (SessionImpl) jcaHandle.getXAResource();
-		ItemManager cacheOfSession = jackrabbitSession.getItemManager();
-		Method clearCacheMethod = cacheOfSession.getClass().getDeclaredMethod("dispose");
-		clearCacheMethod.setAccessible(true);
-		clearCacheMethod.invoke(cacheOfSession);
-	}
-
-	/**
 	 * Destroys the JCR session to which the current JCA handle {@code session} of this instance is connected.
 	 */
 	public void destroy() {
 		try {
 			if (session != null) {
 				JCASessionHandle handle = (JCASessionHandle) session;
-				// sending an error event forces the JCA adapter to get rid of the corrupt JCR session
-				// (calling handle.getManagedConnection().destroy() does not work, as destroy() reduces the size of the
-				// JCA pool, which would eventually lead to no JCR session being available at all)
+				/*
+				 * sending an error event forces the JCA adapter to get rid of the corrupt JCR session (calling
+				 * handle.getManagedConnection().destroy() does not work, as destroy() reduces the size of the JCA pool,
+				 * which would eventually lead to no JCR session being available at all)
+				 */
 				handle.getManagedConnection().sendrrorEvent(handle,
 						new Exception("This is just a workaround to close a corrupt JCR session - IGNORE."));
 				session = null;
@@ -153,14 +104,37 @@ public class JcrConnector {
 	}
 
 	/**
-	 * Returns the JCR session to which the current JCA handle {@code session} of this instance is connected to the JCA
-	 * connection pool.
+	 * Prepares the JCR session to which the current JCA handle {@code session} of this instance is connected for being
+	 * returned to the JCA connection pool.
+	 * 
+	 * @param explicitReturn
+	 *            {@code true} if the JCR session shall also be returned to the JCA connection pool by this method call
 	 */
-	public void logout() {
+	public void cleanup(boolean explicitReturn) {
 		try {
 			if (session != null) {
-				// Locker.cleanUpLockTokens(session);
-				session.logout();
+				/*
+				 * workaround 1: there seems to be a problem when using JCA handles within transactions (which happens
+				 * within the wasabi core almost all the time). normally the cache of a JCR session (to which a JCA
+				 * handle is connected) is updated when changes of other JCR sessions are persisted. within container
+				 * managed transactions this update procedure seems to fail from to time and consequently even simple
+				 * test cases fail. i have not yet been able to pinpoint this bug in a way that would allow me create a
+				 * very concise test-case that could be handed to the jackrabbit-developers. the bug seems very similar
+				 * to this one https://issues.apache.org/jira/browse/JCR-1953, which is already marked as resolved,
+				 * though.
+				 */
+				clearCache(session);
+				/*
+				 * workaround 2: the automatic logout procedure of the JCA handles does not remove existing lock-tokens
+				 * from JCR sessions. so a client could retrieve a JCR session that still holds lock-tokens from the JCA
+				 * connection pool.
+				 */
+				Locker.cleanUpLockTokens(session);
+
+				if (explicitReturn) {
+					session.logout();
+				}
+
 				session = null;
 			}
 		} catch (Exception e) {
@@ -169,6 +143,21 @@ public class JcrConnector {
 							"Fatal internal error: A JCR session could not be returned to the connection pool properly. Restart the JCR repository to avoid possible consequential errors.",
 							e);
 		}
+	}
+	
+	/**
+	 * Clears the item cache of the JCR session to which the given JCA handle {@code s} is connected.
+	 * 
+	 * @param s
+	 * @throws Exception
+	 */
+	private void clearCache(Session s) throws Exception {
+		JCASessionHandle jcaHandle = (JCASessionHandle) s;
+		SessionImpl jackrabbitSession = (SessionImpl) jcaHandle.getXAResource();
+		ItemManager cacheOfSession = jackrabbitSession.getItemManager();
+		Method clearCacheMethod = cacheOfSession.getClass().getDeclaredMethod("dispose");
+		clearCacheMethod.setAccessible(true);
+		clearCacheMethod.invoke(cacheOfSession);
 	}
 
 }

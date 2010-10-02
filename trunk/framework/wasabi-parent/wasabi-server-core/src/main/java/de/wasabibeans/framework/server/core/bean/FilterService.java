@@ -61,7 +61,7 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 					"filter"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node pipelineNode = FilterServiceImpl.create(name, filter, s, callerPrincipal);
@@ -84,7 +84,7 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 					"filter"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			FilterServiceImpl.updateOrCreate(name, filter, s, callerPrincipal);
@@ -101,13 +101,13 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		return TransferManager.convertNode2DTO(FilterServiceImpl.getPipeline(name, s));
 	}
 
 	@Override
 	public Vector<WasabiPipelineDTO> getPipelines() throws UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Vector<WasabiPipelineDTO> pipelines = new Vector<WasabiPipelineDTO>();
 		for (NodeIterator ni = FilterServiceImpl.getPipelines(s); ni.hasNext();) {
 			pipelines.add((WasabiPipelineDTO) TransferManager.convertNode2DTO(ni.nextNode()));
@@ -118,7 +118,7 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 	@Override
 	public void remove(WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
 			FilterServiceImpl.remove(pipelineNode);

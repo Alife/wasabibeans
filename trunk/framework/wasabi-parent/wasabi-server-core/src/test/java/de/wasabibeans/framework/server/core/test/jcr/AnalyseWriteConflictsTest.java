@@ -115,10 +115,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void diffProperty() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_DIFF_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, SET_DIFF_PROPERTY);
@@ -132,10 +132,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void sameProperty() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_SAME_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, SET_SAME_PROPERTY);
@@ -149,10 +149,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addDiff() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_DIFF_CHILD);
 			UserThread user2 = new TestUserVS(USER2, ADD_DIFF_CHILD);
@@ -166,10 +166,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addSame() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, ADD_SAME_CHILD);
@@ -183,12 +183,12 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeDiff() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addNode(USER1, NodeType.NT_FOLDER);
 			session.getNodeByIdentifier(TESTNODE).addNode(USER2, NodeType.NT_FOLDER);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE_DIFF_CHILD);
 			UserThread user2 = new TestUserVS(USER2, REMOVE_DIFF_CHILD);
@@ -202,11 +202,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeSame() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILD, NodeType.NT_FOLDER);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, REMOVE_SAME_CHILD);
@@ -220,11 +220,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void move() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME, NodeType.NT_FOLDER).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -238,11 +238,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveDiffDest() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME, NodeType.NT_FOLDER).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE_DIFF_DEST);
 			UserThread user2 = new TestUserVS(USER2, MOVE_DIFF_DEST);
@@ -256,11 +256,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsEdit() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_SAME_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -274,11 +274,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void editVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, SET_SAME_PROPERTY);
@@ -292,10 +292,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void editVsremove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE);
 			UserThread user2 = new TestUserVS(USER2, SET_SAME_PROPERTY);
@@ -309,10 +309,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeVsedit() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_SAME_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, REMOVE);
@@ -326,11 +326,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, ADD_SAME_CHILD);
@@ -344,11 +344,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsadd() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -362,10 +362,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeVsadd() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, REMOVE);
@@ -379,10 +379,10 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addVsremove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE);
 			UserThread user2 = new TestUserVS(USER2, ADD_SAME_CHILD);
@@ -396,11 +396,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, REMOVE);
@@ -414,11 +414,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsremove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -432,11 +432,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeParentVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, REMOVE_PARENT);
@@ -450,11 +450,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsremoveParent() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE_PARENT);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -468,11 +468,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsedit() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_SAME_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, VERSION);
@@ -486,11 +486,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void editVsVersion() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION);
 			UserThread user2 = new TestUserVS(USER2, SET_SAME_PROPERTY);
@@ -504,11 +504,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsremove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE);
 			UserThread user2 = new TestUserVS(USER2, VERSION);
@@ -522,11 +522,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeVsVersion() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION);
 			UserThread user2 = new TestUserVS(USER2, REMOVE);
@@ -540,12 +540,12 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, VERSION);
@@ -559,12 +559,12 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsVersion() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -578,11 +578,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsaddchild() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, VERSION);
@@ -596,11 +596,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addChildVsversion() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION);
 			UserThread user2 = new TestUserVS(USER2, ADD_SAME_CHILD);
@@ -614,7 +614,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsedit() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -628,7 +628,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, SET_SAME_PROPERTY);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -642,7 +642,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void editVsRestore() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -656,7 +656,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, SET_SAME_PROPERTY);
@@ -670,7 +670,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsremove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -684,7 +684,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, REMOVE);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -698,7 +698,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void removeVsRestore() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -712,7 +712,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, REMOVE);
@@ -726,7 +726,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsmove() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
@@ -741,7 +741,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, MOVE);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -755,7 +755,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void moveVsRestore() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
@@ -770,7 +770,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
@@ -784,7 +784,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsaddChild() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -798,7 +798,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, ADD_SAME_CHILD);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -812,7 +812,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void addChildVsRestore() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -826,7 +826,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, ADD_SAME_CHILD);
@@ -840,11 +840,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsversionSame() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION);
 			UserThread user2 = new TestUserVS(USER2, VERSION);
@@ -858,11 +858,11 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsversionDiff() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION_DIFF);
 			UserThread user2 = new TestUserVS(USER2, VERSION_DIFF);
@@ -876,7 +876,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void versionVsRestore() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -890,7 +890,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, VERSION_DIFF);
@@ -904,7 +904,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsVersion() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -918,7 +918,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, VERSION_DIFF);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -932,7 +932,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsrestoreSame() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -946,7 +946,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("1", "1");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE);
 			UserThread user2 = new TestUserVS(USER2, RESTORE);
@@ -960,7 +960,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	public void restoreVsrestoreDiff() throws Throwable {
 		beforeTest();
 		try {
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
 			session.getNodeByIdentifier(TESTNODE).addMixin(NodeType.MIX_VERSIONABLE);
 			session.save();
@@ -983,7 +983,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			// edit so that restore matters
 			session.getNodeByIdentifier(TESTNODE).setProperty("2", "2");
 			session.save();
-			jcr.logout();
+			jcr.cleanup(true);
 
 			UserThread user1 = new TestUserVS(USER1, RESTORE_DIFF);
 			UserThread user2 = new TestUserVS(USER2, RESTORE_DIFF);
@@ -1025,9 +1025,9 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			for (Throwable t : executeUserThreads(user1, user2)) {
 				t.printStackTrace();
 			}
-			
+
 			// print result
-			Session session = jcr.getJCRSessionNoTx();
+			Session session = jcr.getJCRSession();
 			System.out.println("---Children rootNode:");
 			for (NodeIterator ni = session.getRootNode().getNodes(); ni.hasNext();) {
 				System.out.println(ni.nextNode().getName());
@@ -1083,7 +1083,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			}
 			System.out.println("------------------------ " + testname + " END");
 		} finally {
-			jcr.logout();
+			jcr.cleanup(true);
 		}
 	}
 
@@ -1105,10 +1105,9 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 				if (TX_ON) {
 					utx = (UserTransaction) jndi.lookup("UserTransaction");
 					utx.begin();
-					session = jcr.getJCRSessionTx();
-				} else {
-					session = jcr.getJCRSessionNoTx();
 				}
+				session = jcr.getJCRSession();
+
 				System.out.println(username + " " + ((JCASessionHandle) session).getXAResource().toString());
 				if (username.equals(USER2)) {
 					waitForMyTurn();
@@ -1205,6 +1204,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 				if (TX_ON) {
 					// finish transaction with commit
 					System.out.println(username + " commits");
+					jcr.cleanup(false);
 					utx.commit();
 				} else {
 					// finish by saving
@@ -1212,6 +1212,9 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 					session.save();
 				}
 			} catch (Throwable t) {
+				if (TX_ON) {
+					jcr.cleanup(false);
+				}
 				System.out.println(username + "throws exception");
 				if (TX_ON && t instanceof RuntimeException) {
 					try {
@@ -1223,7 +1226,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 				throwables.add(t);
 			} finally {
 				if (!TX_ON) {
-					jcr.logout();
+					jcr.cleanup(true);
 				}
 				jndi.close();
 			}
@@ -1241,7 +1244,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			JndiConnector jndi = JndiConnector.getJNDIConnector();
 			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				Session session = jcr.getJCRSessionNoTx();
+				Session session = jcr.getJCRSession();
 				System.out.println(username + " " + ((JCASessionHandle) session).getXAResource().toString());
 				if (username.equals(USER1)) {
 					waitForMyTurn();
@@ -1262,7 +1265,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				jcr.logout();
+				jcr.cleanup(true);
 				jndi.close();
 			}
 

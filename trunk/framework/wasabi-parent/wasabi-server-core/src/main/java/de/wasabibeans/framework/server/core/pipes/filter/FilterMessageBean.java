@@ -73,12 +73,14 @@ public class FilterMessageBean implements MessageListener {
 			Filter.DocumentInfo info = task.getInfo().clone();
 			byte[] data = task.getData();
 
-			wire.to.sink.filter(wire, info, data, jcr.getJCRSessionTx(), jms, sharedFilterBean);
+			wire.to.sink.filter(wire, info, data, jcr.getJCRSession(), jms, sharedFilterBean);
 			sharedFilterBean.finishTask(task);
 		} catch (JMSException e) {
 			throw new RuntimeException(e);
 		} catch (UnexpectedInternalProblemException e) {
 			throw new RuntimeException(e);
+		} finally {
+			jcr.cleanup(false);
 		}
 	}
 }

@@ -142,7 +142,7 @@ public class WasabiManager {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSessionNoTx();
+			Session s = jcr.getJCRSession();
 
 			// register wasabi nodetypes (also registers the wasabi jcr namespaces) in case a path to a .cnd file has
 			// been given
@@ -204,7 +204,7 @@ public class WasabiManager {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			jcr.logout();
+			jcr.cleanup(true);
 			jndi.close();
 		}
 	}

@@ -62,12 +62,16 @@ public class LockingHelper implements LockingHelperLocal {
 	public String acquireLock(String nodeId, boolean isDeep) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
-		LockManager lockManager = s.getWorkspace().getLockManager();
-		String lockToken = lockManager.lock(s.getNodeByIdentifier(nodeId).getPath(), isDeep, false, 10, null)
-				.getLockToken();
-		lockManager.removeLockToken(lockToken);
-		return lockToken;
+		Session s = jcr.getJCRSession();
+		try {
+			LockManager lockManager = s.getWorkspace().getLockManager();
+			String lockToken = lockManager.lock(s.getNodeByIdentifier(nodeId).getPath(), isDeep, false, 10, null)
+					.getLockToken();
+			lockManager.removeLockToken(lockToken);
+			return lockToken;
+		} finally {
+			jcr.cleanup(false);
+		}
 	}
 
 	@Override
@@ -75,12 +79,14 @@ public class LockingHelper implements LockingHelperLocal {
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
 		try {
-			Session s = jcr.getJCRSessionTx();
+			Session s = jcr.getJCRSession();
 			LockManager lockManager = s.getWorkspace().getLockManager();
 			lockManager.addLockToken(lockToken);
 			lockManager.unlock(s.getNodeByIdentifier(nodeId).getPath());
 		} catch (ItemNotFoundException infe) {
 			/* This happens if a node shall be unlocked that does not exist any more. Just do nothing. */
+		} finally {
+			jcr.cleanup(false);
 		}
 	}
 }

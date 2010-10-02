@@ -8,6 +8,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -17,6 +18,8 @@ import javax.jcr.version.VersionIterator;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
+import de.wasabibeans.framework.server.core.aop.WasabiAOP;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
@@ -35,7 +38,8 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @SecurityDomain("wasabi")
 @Stateless(name = "VersioningService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote {
+@Interceptors( { JCRSessionInterceptor.class })
+public class VersioningService implements VersioningServiceLocal, VersioningServiceRemote, WasabiAOP {
 
 	protected JndiConnector jndi;
 	protected JcrConnector jcr;
@@ -49,6 +53,14 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	@PreDestroy
 	public void preDestroy() {
 		jndi.close();
+	}
+
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
+
+	public JcrConnector getJcrConnector() {
+		return jcr;
 	}
 
 	/**
@@ -67,7 +79,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node node = TransferManager.convertDTO2Node(dto, s);
 			VersionHistory versionHistory = s.getWorkspace().getVersionManager().getVersionHistory(node.getPath());
@@ -105,7 +117,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		}
 
 		Node node = null;
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
 			// get unique version label (that is, unique in the version histories of the affected nodes)
@@ -138,7 +150,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 		}
 
 		Node node = null;
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			node = TransferManager.convertDTO2Node(dto, s);
 			// restore versions for entire subtree

@@ -100,14 +100,14 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
-		Session s = jcr.getJCRSessionNoTx();
+		Session s = jcr.getJCRSession();
 		try {
 			UserThread user1 = new TestUser(USER1);
 			UserThread user2 = new TestUser(USER2);
 			executeUserThreads(user1, user2);
 
 		} finally {
-			jcr.logout();
+			jcr.cleanup(true);
 			jndi.close();
 			loCon.disconnect();
 		}
@@ -123,7 +123,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 			JndiConnector jndi = JndiConnector.getJNDIConnector();
 			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 			try {
-				Session s = jcr.getJCRSessionNoTx();
+				Session s = jcr.getJCRSession();
 				JCASessionHandle handle = (JCASessionHandle) s;
 				System.out.println(username + " " + handle.getXAResource().toString());
 				VersionManager vm = s.getWorkspace().getVersionManager();
@@ -131,7 +131,7 @@ public class SimpleJCRSessionLocalTest extends Arquillian {
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				jcr.logout();
+				jcr.cleanup(true);
 				jndi.close();
 			}
 
