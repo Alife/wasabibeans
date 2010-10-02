@@ -32,14 +32,9 @@ public class JCRSessionInterceptor {
 		WasabiAOP service = (WasabiAOP) invocationContext.getTarget();
 		Object[] params = invocationContext.getParameters();
 
-		// has a service been called that supports locking?
-		boolean lockingSupported = false;
-		if (params.length > 0) {
-			lockingSupported = params[params.length - 1] instanceof Long;
-		}
-
+		// is an optLockId given?
 		String lockToken = null;
-		if (lockingSupported) {
+		if (params.length > 0 && params[params.length - 1] instanceof Long) {
 			// acquire lock according to the given optLockId
 			Long optLockId = (Long) params[params.length - 1];
 			lockToken = Locker.acquireServiceCallLock((WasabiObjectDTO) params[0], optLockId, locker,
@@ -49,13 +44,11 @@ public class JCRSessionInterceptor {
 		// get a JCR session from the JCA connection pool
 		Session s = service.getJcrConnector().getJCRSession();
 
-		if (lockingSupported) {
-			// associate existing lock-tokens with the JCR session
-			Locker.recognizeLockToken(s, lockToken);
-			for (Object param : params) {
-				if (param instanceof WasabiObjectDTO) {
-					Locker.recognizeLockToken(s, (WasabiObjectDTO) param);
-				}
+		// associate existing lock-tokens with the JCR session
+		Locker.recognizeLockToken(s, lockToken);
+		for (Object param : params) {
+			if (param instanceof WasabiObjectDTO) {
+				Locker.recognizeLockToken(s, (WasabiObjectDTO) param);
 			}
 		}
 
