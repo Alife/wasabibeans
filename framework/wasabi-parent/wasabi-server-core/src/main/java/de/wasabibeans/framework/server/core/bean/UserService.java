@@ -560,6 +560,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Locker.checkOptLockId(userNode, user, optLockId);
 			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
 			UserServiceImpl.remove(userNode);
 			s.save();

@@ -446,6 +446,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node linkNode = TransferManager.convertDTO2Node(link, s);
+			Locker.checkOptLockId(linkNode, link, optLockId);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
