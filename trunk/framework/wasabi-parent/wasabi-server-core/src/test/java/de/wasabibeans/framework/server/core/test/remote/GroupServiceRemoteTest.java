@@ -41,6 +41,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class GroupServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiGroupDTO group1_1;
 
 	@BeforeMethod
@@ -237,7 +238,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	public void moveTest() throws Exception {
 		WasabiGroupDTO group1 = groupService().getGroupByName("group1");
 		WasabiGroupDTO group1_1_2 = groupService().getGroupByName("group1_1_2");
-		groupService().move(group1_1_2, group1, null);
+		groupService().move(group1_1_2, group1, optLockId);
 		Vector<WasabiGroupDTO> subgroups1_1 = groupService().getSubGroups(group1_1);
 		Vector<WasabiGroupDTO> subgroups1 = groupService().getSubGroups(group1);
 		AssertJUnit.assertEquals(1, subgroups1_1.size());
@@ -245,7 +246,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertFalse(subgroups1_1.contains(group1_1_2));
 		AssertJUnit.assertTrue(subgroups1.contains(group1_1_2));
 
-		groupService().move(group1_1_2, null, null);
+		groupService().move(group1_1_2, null, optLockId);
 		subgroups1 = groupService().getSubGroups(group1);
 		Vector<WasabiGroupDTO> topgroups = groupService().getTopLevelGroups();
 		AssertJUnit.assertEquals(2, subgroups1.size());
@@ -266,7 +267,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	public void renameTest() throws Exception {
 		WasabiGroupDTO group1 = groupService().getGroupByName("group1");
 		try {
-			groupService().rename(group1_1, "group1_1_1", null);
+			groupService().rename(group1_1, "group1_1_1", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(groupService().getGroupByName("group1_1"));
@@ -274,7 +275,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		try {
-			groupService().rename(group1_1, null, null);
+			groupService().rename(group1_1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -282,7 +283,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 			}
 		}
 
-		groupService().rename(group1_1, "group1-1", null);
+		groupService().rename(group1_1, "group1-1", optLockId);
 		AssertJUnit.assertEquals("group1-1", groupService().getName(group1_1).getValue());
 		AssertJUnit.assertNotNull(groupService().getGroupByName("group1-1"));
 		AssertJUnit.assertEquals(2, groupService().getSubGroups(group1).size());
@@ -292,7 +293,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setDisplayNameTest() throws Exception {
 		try {
-			groupService().setDisplayName(group1_1, null, null);
+			groupService().setDisplayName(group1_1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -301,8 +302,8 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiGroupDTO group1_2 = groupService().getGroupByName("group1_2");
-		groupService().setDisplayName(group1_1, "name", null);
-		groupService().setDisplayName(group1_2, "name", null);
+		groupService().setDisplayName(group1_1, "name", optLockId);
+		groupService().setDisplayName(group1_2, "name", optLockId);
 		AssertJUnit.assertEquals("name", groupService().getDisplayName(group1_1).getValue());
 		AssertJUnit.assertEquals("name", groupService().getDisplayName(group1_2).getValue());
 	}
@@ -349,7 +350,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 		WasabiGroupDTO group1 = groupService().getGroupByName("group1");
 		WasabiGroupDTO group1_1_1 = groupService().getGroupByName("group1_1_1");
 		groupService().addMember(group1_1_1, user3);
-		groupService().remove(group1_1, null);
+		groupService().remove(group1_1, optLockId);
 		Vector<WasabiGroupDTO> subgroups1 = groupService().getSubGroups(group1);
 		AssertJUnit.assertEquals(1, subgroups1.size());
 		AssertJUnit.assertFalse(subgroups1.contains(subgroups1));
@@ -362,7 +363,7 @@ public class GroupServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { ".*set.*" })
 	public void getGroupsByDisplayNameTest() throws Exception {
 		WasabiGroupDTO group1 = groupService().getGroupByName("group1");
-		groupService().setDisplayName(group1, "group1_1", null);
+		groupService().setDisplayName(group1, "group1_1", optLockId);
 		Vector<WasabiGroupDTO> groups = groupService().getGroupsByDisplayName("group1_1");
 		AssertJUnit.assertTrue(groups.contains(group1) && groups.contains(group1_1));
 		AssertJUnit.assertEquals(2, groups.size());

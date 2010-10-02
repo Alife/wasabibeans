@@ -44,6 +44,8 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
 public class ObjectServiceRemoteTest extends WasabiRemoteTest {
+	
+	private Long optLockId = -1L;
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -66,7 +68,7 @@ public class ObjectServiceRemoteTest extends WasabiRemoteTest {
 		WasabiContainerDTO container = containerService().create("container", rootRoom);
 		AssertJUnit.assertTrue(objectService().exists(container));
 
-		containerService().remove(container, null);
+		containerService().remove(container, optLockId);
 
 		try {
 			objectService().exists(container);

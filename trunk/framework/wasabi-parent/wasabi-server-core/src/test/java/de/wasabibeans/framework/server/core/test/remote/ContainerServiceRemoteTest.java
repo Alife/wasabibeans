@@ -45,6 +45,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiContainerDTO container1;
 
 	@BeforeMethod
@@ -132,7 +133,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		containerService().create("container1", room);
 
 		try {
-			containerService().move(container1, room, null);
+			containerService().move(container1, room, optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			Vector<WasabiContainerDTO> containersOfRoot = containerService().getContainers(rootRoom);
@@ -142,7 +143,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiContainerDTO container2 = containerService().getContainerByName(rootRoom, "container2");
-		containerService().move(container2, room, null);
+		containerService().move(container2, room, optLockId);
 		Vector<WasabiContainerDTO> containersOfRoot = containerService().getContainers(rootRoom);
 		AssertJUnit.assertFalse(containersOfRoot.contains(container2));
 		AssertJUnit.assertEquals(2, containersOfRoot.size());
@@ -153,7 +154,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws Exception {
-		containerService().remove(container1, null);
+		containerService().remove(container1, optLockId);
 		Vector<WasabiContainerDTO> containers = containerService().getContainers(rootRoom);
 		AssertJUnit.assertFalse(containers.contains(container1));
 		AssertJUnit.assertEquals(2, containers.size());
@@ -164,14 +165,14 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		WasabiContainerDTO container2 = containerService().getContainerByName(rootRoom, "container2");
 
 		try {
-			containerService().rename(container2, "container1", null);
+			containerService().rename(container2, "container1", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(containerService().getContainerByName(rootRoom, "container2"));
 			AssertJUnit.assertEquals(3, containerService().getContainers(rootRoom).size());
 		}
 
-		containerService().rename(container2, "container_2", null);
+		containerService().rename(container2, "container_2", optLockId);
 		AssertJUnit.assertEquals("container_2", containerService().getName(container2).getValue());
 		AssertJUnit.assertNotNull(containerService().getContainerByName(rootRoom, "container_2"));
 		AssertJUnit.assertEquals(3, containerService().getContainers(rootRoom).size());
@@ -189,7 +190,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			containers[i] = containerService().create("container" + i, room);
-			objectService().setCreatedOn(containers[i], dates[i], null);
+			objectService().setCreatedOn(containers[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -223,7 +224,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 					containers[d][t] = containerService().create("container" + t + d,
 							containers[d - 1][(int) (Math.random() * 5)]);
 				}
-				objectService().setCreatedOn(containers[d][t], dates[t], null);
+				objectService().setCreatedOn(containers[d][t], dates[t], optLockId);
 			}
 		}
 
@@ -306,7 +307,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 		for (int i = 0; i < 5; i++) {
 			dates[i] = cal.getTime();
 			containers[i] = containerService().create("container" + i, room);
-			objectService().setModifiedOn(containers[i], dates[i], null);
+			objectService().setModifiedOn(containers[i], dates[i], optLockId);
 
 			cal.add(Calendar.MILLISECOND, 1);
 		}
@@ -341,7 +342,7 @@ public class ContainerServiceRemoteTest extends WasabiRemoteTest {
 					containers[d][t] = containerService().create("container" + t,
 							containers[d - 1][(int) (Math.random() * 5)]);
 				}
-				objectService().setModifiedOn(containers[d][t], dates[t], null);
+				objectService().setModifiedOn(containers[d][t], dates[t], optLockId);
 			}
 		}
 

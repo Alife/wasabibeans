@@ -424,7 +424,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	public void move(WasabiRoomDTO room, WasabiRoomDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(room, optLockId, locker, tm);
+		String lockToken = Locker.acquireServiceCallLock(room, optLockId, locker, getTransactionManager());
 		Session s = jcr.getJCRSessionTx();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();

@@ -28,6 +28,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -73,9 +74,13 @@ public class LockingHelper implements LockingHelperLocal {
 	public void releaseLock(String nodeId, String lockToken) throws AccessDeniedException, LockException,
 			PathNotFoundException, InvalidItemStateException, UnsupportedRepositoryOperationException,
 			RepositoryException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
-		LockManager lockManager = s.getWorkspace().getLockManager();
-		lockManager.addLockToken(lockToken);
-		lockManager.unlock(s.getNodeByIdentifier(nodeId).getPath());
+		try {
+			Session s = jcr.getJCRSessionTx();
+			LockManager lockManager = s.getWorkspace().getLockManager();
+			lockManager.addLockToken(lockToken);
+			lockManager.unlock(s.getNodeByIdentifier(nodeId).getPath());
+		} catch (ItemNotFoundException infe) {
+			/* This happens if a node shall be unlocked that does not exist any more. Just do nothing. */
+		}
 	}
 }

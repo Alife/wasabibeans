@@ -45,6 +45,7 @@ import de.wasabibeans.framework.server.core.util.HashGenerator;
 @Run(RunModeType.AS_CLIENT)
 public class UserServiceRemoteTest extends WasabiRemoteTest {
 
+	private Long optLockId = -1L;
 	private WasabiUserDTO user1;
 
 	@BeforeMethod
@@ -202,14 +203,14 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void renameTest() throws Exception {
 		try {
-			userService().rename(user1, "user2", null);
+			userService().rename(user1, "user2", optLockId);
 			AssertJUnit.fail();
 		} catch (ObjectAlreadyExistsException e) {
 			AssertJUnit.assertNotNull(userService().getUserByName("user1"));
 			AssertJUnit.assertEquals(5, userService().getAllUsers().size());
 		}
 
-		userService().rename(user1, "user_2", null);
+		userService().rename(user1, "user_2", optLockId);
 		AssertJUnit.assertEquals("user_2", userService().getName(user1).getValue());
 		AssertJUnit.assertNotNull(userService().getUserByName("user_2"));
 		AssertJUnit.assertEquals(5, userService().getAllUsers().size());
@@ -221,7 +222,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setDisplayNameTest() throws Exception {
 		try {
-			userService().setDisplayName(user1, null, null);
+			userService().setDisplayName(user1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -230,8 +231,8 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().setDisplayName(user1, "name", null);
-		userService().setDisplayName(user2, "name", null);
+		userService().setDisplayName(user1, "name", optLockId);
+		userService().setDisplayName(user2, "name", optLockId);
 		AssertJUnit.assertEquals("name", userService().getDisplayName(user1).getValue());
 		AssertJUnit.assertEquals("name", userService().getDisplayName(user2).getValue());
 	}
@@ -255,7 +256,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { "createTest" })
 	public void setStartRoomTest() throws Exception {
 		try {
-			userService().setStartRoom(user1, null, null);
+			userService().setStartRoom(user1, null, optLockId);
 			AssertJUnit.fail();
 		} catch (EJBException e) {
 			if (!(e.getCause() instanceof IllegalArgumentException)) {
@@ -264,13 +265,13 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		}
 
 		WasabiRoomDTO newRoom = roomService().create("newRoom", rootRoom);
-		userService().setStartRoom(user1, newRoom, null);
+		userService().setStartRoom(user1, newRoom, optLockId);
 		AssertJUnit.assertEquals(newRoom, userService().getStartRoom(user1).getValue());
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
 	public void setStatusTest() throws Exception {
-		userService().setStatus(user1, false, null);
+		userService().setStatus(user1, false, optLockId);
 		AssertJUnit.assertFalse((Boolean) userService().getStatus(user1).getValue());
 		// TODO any other consequences to test??
 	}
@@ -300,7 +301,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	public void removeTest() throws Exception {
 		userService().enter(user1, rootRoom);
 
-		userService().remove(user1, null);
+		userService().remove(user1, optLockId);
 		// check that user is removed
 		Vector<WasabiUserDTO> users = userService().getAllUsers();
 		AssertJUnit.assertFalse(users.contains(user1));
@@ -346,7 +347,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	@Test(dependsOnMethods = { ".*set.*" })
 	public void getUsersByDisplayName() throws WasabiException {
 		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().setDisplayName(user2, "user1", null);
+		userService().setDisplayName(user2, "user1", optLockId);
 		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user1");
 		AssertJUnit.assertTrue(users.contains(user1) && users.contains(user2));
 		AssertJUnit.assertEquals(2, users.size());
