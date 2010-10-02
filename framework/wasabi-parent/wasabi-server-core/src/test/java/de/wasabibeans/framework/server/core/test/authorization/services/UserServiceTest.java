@@ -313,6 +313,18 @@ public class UserServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting EXECUTE as userRight for getUsersTestRoom... ");
+		aclService().create(getUsersTestRoom, user1, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for getUsersTestRoom... ");
+		aclService().create(getUsersTestRoom, user2, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for getUsersTestRoom... ");
+		aclService().create(getUsersTestRoom, user3, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
 		System.out.print("Entering getUsersTestRoom by user1...");
 		try {
 			userService().enter(user1, getUsersTestRoom);
@@ -618,6 +630,245 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Setting startRoom of newUser...");
 		try {
 			userService().setStartRoom(newUser, usersHome, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getWhereaboutsTest() throws WasabiException {
+		System.out.println("=== getWhereaboutsTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating enterRoom1 at usersHome... ");
+		WasabiRoomDTO enterRoom1 = null;
+		try {
+			enterRoom1 = roomService().create("enterRoom1", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating enterRoom2 at usersHome... ");
+		WasabiRoomDTO enterRoom2 = null;
+		try {
+			enterRoom2 = roomService().create("enterRoom2", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating enterRoom3 at usersHome... ");
+		WasabiRoomDTO enterRoom3 = null;
+		try {
+			enterRoom3 = roomService().create("enterRoom3", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for enterRoom1... ");
+		aclService().create(enterRoom1, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting GRANT as userRight for enterRoom2... ");
+		aclService().create(enterRoom2, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting GRANT as userRight for enterRoom3... ");
+		aclService().create(enterRoom3, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for enterRoom1... ");
+		aclService().deactivateInheritance(enterRoom1);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for enterRoom2... ");
+		aclService().deactivateInheritance(enterRoom2);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for enterRoom3... ");
+		aclService().deactivateInheritance(enterRoom3);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for enterRoom1... ");
+		aclService().create(enterRoom1, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for enterRoom2... ");
+		aclService().create(enterRoom2, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for enterRoom3... ");
+		aclService().create(enterRoom3, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for enterRoom1... ");
+		aclService().create(enterRoom1, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for enterRoom2... ");
+		aclService().create(enterRoom2, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for enterRoom3... ");
+		aclService().create(enterRoom3, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering enterRoom1...");
+		try {
+			userService().enter(newUser, enterRoom1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering enterRoom2...");
+		try {
+			userService().enter(newUser, enterRoom2);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering enterRoom3...");
+		try {
+			userService().enter(newUser, enterRoom3);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(enterRoom1, "enterRoom1");
+		displayACLEntry(enterRoom2, "enterRoom2");
+		displayACLEntry(enterRoom3, "enterRoom3");
+
+		System.out.println("Using getWhereabouts...");
+		try {
+			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
+			for (WasabiRoomDTO wasabiRoomDTO : rooms)
+				System.out.println(objectService().getName(wasabiRoomDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(enterRoom1, "enterRoom1");
+		displayACLEntry(enterRoom2, "enterRoom2");
+		displayACLEntry(enterRoom3, "enterRoom3");
+
+		System.out.print("Setting VIEW as userRight for enterRoom1... ");
+		aclService().create(enterRoom1, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as userRight for enterRoom3... ");
+		aclService().create(enterRoom3, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		displayACLEntry(enterRoom1, "enterRoom1");
+		displayACLEntry(enterRoom2, "enterRoom2");
+		displayACLEntry(enterRoom3, "enterRoom3");
+
+		System.out.println("Using getWhereabouts...");
+		try {
+			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
+			for (WasabiRoomDTO wasabiRoomDTO : rooms)
+				System.out.println(objectService().getName(wasabiRoomDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Leaving enterRoom3...");
+		try {
+			userService().leave(newUser, enterRoom3);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Using getWhereabouts...");
+		try {
+			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
+			for (WasabiRoomDTO wasabiRoomDTO : rooms)
+				System.out.println(objectService().getName(wasabiRoomDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void enterTest() throws WasabiException {
+		System.out.println("=== enterTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating enterTestRoom at usersHome... ");
+		WasabiRoomDTO enterTestRoom = null;
+		try {
+			enterTestRoom = roomService().create("enterTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for enterTestRoom... ");
+		aclService().create(enterTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for enterTestRoom... ");
+		aclService().deactivateInheritance(enterTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Entering enterTestRoom...");
+		try {
+			userService().enter(newUser, enterTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE as userRight for enterTestRoom... ");
+		aclService().create(enterTestRoom, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Entering enterTestRoom...");
+		try {
+			userService().enter(newUser, enterTestRoom);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

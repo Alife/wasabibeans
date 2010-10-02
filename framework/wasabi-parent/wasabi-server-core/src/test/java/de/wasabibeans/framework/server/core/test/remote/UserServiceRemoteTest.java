@@ -48,117 +48,6 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 	private Long optLockId = -1L;
 	private WasabiUserDTO user1;
 
-	@BeforeMethod
-	public void setUpBeforeEachMethod() throws Exception {
-		// initialize test
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		rootRoom = testhelper.initRepository();
-		testhelper.initTestUser();
-		user1 = testhelper.initUserServiceTest();
-
-		reWaCon.login("user", "user");
-	}
-
-	@AfterMethod
-	public void tearDownAfterEachMethod() throws Exception {
-		reWaCon.logout();
-	}
-
-	@Test
-	public void get1AllUsersTest() throws Exception {
-		Vector<WasabiUserDTO> users = userService().getAllUsers();
-		AssertJUnit.assertTrue(users.contains(user1));
-		AssertJUnit.assertEquals(5, users.size());
-	}
-
-	@Test
-	public void get1DisplayNameTest() throws Exception {
-		String displayName = userService().getDisplayName(user1).getValue();
-		AssertJUnit.assertEquals("user1", displayName);
-	}
-
-	@Test
-	public void get1HomeRoomTest() throws Exception {
-		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
-		AssertJUnit.assertNotNull(homeRoom);
-		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user1).getValue());
-	}
-
-	@Test
-	public void get1PasswordTest() throws Exception {
-		String expectedPwd = HashGenerator.generateHash("user1", hashAlgorithms.SHA);
-		AssertJUnit.assertEquals(expectedPwd, userService().getPassword(user1));
-	}
-
-	@Test
-	public void get1StartRoomTest() throws Exception {
-		WasabiRoomDTO startRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
-		AssertJUnit.assertNotNull(startRoom);
-		AssertJUnit.assertEquals(startRoom, userService().getStartRoom(user1).getValue());
-	}
-
-	@Test
-	public void get1StatusTest() throws Exception {
-		AssertJUnit.assertTrue((Boolean) userService().getStatus(user1).getValue());
-	}
-
-	@Test
-	public void get1UserByNameTest() throws Exception {
-		WasabiUserDTO test = userService().getUserByName("user1");
-		AssertJUnit.assertEquals(user1, test);
-
-		try {
-			userService().getUserByName(null);
-			AssertJUnit.fail();
-		} catch (EJBException e) {
-			if (!(e.getCause() instanceof IllegalArgumentException)) {
-				AssertJUnit.fail();
-			}
-		}
-
-		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
-	}
-
-	@Test
-	public void get1MembershipsTest() throws Exception {
-		Vector<WasabiGroupDTO> memberships = userService().getMemberships(user1);
-		AssertJUnit.assertEquals(1, memberships.size());
-		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
-		AssertJUnit.assertTrue(memberships.contains(wasabiGroup));
-	}
-
-	@Test(dependsOnMethods = { ".*get1.*" })
-	public void get2UsersRoomTest() throws Exception {
-		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
-		Vector<WasabiUserDTO> result = userService().getUsers(homeRoom);
-		AssertJUnit.assertEquals(1, result.size());
-		AssertJUnit.assertTrue(result.contains(user1));
-	}
-
-	@Test(dependsOnMethods = { ".*get1.*" })
-	public void get2UsersByNameRoomTest() throws Exception {
-		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
-		try {
-			userService().getUserByName(homeRoom, null);
-			AssertJUnit.fail();
-		} catch (EJBException e) {
-			if (!(e.getCause() instanceof IllegalArgumentException)) {
-				AssertJUnit.fail();
-			}
-		}
-
-		// search not existing user
-		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "doesNotExist"));
-
-		// search existing but not present user
-		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "user2"));
-
-		// search existing and present user
-		WasabiUserDTO test = userService().getUserByName(homeRoom, "user1");
-		AssertJUnit.assertEquals(user1, test);
-	}
-
 	@Test(dependsOnMethods = { ".*get2.*" })
 	public void createTest() throws WasabiException {
 		WasabiUserDTO user3 = userService().create("user3", "pwd");
@@ -198,6 +87,188 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		} catch (ObjectAlreadyExistsException e) {
 			// passed
 		}
+	}
+
+	@Test(dependsOnMethods = { "createTest" })
+	public void enterTest() throws Exception {
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().enter(user1, rootRoom);
+		userService().enter(user2, rootRoom);
+		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
+		AssertJUnit.assertEquals(2, result.size());
+		AssertJUnit.assertTrue(result.contains(user1) && result.contains(user2));
+	}
+
+	@Test
+	public void get1AllUsersTest() throws Exception {
+		Vector<WasabiUserDTO> users = userService().getAllUsers();
+		AssertJUnit.assertTrue(users.contains(user1));
+		AssertJUnit.assertEquals(5, users.size());
+	}
+
+	@Test
+	public void get1DisplayNameTest() throws Exception {
+		String displayName = userService().getDisplayName(user1).getValue();
+		AssertJUnit.assertEquals("user1", displayName);
+	}
+
+	@Test
+	public void get1HomeRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
+		AssertJUnit.assertNotNull(homeRoom);
+		AssertJUnit.assertEquals(homeRoom, userService().getHomeRoom(user1).getValue());
+	}
+
+	@Test
+	public void get1MembershipsTest() throws Exception {
+		Vector<WasabiGroupDTO> memberships = userService().getMemberships(user1);
+		AssertJUnit.assertEquals(1, memberships.size());
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+		AssertJUnit.assertTrue(memberships.contains(wasabiGroup));
+	}
+
+	@Test
+	public void get1PasswordTest() throws Exception {
+		String expectedPwd = HashGenerator.generateHash("user1", hashAlgorithms.SHA);
+		AssertJUnit.assertEquals(expectedPwd, userService().getPassword(user1));
+	}
+
+	@Test
+	public void get1StartRoomTest() throws Exception {
+		WasabiRoomDTO startRoom = roomService().getRoomByName(roomService().getRootHome(), "user1");
+		AssertJUnit.assertNotNull(startRoom);
+		AssertJUnit.assertEquals(startRoom, userService().getStartRoom(user1).getValue());
+	}
+
+	@Test
+	public void get1StatusTest() throws Exception {
+		AssertJUnit.assertTrue((Boolean) userService().getStatus(user1).getValue());
+	}
+
+	@Test
+	public void get1UserByNameTest() throws Exception {
+		WasabiUserDTO test = userService().getUserByName("user1");
+		AssertJUnit.assertEquals(user1, test);
+
+		try {
+			userService().getUserByName(null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
+
+		AssertJUnit.assertNull(userService().getUserByName(rootRoom, "doesNotExist"));
+	}
+
+	@Test(dependsOnMethods = { ".*get1.*" })
+	public void get2UsersByNameRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
+		try {
+			userService().getUserByName(homeRoom, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
+
+		// search not existing user
+		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "doesNotExist"));
+
+		// search existing but not present user
+		AssertJUnit.assertNull(userService().getUserByName(homeRoom, "user2"));
+
+		// search existing and present user
+		WasabiUserDTO test = userService().getUserByName(homeRoom, "user1");
+		AssertJUnit.assertEquals(user1, test);
+	}
+
+	@Test(dependsOnMethods = { ".*get1.*" })
+	public void get2UsersRoomTest() throws Exception {
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
+		Vector<WasabiUserDTO> result = userService().getUsers(homeRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertTrue(result.contains(user1));
+	}
+
+	@Test(dependsOnMethods = { ".*set.*" })
+	public void getUsersByDisplayName() throws WasabiException {
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().setDisplayName(user2, "user1", optLockId);
+		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user1");
+		AssertJUnit.assertTrue(users.contains(user1) && users.contains(user2));
+		AssertJUnit.assertEquals(2, users.size());
+
+		try {
+			userService().getUsersByDisplayName(null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
+
+		AssertJUnit.assertTrue(userService().getUsersByDisplayName("doesNotExist").isEmpty());
+	}
+
+	@Test(dependsOnMethods = { "leaveTest" })
+	public void getWhereaboutsTest() throws Exception {
+		// create more rooms
+		WasabiRoomDTO room1 = roomService().create("room1", rootRoom);
+		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
+
+		// enter more rooms (initially user is present in his home room)
+		userService().enter(user1, room1);
+		userService().enter(user1, room2);
+
+		// check whereabouts
+		Vector<WasabiRoomDTO> whereabouts = userService().getWhereabouts(user1);
+		AssertJUnit.assertEquals(3, whereabouts.size());
+		AssertJUnit.assertTrue(whereabouts.contains(room1) && whereabouts.contains(room2)
+				&& whereabouts.contains(userService().getHomeRoom(user1).getValue()));
+
+		// leave a room
+		userService().leave(user1, room1);
+
+		// check whereabouts again
+		whereabouts = userService().getWhereabouts(user1);
+		AssertJUnit.assertEquals(2, whereabouts.size());
+		AssertJUnit.assertTrue(whereabouts.contains(room2)
+				&& whereabouts.contains(userService().getHomeRoom(user1).getValue()));
+	}
+
+	@Test(dependsOnMethods = { "enterTest" })
+	public void leaveTest() throws Exception {
+		WasabiUserDTO user2 = userService().getUserByName("user2");
+		userService().enter(user1, rootRoom);
+		userService().enter(user2, rootRoom);
+		userService().leave(user1, rootRoom);
+		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
+		AssertJUnit.assertEquals(1, result.size());
+		AssertJUnit.assertTrue(result.contains(user2));
+	}
+
+	@Test(dependsOnMethods = { "enterTest" })
+	public void removeTest() throws Exception {
+		userService().enter(user1, rootRoom);
+
+		userService().remove(user1, optLockId);
+		// check that user is removed
+		Vector<WasabiUserDTO> users = userService().getAllUsers();
+		AssertJUnit.assertFalse(users.contains(user1));
+		AssertJUnit.assertEquals(4, users.size());
+		// check that the user's home-room is removed
+		AssertJUnit.assertNull(roomService().getRoomByName(roomService().getRootHome(), "user1"));
+		// check that the user not listed as present any more
+		AssertJUnit.assertTrue(userService().getUsers(rootRoom).isEmpty());
+		// check that the user is not listed as member any more
+		WasabiGroupDTO wasabi = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+		AssertJUnit.assertTrue(!groupService().getMembers(wasabi).contains(user1));
+		// check that the user's entries in the database have been removed by attempting to create a new user with
+		// exactly the same attributes
+		userService().create("user1", "user1");
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -276,91 +347,20 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		// TODO any other consequences to test??
 	}
 
-	@Test(dependsOnMethods = { "createTest" })
-	public void enterTest() throws Exception {
-		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().enter(user1, rootRoom);
-		userService().enter(user2, rootRoom);
-		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
-		AssertJUnit.assertEquals(2, result.size());
-		AssertJUnit.assertTrue(result.contains(user1) && result.contains(user2));
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize test
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
+		testhelper.initTestUser();
+		user1 = testhelper.initUserServiceTest();
+
+		reWaCon.login("user", "user");
 	}
 
-	@Test(dependsOnMethods = { "enterTest" })
-	public void leaveTest() throws Exception {
-		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().enter(user1, rootRoom);
-		userService().enter(user2, rootRoom);
-		userService().leave(user1, rootRoom);
-		Vector<WasabiUserDTO> result = userService().getUsers(rootRoom);
-		AssertJUnit.assertEquals(1, result.size());
-		AssertJUnit.assertTrue(result.contains(user2));
-	}
-
-	@Test(dependsOnMethods = { "enterTest" })
-	public void removeTest() throws Exception {
-		userService().enter(user1, rootRoom);
-
-		userService().remove(user1, optLockId);
-		// check that user is removed
-		Vector<WasabiUserDTO> users = userService().getAllUsers();
-		AssertJUnit.assertFalse(users.contains(user1));
-		AssertJUnit.assertEquals(4, users.size());
-		// check that the user's home-room is removed
-		AssertJUnit.assertNull(roomService().getRoomByName(roomService().getRootHome(), "user1"));
-		// check that the user not listed as present any more
-		AssertJUnit.assertTrue(userService().getUsers(rootRoom).isEmpty());
-		// check that the user is not listed as member any more
-		WasabiGroupDTO wasabi = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
-		AssertJUnit.assertTrue(!groupService().getMembers(wasabi).contains(user1));
-		// check that the user's entries in the database have been removed by attempting to create a new user with
-		// exactly the same attributes
-		userService().create("user1", "user1");
-	}
-
-	@Test(dependsOnMethods = { "leaveTest" })
-	public void getWhereaboutsTest() throws Exception {
-		// create more rooms
-		WasabiRoomDTO room1 = roomService().create("room1", rootRoom);
-		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
-
-		// enter more rooms (initially user is present in his home room)
-		userService().enter(user1, room1);
-		userService().enter(user1, room2);
-
-		// check whereabouts
-		Vector<WasabiRoomDTO> whereabouts = userService().getWhereabouts(user1);
-		AssertJUnit.assertEquals(3, whereabouts.size());
-		AssertJUnit.assertTrue(whereabouts.contains(room1) && whereabouts.contains(room2)
-				&& whereabouts.contains(userService().getHomeRoom(user1).getValue()));
-
-		// leave a room
-		userService().leave(user1, room1);
-
-		// check whereabouts again
-		whereabouts = userService().getWhereabouts(user1);
-		AssertJUnit.assertEquals(2, whereabouts.size());
-		AssertJUnit.assertTrue(whereabouts.contains(room2)
-				&& whereabouts.contains(userService().getHomeRoom(user1).getValue()));
-	}
-
-	@Test(dependsOnMethods = { ".*set.*" })
-	public void getUsersByDisplayName() throws WasabiException {
-		WasabiUserDTO user2 = userService().getUserByName("user2");
-		userService().setDisplayName(user2, "user1", optLockId);
-		Vector<WasabiUserDTO> users = userService().getUsersByDisplayName("user1");
-		AssertJUnit.assertTrue(users.contains(user1) && users.contains(user2));
-		AssertJUnit.assertEquals(2, users.size());
-
-		try {
-			userService().getUsersByDisplayName(null);
-			AssertJUnit.fail();
-		} catch (EJBException e) {
-			if (!(e.getCause() instanceof IllegalArgumentException)) {
-				AssertJUnit.fail();
-			}
-		}
-
-		AssertJUnit.assertTrue(userService().getUsersByDisplayName("doesNotExist").isEmpty());
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 }
