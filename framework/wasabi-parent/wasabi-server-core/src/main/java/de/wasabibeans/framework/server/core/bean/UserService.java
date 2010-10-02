@@ -80,7 +80,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"password"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node wasabiGroup = GroupServiceImpl.getWasabiGroup(s);
@@ -105,7 +105,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		try {
@@ -140,7 +140,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public WasabiValueDTO getDisplayName(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -159,7 +159,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public WasabiValueDTO getHomeRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -179,7 +179,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public Vector<WasabiGroupDTO> getMemberships(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -220,7 +220,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public String getPassword(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -238,7 +238,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public WasabiValueDTO getStartRoom(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, TargetDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -257,7 +257,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public WasabiValueDTO getStatus(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -280,7 +280,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = UserServiceImpl.getUserByName(userName, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -302,7 +302,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
 		Node userNode = UserServiceImpl.getUserByName(roomNode, userName);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -321,7 +321,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public Vector<WasabiUserDTO> getUsers(WasabiRoomDTO room) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
 			Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
@@ -364,7 +364,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"display-name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 		NodeIterator ni = UserServiceImpl.getUsersByDisplayName(displayName, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -394,8 +394,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"displayname"));
 		}
 
-		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -408,8 +407,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 							"WRITE"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, user);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setDisplayName(userNode, displayName, callerPrincipal);
 			s.save();
@@ -428,7 +425,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"password"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -446,8 +443,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public void setStartRoom(WasabiUserDTO user, WasabiRoomDTO room, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -461,8 +457,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			/* Authorization - End */
 
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.recognizeLockTokens(s, user);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStartRoom(userNode, roomNode, callerPrincipal);
 			EventCreator
@@ -476,8 +470,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
@@ -490,8 +483,6 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 							"WRITE"));
 			/* Authorization - End */
 			
-			Locker.recognizeLockTokens(s, user);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStatus(userNode, active, callerPrincipal);
 			s.save();
@@ -504,12 +495,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.recognizeLockTokens(s, user, room);
 			UserServiceImpl.enter(userNode, roomNode);
 			s.save();
 			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
@@ -521,12 +511,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.recognizeLockTokens(s, user, room);
 			UserServiceImpl.leave(userNode, roomNode);
 			s.save();
 			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
@@ -537,7 +526,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
@@ -567,14 +556,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
-		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
-			Locker.recognizeLockTokens(s, user);
-			Locker.recognizeLockToken(s, lockToken);
 			UserServiceImpl.remove(userNode);
 			s.save();
 		} catch (RepositoryException re) {
@@ -590,13 +576,10 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 					"name"));
 		}
 
-		String lockToken = Locker.acquireServiceCallLock(user, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.recognizeLockTokens(s, user);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.rename(userNode, name, callerPrincipal);
 			s.save();

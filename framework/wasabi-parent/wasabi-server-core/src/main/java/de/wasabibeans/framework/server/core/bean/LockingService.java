@@ -27,11 +27,14 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
+import de.wasabibeans.framework.server.core.aop.WasabiAOP;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
@@ -48,7 +51,8 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @SecurityDomain("wasabi")
 @Stateless(name = "LockingService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-public class LockingService implements LockingServiceLocal, LockingServiceRemote {
+@Interceptors( { JCRSessionInterceptor.class })
+public class LockingService implements LockingServiceLocal, LockingServiceRemote, WasabiAOP {
 
 	@EJB
 	private LockingHelperLocal locker;
@@ -67,9 +71,17 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 		jndi.close();
 	}
 
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
+
+	public JcrConnector getJcrConnector() {
+		return jcr;
+	}
+
 	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, LockingException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String lockToken = Locker.acquireLock(objectNode, object, isDeep, locker);
 		return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
@@ -84,9 +96,8 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_LOCKING_TOKEN_NULL);
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		Locker.recognizeLockTokens(s, object);
 		Locker.releaseLock(objectNode, s);
 		return TransferManager.removeLockToken(object);
 	}

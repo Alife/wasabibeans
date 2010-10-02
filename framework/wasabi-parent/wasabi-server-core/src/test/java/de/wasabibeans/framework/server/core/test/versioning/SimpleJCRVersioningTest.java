@@ -111,7 +111,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			testHelper.initDatabase();
 			testHelper.initRepository();
 
-			Session s = jcr.getJCRSessionNoTx();
+			Session s = jcr.getJCRSession();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 
 			Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
@@ -153,7 +153,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			versionManager.checkout(document1.getPath());
 			versionManager.checkout(document2.getPath());
 		} finally {
-			jcr.logout();
+			jcr.cleanup(true);
 			jndi.close();
 		}
 	}
@@ -215,7 +215,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
 		try {
-			Session s = jcr.getJCRSessionNoTx();
+			Session s = jcr.getJCRSession();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
 			Node room = s.getNodeByIdentifier(roomId);
 
@@ -233,7 +233,7 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			printOutFullTree(version, "");
 
 		} finally {
-			jcr.logout();
+			jcr.cleanup(true);
 			jndi.close();
 		}
 	}

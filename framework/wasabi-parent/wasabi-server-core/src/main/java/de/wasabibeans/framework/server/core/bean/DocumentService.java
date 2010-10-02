@@ -83,11 +83,10 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
-			Locker.recognizeLockTokens(s, environment);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -109,7 +108,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, DocumentContentException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
@@ -132,7 +131,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node documentNode = DocumentServiceImpl.getDocumentByName(locationNode, name);
@@ -150,7 +149,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 	public Vector<WasabiDocumentDTO> getDocuments(WasabiLocationDTO location)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -177,7 +176,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -203,7 +202,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -230,7 +229,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -254,7 +253,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
@@ -277,7 +276,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -304,7 +303,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModificationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate, int depth) throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -331,7 +330,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -355,7 +354,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
@@ -378,7 +377,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public Vector<WasabiDocumentDTO> getDocumentsOrderedByCreationDate(WasabiLocationDTO location, SortType order)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiDocumentDTO> documents = new Vector<WasabiDocumentDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -404,7 +403,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 	public WasabiValueDTO getEnvironment(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node environmentNode = DocumentServiceImpl.getEnvironment(documentNode);
@@ -424,7 +423,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public boolean hasDocumentsCreatedAfter(WasabiLocationDTO environment, Long timestamp)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
 		/* Authorization - Begin */
@@ -439,7 +438,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public boolean hasDocumentsCreatedBefore(WasabiLocationDTO environment, Long timestamp)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
 		/* Authorization - Begin */
@@ -454,7 +453,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public boolean hasDocumentsModifiedAfter(WasabiLocationDTO environment, Long timestamp)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
 		/* Authorization - Begin */
@@ -469,7 +468,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	@Override
 	public boolean hasDocumentsModifiedBefore(WasabiLocationDTO environment, Long timestamp)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
 		/* Authorization - Begin */
@@ -484,8 +483,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void move(WasabiDocumentDTO document, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
@@ -505,8 +503,6 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			}
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, document, newEnvironment);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
@@ -518,13 +514,10 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 	public void remove(WasabiDocumentDTO document, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			Locker.recognizeLockTokens(s, document);
-			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
@@ -556,8 +549,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 					"name"));
 		}
 
-		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
@@ -570,8 +562,6 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 							"document"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, document);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.rename(documentNode, name, callerPrincipal);
 			s.save();
@@ -584,8 +574,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
 			ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(document, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node documentNode = TransferManager.convertDTO2Node(document, s);
@@ -598,8 +587,6 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 							"WRITE", "document"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, document);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(documentNode, document, optLockId);
 			DocumentServiceImpl.setContentPiped(documentNode, content, s, jms, sharedFilterBean, callerPrincipal);
 			s.save();

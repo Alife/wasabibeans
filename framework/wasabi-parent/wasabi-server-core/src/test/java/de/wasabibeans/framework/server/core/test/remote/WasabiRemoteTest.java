@@ -30,6 +30,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import de.wasabibeans.framework.server.core.aop.WasabiAOP;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
@@ -98,6 +99,7 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(Locker.class.getPackage()) // locking
 				.addPackage(WasabiEventType.class.getPackage()) // event
 				.addPackage(WasabiManager.class.getPackage()) // manager
+				.addPackage(WasabiAOP.class.getPackage()) // AOP
 				.addPackage(Filter.class.getPackage()) // pipes.filter
 				.addPackage(FilterField.class.getPackage()) // pipes.filter.annotation
 				.addPackage(DocumentSource.class.getPackage()) // pipes.filter.impl

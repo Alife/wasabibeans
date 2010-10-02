@@ -76,7 +76,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
@@ -90,7 +90,6 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 							"INSERT or WRITE", "environment"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, environment);
 			Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(containerNode, environmentNode, jms, callerPrincipal);
@@ -108,7 +107,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 					"name"));
 		}
 
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Node containerNode = ContainerServiceImpl.getContainerByName(locationNode, name);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -127,7 +126,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainers(WasabiLocationDTO location) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -152,7 +151,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByCreationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -178,7 +177,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByCreationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -205,7 +204,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByCreator(WasabiUserDTO creator)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -229,7 +228,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByCreator(WasabiUserDTO creator, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node creatorNode = TransferManager.convertDTO2Node(creator, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
@@ -252,7 +251,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByModificationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -278,7 +277,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByModificationDate(WasabiLocationDTO environment, Date startDate,
 			Date endDate, int depth) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -304,7 +303,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByModifier(WasabiUserDTO modifier)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -328,7 +327,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByModifier(WasabiUserDTO modifier, WasabiLocationDTO environment)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node modifierNode = TransferManager.convertDTO2Node(modifier, s);
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
@@ -351,7 +350,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public Vector<WasabiContainerDTO> getContainersByNamePattern(WasabiLocationDTO environment, String pattern)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 		Vector<WasabiContainerDTO> containers = new Vector<WasabiContainerDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -375,7 +374,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public WasabiValueDTO getEnvironment(WasabiContainerDTO container) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		Node containerNode = TransferManager.convertDTO2Node(container, s);
 		Node environmentNode = ContainerServiceImpl.getEnvironment(containerNode);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -395,8 +394,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	public void move(WasabiContainerDTO container, WasabiLocationDTO newEnvironment, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
@@ -416,8 +414,6 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			}
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, container, newEnvironment);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal, s);
 			s.save();
@@ -430,13 +426,10 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	@Override
 	public void remove(WasabiContainerDTO container, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
-		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
-			Locker.recognizeLockTokens(s, container);
-			Locker.recognizeLockToken(s, lockToken);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
@@ -469,8 +462,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 					"name"));
 		}
 
-		String lockToken = Locker.acquireServiceCallLock(container, optLockId, locker, getTransactionManager());
-		Session s = jcr.getJCRSessionTx();
+		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node containerNode = TransferManager.convertDTO2Node(container, s);
@@ -483,8 +475,6 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 							"container"));
 			/* Authorization - End */
 
-			Locker.recognizeLockTokens(s, container);
-			Locker.recognizeLockToken(s, lockToken);
 			Locker.checkOptLockId(containerNode, container, optLockId);
 			ContainerServiceImpl.rename(containerNode, name, callerPrincipal);
 			s.save();

@@ -27,19 +27,17 @@ public class Locker {
 	private static WasabiLogger logger = WasabiLogger.getLogger(Locker.class);
 
 	/**
-	 * If the given {@code dtosWithPotentialLockTokens} contain lock-tokens, these lock-tokens will be associated with
-	 * the given {@code Session s}.
+	 * If the given {@code dtoWithPotentialLockToken} contains a lock-token, this lock-token will be associated with the
+	 * given {@code Session s}.
 	 * 
 	 * @param s
-	 * @param dtosWithPotentialLockTokens
+	 * @param dtoWithPotentialLockToken
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static void recognizeLockTokens(Session s, WasabiObjectDTO... dtosWithPotentialLockTokens)
+	public static void recognizeLockToken(Session s, WasabiObjectDTO dtoWithPotentialLockToken)
 			throws UnexpectedInternalProblemException {
-		for (WasabiObjectDTO dto : dtosWithPotentialLockTokens) {
-			String potentialLockToken = dto != null ? dto.getLockToken() : null;
-			recognizeLockToken(s, potentialLockToken);
-		}
+		String potentialLockToken = dtoWithPotentialLockToken != null ? dtoWithPotentialLockToken.getLockToken() : null;
+		recognizeLockToken(s, potentialLockToken);
 	}
 
 	/**
@@ -192,7 +190,7 @@ public class Locker {
 		}
 		try {
 			String lockToken = locker.acquireLock(dto.getId(), false);
-			tm.getTransaction().registerSynchronization(new ServiceCallLockUnlocker(dto.getId(), lockToken));
+			tm.getTransaction().registerSynchronization(new ServiceCallLockUnlocker(dto.getId(), lockToken, locker));
 			return lockToken;
 		} catch (LockException e) {
 			throw new ConcurrentModificationException("The object represented by " + dto.toString()
@@ -215,17 +213,18 @@ public class Locker {
 
 		private String nodeId;
 		private String lockToken;
+		private LockingHelperLocal locker;
 
-		public ServiceCallLockUnlocker(String nodeId, String lockToken) {
+		public ServiceCallLockUnlocker(String nodeId, String lockToken, LockingHelperLocal locker) {
 			this.nodeId = nodeId;
 			this.lockToken = lockToken;
+			this.locker = locker;
 		}
 
 		@Override
 		public void afterCompletion(int status) {
 			JndiConnector jndi = JndiConnector.getJNDIConnector();
 			try {
-				LockingHelperLocal locker = (LockingHelperLocal) jndi.lookupLocal("LockingHelper");
 				locker.releaseLock(nodeId, lockToken);
 			} catch (Exception e) {
 				e.printStackTrace();
