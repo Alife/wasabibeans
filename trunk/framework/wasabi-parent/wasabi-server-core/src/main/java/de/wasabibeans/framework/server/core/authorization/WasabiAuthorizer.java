@@ -36,6 +36,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import de.wasabibeans.framework.server.core.common.WasabiACLPriority;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -49,6 +50,16 @@ import de.wasabibeans.framework.server.core.util.SqlConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiAuthorizer {
+
+	public static boolean isAdminUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
+		if (callerPrincipal.equals("root") || callerPrincipal.equals("admin"))
+			return true;
+		
+		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.ADMINS_GROUP_NAME, s), userNode))
+			return true;
+		return false;
+	}
 
 	public static boolean authorize(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
@@ -130,7 +141,7 @@ public class WasabiAuthorizer {
 					+ "' AND `priority`="
 					+ WasabiACLPriority.INHERITED_GROUP_RIGHT
 					+ " AND "
-					+ allGroupsQuery
+					+ identityCheck
 					+ " AND "
 					+ rightQueryAllow
 					+ "AND ((`start_time`<="
@@ -158,7 +169,7 @@ public class WasabiAuthorizer {
 					+ " AND `priority`="
 					+ WasabiACLPriority.EXPLICIT_GROUP_RIGHT
 					+ " AND "
-					+ allGroupsQuery
+					+ identityCheck
 					+ " AND "
 					+ rightQueryAllow
 					+ "AND ((`start_time`<="
@@ -242,7 +253,7 @@ public class WasabiAuthorizer {
 					+ " AND `priority`="
 					+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
 					+ " AND "
-					+ allGroupsQuery
+					+ identityCheck
 					+ " AND "
 					+ rightQueryAllow
 					+ "AND ((`start_time`<="
@@ -270,7 +281,7 @@ public class WasabiAuthorizer {
 					+ " AND `priority`="
 					+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
 					+ " AND "
-					+ allGroupsQuery
+					+ identityCheck
 					+ " AND "
 					+ rightQueryAllow
 					+ "AND ((`start_time`<="

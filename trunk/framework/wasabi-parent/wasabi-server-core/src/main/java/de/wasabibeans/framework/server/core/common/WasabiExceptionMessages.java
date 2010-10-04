@@ -91,6 +91,7 @@ public class WasabiExceptionMessages {
 	public final static String AUTHORIZATION_NO_PERMISSION_EXISTS = "You don't have the permission to access or object does not exist.";
 	public final static String AUTHORIZATION_NO_PERMISSION_GROUP = "You don't have the permission to access: &0 requires &1 permission at group &2.";
 	public final static String AUTHORIZATION_NO_PERMISSION_RETURN = "You don't have the permission to access: &0 requires &1 permission at requested data.";
+	public final static String AUTHORIZATION_NO_PERMISSION_ADMIN = "You don't have the permission to access: Administrative user needed for this operation.";
 	
 	/* Versioning */
 	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
