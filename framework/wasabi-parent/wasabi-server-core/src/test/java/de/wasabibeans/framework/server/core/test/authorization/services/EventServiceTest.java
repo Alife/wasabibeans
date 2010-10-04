@@ -21,10 +21,7 @@
 
 package de.wasabibeans.framework.server.core.test.authorization.services;
 
-import java.util.HashMap;
 import java.util.Vector;
-
-import javax.jms.Queue;
 
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
@@ -34,7 +31,6 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
-import de.wasabibeans.framework.server.core.dto.WasabiDocumentDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -44,7 +40,7 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
 public class EventServiceTest extends WasabiRemoteTest {
-	
+
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
 		if (room != null) {
@@ -65,7 +61,7 @@ public class EventServiceTest extends WasabiRemoteTest {
 			}
 		}
 	}
-	
+
 	@Test
 	public void createTest() throws WasabiException {
 		System.out.println("=== createTest() ===");
@@ -97,11 +93,11 @@ public class EventServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting READ as userRight for createTestRoom... ");
 		aclService().create(createTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Subscribing to createTestRoom... ");
 		try {
 			eventService().subscribe(createTestRoom, "sonstwas", false);

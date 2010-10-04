@@ -27,6 +27,7 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiPipelineDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -39,15 +40,15 @@ import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 public interface FilterServiceLocal extends ObjectServiceLocal {
 
 	WasabiPipelineDTO create(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException;
+			ObjectAlreadyExistsException, NoPermissionException;
 
-	void updateOrCreate(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException;
+	WasabiPipelineDTO getPipeline(String name) throws UnexpectedInternalProblemException, NoPermissionException;
 
-	WasabiPipelineDTO getPipeline(String name) throws UnexpectedInternalProblemException;
-
-	Vector<WasabiPipelineDTO> getPipelines() throws UnexpectedInternalProblemException;
+	Vector<WasabiPipelineDTO> getPipelines() throws UnexpectedInternalProblemException, NoPermissionException;
 
 	void remove(WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			ConcurrentModificationException;
+			ConcurrentModificationException, NoPermissionException;
+
+	void updateOrCreate(String name, Filter filter) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException, NoPermissionException;
 }
