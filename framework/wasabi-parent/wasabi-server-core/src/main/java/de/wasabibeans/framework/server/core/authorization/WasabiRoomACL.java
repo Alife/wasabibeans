@@ -43,6 +43,7 @@ public class WasabiRoomACL {
 		try {
 			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(roomNode, true, s);
+			WasabiRoomSQL.createRandomSQLinserts();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

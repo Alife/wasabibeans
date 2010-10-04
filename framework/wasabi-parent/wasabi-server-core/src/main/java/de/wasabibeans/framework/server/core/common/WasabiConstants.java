@@ -35,7 +35,7 @@ public interface WasabiConstants {
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
-	public final static boolean ACL_CERTIFICATE_ENABLE = false;
+	public final static boolean ACL_CERTIFICATE_ENABLE = true;
 
 	/* JMS for event-handling */
 	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";

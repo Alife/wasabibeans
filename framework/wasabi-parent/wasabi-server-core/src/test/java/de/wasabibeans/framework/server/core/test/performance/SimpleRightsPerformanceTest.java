@@ -27,6 +27,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.authorization.Certificate;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
@@ -52,98 +53,101 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		reWaCon.logout();
 	}
 
+	private static int randNr(int n) {
+		double decNr = Math.random();
+		return (int) Math.round(decNr * n);
+	}
+
 	@Test
 	public void createRooms1() throws WasabiException {
-		int numberOfRooms = 500;
+		int numberOfRooms = 2;
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+		for (long i = 0; i < numberOfRooms; i++) {
 			roomService().create(String.valueOf(i), usersHome);
-			// System.out.println("create room " + i);
+			System.out.println("create room " + i);
 		}
 		long endTime = java.lang.System.currentTimeMillis();
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
-		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-			roomService().getName(room);
-			roomService().getName(room);
-			roomService().getName(room);
-			roomService().getName(room);
+		for (int j = 0; j < 100; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms-1)));
 			roomService().getName(room);
 		}
 		long endTimeRead = java.lang.System.currentTimeMillis();
 
 		System.out.println("Write pass 1: " + (endTime - startTime));
 		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
+		System.out.println("dbAccess: " + Certificate.getDbAccess());
+		System.out.println("certAccess: " + Certificate.getCertAccess());
 	}
 
-//	@Test
-//	public void createRooms2() throws WasabiException {
-//		int numberOfRooms = 100;
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		long startTime = java.lang.System.currentTimeMillis();
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			roomService().create(String.valueOf(i), usersHome);
-//			// System.out.println("create room " + i);
-//		}
-//		long endTime = java.lang.System.currentTimeMillis();
-//
-//		long startTimeRead = java.lang.System.currentTimeMillis();
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		long endTimeRead = java.lang.System.currentTimeMillis();
-//
-//		System.out.println("Write pass 2: " + (endTime - startTime));
-//		System.out.println("Read pass 2: " + (endTimeRead - startTimeRead));
-//	}
-//
-//	@Test
-//	public void createRooms3() throws WasabiException {
-//		int numberOfRooms = 100;
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		long startTime = java.lang.System.currentTimeMillis();
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			roomService().create(String.valueOf(i), usersHome);
-//			// System.out.println("create room " + i);
-//		}
-//		long endTime = java.lang.System.currentTimeMillis();
-//
-//		long startTimeRead = java.lang.System.currentTimeMillis();
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		for (long i = startTime; i < (startTime + numberOfRooms); i++) {
-//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
-//			roomService().getName(room);
-//		}
-//		long endTimeRead = java.lang.System.currentTimeMillis();
-//
-//		System.out.println("Write pass 3: " + (endTime - startTime));
-//		System.out.println("Read pass 3: " + (endTimeRead - startTimeRead));
-//	}
+	// @Test
+	// public void createRooms2() throws WasabiException {
+	// int numberOfRooms = 100;
+	//
+	// WasabiUserDTO user = userService().getUserByName("user");
+	// WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+	//
+	// long startTime = java.lang.System.currentTimeMillis();
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// roomService().create(String.valueOf(i), usersHome);
+	// // System.out.println("create room " + i);
+	// }
+	// long endTime = java.lang.System.currentTimeMillis();
+	//
+	// long startTimeRead = java.lang.System.currentTimeMillis();
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// long endTimeRead = java.lang.System.currentTimeMillis();
+	//
+	// System.out.println("Write pass 2: " + (endTime - startTime));
+	// System.out.println("Read pass 2: " + (endTimeRead - startTimeRead));
+	// }
+	//
+	// @Test
+	// public void createRooms3() throws WasabiException {
+	// int numberOfRooms = 100;
+	//
+	// WasabiUserDTO user = userService().getUserByName("user");
+	// WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+	//
+	// long startTime = java.lang.System.currentTimeMillis();
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// roomService().create(String.valueOf(i), usersHome);
+	// // System.out.println("create room " + i);
+	// }
+	// long endTime = java.lang.System.currentTimeMillis();
+	//
+	// long startTimeRead = java.lang.System.currentTimeMillis();
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// for (long i = startTime; i < (startTime + numberOfRooms); i++) {
+	// WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(i));
+	// roomService().getName(room);
+	// }
+	// long endTimeRead = java.lang.System.currentTimeMillis();
+	//
+	// System.out.println("Write pass 3: " + (endTime - startTime));
+	// System.out.println("Read pass 3: " + (endTimeRead - startTimeRead));
+	// }
 }
