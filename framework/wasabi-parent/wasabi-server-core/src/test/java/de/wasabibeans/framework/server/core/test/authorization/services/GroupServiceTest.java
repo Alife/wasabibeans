@@ -203,6 +203,73 @@ public class GroupServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void getAllMembersTest() throws WasabiException {
+		System.out.println("=== getAllMembersTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting all members of testGroup...");
+		try {
+			Vector<WasabiUserDTO> users = groupService().getAllMembers(testGroup);
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting all members of testGroup...");
+		try {
+			Vector<WasabiUserDTO> users = groupService().getAllMembers(testGroup);
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.READ, false);
+		System.out.println("done.");
+
+		System.out.println("Getting all members of testGroup...");
+		try {
+			Vector<WasabiUserDTO> users = groupService().getAllMembers(testGroup);
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void getDisplayNameTest() throws WasabiException {
 		System.out.println("=== getDisplayNameTest() ===");
 
@@ -287,8 +354,54 @@ public class GroupServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void getAllMembersTest() throws WasabiException {
-		System.out.println("=== getAllMembersTest() ===");
+	public void getGroupsByDisplayNameTest() throws WasabiException {
+		System.out.println("=== getGroupsByDisplayNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup1...");
+		WasabiGroupDTO testGroup1 = null;
+		try {
+			testGroup1 = groupService().create("testGroup1", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting testGroup1 by displayname...");
+		try {
+			Vector<WasabiGroupDTO> groups = groupService().getGroupsByDisplayName("testGroup1");
+			for (WasabiGroupDTO wasabiGroupDTO : groups)
+				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup1, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting testGroup1 by displayname...");
+		try {
+			Vector<WasabiGroupDTO> groups = groupService().getGroupsByDisplayName("testGroup1");
+			for (WasabiGroupDTO wasabiGroupDTO : groups)
+				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getMemberByNameTest() throws WasabiException {
+		System.out.println("=== getMemberByNameTest() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -315,9 +428,86 @@ public class GroupServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.println("Getting all members of testGroup...");
+		System.out.print("Getting member user by name...");
 		try {
-			Vector<WasabiUserDTO> users = groupService().getAllMembers(testGroup);
+			groupService().getMemberByName(testGroup, "user");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Getting member user by name...");
+		try {
+			groupService().getMemberByName(testGroup, "user");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.READ, false);
+		System.out.println("done.");
+
+		System.out.print("Getting member user by name...");
+		try {
+			groupService().getMemberByName(testGroup, "user");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getMembersTest() throws WasabiException {
+		System.out.println("=== getMembersTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting  members of testGroup...");
+		try {
+			Vector<WasabiUserDTO> users = groupService().getMembers(testGroup);
+			for (WasabiUserDTO wasabiUserDTO : users)
+				System.out.println(objectService().getName(wasabiUserDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting  members of testGroup...");
+		try {
+			Vector<WasabiUserDTO> users = groupService().getMembers(testGroup);
 			for (WasabiUserDTO wasabiUserDTO : users)
 				System.out.println(objectService().getName(wasabiUserDTO).getValue());
 		} catch (Exception e) {
@@ -328,9 +518,9 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		aclService().create(testGroup, user, WasabiPermission.READ, false);
 		System.out.println("done.");
 
-		System.out.println("Getting all members of testGroup...");
+		System.out.println("Getting  members of testGroup...");
 		try {
-			Vector<WasabiUserDTO> users = groupService().getAllMembers(testGroup);
+			Vector<WasabiUserDTO> users = groupService().getMembers(testGroup);
 			for (WasabiUserDTO wasabiUserDTO : users)
 				System.out.println(objectService().getName(wasabiUserDTO).getValue());
 		} catch (Exception e) {
@@ -339,11 +529,126 @@ public class GroupServiceTest extends WasabiRemoteTest {
 
 		System.out.println("===========================");
 	}
-	
-	
+
 	@Test
-	public void getGroupsByDisplayName() throws WasabiException {
-		System.out.println("=== getGroupsByDisplayName() ===");
+	public void getParentGroupTest() throws WasabiException {
+		System.out.println("=== getParentGroupTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting parent group...");
+		try {
+			groupService().getParentGroup(testGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Setting VIEW as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Getting parent group...");
+		try {
+			groupService().getParentGroup(testGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Getting parent group...");
+		try {
+			groupService().getParentGroup(testGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getSubGroupByNameTest() throws WasabiException {
+		System.out.println("=== getSubGroupByNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Getting sub group by name...");
+		try {
+			groupService().getSubGroupByName(wasabiGroup, "testGroup");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbidance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Getting sub group by name...");
+		try {
+			groupService().getSubGroupByName(wasabiGroup, "testGroup");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Getting sub group by name...");
+		try {
+			groupService().getSubGroupByName(wasabiGroup, "testGroup");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getSubGroupsTest() throws WasabiException {
+		System.out.println("=== getSubGroupsTest() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -361,25 +666,206 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
-		System.out.println("Getting testGroup1 by displayname...");
+
+		System.out.print("Creating group testGroup2...");
+		WasabiGroupDTO testGroup2 = null;
 		try {
-			Vector<WasabiGroupDTO> groups = groupService().getGroupsByDisplayName("testGroup1");
-			for (WasabiGroupDTO wasabiGroupDTO : groups)
+			testGroup2 = groupService().create("testGroup2", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Getting sub groups...");
+		try {
+			Vector<WasabiGroupDTO> subgroups = groupService().getSubGroups(wasabiGroup);
+			for (WasabiGroupDTO wasabiGroupDTO : subgroups)
 				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting VIEW forbiddance as userRight for testGroup... ");
-		aclService().create(testGroup1, user, WasabiPermission.VIEW, false);
+		System.out.print("Setting VIEW forbiddance as userRight for testGroup2... ");
+		aclService().create(testGroup2, user, WasabiPermission.VIEW, false);
 		System.out.println("done.");
 
-		System.out.println("Getting testGroup1 by displayname...");
+		System.out.println("Getting sub groups...");
 		try {
-			Vector<WasabiGroupDTO> groups = groupService().getGroupsByDisplayName("testGroup1");
-			for (WasabiGroupDTO wasabiGroupDTO : groups)
+			Vector<WasabiGroupDTO> subgroups = groupService().getSubGroups(wasabiGroup);
+			for (WasabiGroupDTO wasabiGroupDTO : subgroups)
 				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for wasabi group... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting sub groups...");
+		try {
+			Vector<WasabiGroupDTO> subgroups = groupService().getSubGroups(wasabiGroup);
+			for (WasabiGroupDTO wasabiGroupDTO : subgroups)
+				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getTopLevelGroupsTest() throws WasabiException {
+		System.out.println("=== getTopLevelGroupsTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.println("Getting top level groups...");
+		try {
+			Vector<WasabiGroupDTO> toplvl = groupService().getTopLevelGroups();
+			for (WasabiGroupDTO wasabiGroupDTO : toplvl)
+				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Getting top level groups...");
+		try {
+			Vector<WasabiGroupDTO> toplvl = groupService().getTopLevelGroups();
+			for (WasabiGroupDTO wasabiGroupDTO : toplvl)
+				System.out.println(objectService().getName(wasabiGroupDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void isDirectMember() throws WasabiException {
+		System.out.println("=== isDirectMember() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isDirectMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isDirectMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isDirectMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void isMember() throws WasabiException {
+		System.out.println("=== isMember() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbiddance as userRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Check if user is direct member of testGroup: ");
+		try {
+			System.out.println(groupService().isMember(testGroup, user));
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
