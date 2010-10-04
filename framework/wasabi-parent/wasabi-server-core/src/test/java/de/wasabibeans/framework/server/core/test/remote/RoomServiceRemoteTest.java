@@ -204,7 +204,7 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		}
 	}
 
-	@Test//(dependsOnMethods = { "createTest" })
+	@Test(dependsOnMethods = { "createTest" })
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
