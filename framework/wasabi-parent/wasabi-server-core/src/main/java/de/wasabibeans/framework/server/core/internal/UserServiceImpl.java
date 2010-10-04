@@ -261,8 +261,12 @@ public class UserServiceImpl {
 	}
 
 	public static void remove(Node userNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		// Database
+
+		/* ACL Environment - Begin */
 		WasabiUserSQL.SqlQueryForRemove(userNode);
+		if (WasabiConstants.ACL_ENTRY_ENABLE)
+			WasabiUserSQL.removeRights(userNode);
+		/* ACL Environment - End */
 
 		// JCR
 		try {
