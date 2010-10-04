@@ -29,6 +29,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -72,9 +73,10 @@ public class Event2UserDestinationAllocator implements MessageListener {
 	public void onMessage(Message message) {
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			// create producer without specified destination
 			MessageProducer jmsProducer = jmsSession.createProducer(null);
+			jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
 			// subscribers of the affected object (e.g. create new document in room, the document is the affected
 			// object)

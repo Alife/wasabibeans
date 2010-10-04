@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.event;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -32,6 +33,8 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class EventCreator {
+
+	private static final int DELIVERY_MODE = DeliveryMode.NON_PERSISTENT;
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(EventCreator.class);
 
@@ -46,8 +49,9 @@ public class EventCreator {
 			}
 
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.PROPERTY_CHANGED);
@@ -78,8 +82,9 @@ public class EventCreator {
 	public static void createCreatedEvent(Node objectNode, Node envNode, JmsConnector jms, String triggeredBy) {
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.CREATED);
@@ -111,8 +116,9 @@ public class EventCreator {
 			}
 
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.REMOVED);
@@ -144,8 +150,9 @@ public class EventCreator {
 			}
 
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.MOVED);
@@ -174,8 +181,9 @@ public class EventCreator {
 			String triggeredBy) {
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			if (entered) {
@@ -203,8 +211,9 @@ public class EventCreator {
 			String triggeredBy) {
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
-			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
+			jmsProducer.setDeliveryMode(DELIVERY_MODE);
 			Message event = jmsSession.createMessage();
 
 			if (added) {
