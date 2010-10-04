@@ -51,16 +51,6 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiAuthorizer {
 
-	public static boolean isAdminUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
-		if (callerPrincipal.equals("root") || callerPrincipal.equals("admin"))
-			return true;
-		
-		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.ADMINS_GROUP_NAME, s), userNode))
-			return true;
-		return false;
-	}
-
 	public static boolean authorize(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
@@ -471,6 +461,23 @@ public class WasabiAuthorizer {
 			return rightQuery;
 		}
 		return rightQuery;
+	}
+
+	public static boolean isAdminUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
+		if (callerPrincipal.equals("root") || callerPrincipal.equals("admin"))
+			return true;
+
+		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.ADMINS_GROUP_NAME, s), userNode))
+			return true;
+		return false;
+	}
+
+	public static boolean isPafUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
+		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.PAF_GROUP_NAME, s), userNode))
+			return true;
+		return false;
 	}
 
 	private static Vector<String> permissionFilter(String parentUUID, String userUUID, Node userNode,
