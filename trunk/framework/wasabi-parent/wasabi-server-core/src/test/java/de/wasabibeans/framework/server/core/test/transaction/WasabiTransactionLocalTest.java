@@ -46,6 +46,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiValueDTO;
 import de.wasabibeans.framework.server.core.event.WasabiEventType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
@@ -317,7 +318,6 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
 				if (username.equals(USER1)) {
 					System.out.println(username + " reads");
-					userService.getDisplayName(user3).getValue();
 					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 
 					notifyOther();
@@ -684,9 +684,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 				UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 
 				userService.create(USER2, USER2);
-				// WasabiUserDTO user2 = userService.getUserByName(USER2);
-				// userService.getDisplayName(user2);
-				userService.create(null, null); // provoke exception and failure of transaction
+				userService.create(USER2, USER2); // provoke exception and failure of transaction
 
 				return null;
 			} finally {
@@ -709,7 +707,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 			loWaCon.defaultLogin();
 			UserServiceLocal userService = (UserServiceLocal) loWaCon.lookup("UserService");
 
-			userService.create(USER1, "user1");
+			userService.create(USER1, USER1);
 
 			loWaCon.disconnect();
 
@@ -724,7 +722,7 @@ public class WasabiTransactionLocalTest extends Arquillian {
 
 			boolean rolledBack = false;
 			for (Throwable t : throwables) {
-				if (t instanceof EJBTransactionRolledbackException) {
+				if (t instanceof ObjectAlreadyExistsException) {
 					rolledBack = true;
 				} else {
 					throw t;
