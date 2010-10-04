@@ -24,7 +24,6 @@ package de.wasabibeans.framework.server.core.test.transaction;
 import java.util.HashMap;
 import java.util.Vector;
 
-import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.RollbackException;
 import javax.transaction.UserTransaction;
 
@@ -288,7 +287,6 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				// tx user1 reads, tx user2 writes, tx user2 commits, tx user1 reads
 				if (username.equals(USER1)) {
 					System.out.println(username + " reads");
-					userService.getDisplayName(user3);
 					AssertJUnit.assertEquals(USER3, userService.getDisplayName(user3).getValue());
 
 					notifyOther();
@@ -670,11 +668,9 @@ public class WasabiTransactionRemoteTest extends Arquillian {
 				utx.begin();
 
 				userService.create(USER1, USER1);
-				userService.create(null, null); // provoke exception and failure of transaction
+				userService.create(USER1, USER1); // provoke exception and failure of transaction
 
 				utx.commit();
-			} catch (EJBTransactionRolledbackException rb) {
-				utx.rollback();
 			} catch (WasabiException we) {
 				utx.rollback();
 			}
