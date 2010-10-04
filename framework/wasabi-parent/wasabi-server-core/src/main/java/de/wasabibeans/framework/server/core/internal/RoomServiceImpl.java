@@ -203,9 +203,15 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void move(Node roomNode, Node newEnvironmentNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void move(Node roomNode, Node newEnvironmentNode, boolean checkIfHomeRoom, String callerPrincipal,
+			Session s) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
+			if (checkIfHomeRoom
+					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
+							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+				throw new IllegalArgumentException("A user's home-room cannot be removed.");
+			}
+
 			roomNode.getSession().move(roomNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/" + roomNode.getName());
 			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
@@ -228,13 +234,32 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void remove(Node roomNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		ObjectServiceImpl.remove(roomNode);
+	public static void remove(Node roomNode, boolean checkIfHomeRoom) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
+		try {
+			if (checkIfHomeRoom
+					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
+							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+				throw new IllegalArgumentException("A user's home-room cannot be removed.");
+			}
+			ObjectServiceImpl.remove(roomNode);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static void rename(Node roomNode, String name, String callerPrincipal)
+	public static void rename(Node roomNode, String name, boolean checkIfHomeRoom, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(roomNode, name, callerPrincipal);
+		try {
+			if (checkIfHomeRoom
+					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
+							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+				throw new IllegalArgumentException("A user's home-room cannot be renamed.");
+			}
+			ObjectServiceImpl.rename(roomNode, name, callerPrincipal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	// ------------------------------------- Wasabi Pipes -----------------------------------------------------

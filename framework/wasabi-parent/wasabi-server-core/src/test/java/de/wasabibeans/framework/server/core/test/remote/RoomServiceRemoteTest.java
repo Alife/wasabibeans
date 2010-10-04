@@ -156,6 +156,17 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "room_2"));
 		AssertJUnit.assertEquals(3, roomService().getRooms(rootRoom).size());
 		AssertJUnit.assertNull(roomService().getRoomByName(rootRoom, "room2"));
+		
+		// test renaming a user's home-room
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(userService().getUserByName("user")).getValue();
+		try {
+			roomService().rename(homeRoom, "test", null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
 	}
 
 	@Test(dependsOnMethods = { "createTest" })
@@ -180,9 +191,20 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		Vector<WasabiRoomDTO> roomsOfRoom2 = roomService().getRooms(room2);
 		AssertJUnit.assertTrue(roomsOfRoom2.contains(sub));
 		AssertJUnit.assertEquals(1, roomsOfRoom2.size());
+		
+		// test moving a user's home-room
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(userService().getUserByName("user")).getValue();
+		try {
+			roomService().move(homeRoom, rootRoom, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
 	}
 
-	@Test(dependsOnMethods = { "createTest" })
+	@Test//(dependsOnMethods = { "createTest" })
 	public void removeTest() throws WasabiException {
 		WasabiRoomDTO room2 = roomService().create("room2", rootRoom);
 
@@ -190,6 +212,17 @@ public class RoomServiceRemoteTest extends WasabiRemoteTest {
 		Vector<WasabiRoomDTO> rooms = roomService().getRooms(rootRoom);
 		AssertJUnit.assertFalse(rooms.contains(room2));
 		AssertJUnit.assertEquals(2, rooms.size());
+		
+		// test removing a user's home-room
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(userService().getUserByName("user")).getValue();
+		try {
+			roomService().remove(homeRoom, null);
+			AssertJUnit.fail();
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
+		}
 	}
 
 	@Test(dependsOnMethods = { "createTest" })

@@ -92,7 +92,7 @@ public interface UserServiceLocal extends ObjectServiceLocal {
 
 	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			NoPermissionException;
+			NoPermissionException, TargetDoesNotExistException;
 
 	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,

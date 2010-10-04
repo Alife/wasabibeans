@@ -252,6 +252,7 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 
 	@Test(dependsOnMethods = { "enterTest" })
 	public void removeTest() throws Exception {
+		// prepare remove test
 		userService().enter(user1, rootRoom);
 
 		userService().remove(user1, optLockId);
@@ -288,6 +289,13 @@ public class UserServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNull(userService().getUserByName("user1"));
 		AssertJUnit.assertEquals(HashGenerator.generateHash("user1", hashAlgorithms.SHA), userService().getPassword(
 				user1));
+
+		// check that the home-room has been renamed, too
+		WasabiRoomDTO homeRoom = userService().getHomeRoom(user1).getValue();
+		WasabiRoomDTO rootHome = roomService().getRootHome();
+		AssertJUnit.assertEquals("user_2", roomService().getName(homeRoom).getValue());
+		AssertJUnit.assertNotNull(roomService().getRoomByName(rootHome, "user_2"));
+		AssertJUnit.assertNull(roomService().getRoomByName(rootHome, "user1"));
 	}
 
 	@Test(dependsOnMethods = { "createTest" })

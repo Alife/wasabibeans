@@ -493,7 +493,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
-			NoPermissionException {
+			NoPermissionException, TargetDoesNotExistException {
 		if (name == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"name"));
