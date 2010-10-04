@@ -23,7 +23,9 @@ package de.wasabibeans.framework.server.core.bean;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -35,10 +37,14 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.exception.LockingException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.LockingServiceLocal;
@@ -54,11 +60,40 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @Interceptors( { JCRSessionInterceptor.class })
 public class LockingService implements LockingServiceLocal, LockingServiceRemote, WasabiAOP {
 
+	@Resource
+	protected SessionContext ctx;
+
+	protected JcrConnector jcr;
+
+	protected JndiConnector jndi;
 	@EJB
 	private LockingHelperLocal locker;
 
-	protected JndiConnector jndi;
-	protected JcrConnector jcr;
+	public JcrConnector getJcrConnector() {
+		return jcr;
+	}
+
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
+
+	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, LockingException, NoPermissionException {
+		Session s = jcr.getJCRSession();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.lock()", "WRITE",
+								"object"));
+		/* Authorization - End */
+
+		String lockToken = Locker.acquireLock(objectNode, object, isDeep, locker);
+		return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
+	}
 
 	@PostConstruct
 	public void postConstruct() {
@@ -71,24 +106,8 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 		jndi.close();
 	}
 
-	public JndiConnector getJndiConnector() {
-		return jndi;
-	}
-
-	public JcrConnector getJcrConnector() {
-		return jcr;
-	}
-
-	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, LockingException {
-		Session s = jcr.getJCRSession();
-		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		String lockToken = Locker.acquireLock(objectNode, object, isDeep, locker);
-		return TransferManager.enrichWithLockToken(object, lockToken, isDeep);
-	}
-
 	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
+			ObjectDoesNotExistException, NoPermissionException {
 		if (object == null) {
 			return null;
 		}
@@ -98,6 +117,16 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.unlock()", "WRITE",
+						"object"));
+		/* Authorization - End */
+
 		Locker.releaseLock(objectNode, s);
 		return TransferManager.removeLockToken(object);
 	}
