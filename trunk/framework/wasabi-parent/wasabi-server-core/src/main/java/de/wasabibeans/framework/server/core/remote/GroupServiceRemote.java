@@ -64,7 +64,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 			UnexpectedInternalProblemException, NoPermissionException;
 
 	public Vector<WasabiUserDTO> getMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public WasabiValueDTO getParentGroup(WasabiGroupDTO group) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException;
@@ -73,7 +73,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 			UnexpectedInternalProblemException, NoPermissionException;
 
 	public Vector<WasabiGroupDTO> getSubGroups(WasabiGroupDTO group) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException;
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public Vector<WasabiGroupDTO> getTopLevelGroups() throws UnexpectedInternalProblemException;
 
