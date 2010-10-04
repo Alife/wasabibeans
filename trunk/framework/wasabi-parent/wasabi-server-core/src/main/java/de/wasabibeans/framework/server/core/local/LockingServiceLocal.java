@@ -25,6 +25,7 @@ import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.exception.LockingException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -32,9 +33,9 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface LockingServiceLocal {
 
 	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
-			LockingException, ObjectDoesNotExistException;
+			LockingException, ObjectDoesNotExistException, NoPermissionException;
 
 	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException;
+			ObjectDoesNotExistException, NoPermissionException;
 
 }
