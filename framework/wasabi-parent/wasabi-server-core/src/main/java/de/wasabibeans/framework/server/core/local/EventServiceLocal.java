@@ -24,13 +24,15 @@ package de.wasabibeans.framework.server.core.local;
 import javax.ejb.Local;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Local
 public interface EventServiceLocal {
 
 	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
-			throws UnexpectedInternalProblemException;
+			throws UnexpectedInternalProblemException, NoPermissionException, ObjectDoesNotExistException;
 
 	public void unsubscribe(WasabiObjectDTO object);
 }

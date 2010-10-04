@@ -24,13 +24,15 @@ package de.wasabibeans.framework.server.core.remote;
 import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 @Remote
 public interface EventServiceRemote {
 
 	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
-			throws UnexpectedInternalProblemException;
+			throws UnexpectedInternalProblemException, NoPermissionException, ObjectDoesNotExistException;
 
 	public void unsubscribe(WasabiObjectDTO object);
 }
