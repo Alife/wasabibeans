@@ -29,6 +29,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.interceptor.Interceptors;
+import javax.jcr.Node;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -37,9 +38,15 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.EventServiceLocal;
 import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
@@ -56,9 +63,17 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 	@Resource
 	protected SessionContext ctx;
 
-	private JndiConnector jndi;
 	private JcrConnector jcr;
 	private JmsConnector jms;
+	private JndiConnector jndi;
+
+	public JcrConnector getJcrConnector() {
+		return jcr;
+	}
+
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
 
 	@PostConstruct
 	public void postConstruct() {
@@ -71,19 +86,22 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 	public void preDestroy() {
 		jndi.close();
 	}
-	
-	public JndiConnector getJndiConnector() {
-		return jndi;
-	}
-
-	public JcrConnector getJcrConnector() {
-		return jcr;
-	}
 
 	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, NoPermissionException, ObjectDoesNotExistException {
+		javax.jcr.Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node objectNode = TransferManager.convertDTO2Node(object, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "EventService.subscribe()", "READ",
+							"object"));
+			/* Authorization - End */
+
 			Connection jmsConnection = jms.getJmsConnection();
 			// check that the parameters jmsDestinationName and isQueue actually match
 			Session jmsSession = jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
