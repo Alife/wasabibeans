@@ -444,7 +444,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.checkOptLockId(roomNode, room, optLockId);
-			RoomServiceImpl.move(roomNode, newEnvironmentNode, callerPrincipal, s);
+			RoomServiceImpl.move(roomNode, newEnvironmentNode, true, callerPrincipal, s);
 			s.save();
 			EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
 		} catch (RepositoryException re) {
@@ -474,7 +474,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			else {
 				// TODO special case for events due to recursive deletion of subtree
 				EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
-				RoomServiceImpl.remove(roomNode);
+				RoomServiceImpl.remove(roomNode, true);
 			}
 
 			s.save();
@@ -506,7 +506,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			/* Authorization - End */
 
 			Locker.checkOptLockId(roomNode, room, optLockId);
-			RoomServiceImpl.rename(roomNode, name, callerPrincipal);
+			RoomServiceImpl.rename(roomNode, name, true, callerPrincipal);
 			EventCreator.createPropertyChangedEvent(roomNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 			s.save();
 		} catch (RepositoryException re) {

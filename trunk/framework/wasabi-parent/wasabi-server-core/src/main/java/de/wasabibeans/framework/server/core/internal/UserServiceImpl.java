@@ -271,7 +271,7 @@ public class UserServiceImpl {
 		// JCR
 		try {
 			Node homeRoom = getHomeRoom(userNode);
-			ObjectServiceImpl.remove(homeRoom);
+			RoomServiceImpl.remove(homeRoom, false);
 		} catch (TargetDoesNotExistException tdnee) {
 			// nothing to remove if home room does not exist
 		}
@@ -279,11 +279,12 @@ public class UserServiceImpl {
 	}
 
 	public static void rename(Node userNode, String name, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, TargetDoesNotExistException {
 		String wasabiUser = ObjectServiceImpl.getName(userNode);
 
 		// JCR
 		ObjectServiceImpl.rename(userNode, name, callerPrincipal);
+		RoomServiceImpl.rename(UserServiceImpl.getHomeRoom(userNode), name, false, callerPrincipal);
 
 		// Database
 		WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
