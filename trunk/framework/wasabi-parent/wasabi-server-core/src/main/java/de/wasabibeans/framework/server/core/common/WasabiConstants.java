@@ -43,7 +43,7 @@ public interface WasabiConstants {
 	public final static String JMS_EVENT_ADMIN_PASSWORD = "event_admin";
 	public final static String JMS_EVENT_USER = "event_user";
 	public final static int JMS_PERMISSION_CACHE_TIME = 10;
-	public final static String JMS_RESOURCE_ADAPTER = "jms-ra.rar";
+	public final static String JMS_RESOURCE_ADAPTER = "hornetq-ra.rar";
 	
 	/* JMS for asynchronous pipelines */
 	public final static String JMS_QUEUE_PIPELINE = "queue/pipeline";
