@@ -104,6 +104,31 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	}
 
 	@Override
+	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
+		Session s = jcr.getJCRSession();
+		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
+							"room"));
+			/* Authorization - End */
+
+			UserServiceImpl.enter(userNode, roomNode);
+			s.save();
+			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
 	public Vector<WasabiUserDTO> getAllUsers() throws UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
@@ -385,6 +410,117 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		return users;
 	}
 
+	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
+
+			while (ni.hasNext()) {
+				Node roomRef = ni.nextNode();
+				Node room = null;
+				try {
+					room = roomRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
+				} catch (ItemNotFoundException infe) {
+					try {
+						roomRef.remove();
+					} catch (RepositoryException re) {
+						// do nothing -> remove failed -> reference already removed by another thread concurrently
+					}
+				}
+				if (room != null) {
+					/* Authorization - Begin */
+					if (WasabiConstants.ACL_CHECK_ENABLE) {
+						if (WasabiAuthorizer.authorize(room, callerPrincipal, WasabiPermission.VIEW, s))
+							whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+					}
+					/* Authorization - End */
+					else
+						whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+				}
+			}
+
+			return whereabouts;
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, ConcurrentModificationException {
+		Session s = jcr.getJCRSession();
+		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+			Node roomNode = TransferManager.convertDTO2Node(room, s);
+			UserServiceImpl.leave(userNode, roomNode);
+			s.save();
+			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
+		Session s = jcr.getJCRSession();
+		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.remove()", "WRITE",
+							"user"));
+			/* Authorization - End */
+
+			Locker.checkOptLockId(userNode, user, optLockId);
+			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
+			UserServiceImpl.remove(userNode);
+			s.save();
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	@Override
+	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			NoPermissionException {
+		if (name == null) {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+					"name"));
+		}
+
+		Session s = jcr.getJCRSession();
+		try {
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+			Node userNode = TransferManager.convertDTO2Node(user, s);
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE)
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.rename()", "WRITE",
+							"user"));
+			/* Authorization - End */
+
+			Locker.checkOptLockId(userNode, user, optLockId);
+			UserServiceImpl.rename(userNode, name, callerPrincipal);
+			s.save();
+			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.NAME, name, jms, callerPrincipal);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	@Override
 	public void setDisplayName(WasabiUserDTO user, String displayName, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
@@ -404,7 +540,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setDisplayName()",
-							"WRITE"));
+							"WRITE", "user"));
 			/* Authorization - End */
 
 			Locker.checkOptLockId(userNode, user, optLockId);
@@ -433,7 +569,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setPassword()", "WRITE"));
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setPassword()", "WRITE",
+						"user"));
 		/* Authorization - End */
 
 		UserServiceImpl.setPassword(userNode, password);
@@ -452,8 +589,8 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()",
-							"WRITE"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()", "WRITE",
+							"user"));
 			/* Authorization - End */
 
 			Node roomNode = TransferManager.convertDTO2Node(room, s);
@@ -469,141 +606,25 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public void setStatus(WasabiUserDTO user, boolean active, Long optLockId)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
+			NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
 			Node userNode = TransferManager.convertDTO2Node(user, s);
-			
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()",
-							"WRITE"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()", "WRITE",
+							"user"));
 			/* Authorization - End */
-			
+
 			Locker.checkOptLockId(userNode, user, optLockId);
 			UserServiceImpl.setStatus(userNode, active, callerPrincipal);
 			s.save();
 			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.STATUS, active, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	@Override
-	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
-		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
-							"room"));
-			/* Authorization - End */
-			
-			UserServiceImpl.enter(userNode, roomNode);
-			s.save();
-			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	@Override
-	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException {
-		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			UserServiceImpl.leave(userNode, roomNode);
-			s.save();
-			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	public Vector<WasabiRoomDTO> getWhereabouts(WasabiUserDTO user) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException {
-		Session s = jcr.getJCRSession();
-		try {
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
-			
-			while (ni.hasNext()) {
-				Node roomRef = ni.nextNode();
-				Node room = null;
-				try {
-					room = roomRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
-				} catch (ItemNotFoundException infe) {
-					try {
-						roomRef.remove();
-					} catch (RepositoryException re) {
-						// do nothing -> remove failed -> reference already removed by another thread concurrently
-					}
-				}
-				if (room != null) {
-					/* Authorization - Begin */
-					if (WasabiConstants.ACL_CHECK_ENABLE) {
-						if (WasabiAuthorizer.authorize(room, callerPrincipal, WasabiPermission.VIEW, s))
-							whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
-					}
-					/* Authorization - End */
-					else
-						whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
-				}
-			}
-			
-			return whereabouts;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	@Override
-	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ConcurrentModificationException {
-		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.checkOptLockId(userNode, user, optLockId);
-			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
-			UserServiceImpl.remove(userNode);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	@Override
-	public void rename(WasabiUserDTO user, String name, Long optLockId) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException {
-		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
-					"name"));
-		}
-
-		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Locker.checkOptLockId(userNode, user, optLockId);
-			UserServiceImpl.rename(userNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
