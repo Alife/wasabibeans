@@ -32,6 +32,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiGroupACL;
+import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -79,6 +81,11 @@ public class GroupServiceImpl {
 			} else {
 				ObjectServiceImpl.created(newGroup, s, callerPrincipal, true);
 			}
+			
+			/* ACL Environment - Begin */
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiGroupACL.ACLEntryForCreate(newGroup, s);
+			/* ACL Environment - End */
 
 			return newGroup;
 		} catch (LockException le) {
