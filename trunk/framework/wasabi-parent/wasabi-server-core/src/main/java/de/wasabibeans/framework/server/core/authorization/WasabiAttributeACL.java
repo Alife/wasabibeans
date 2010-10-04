@@ -52,7 +52,7 @@ public class WasabiAttributeACL {
 	public static void ACLEntryForMove(Node attributeNode, Session s) throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiAttributeSQL.SQLQueryForMove(attributeNode.getIdentifier());
-			ACLServiceImpl.resetInheritance(attributeNode, inheritance_ids, s);
+			ACLServiceImpl.resetInheritance(attributeNode, inheritance_ids);
 			if (attributeNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(attributeNode, true, s);
 		} catch (RepositoryException re) {

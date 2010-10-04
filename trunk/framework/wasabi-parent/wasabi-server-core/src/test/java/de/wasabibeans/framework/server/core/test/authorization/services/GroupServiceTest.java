@@ -752,8 +752,8 @@ public class GroupServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void isDirectMember() throws WasabiException {
-		System.out.println("=== isDirectMember() ===");
+	public void isDirectMemberTest() throws WasabiException {
+		System.out.println("=== isDirectMemberTest() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -813,8 +813,8 @@ public class GroupServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void isMember() throws WasabiException {
-		System.out.println("=== isMember() ===");
+	public void isMemberTest() throws WasabiException {
+		System.out.println("=== isMemberTest() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -866,6 +866,266 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		System.out.print("Check if user is direct member of testGroup: ");
 		try {
 			System.out.println(groupService().isMember(testGroup, user));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void moveTest() throws WasabiException {
+		System.out.println("=== moveTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup1...");
+		WasabiGroupDTO testGroup1 = null;
+		try {
+			testGroup1 = groupService().create("testGroup1", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating group testGroup2...");
+		WasabiGroupDTO testGroup2 = null;
+		try {
+			testGroup2 = groupService().create("testGroup2", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting COMMENT as userRight for testGroup1... ");
+		aclService().create(testGroup1, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE as userRight for testGroup2... ");
+		aclService().create(testGroup2, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group moveGroup...");
+		WasabiGroupDTO moveGroup = null;
+		try {
+			moveGroup = groupService().create("moveGroup", testGroup1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(testGroup1, "testGroup1");
+		displayACLEntry(testGroup2, "testGroup2");
+		displayACLEntry(moveGroup, "moveGroup");
+
+		System.out.print("Moving moveGroup to testGroup2...");
+		try {
+			groupService().move(moveGroup, testGroup2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for testGroup2... ");
+		aclService().create(testGroup2, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Moving moveGroup to testGroup2...");
+		try {
+			groupService().move(moveGroup, testGroup2, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(moveGroup, "moveGroup");
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeMemberTest() throws WasabiException {
+		System.out.println("=== removeMemberTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing user from testGroup...");
+		try {
+			groupService().removeMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Removing user from testGroup...");
+		try {
+			groupService().removeMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeTest() throws WasabiException {
+		System.out.println("=== removeTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing group testGroup...");
+		try {
+			groupService().remove(testGroup, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for group wasabi... ");
+		aclService().create(testGroup, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Removing group testGroup...");
+		try {
+			groupService().remove(testGroup, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void renameTest() throws WasabiException {
+		System.out.println("=== renameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Renaming group testGroup...");
+		try {
+			groupService().rename(testGroup, "newName", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for group wasabi... ");
+		aclService().create(testGroup, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Renaming group testGroup...");
+		try {
+			groupService().rename(testGroup, "newName", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void setDisplayNameTest() throws WasabiException {
+		System.out.println("=== setDisplayNameTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting displayname of testGroup...");
+		try {
+			groupService().setDisplayName(testGroup, "bla", null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for group wasabi... ");
+		aclService().create(testGroup, user, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Setting displayname of testGroup...");
+		try {
+			groupService().setDisplayName(testGroup, "bla", null);
+			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

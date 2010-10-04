@@ -108,21 +108,26 @@ public class WasabiObjectACL {
 
 				while (AttributeChildreen.hasNext())
 					childreenNodes.add(AttributeChildreen.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUP)) {
+				NodeIterator GroupChildreen = objectNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
+
+				while (GroupChildreen.hasNext())
+					childreenNodes.add(GroupChildreen.nextNode());
 			}
 
 			if (childreenNodes.size() == 0) {
 				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s)) {
 					String objectUUID = objectNode.getIdentifier();
-					
-					//Remove database rows with object UUID
+
+					// Remove database rows with object UUID
 					WasabiObjectSQL.SqlQueryForRemove(objectUUID);
-					
-					//Remove database rows (templates) where location (room or container) is object UUID
+
+					// Remove database rows (templates) where location (room or container) is object UUID
 					if (objectType.equals(WasabiNodeType.ROOM))
 						WasabiRoomSQL.SQLQueryForRemove(objectUUID);
 					if (objectType.equals(WasabiNodeType.CONTAINER))
 						WasabiContainerSQL.SQLQueryForRemove(objectUUID);
-					
+
 					ObjectServiceImpl.remove(objectNode);
 
 					return 0;

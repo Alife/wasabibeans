@@ -48,12 +48,12 @@ public class WasabiLinkACL {
 		}
 	}
 
-	public static void ACLEntryForMove(Node documentNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForMove(Node linkNode, Session s) throws UnexpectedInternalProblemException {
 		try {
-			String[] inheritance_ids = WasabiLinkSQL.SQLQueryForMove(documentNode.getIdentifier());
-			ACLServiceImpl.resetInheritance(documentNode, inheritance_ids, s);
-			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(documentNode, true, s);
+			String[] inheritance_ids = WasabiLinkSQL.SQLQueryForMove(linkNode.getIdentifier());
+			ACLServiceImpl.resetInheritance(linkNode, inheritance_ids);
+			if (linkNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+				ACLServiceImpl.setInheritance(linkNode, true, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

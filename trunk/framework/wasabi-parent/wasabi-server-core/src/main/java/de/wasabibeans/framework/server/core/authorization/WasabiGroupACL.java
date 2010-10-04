@@ -28,6 +28,7 @@ import javax.jcr.Session;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 
@@ -42,5 +43,21 @@ public class WasabiGroupACL {
 		}
 		ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
 				new boolean[] { true, true }, 0, 0, s);
+	}
+
+	public static void ACLEntryForMove(Node groupNode, Session s) throws UnexpectedInternalProblemException {
+		try {
+			String[] inheritance_ids = WasabiGroupSQL.SQLQueryForMove(groupNode.getIdentifier());
+			ACLServiceImpl.resetInheritance(groupNode, inheritance_ids);
+			if (groupNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+				ACLServiceImpl.setInheritance(groupNode, true, s);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void remove(Node roomNode, String callerPrincipal, Session s)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s);
 	}
 }
