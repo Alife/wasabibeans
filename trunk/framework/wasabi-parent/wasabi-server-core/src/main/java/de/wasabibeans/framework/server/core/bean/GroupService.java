@@ -140,19 +140,42 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public Vector<WasabiGroupDTO> getAllGroups() throws UnexpectedInternalProblemException {
 		Session s = jcr.getJCRSession();
 		Vector<WasabiGroupDTO> allGroups = new Vector<WasabiGroupDTO>();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		NodeIterator ni = GroupServiceImpl.getAllGroups(s);
-		while (ni.hasNext()) {
-			allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			while (ni.hasNext()) {
+				Node groupNode = ni.nextNode();
+				if (WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.VIEW, s))
+					allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(groupNode));
+			}
 		}
+		/* Authorization - End */
+		else
+			while (ni.hasNext())
+				allGroups.add((WasabiGroupDTO) TransferManager.convertNode2DTO(ni.nextNode()));
+
 		return allGroups;
 	}
 
 	@Override
 	public Vector<WasabiUserDTO> getAllMembers(WasabiGroupDTO group) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
+			UnexpectedInternalProblemException, NoPermissionException {
 		Session s = jcr.getJCRSession();
 		try {
 			Node groupNode = TransferManager.convertDTO2Node(group, s);
+			String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+			/* Authorization - Begin */
+			if (WasabiConstants.ACL_CHECK_ENABLE) {
+				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.getAllMember()", "READ",
+							"group"));
+			}
+			/* Authorization - End */
+
 			Vector<WasabiUserDTO> allMembers = new Vector<WasabiUserDTO>();
 			for (NodeIterator ni : GroupServiceImpl.getAllMembers(groupNode)) {
 				while (ni.hasNext()) {
@@ -171,6 +194,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 					}
 				}
 			}
+
 			return allMembers;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
