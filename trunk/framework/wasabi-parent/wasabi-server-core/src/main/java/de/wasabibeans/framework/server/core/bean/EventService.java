@@ -28,41 +28,56 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.interceptor.Interceptors;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
+import de.wasabibeans.framework.server.core.aop.WasabiAOP;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.local.EventServiceLocal;
 import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @SecurityDomain("wasabi")
 @Stateless(name = "EventService")
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-public class EventService implements EventServiceLocal, EventServiceRemote {
+@Interceptors( { JCRSessionInterceptor.class })
+public class EventService implements EventServiceLocal, EventServiceRemote, WasabiAOP {
 
 	@Resource
 	protected SessionContext ctx;
 
 	private JndiConnector jndi;
+	private JcrConnector jcr;
 	private JmsConnector jms;
 
 	@PostConstruct
 	public void postConstruct() {
 		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
 		this.jms = JmsConnector.getJmsConnector(jndi);
 	}
 
 	@PreDestroy
 	public void preDestroy() {
 		jndi.close();
+	}
+	
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
+
+	public JcrConnector getJcrConnector() {
+		return jcr;
 	}
 
 	public void subscribe(WasabiObjectDTO object, String jmsDestinationName, boolean isQueue)
