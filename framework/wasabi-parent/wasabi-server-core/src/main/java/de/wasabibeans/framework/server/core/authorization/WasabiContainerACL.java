@@ -51,7 +51,7 @@ public class WasabiContainerACL {
 	public static void ACLEntryForMove(Node containerNode, Session s) throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiContainerSQL.SQLQueryForMove(containerNode.getIdentifier());
-			ACLServiceImpl.resetInheritance(containerNode, inheritance_ids, s);
+			ACLServiceImpl.resetInheritance(containerNode, inheritance_ids);
 			if (containerNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(containerNode, true, s);
 		} catch (RepositoryException re) {

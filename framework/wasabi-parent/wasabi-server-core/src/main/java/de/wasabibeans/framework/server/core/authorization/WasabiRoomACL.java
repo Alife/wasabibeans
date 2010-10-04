@@ -51,7 +51,7 @@ public class WasabiRoomACL {
 	public static void ACLEntryForMove(Node roomNode, Session s) throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
-			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids, s);
+			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);
 			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(roomNode, true, s);
 		} catch (RepositoryException re) {

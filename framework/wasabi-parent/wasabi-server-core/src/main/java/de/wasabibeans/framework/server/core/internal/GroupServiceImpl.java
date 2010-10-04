@@ -33,7 +33,6 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiGroupACL;
-import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -81,7 +80,7 @@ public class GroupServiceImpl {
 			} else {
 				ObjectServiceImpl.created(newGroup, s, callerPrincipal, true);
 			}
-			
+
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiGroupACL.ACLEntryForCreate(newGroup, s);
@@ -100,6 +99,21 @@ public class GroupServiceImpl {
 		return ObjectServiceImpl.getNodesByType(WasabiNodeType.GROUP, s);
 	}
 
+	/**
+	 * Returns a {@code Vector} that contains a {@code NodeIterator} for the direct members of the group represented by
+	 * the given node and a {@code NodeIterator} for each subgroup of the group represented by the given node.
+	 * 
+	 * @param groupNode
+	 *            the node representing a wasabi-group
+	 * @return {@code Vector} containing {@code NodeIterator}s
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static Vector<NodeIterator> getAllMembers(Node groupNode) throws UnexpectedInternalProblemException {
+		Vector<NodeIterator> allMembers = new Vector<NodeIterator>();
+		retrieveAllMembers(allMembers, groupNode);
+		return allMembers;
+	}
+
 	public static String getDisplayName(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getProperty(WasabiNodeProperty.DISPLAY_NAME).getString();
@@ -114,17 +128,6 @@ public class GroupServiceImpl {
 			return ni.nextNode();
 		} else {
 			return null;
-		}
-	}
-
-	public static Node getWasabiGroup(Session s) throws UnexpectedInternalProblemException {
-		try {
-			return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(
-					WasabiConstants.WASABI_GROUP_NAME);
-		} catch (PathNotFoundException pnfe) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_WASABI_GROUP, pnfe);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
@@ -173,31 +176,6 @@ public class GroupServiceImpl {
 		}
 	}
 
-	/**
-	 * Returns a {@code Vector} that contains a {@code NodeIterator} for the direct members of the group represented by
-	 * the given node and a {@code NodeIterator} for each subgroup of the group represented by the given node.
-	 * 
-	 * @param groupNode
-	 *            the node representing a wasabi-group
-	 * @return {@code Vector} containing {@code NodeIterator}s
-	 * @throws UnexpectedInternalProblemException
-	 */
-	public static Vector<NodeIterator> getAllMembers(Node groupNode) throws UnexpectedInternalProblemException {
-		Vector<NodeIterator> allMembers = new Vector<NodeIterator>();
-		retrieveAllMembers(allMembers, groupNode);
-		return allMembers;
-	}
-
-	private static Vector<NodeIterator> retrieveAllMembers(Vector<NodeIterator> allMembers, Node groupNode)
-			throws UnexpectedInternalProblemException {
-		allMembers.add(getMembers(groupNode));
-		NodeIterator ni = getSubGroups(groupNode);
-		while (ni.hasNext()) {
-			allMembers.addAll(retrieveAllMembers(allMembers, ni.nextNode()));
-		}
-		return allMembers;
-	}
-
 	public static Node getParentGroup(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
 			Node parent = groupNode.getParent().getParent();
@@ -237,6 +215,17 @@ public class GroupServiceImpl {
 		}
 	}
 
+	public static Node getWasabiGroup(Session s) throws UnexpectedInternalProblemException {
+		try {
+			return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(
+					WasabiConstants.WASABI_GROUP_NAME);
+		} catch (PathNotFoundException pnfe) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_WASABI_GROUP, pnfe);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.MEMBERS).hasNode(userNode.getIdentifier());
@@ -260,16 +249,25 @@ public class GroupServiceImpl {
 		return false;
 	}
 
-	public static void move(Node groupNode, Node newParentGroupNode, String callerPrincipal)
+	public static void move(Node groupNode, Node newParentGroupNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
 			if (newParentGroupNode != null) {
 				groupNode.getSession().move(groupNode.getPath(),
 						newParentGroupNode.getPath() + "/" + WasabiNodeProperty.SUBGROUPS + "/" + groupNode.getName());
+
+				/* ACL Environment - Begin */
+				if (WasabiConstants.ACL_ENTRY_ENABLE)
+					WasabiGroupACL.ACLEntryForMove(groupNode, s);
+				/* ACL Environment - End */
 			} else {
-				Session s = groupNode.getSession();
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
 				s.move(groupNode.getPath(), rootOfGroupsNode.getPath() + "/" + groupNode.getName());
+
+				/* ACL Environment - Begin */
+				if (WasabiConstants.ACL_ENTRY_ENABLE)
+					WasabiGroupACL.ACLEntryForMove(groupNode, s);
+				/* ACL Environment - End */
 			}
 			ObjectServiceImpl.modified(groupNode, groupNode.getSession(), callerPrincipal, false);
 		} catch (RepositoryException re) {
@@ -312,6 +310,16 @@ public class GroupServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
+	}
+
+	private static Vector<NodeIterator> retrieveAllMembers(Vector<NodeIterator> allMembers, Node groupNode)
+			throws UnexpectedInternalProblemException {
+		allMembers.add(getMembers(groupNode));
+		NodeIterator ni = getSubGroups(groupNode);
+		while (ni.hasNext()) {
+			allMembers.addAll(retrieveAllMembers(allMembers, ni.nextNode()));
+		}
+		return allMembers;
 	}
 
 	public static void setDisplayName(Node groupNode, String displayName, String callerPrincipal)
