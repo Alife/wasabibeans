@@ -216,16 +216,36 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE
-					&& !Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode)))
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ }, s))
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
+				boolean cert = Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl
+						.getUUID(objectNode));
+				Certificate.setCertAccess();
+
+				if (!cert) {
+					boolean auth = WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] {
+							WasabiPermission.VIEW, WasabiPermission.READ }, s);
+					Certificate.setDbAccess();
+
+					if (!auth)
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
+								"VIEW or READ", "object"));
+					else
+						Certificate.set(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode),
+								true);
+				}
+			} else {
+				boolean auth = WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] {
+						WasabiPermission.VIEW, WasabiPermission.READ }, s);
+				Certificate.setDbAccess();
+
+				if (!auth)
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
 							"VIEW or READ", "object"));
-				else if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-					Certificate.set(userUUID, "ObjectService", "getName", ObjectServiceImpl.getUUID(objectNode), true);
+			}
+		}
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);

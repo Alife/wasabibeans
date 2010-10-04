@@ -68,4 +68,26 @@ public class WasabiRoomSQL {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
 	}
+
+	public static void createRandomSQLinserts() throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+				+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+				+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		try {
+			for (int i = 0; i < randNr(500000); i++)
+				run.update(insertUserACLEntryQuery, randNr(1000000), randNr(1000000), randNr(1000000), "", randNr(1),
+						randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1),
+						randNr(1000000), randNr(8), "ROOM");
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+
+	}
+
+	private static int randNr(int n) {
+		double decNr = Math.random();
+		return (int) Math.round(decNr * n);
+	}
 }
