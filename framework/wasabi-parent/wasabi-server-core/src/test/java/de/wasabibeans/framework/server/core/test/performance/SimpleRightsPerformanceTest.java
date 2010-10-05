@@ -21,6 +21,15 @@
 
 package de.wasabibeans.framework.server.core.test.performance;
 
+import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.annotations.AfterMethod;
@@ -43,7 +52,6 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		testhelper.initDatabase();
 		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
-
 		reWaCon.login("user", "user");
 	}
 
@@ -58,24 +66,32 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void createRooms1() throws WasabiException {
+	public void createRooms1() throws WasabiException, LoginException, NamingException, NotSupportedException,
+			SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException,
+			HeuristicRollbackException {
 		int numberOfRooms = 500;
 
+		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
+		utx.begin();
 		for (long i = 0; i < numberOfRooms; i++) {
 			roomService().create(String.valueOf(i), usersHome);
 			System.out.println("create room " + i);
 		}
+		utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
-		for (int j = 0; j < 500; j++) {
+
+		//utx.begin();
+		for (int j = 0; j < 1500; j++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
+		//utx.commit();
 		long endTimeRead = java.lang.System.currentTimeMillis();
 
 		System.out.println("Write pass 1: " + (endTime - startTime));

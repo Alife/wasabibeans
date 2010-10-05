@@ -58,7 +58,23 @@ public class WasabiAuthorizer {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
 
-			return checkRights(objectUUID, userUUID, userNode, permission, s);
+			//Variante 1 
+//			 return checkRights(objectUUID, userUUID, userNode, permission, s);
+			 
+			
+			// Variante 2
+//			if (existsTimeRights(objectUUID, userUUID, userNode, permission, s)) {
+//				return checkTimeRights(objectUUID, userUUID, userNode, permission, s);
+//			} else if (existsNormalRights(objectUUID, userUUID, userNode, permission, s)) {
+//				return checkNormalRights(objectUUID, userUUID, userNode, permission, s);
+//			} else
+//				return false;
+
+
+			// Variante 3 
+			return checkCalcRights(objectUUID, userUUID, userNode, permission, s);
+
+
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -108,6 +124,374 @@ public class WasabiAuthorizer {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
+	}
+
+	private static boolean checkTimeRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			Vector<String> allGroups = getGroupMemberships(userNode, s);
+			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+			String rightQueryAllow = getRightQueryAllow(permission);
+			String rightQueryDeny = getRightQueryDeny(permission);
+			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+			long time = java.lang.System.currentTimeMillis();
+
+			String explicitUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+					+ rightQueryAllow + "AND" + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
+					+ " AND `start_time`<=" + time + " AND `end_time`>=" + time + " AND " + identityCheck
+					+ "AND `object_id` NOT IN(" + "SELECT `object_id` FROM `wasabi_rights` WHERE "
+					+ "`object_id`=? AND " + rightQueryDeny + "AND" + "`priority`="
+					+ WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " AND `start_time`<=" + time + " AND `end_time`>="
+					+ time + "AND " + identityCheck + ")";
+
+			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result1 = run.query(explicitUserTimeRights, h1, objectUUID, objectUUID);
+
+			if (result1.size() > 0)
+				return true;
+			else {
+				String inheritedUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+						+ "`object_id`=? AND "
+						+ rightQueryAllow
+						+ "AND"
+						+ "`priority`="
+						+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT
+						+ " AND `start_time`<="
+						+ time
+						+ " AND `end_time`>="
+						+ time
+						+ " AND "
+						+ identityCheck
+						+ "AND `object_id` NOT IN("
+						+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
+						+ "`object_id`=? AND "
+						+ rightQueryDeny
+						+ "AND"
+						+ "`priority`="
+						+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT
+						+ " AND `start_time`<="
+						+ time
+						+ " AND `end_time`>=" + time + "AND " + identityCheck + ")";
+
+				ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result2 = run.query(inheritedUserTimeRights, h2, objectUUID, objectUUID);
+
+				if (result2.size() > 0)
+					return true;
+				else {
+					String explicitGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+							+ "`object_id`=? AND "
+							+ rightQueryAllow
+							+ "AND"
+							+ "`priority`="
+							+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
+							+ " AND `start_time`<="
+							+ time
+							+ " AND `end_time`>="
+							+ time
+							+ "AND "
+							+ identityCheck
+							+ "AND `object_id` NOT IN("
+							+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
+							+ "`object_id`=? AND "
+							+ rightQueryDeny
+							+ "AND"
+							+ "`priority`="
+							+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
+							+ " AND `start_time`<="
+							+ time
+							+ " AND `end_time`>=" + time + "AND " + identityCheck + ")";
+
+					ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
+							WasabiACLEntry.class);
+					List<WasabiACLEntry> result3 = run.query(explicitGroupTimeRights, h3, objectUUID, objectUUID);
+
+					if (result3.size() > 0)
+						return true;
+					else {
+						String inheritedGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+								+ "`object_id`=? AND "
+								+ rightQueryAllow
+								+ "AND"
+								+ "`priority`="
+								+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
+								+ " AND `start_time`<="
+								+ time
+								+ " AND `end_time`>="
+								+ time
+								+ " AND "
+								+ identityCheck
+								+ "AND `object_id` NOT IN("
+								+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
+								+ "`object_id`=? AND "
+								+ rightQueryDeny
+								+ "AND"
+								+ "`priority`="
+								+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
+								+ " AND `start_time`<="
+								+ time
+								+ " AND `end_time`>="
+								+ time
+								+ "AND "
+								+ identityCheck
+								+ ")";
+
+						ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
+								WasabiACLEntry.class);
+						List<WasabiACLEntry> result4 = run.query(inheritedGroupTimeRights, h4, objectUUID, objectUUID);
+
+						if (result4.size() > 0)
+							return true;
+					}
+				}
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return false;
+	}
+
+	private static boolean checkNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
+			Session s) throws UnexpectedInternalProblemException {
+		try {
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			Vector<String> allGroups = getGroupMemberships(userNode, s);
+			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+			String rightQueryAllow = getRightQueryAllow(permission);
+			String rightQueryDeny = getRightQueryDeny(permission);
+			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+
+			String explicitUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+					+ rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT
+					+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck;
+
+			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result1 = run.query(explicitUserRights, h1, objectUUID);
+
+			if (result1.size() > 0)
+				return true;
+			else {
+				String inheritedUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+						+ rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
+						+ " AND `start_time`=0 AND `end_time`=0" + " AND " + identityCheck + "AND `object_id` NOT IN("
+						+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
+						+ "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
+						+ " AND `start_time`=0 AND `end_time`=0 " + " AND " + identityCheck + ")";
+
+				ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result2 = run.query(inheritedUserRights, h2, objectUUID, objectUUID);
+
+				if (result2.size() > 0)
+					return true;
+				else {
+					String explicitGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+							+ "`object_id`=? AND " + rightQueryAllow + "AND" + "`priority`="
+							+ WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 " + "AND "
+							+ identityCheck + "AND `object_id` NOT IN("
+							+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
+							+ "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT
+							+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
+
+					ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
+							WasabiACLEntry.class);
+					List<WasabiACLEntry> result3 = run.query(explicitGroupRights, h3, objectUUID, objectUUID);
+
+					if (result3.size() > 0)
+						return true;
+					else {
+						String inheritedGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+								+ "`object_id`=? AND " + rightQueryAllow + "AND " + "`priority`="
+								+ WasabiACLPriority.INHERITED_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 "
+								+ "AND " + identityCheck + "AND `object_id` NOT IN("
+								+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+								+ rightQueryDeny + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_GROUP_RIGHT
+								+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
+
+						ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
+								WasabiACLEntry.class);
+						List<WasabiACLEntry> result4 = run.query(inheritedGroupRights, h4, objectUUID, objectUUID);
+
+						if (result4.size() > 0)
+							return true;
+					}
+				}
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return false;
+	}
+
+	private static boolean checkCalcRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			Vector<String> allGroups = getGroupMemberships(userNode, s);
+			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+			long time = java.lang.System.currentTimeMillis();
+			int[] rights = new int[8];
+
+			String getRights = "SELECT `object_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` "
+					+ "FROM `wasabi_rights` WHERE "
+					+ "`object_id`=? "
+					+ " AND ((`start_time`<="
+					+ time
+					+ " AND `end_time`>="
+					+ time
+					+ ") OR (`start_time`=0 AND `end_time`=0)) "
+					+ "AND "
+					+ identityCheck
+					+ "ORDER BY `priority`";
+
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result = run.query(getRights, h, objectUUID);
+
+			if (result.size() == 0)
+				return false;
+			else {
+				for (WasabiACLEntry wasabiACLEntry : result) {
+					int prio = wasabiACLEntry.getPriority();
+					switch (prio) {
+					case WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT:
+						if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] = 1;
+					case WasabiACLPriority.INHERITED_USER_TIME_RIGHT:
+						if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
+					case WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT:
+						if (rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] = 1;
+					case WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT:
+						if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
+					case WasabiACLPriority.EXPLICIT_USER_RIGHT:
+						if (rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							return true;
+					case WasabiACLPriority.INHERITED_USER_RIGHT:
+						if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
+					case WasabiACLPriority.EXPLICIT_GROUP_RIGHT:
+						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
+					case WasabiACLPriority.INHERITED_GROUP_RIGHT:
+						if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
+							return true;
+						else if (getRight(wasabiACLEntry, permission) == -1)
+							return false;
+						else
+							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
+					}
+				}
+				if (rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] == 1)
+					return true;
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return false;
+	}
+
+	private static int getRight(WasabiACLEntry wasabiACLEntry, int permission) {
+		switch (permission) {
+		case WasabiPermission.VIEW:
+			return wasabiACLEntry.getView();
+		case WasabiPermission.READ:
+			return wasabiACLEntry.getRead();
+		case WasabiPermission.EXECUTE:
+			return wasabiACLEntry.getExecute();
+		case WasabiPermission.COMMENT:
+			return wasabiACLEntry.getComment();
+		case WasabiPermission.INSERT:
+			return wasabiACLEntry.getInsert();
+		case WasabiPermission.WRITE:
+			return wasabiACLEntry.getWrite();
+		case WasabiPermission.GRANT:
+			return wasabiACLEntry.getGrant();
+		}
+		return 0;
+	}
+
+	private static boolean existsTimeRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
+			throws UnexpectedInternalProblemException {
+		try {
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			Vector<String> allGroups = getGroupMemberships(userNode, s);
+			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+			String rightQueryAllow = getRightQueryAllow(permission);
+			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+
+			String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+					+ rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " OR "
+					+ "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT + " OR " + "`priority`="
+					+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT + " OR " + "`priority`="
+					+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT + ") " + "AND " + identityCheck;
+
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
+
+			if (result.size() > 0)
+				return true;
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return false;
+	}
+
+	private static boolean existsNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
+			Session s) throws UnexpectedInternalProblemException {
+		try {
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			Vector<String> allGroups = getGroupMemberships(userNode, s);
+			String allGroupsQuery = getGroupMembershipQuery(allGroups);
+			String rightQueryAllow = getRightQueryAllow(permission);
+			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+
+			String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+					+ rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT + " OR "
+					+ "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " OR " + "`priority`="
+					+ WasabiACLPriority.INHERITED_USER_RIGHT + " OR " + "`priority`="
+					+ WasabiACLPriority.INHERITED_GROUP_RIGHT + ") " + "AND " + identityCheck;
+
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+			List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
+
+			if (result.size() > 0)
+				return true;
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
+		return false;
 	}
 
 	private static boolean checkRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
