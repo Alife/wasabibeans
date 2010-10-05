@@ -31,17 +31,13 @@ import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 @Stateless(name = "CertificateService")
 public class Certificate implements CertificateServiceLocal, CertificateServiceRemote {
 
-	private static HashMap<String, Boolean> certificate = new HashMap<String, Boolean>();
-	private static int dbAccess = 0;
 	private static int certAccess = 0;
+	private static HashMap<String, Boolean> certificate = new HashMap<String, Boolean>();
+	private static int certResultAccess = 0;
+	private static int dbAccess = 0;
 
-	public static void set(String key, boolean value) {
-		certificate.put(key, value);
-	}
-
-	public static void set(String user, String service, String method, String objectUUID, boolean value) {
-		String key = concatInputs(user, service, method, objectUUID);
-		certificate.put(key, value);
+	private static String concatInputs(String user, String service, String method, String objectUUID) {
+		return user + "::" + service + "::" + method + "::" + objectUUID;
 	}
 
 	public static boolean get(String key) {
@@ -59,18 +55,13 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 			return false;
 	}
 
-	private static String concatInputs(String user, String service, String method, String objectUUID) {
-		return user + "::" + service + "::" + method + "::" + objectUUID;
+	public static void set(String key, boolean value) {
+		certificate.put(key, value);
 	}
 
-	@Override
-	public int getDbAccess() {
-		return dbAccess;
-	}
-
-	@Override
-	public void setDbAccess() {
-		dbAccess = dbAccess + 1;
+	public static void set(String user, String service, String method, String objectUUID, boolean value) {
+		String key = concatInputs(user, service, method, objectUUID);
+		certificate.put(key, value);
 	}
 
 	@Override
@@ -79,7 +70,27 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 	}
 
 	@Override
+	public int getDbAccess() {
+		return dbAccess;
+	}
+
+	@Override
+	public int getResultCertAccess() {
+		return certResultAccess;
+	}
+
+	@Override
 	public void setCertAccess() {
 		certAccess = certAccess + 1;
+	}
+
+	@Override
+	public void setDbAccess() {
+		dbAccess = dbAccess + 1;
+	}
+
+	@Override
+	public void setResultCertAccess() {
+		certResultAccess = certResultAccess + 1;
 	}
 }

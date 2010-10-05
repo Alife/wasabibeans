@@ -135,6 +135,22 @@ public class UserServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting EXECUTE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.EXECUTE, false);
+		System.out.println("done.");
+
+		System.out.print("Entering enterTestRoom...");
+		try {
+			userService().enter(newUser, enterTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
 		System.out.print("Entering enterTestRoom...");
 		try {
 			userService().enter(newUser, enterTestRoom);
@@ -962,6 +978,23 @@ public class UserServiceTest extends WasabiRemoteTest {
 		displayACLEntry(enterRoom2, "enterRoom2");
 		displayACLEntry(enterRoom3, "enterRoom3");
 
+		System.out.print("Setting VIEW forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("Using getWhereabouts...");
+		try {
+			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
+			for (WasabiRoomDTO wasabiRoomDTO : rooms)
+				System.out.println(objectService().getName(wasabiRoomDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
 		System.out.println("Using getWhereabouts...");
 		try {
 			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
@@ -1009,6 +1042,99 @@ public class UserServiceTest extends WasabiRemoteTest {
 			Vector<WasabiRoomDTO> rooms = userService().getWhereabouts(newUser);
 			for (WasabiRoomDTO wasabiRoomDTO : rooms)
 				System.out.println(objectService().getName(wasabiRoomDTO).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void leaveTest() throws WasabiException {
+		System.out.println("=== leaveTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating leaveTestRoom at usersHome... ");
+		WasabiRoomDTO leaveTestRoom = null;
+		try {
+			leaveTestRoom = roomService().create("leaveTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for leaveTestRoom... ");
+		aclService().create(leaveTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for leaveTestRoom... ");
+		aclService().deactivateInheritance(leaveTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE as userRight for leaveTestRoom... ");
+		aclService().create(leaveTestRoom, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Entering leaveTestRoom...");
+		try {
+			userService().enter(newUser, leaveTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE forbiddance as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.EXECUTE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting EXECUTE forbiddance as userRight for leaveTestRoom... ");
+		aclService().create(leaveTestRoom, user, WasabiPermission.EXECUTE, false);
+		System.out.println("done.");
+
+		System.out.print("Leaving leaveTestRoom...");
+		try {
+			userService().leave(newUser, leaveTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE as userRight for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Leaving leaveTestRoom...");
+		try {
+			userService().leave(newUser, leaveTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting EXECUTE as userRight for leaveTestRoom... ");
+		aclService().create(leaveTestRoom, user, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.print("Leaving leaveTestRoom...");
+		try {
+			userService().leave(newUser, leaveTestRoom);
+			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

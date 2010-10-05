@@ -41,8 +41,13 @@ public class WasabiGroupACL {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
+		// Group gets READ and VIEW permission
 		ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
 				new boolean[] { true, true }, 0, 0, s);
+		// Creator of group gets GRANT permission
+		ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ,
+				WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
+				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0, s);
 	}
 
 	public static void ACLEntryForMove(Node groupNode, Session s) throws UnexpectedInternalProblemException {
