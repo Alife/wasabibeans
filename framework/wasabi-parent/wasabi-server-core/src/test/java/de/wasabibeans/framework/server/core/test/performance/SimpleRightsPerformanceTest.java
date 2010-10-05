@@ -27,7 +27,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.authorization.Certificate;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
@@ -74,15 +73,15 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
 		for (int j = 0; j < 100; j++) {
-			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms-1)));
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
 		long endTimeRead = java.lang.System.currentTimeMillis();
 
 		System.out.println("Write pass 1: " + (endTime - startTime));
 		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
-		System.out.println("dbAccess: " + Certificate.getDbAccess());
-		System.out.println("certAccess: " + Certificate.getCertAccess());
+		System.out.println("dbAccess: " + certificateService().getDbAccess());
+		System.out.println("certAccess: " + certificateService().getCertAccess());
 	}
 
 	// @Test
