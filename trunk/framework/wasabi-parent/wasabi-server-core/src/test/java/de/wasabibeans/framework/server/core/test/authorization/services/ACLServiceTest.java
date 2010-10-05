@@ -253,6 +253,10 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		displayACLEntry(someRoom, "someRoom");
 		displayACLEntry(someSubRoom, "someSubRoom");
 
+		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
 		System.out.println("===========================");
 	}
 
@@ -867,7 +871,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting READ as userRight for someRoom... ");
 		aclService().create(someRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
@@ -880,7 +884,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting READ as userRight for someSubRoom... ");
 		aclService().create(someSubRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");

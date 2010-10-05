@@ -85,7 +85,7 @@ public interface UserServiceRemote extends ObjectServiceRemote {
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, ConcurrentModificationException;
+			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException;
 
 	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException;

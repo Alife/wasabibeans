@@ -30,7 +30,11 @@ public interface CertificateServiceLocal {
 
 	public int getDbAccess();
 
+	public int getResultCertAccess();
+	
 	public void setCertAccess();
-
+	
 	public void setDbAccess();
+
+	public void setResultCertAccess();
 }

@@ -113,22 +113,22 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			if (parentGroup != null) {
 				parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
 			}
-			Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, callerPrincipal);
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (parentGroup == null)
+				if (parentGroup == null) {
 					if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 						throw new NoPermissionException(WasabiExceptionMessages
 								.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-				if (!WasabiAuthorizer.authorize(parentGroupNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
+				} else if (!WasabiAuthorizer.authorize(parentGroupNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.create()",
 							"INSERT or WRITE", "parentGroup"));
 			}
 			/* Authorization - End */
 
+			Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, callerPrincipal);
 			s.save();
 			EventCreator.createCreatedEvent(groupNode, parentGroupNode, jms, callerPrincipal);
 			return TransferManager.convertNode2DTO(groupNode, parentGroup);

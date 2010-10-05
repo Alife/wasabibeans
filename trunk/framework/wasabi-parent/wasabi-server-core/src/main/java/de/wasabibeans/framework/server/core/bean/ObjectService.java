@@ -214,6 +214,8 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 				boolean cert = Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl
 						.getUUID(objectNode));
 				certificateService.setCertAccess();
+				if (cert)
+					certificateService.setResultCertAccess();
 
 				if (!cert) {
 					boolean auth = WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] {

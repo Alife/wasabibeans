@@ -116,12 +116,15 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		System.out.println("done.");
 
 		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
 		try {
-			groupService().create("testGroup", wasabiGroup);
+			testGroup = groupService().create("testGroup", wasabiGroup);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		displayACLEntry(testGroup, "testGroup");
 
 		System.out.println("===========================");
 	}
@@ -1021,6 +1024,10 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.print("Setting WRITE forbidance as userRight for group wasabi... ");
+		aclService().create(testGroup, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
 
 		System.out.print("Removing group testGroup...");
 		try {
