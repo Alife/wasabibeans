@@ -27,6 +27,7 @@ import java.util.Vector;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -58,6 +59,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
 import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
@@ -74,32 +76,15 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @Interceptors( { JCRSessionInterceptor.class })
 public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, WasabiAOP {
 
+	@EJB
+	private CertificateServiceLocal certificateService;
+
 	@Resource
 	protected SessionContext ctx;
 
-	protected JndiConnector jndi;
 	protected JcrConnector jcr;
 	protected JmsConnector jms;
-
-	@PostConstruct
-	public void postConstruct() {
-		this.jndi = JndiConnector.getJNDIConnector();
-		this.jcr = JcrConnector.getJCRConnector(jndi);
-		this.jms = JmsConnector.getJmsConnector(jndi);
-	}
-
-	@PreDestroy
-	public void preDestroy() {
-		jndi.close();
-	}
-
-	public JndiConnector getJndiConnector() {
-		return jndi;
-	}
-
-	public JcrConnector getJcrConnector() {
-		return jcr;
-	}
+	protected JndiConnector jndi;
 
 	@Override
 	public boolean exists(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
@@ -169,6 +154,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		return TransferManager.convertValue2DTO(ObjectServiceImpl.getCreatedOn(objectNode), optLockId);
 	}
 
+	public JcrConnector getJcrConnector() {
+		return jcr;
+	}
+
+	public JndiConnector getJndiConnector() {
+		return jndi;
+	}
+
 	@Override
 	public WasabiValueDTO getModifiedBy(WasabiObjectDTO object) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
@@ -220,12 +213,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
 				boolean cert = Certificate.get(userUUID, "ObjectService", "getName", ObjectServiceImpl
 						.getUUID(objectNode));
-				Certificate.setCertAccess();
+				certificateService.setCertAccess();
 
 				if (!cert) {
 					boolean auth = WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] {
 							WasabiPermission.VIEW, WasabiPermission.READ }, s);
-					Certificate.setDbAccess();
+					certificateService.setDbAccess();
 
 					if (!auth)
 						throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -238,7 +231,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 			} else {
 				boolean auth = WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] {
 						WasabiPermission.VIEW, WasabiPermission.READ }, s);
-				Certificate.setDbAccess();
+				certificateService.setDbAccess();
 
 				if (!auth)
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -368,6 +361,18 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		/* Authorization - End */
 
 		return ObjectServiceImpl.getUUID(objectNode);
+	}
+
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 
 	@Override
