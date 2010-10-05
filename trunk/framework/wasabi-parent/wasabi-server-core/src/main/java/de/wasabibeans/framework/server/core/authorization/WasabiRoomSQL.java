@@ -76,7 +76,7 @@ public class WasabiRoomSQL {
 				+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
 				+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try {
-			for (int i = 0; i < randNr(10); i++)
+			for (int i = 0; i < randNr(1000); i++)
 				run.update(insertUserACLEntryQuery, randNr(1000000), randNr(1000000), randNr(1000000), "", randNr(1),
 						randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1),
 						randNr(1000000), randNr(8), "ROOM");
