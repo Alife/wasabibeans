@@ -96,9 +96,6 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 		System.out.println("Write pass 1: " + (endTime - startTime));
 		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
-		System.out.println("dbAccess: " + certificateService().getDbAccess());
-		System.out.println("certAccess: " + certificateService().getCertAccess());
-		System.out.println("certResultAccess: " + certificateService().getResultCertAccess());
 	}
 
 	// @Test
