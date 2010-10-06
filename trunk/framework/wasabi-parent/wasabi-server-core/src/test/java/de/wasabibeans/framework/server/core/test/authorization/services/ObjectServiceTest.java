@@ -88,6 +88,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(existsTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				existsTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for existsTestRoom... ");
 		aclService().create(existsTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -109,8 +115,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for existsTestRoom... ");
-		aclService().create(existsTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for existsTestRoom... ");
+		aclService().create(existsTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking if someRoom exists...");
@@ -148,6 +154,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getCreatedByTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getCreatedByTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getCreatedByTestRoom... ");
 		aclService().create(getCreatedByTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -169,8 +181,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getCreatedByTestRoom... ");
-		aclService().create(getCreatedByTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getCreatedByTestRoom... ");
+		aclService().create(getCreatedByTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking getCreatedBy of someRoom...");
@@ -208,6 +220,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getCreatedOnTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getCreatedOnTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getCreatedOnTestRoom... ");
 		aclService().create(getCreatedOnTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -229,8 +247,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getCreatedOnTestRoom... ");
-		aclService().create(getCreatedOnTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getCreatedOnTestRoom... ");
+		aclService().create(getCreatedOnTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking getCreatedOn of someRoom...");
@@ -268,6 +286,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getModifiedByTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getModifiedByTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getModifiedByTestRoom... ");
 		aclService().create(getModifiedByTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -289,8 +313,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getModifiedByTestRoom... ");
-		aclService().create(getModifiedByTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getModifiedByTestRoom... ");
+		aclService().create(getModifiedByTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking getModifiedBy of someRoom...");
@@ -328,6 +352,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getModifiedOnTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getModifiedOnTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getModifiedOnTestRoom... ");
 		aclService().create(getModifiedOnTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -349,8 +379,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getModifiedOnTestRoom... ");
-		aclService().create(getModifiedOnTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getModifiedOnTestRoom... ");
+		aclService().create(getModifiedOnTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking getModifiedOn of someRoom...");
@@ -388,6 +418,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getNameTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getNameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getNameTestRoom... ");
 		aclService().create(getNameTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -409,8 +445,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getNameTestRoom... ");
-		aclService().create(getNameTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getNameTestRoom... ");
+		aclService().create(getNameTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Checking getName of someRoom...");
@@ -447,6 +483,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getObjectsByAttributeNameTestRoom... ");
 		aclService().deactivateInheritance(getObjectsByAttributeNameTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getObjectsByAttributeNameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting INSERT as userRight for getObjectsByAttributeNameTestRoom... ");
 		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.INSERT, true);
@@ -493,8 +535,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for getObjectsByAttributeNameTestRoom... ");
-		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for getObjectsByAttributeNameTestRoom... ");
+		aclService().create(getObjectsByAttributeNameTestRoom, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Getting objects by someAttribute... ");
@@ -535,6 +577,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getObjectsByCreatorTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getObjectsByCreatorTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getObjectsByCreatorTestRoom... ");
 		aclService().create(getObjectsByCreatorTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -568,8 +616,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for someRoom1... ");
-		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Getting objects by creator user... ");
@@ -610,6 +658,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getObjectsByModifierTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getObjectsByModifierTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getObjectsByModifierTestRoom... ");
 		aclService().create(getObjectsByModifierTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -643,8 +697,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for someRoom1... ");
-		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Getting objects by modifier user... ");
@@ -685,6 +739,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getObjectsByNameTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getObjectsByNameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting INSERT as userRight for getObjectsByNameTestRoom... ");
 		aclService().create(getObjectsByNameTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
@@ -718,8 +778,8 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting READ as userRight for someRoom1... ");
-		aclService().create(someRoom1, user, WasabiPermission.READ, true);
+		System.out.print("Setting VIEW as userRight for someRoom1... ");
+		aclService().create(someRoom1, user, WasabiPermission.VIEW, true);
 		System.out.println("done.");
 
 		System.out.print("Getting objects by name 'someRoom1'... ");
@@ -760,6 +820,12 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getUUIDTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getUUIDTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Display ACL Entries... ");
 		try {
 			displayACLEntry(getUUIDTestRoom, "getUUIDTestRoom");
@@ -771,7 +837,7 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().create(getUUIDTestRoom, user, WasabiPermission.READ, true);
 		System.out.println("done.");
 
-		System.out.print("Display ACL Entries... ");
+		System.out.println("Display ACL Entries... ");
 		try {
 			displayACLEntry(getUUIDTestRoom, "getUUIDTestRoom");
 		} catch (Exception e) {
@@ -803,6 +869,24 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Deactivating inheritance for setCreatedByTestRoom... ");
 		aclService().deactivateInheritance(setCreatedByTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				setCreatedByTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Using setCreatedBy at setCreatedByTestRoom... ");
+		try {
+			objectService().setCreatedBy(setCreatedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT forbiddance as userRight for setCreatedByTestRoom... ");
+		aclService().create(setCreatedByTestRoom, user, WasabiPermission.GRANT, false);
 		System.out.println("done.");
 
 		System.out.print("Using setCreatedBy at setCreatedByTestRoom... ");
@@ -840,6 +924,24 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(setCreatedOnTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				setCreatedOnTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Using setCreatedOn at setCreatedOnTestRoom... ");
+		try {
+			objectService().setCreatedOn(setCreatedOnTestRoom, new Date(), null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT forbiddance as userRight for setCreatedOnTestRoom... ");
+		aclService().create(setCreatedOnTestRoom, user, WasabiPermission.GRANT, false);
+		System.out.println("done.");
+
 		System.out.print("Using setCreatedOn at setCreatedOnTestRoom... ");
 		try {
 			objectService().setCreatedOn(setCreatedOnTestRoom, new Date(), null);
@@ -875,6 +977,24 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(setModifiedByTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				setModifiedByTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Using setModifiedBy at setModifiedByTestRoom... ");
+		try {
+			objectService().setModifiedBy(setModifiedByTestRoom, user, null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT forbiddance as userRight for setModifiedByTestRoom... ");
+		aclService().create(setModifiedByTestRoom, user, WasabiPermission.GRANT, false);
+		System.out.println("done.");
+
 		System.out.print("Using setModifiedBy at setModifiedByTestRoom... ");
 		try {
 			objectService().setModifiedBy(setModifiedByTestRoom, user, null);
@@ -908,6 +1028,24 @@ public class ObjectServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Deactivating inheritance for setModifiedOnTestRoom... ");
 		aclService().deactivateInheritance(setModifiedOnTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				setModifiedOnTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Using setModifiedOn at setModifiedOnTestRoom... ");
+		try {
+			objectService().setModifiedOn(setModifiedOnTestRoom, new Date(), null);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT forbiddance as userRight for setModifiedOnTestRoom... ");
+		aclService().create(setModifiedOnTestRoom, user, WasabiPermission.GRANT, false);
 		System.out.println("done.");
 
 		System.out.print("Using setModifiedOn at setModifiedOnTestRoom... ");

@@ -65,6 +65,12 @@ public class VersioningServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(createVersionTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				createVersionTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Creating version at createVersionTestRoom... ");
 		try {
 			versioningService().createVersion(createVersionTestRoom, "wtf");
@@ -133,6 +139,12 @@ public class VersioningServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getVersionsTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getVersionsTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Getting versions of getVersionsTestRoom... ");
 		try {
 			versioningService().getVersions(getVersionsTestRoom);
@@ -179,6 +191,12 @@ public class VersioningServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for restoreVersionTestRoom... ");
 		aclService().deactivateInheritance(restoreVersionTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				restoreVersionTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Restoring version at restoreVersionTestRoom... ");
 		try {

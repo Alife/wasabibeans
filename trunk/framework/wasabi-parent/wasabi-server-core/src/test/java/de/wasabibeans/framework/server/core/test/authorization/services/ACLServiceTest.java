@@ -74,6 +74,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(activateInheritanceTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				activateInheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Delete GRANT as userRight for activateInheritanceTestRoom... ");
 		aclService().remove(activateInheritanceTestRoom, user, WasabiPermission.GRANT);
 		System.out.println("done.");
@@ -114,6 +120,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for createDefaultTestRoom... ");
 		aclService().deactivateInheritance(createDefaultTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				createDefaultTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
 		aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
@@ -174,6 +186,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for createTestRoom... ");
 		aclService().deactivateInheritance(createTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				createTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Delete GRANT as userRight for createTestRoom... ");
 		aclService().remove(createTestRoom, user, WasabiPermission.GRANT);
@@ -249,6 +267,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(deactivateInheritanceTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				deactivateInheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
 		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
 		displayACLEntry(someRoom, "someRoom");
 		displayACLEntry(someSubRoom, "someSubRoom");
@@ -318,6 +342,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getAclEntriesTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getAclEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.println("Try to use getAclEntries for getAclEntriesTestRoom...");
 		try {
 			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
@@ -378,6 +408,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getACLEntriesTestRoom... ");
 		aclService().deactivateInheritance(getACLEntriesTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getACLEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.println("Try to use getACLEntries for getACLEntriesTestRoom...");
 		try {
@@ -475,6 +511,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getDefaultAclEntriesByTypeTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getDefaultAclEntriesByTypeTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesByTypeTestRoom... ");
 		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
@@ -562,6 +604,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getDefaultAclEntriesTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getDefaultAclEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesTestRoom... ");
 		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
@@ -647,6 +695,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(isInheritanceAllowedTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				isInheritanceAllowedTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.println("Check inheritance for isInheritanceAllowedTestRoom");
 		try {
 			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
@@ -710,6 +764,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for removeDefaultTestRoom... ");
 		aclService().deactivateInheritance(removeDefaultTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				removeDefaultTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
 		aclService().createDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
@@ -814,6 +874,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(removeTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				removeTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Delete GRANT as userRight for removeTestRoom... ");
 		aclService().remove(removeTestRoom, user, WasabiPermission.GRANT);
 		System.out.println("done.");
@@ -854,6 +920,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for resetTestRoom... ");
 		aclService().deactivateInheritance(resetTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				resetTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting INSERT as userRight for resetTestRoom... ");
 		aclService().create(resetTestRoom, user, WasabiPermission.INSERT, true);

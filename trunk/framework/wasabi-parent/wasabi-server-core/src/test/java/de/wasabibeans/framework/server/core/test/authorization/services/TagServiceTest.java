@@ -66,6 +66,12 @@ public class TagServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(addTagTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				addTagTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Adding Tag for addTagTestRoom... ");
 		try {
 			tagService().addTag(addTagTestRoom, "Blubbi");
@@ -116,6 +122,12 @@ public class TagServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for clearTagTestRoom... ");
 		aclService().deactivateInheritance(clearTagTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				clearTagTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Adding Tag for clearTagTestRoom... ");
 		try {
@@ -204,6 +216,9 @@ public class TagServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getDocumentsByTagRoom... ");
 		aclService().deactivateInheritance(getDocumentsByTagRoom);
 		System.out.println("done.");
+
+		aclService().remove(getDocumentsByTagRoom, user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Creating document testDoc1 at getDocumentsByTagRoom... ");
 		WasabiDocumentDTO testDoc1 = null;
@@ -322,6 +337,12 @@ public class TagServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getTagsRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getTagsRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Adding Tag for getTagsRoom... ");
 		try {
 			tagService().addTag(getTagsRoom, "Blubbi");
@@ -382,7 +403,7 @@ public class TagServiceTest extends WasabiRemoteTest {
 		System.out.print("Setting GRANT as userRight for removeTagRoom... ");
 		aclService().create(removeTagRoom, user, WasabiPermission.GRANT, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Setting COMMENT as userRight for removeTagRoom... ");
 		aclService().create(removeTagRoom, user, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
@@ -390,6 +411,12 @@ public class TagServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for removeTagRoom... ");
 		aclService().deactivateInheritance(removeTagRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				removeTagRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Adding Tag for removeTagRoom... ");
 		try {
@@ -406,11 +433,11 @@ public class TagServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Setting WRITE as userRight for removeTagRoom... ");
 		aclService().create(removeTagRoom, user, WasabiPermission.WRITE, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Removing Tag from removeTagRoom... ");
 		try {
 			tagService().removeTag(removeTagRoom, "Blubbi");
