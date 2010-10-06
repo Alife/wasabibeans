@@ -35,16 +35,13 @@ import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
 import de.wasabibeans.framework.server.core.authentication.SqlLoginModule;
-import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.bean.RoomService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.event.WasabiEventType;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
-import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
@@ -106,7 +103,7 @@ public class NodeCreationLocalTest extends Arquillian {
 	}
 
 	// @Test
-	// this is the optimum reachable; no ejb, nodetype or whatsoever overhead
+	/* this is the optimum reachable; no ejb, nodetype or whatsoever overhead */
 	// results are: 1653, 1681, 1551
 	public void directJCRTest() throws Throwable {
 		beforeTest();
@@ -127,9 +124,87 @@ public class NodeCreationLocalTest extends Arquillian {
 		}
 	}
 
-	//@Test
-	// introducing nodetype overhead; referenceable, lockable etc, all that comes at a cost
-	// results are: 12483, 12447, 13586
+	// @Test
+	/* above with transaction */
+	// results are: 1420, 1580, 1579
+	public void directJCRTestTx() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i);
+			}
+			s.save();
+			jcr.cleanup(false);
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// @Test
+	/* above with save after every node creation */
+	// results are: 22807, 23256, 23240
+	public void directJCRTestTxMultipleSaves() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i);
+				s.save();
+			}
+			jcr.cleanup(false);
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// @Test
+	/* above without transaction */
+	// results are: 133851
+	public void directJCRTestMultipleSaves() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			long start = System.currentTimeMillis();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i);
+				s.save();
+			}
+			jcr.cleanup(false);
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jcr.cleanup(true);
+			jndi.close();
+		}
+	}
+
+	// -------------------------------------------------------------------------------------------------
+
+	// @Test
+	/* introducing nodetype overhead; referenceable, lockable etc, all that comes at a cost */
+	// results are: 12483, 12447, 13586, 13824
 	public void directJCRNodeTypeTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -146,12 +221,90 @@ public class NodeCreationLocalTest extends Arquillian {
 			System.out.println("------ " + (System.currentTimeMillis() - start));
 		} finally {
 			jcr.cleanup(true);
+			jndi.close();
 		}
 	}
 
-	//@Test
-	// introducing overhead due to all the extra stuff happening in RoomServiceImpl.create() (like setting creation
-	// date)
+	// @Test
+	/* above with transaction */
+	// results are: 13917, 13761
+	public void directJCRNodeTypeTestTx() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i, WasabiNodeType.ROOM);
+			}
+			s.save();
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// @Test
+	/* above with save after every node creation */
+	// results are: 38316, 37084
+	public void directJCRNodeTypeTestTxMultipleSaves() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i, WasabiNodeType.ROOM);
+				s.save();
+			}
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// @Test
+	/* above without transaction */
+	// results are: 151823, 151099
+	public void directJCRNodeTypeTestMultipleSaves() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			long start = System.currentTimeMillis();
+			Session s = jcr.getJCRSession();
+			Node rootNode = s.getRootNode();
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				rootNode.addNode("node" + i, WasabiNodeType.ROOM);
+				s.save();
+			}
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jcr.cleanup(true);
+			jndi.close();
+		}
+	}
+
+	// --------------------------------------------------------------------------------------
+
+	// @Test
+	/*
+	 * introducing overhead due to all the extra stuff happening in RoomServiceImpl.create() (like setting creation
+	 * date)
+	 */
 	// results are: 17279, 17479, 16819
 	public void directJCRNodeTypeAndExtraAttributesTest() throws Throwable {
 		beforeTest();
@@ -169,11 +322,70 @@ public class NodeCreationLocalTest extends Arquillian {
 			System.out.println("------ " + (System.currentTimeMillis() - start));
 		} finally {
 			jcr.cleanup(true);
+			jndi.close();
 		}
 	}
 
+	// @Test
+	/*
+	 * above with transaction
+	 */
+	// results are: 17164, 16695
+	public void directJCRNodeTypeAndExtraAttributesTxTest() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				RoomServiceImpl.create("node" + i, rootRoomNode, s, WasabiConstants.ROOT_USER_NAME);
+			}
+			s.save();
+			jcr.cleanup(false);
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// @Test
+	/*
+	 * above with save after every node creation
+	 */
+	// results are: 48718, 50252
+	public void directJCRNodeTypeAndExtraAttributesTxMultipleSavesTest() throws Throwable {
+		beforeTest();
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			long start = System.currentTimeMillis();
+			utx.begin();
+			Session s = jcr.getJCRSession();
+			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
+			for (int i = 0; i < 5000; i++) {
+				System.out.println(i);
+				RoomServiceImpl.create("node" + i, rootRoomNode, s, WasabiConstants.ROOT_USER_NAME);
+				s.save();
+			}
+			jcr.cleanup(false);
+			utx.commit();
+			System.out.println("------ " + (System.currentTimeMillis() - start));
+		} finally {
+			jndi.close();
+		}
+	}
+
+	// --------------------------------------------------------------------------------------------
+
 	@Test
-	// introducing ejb overhead
+	/* introducing ejb overhead */
 	// results are: 59738, 59223, 58966, 60082
 	public void localServiceTest() throws Throwable {
 		beforeTest();
@@ -188,6 +400,22 @@ public class NodeCreationLocalTest extends Arquillian {
 		}
 		utx.commit();
 		System.out.println("------ " + (System.currentTimeMillis() - start));
+		loCon.disconnect();
 	}
 
+	// @Test
+	/* tests what happens when not using a transaction as in the test above */
+	// results are: 171092, 174674
+	public void localServiceWithoutTxTest() throws Throwable {
+		beforeTest();
+		loCon.defaultConnectAndLogin();
+		RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < 5000; i++) {
+			System.out.println(i);
+			roomService.create("room" + i, rootRoom);
+		}
+		System.out.println("------ " + (System.currentTimeMillis() - start));
+		loCon.disconnect();
+	}
 }
