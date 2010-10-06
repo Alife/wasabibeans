@@ -36,7 +36,7 @@ public interface WasabiConstants {
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
 	public final static boolean ACL_CERTIFICATE_ENABLE = true;
-	
+
 	/* Storage size of certificate maps */
 	public final static int OBJECT_SERVICE_MAP_SIZE = 1000;
 	public final static int ROOM_SERVICE_MAP_SIZE = 1000;
@@ -48,7 +48,7 @@ public interface WasabiConstants {
 	public final static String JMS_EVENT_USER = "event_user";
 	public final static int JMS_PERMISSION_CACHE_TIME = 10;
 	public final static String JMS_RESOURCE_ADAPTER = "hornetq-ra.rar";
-	
+
 	/* JMS for asynchronous pipelines */
 	public final static String JMS_QUEUE_PIPELINE = "queue/pipeline";
 

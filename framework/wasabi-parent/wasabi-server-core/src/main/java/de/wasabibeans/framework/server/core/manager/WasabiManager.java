@@ -54,9 +54,9 @@ public class WasabiManager {
 	private static WasabiLogger logger = WasabiLogger.getLogger(WasabiManager.class);
 
 	public static void initDatabase() {
-		/* Create user table and entries */
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
+		/* Create user table and entries */
 		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
 		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
 				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL,"
