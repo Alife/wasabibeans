@@ -86,6 +86,12 @@ public class EventServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(createTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				createTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Subscribing to createTestRoom... ");
 		try {
 			eventService().subscribe(createTestRoom, "sonstwas", false);

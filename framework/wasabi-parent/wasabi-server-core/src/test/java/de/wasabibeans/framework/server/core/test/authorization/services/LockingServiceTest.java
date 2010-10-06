@@ -86,6 +86,12 @@ public class LockingServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(lockTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				lockTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Setting lock at lockTestRoom... ");
 		try {
 			lockingService().lock(lockTestRoom, true);
@@ -148,6 +154,12 @@ public class LockingServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for unlockTestRoom... ");
 		aclService().deactivateInheritance(unlockTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				unlockTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting WRITE as userRight for unlockTestRoom... ");
 		aclService().create(unlockTestRoom, user, WasabiPermission.WRITE, true);

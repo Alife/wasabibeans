@@ -58,22 +58,19 @@ public class WasabiAuthorizer {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
 
-			//Variante 1 
+			// Variante 1
 //			 return checkRights(objectUUID, userUUID, userNode, permission, s);
-			 
-			
+
 			// Variante 2
-//			if (existsTimeRights(objectUUID, userUUID, userNode, permission, s)) {
-//				return checkTimeRights(objectUUID, userUUID, userNode, permission, s);
-//			} else if (existsNormalRights(objectUUID, userUUID, userNode, permission, s)) {
-//				return checkNormalRights(objectUUID, userUUID, userNode, permission, s);
-//			} else
-//				return false;
+			// if (existsTimeRights(objectUUID, userUUID, userNode, permission, s)) {
+			// return checkTimeRights(objectUUID, userUUID, userNode, permission, s);
+			// } else if (existsNormalRights(objectUUID, userUUID, userNode, permission, s)) {
+			// return checkNormalRights(objectUUID, userUUID, userNode, permission, s);
+			// } else
+			// return false;
 
-
-			// Variante 3 
+			// Variante 3
 			return checkCalcRights(objectUUID, userUUID, userNode, permission, s);
-
 
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -356,59 +353,60 @@ public class WasabiAuthorizer {
 			else {
 				for (WasabiACLEntry wasabiACLEntry : result) {
 					int prio = wasabiACLEntry.getPriority();
+					int right = getRight(wasabiACLEntry, permission);
 					switch (prio) {
 					case WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT:
-						if (getRight(wasabiACLEntry, permission) == -1)
+						if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] = 1;
 					case WasabiACLPriority.INHERITED_USER_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
 					case WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] = 1;
 					case WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
 					case WasabiACLPriority.EXPLICIT_USER_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							return true;
 					case WasabiACLPriority.INHERITED_USER_RIGHT:
-						if (getRight(wasabiACLEntry, permission) == -1)
+						if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
 					case WasabiACLPriority.EXPLICIT_GROUP_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
+						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
 					case WasabiACLPriority.INHERITED_GROUP_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
 							return true;
-						else if (getRight(wasabiACLEntry, permission) == -1)
+						else if (right == -1)
 							return false;
-						else
-							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
+						else if (right == 1)
+							rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] = 1;
 					}
 				}
 				if (rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] == 1)

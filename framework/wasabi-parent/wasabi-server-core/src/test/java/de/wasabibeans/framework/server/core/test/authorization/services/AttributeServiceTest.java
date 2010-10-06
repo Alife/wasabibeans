@@ -71,6 +71,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(createTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				createTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr1 at createTestRoom... ");
 		WasabiAttributeDTO attr1 = null;
 		try {
@@ -170,6 +176,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getAffiliationRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getAffiliationRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr1 at getAffiliationRoom... ");
 		WasabiAttributeDTO attr1 = null;
 		try {
@@ -230,6 +242,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getAttributeByNameRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getAttributeByNameRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr1 at getAttributeByNameRoom... ");
 		WasabiAttributeDTO attr1 = null;
 		try {
@@ -289,6 +307,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getAttributesRoom... ");
 		aclService().deactivateInheritance(getAttributesRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getAttributesRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Creating attribute attr1 at getAttributesRoom... ");
 		WasabiAttributeDTO attr1 = null;
@@ -376,6 +400,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getAttributeTypeRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getAttributeTypeRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr1 at getAttributeTypeRoom... ");
 		WasabiAttributeDTO attr1 = null;
 		try {
@@ -434,6 +464,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getValueRoom... ");
 		aclService().deactivateInheritance(getValueRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getValueRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Creating attribute attr1 at getValueRoom... ");
 		WasabiAttributeDTO attr1 = null;
@@ -494,6 +530,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getWasabiValueRoom... ");
 		aclService().deactivateInheritance(getWasabiValueRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getWasabiValueRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Creating attribute attr2 at getWasabiValueRoom... ");
 		WasabiAttributeDTO attr2 = null;
@@ -573,9 +615,21 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(moveTestRoom1);
 		System.out.println("done.");
 
+		aclService().remove(
+				moveTestRoom1,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Deactivating inheritance for moveTestRoom2... ");
 		aclService().deactivateInheritance(moveTestRoom2);
 		System.out.println("done.");
+
+		aclService().remove(
+				moveTestRoom2,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting INSERT as userRight for moveTestRoom1... ");
 		aclService().create(moveTestRoom1, user, WasabiPermission.INSERT, true);
@@ -676,6 +730,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for removeTestRoom1... ");
 		aclService().deactivateInheritance(removeTestRoom1);
 		System.out.println("done.");
+
+		aclService().remove(
+				removeTestRoom1,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting INSERT as userRight for removeTestRoom1... ");
 		aclService().create(removeTestRoom1, user, WasabiPermission.INSERT, true);
@@ -810,6 +870,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(renameTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				renameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr1 at renameTestRoom... ");
 		WasabiAttributeDTO attr1 = null;
 		try {
@@ -881,6 +947,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(setValueRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				setValueRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Creating attribute attr2 at setValueRoom... ");
 		WasabiAttributeDTO attr2 = null;
 		try {
@@ -940,6 +1012,12 @@ public class AttributeServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for setWasabiValueRoom... ");
 		aclService().deactivateInheritance(setWasabiValueRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				setWasabiValueRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Creating attribute attr2 at setWasabiValueRoom... ");
 		WasabiAttributeDTO attr2 = null;

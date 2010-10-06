@@ -53,6 +53,8 @@ public class UserServiceTest extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
 
+		displayACLEntry(wasabiGroup, "wasabiGroup");
+
 		System.out.println("Creating user newUser...");
 		try {
 			userService().create("newUser", "password");
@@ -61,8 +63,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting INSERT as userRight for group wasabi... ");
-		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, true);
+		System.out.print("Setting INSERT forbidance as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.INSERT, false);
+		System.out.println("done.");
+		
+		System.out.print("Setting WRITE forbidance as userRight for group wasabi... ");
+		aclService().create(wasabiGroup, user, WasabiPermission.WRITE, false);
 		System.out.println("done.");
 
 		System.out.println("Creating user newUser...");
@@ -125,6 +131,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for enterTestRoom... ");
 		aclService().deactivateInheritance(enterTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				enterTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.println("Creating user newUser...");
 		WasabiUserDTO newUser = null;
@@ -588,6 +600,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getUserByNameWithEnvironmentTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getUserByNameWithEnvironmentTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.INSERT,
+						WasabiPermission.WRITE });
+
 		System.out.println("Creating user newUser...");
 		WasabiUserDTO newUser = null;
 		try {
@@ -664,6 +682,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getUsersByDisplayNameTestRoom... ");
 		aclService().deactivateInheritance(getUsersByDisplayNameTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getUsersByDisplayNameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.INSERT,
+						WasabiPermission.WRITE });
 
 		System.out.println("Creating user1...");
 		WasabiUserDTO user1 = null;
@@ -773,6 +797,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getUsersTestRoom... ");
 		aclService().deactivateInheritance(getUsersTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getUsersTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.println("Creating user1...");
 		WasabiUserDTO user1 = null;
@@ -909,13 +939,31 @@ public class UserServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(enterRoom1);
 		System.out.println("done.");
 
+		aclService().remove(
+				enterRoom1,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Deactivating inheritance for enterRoom2... ");
 		aclService().deactivateInheritance(enterRoom2);
 		System.out.println("done.");
 
+		aclService().remove(
+				enterRoom2,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Deactivating inheritance for enterRoom3... ");
 		aclService().deactivateInheritance(enterRoom3);
 		System.out.println("done.");
+
+		aclService().remove(
+				enterRoom3,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.print("Setting EXECUTE as userRight for enterRoom1... ");
 		aclService().create(enterRoom1, user, WasabiPermission.EXECUTE, true);
@@ -1077,6 +1125,12 @@ public class UserServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for leaveTestRoom... ");
 		aclService().deactivateInheritance(leaveTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				leaveTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
 
 		System.out.println("Creating user newUser...");
 		WasabiUserDTO newUser = null;

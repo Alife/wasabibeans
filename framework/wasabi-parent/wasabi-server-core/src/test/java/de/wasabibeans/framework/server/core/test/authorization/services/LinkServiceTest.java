@@ -66,6 +66,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(createTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				createTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		System.out.print("Create Link for createTestRoom... ");
 		try {
 			linkService().create("link", usersHome, createTestRoom);
@@ -138,6 +144,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getDestinationRoomTest);
 		System.out.println("done.");
 
+		aclService().remove(
+				getDestinationRoomTest,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Create Link for getDestinationTestRoom... ");
 		WasabiLinkDTO link = null;
 		try {
@@ -198,6 +210,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(getEnvironmentTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				getEnvironmentTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Create Link for getEnvironmentTestRoom... ");
 		WasabiLinkDTO link = null;
 		try {
@@ -257,6 +275,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getLinkByNameTestRoom... ");
 		aclService().deactivateInheritance(getLinkByNameTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getLinkByNameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Create Link for getLinkByNameTestRoom... ");
 		WasabiLinkDTO link = null;
@@ -321,6 +345,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for getLinksTestRoom... ");
 		aclService().deactivateInheritance(getLinksTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				getLinksTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
 
 		System.out.print("Create link1 for getLinksTestRoom... ");
 		WasabiLinkDTO link1 = null;
@@ -430,9 +460,21 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(moveTestRoom1);
 		System.out.println("done.");
 
+		aclService().remove(
+				moveTestRoom1,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Deactivating inheritance for moveTestRoom2... ");
 		aclService().deactivateInheritance(moveTestRoom2);
 		System.out.println("done.");
+
+		aclService().remove(
+				moveTestRoom2,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.EXECUTE, WasabiPermission.INSERT,
+						WasabiPermission.WRITE });
 
 		System.out.print("Creating Link for moveTestRoom1... ");
 		WasabiLinkDTO link = null;
@@ -508,6 +550,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(removeTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				removeTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Create Link for removeTestRoom... ");
 		WasabiLinkDTO link = null;
 		try {
@@ -568,6 +616,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		aclService().deactivateInheritance(renameTestRoom);
 		System.out.println("done.");
 
+		aclService().remove(
+				renameTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
 		System.out.print("Create Link for renameTestRoom... ");
 		WasabiLinkDTO link = null;
 		try {
@@ -627,6 +681,12 @@ public class LinkServiceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for setDestinationTestRoom... ");
 		aclService().deactivateInheritance(setDestinationTestRoom);
 		System.out.println("done.");
+
+		aclService().remove(
+				setDestinationTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Create Link for setDestinationTestRoom... ");
 		WasabiLinkDTO link = null;
