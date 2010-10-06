@@ -62,14 +62,14 @@ public class WasabiAuthorizer {
 //			 return checkRights(objectUUID, userUUID, userNode, permission, s);
 
 			// Variante 2
-			// if (existsTimeRights(objectUUID, userUUID, userNode, permission, s)) {
-			// return checkTimeRights(objectUUID, userUUID, userNode, permission, s);
-			// } else if (existsNormalRights(objectUUID, userUUID, userNode, permission, s)) {
-			// return checkNormalRights(objectUUID, userUUID, userNode, permission, s);
-			// } else
-			// return false;
+//			 if (existsTimeRights(objectUUID, userUUID, userNode, permission, s)) {
+//			 return checkTimeRights(objectUUID, userUUID, userNode, permission, s);
+//			 } else if (existsNormalRights(objectUUID, userUUID, userNode, permission, s)) {
+//			 return checkNormalRights(objectUUID, userUUID, userNode, permission, s);
+//			 } else
+//			 return false;
 
-			// Variante 3
+			// Variante 3		
 			return checkCalcRights(objectUUID, userUUID, userNode, permission, s);
 
 		} catch (RepositoryException re) {

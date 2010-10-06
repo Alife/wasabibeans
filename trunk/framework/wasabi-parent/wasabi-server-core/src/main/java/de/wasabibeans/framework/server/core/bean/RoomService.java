@@ -159,7 +159,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
 				if (!Certificate
-						.getRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl.getUUID(roomByNameNode)))
+						.getRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl.getUUID(roomByNameNode))) {
 					if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 						throw new NoPermissionException(WasabiExceptionMessages.get(
 								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
@@ -167,6 +167,10 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 					else
 						Certificate.setRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl
 								.getUUID(roomByNameNode), true);
+				} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(roomByNameNode, room);
