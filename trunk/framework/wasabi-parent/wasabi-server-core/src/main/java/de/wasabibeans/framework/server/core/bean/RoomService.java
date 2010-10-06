@@ -155,15 +155,15 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getRoomServiceMap(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
+					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
 									"RoomService.getRoomByName()", "VIEW"));
 						else
-							Certificate.setRoomServiceMap(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
-									WasabiPermission.VIEW, true);
+							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
+									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",

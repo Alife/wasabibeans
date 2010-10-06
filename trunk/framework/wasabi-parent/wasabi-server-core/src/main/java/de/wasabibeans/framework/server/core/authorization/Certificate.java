@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.ejb.Stateless;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
 import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 
@@ -39,72 +40,193 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 	private static int certResultAccess = 0;
 	private static int dbAccess = 0;
 
-	private static ConcurrentHashMap<String, Boolean> objectServiceMap = new ConcurrentHashMap<String, Boolean>();
-	private static ConcurrentHashMap<String, Boolean> roomServiceMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> viewRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> readRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> commentRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> executeRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> insertRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> writeRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Boolean> grantRightMap = new ConcurrentHashMap<String, Boolean>();
 
-	private static ConcurrentLinkedQueue<String> objectServiceQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentLinkedQueue<String> roomServiceQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> viewRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> readRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> commentRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> executeRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> insertRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> writeRightQueue = new ConcurrentLinkedQueue<String>();
+	private static ConcurrentLinkedQueue<String> grantRightQueue = new ConcurrentLinkedQueue<String>();
 
 	private static String concatInputs(String user, String objectUUID, int permission) {
 		return user + "::" + objectUUID + "::" + (new Integer(permission)).toString();
 	}
 
-	public static boolean getObjectServiceMap(String user, String objectUUID, int permission) {
+	public static boolean getCertificate(String user, String objectUUID, int permission) {
 		long start = java.lang.System.nanoTime();
 		String key = concatInputs(user, objectUUID, permission);
-		Boolean value = objectServiceMap.get(key);
-		if (value == null) {
-			long end = java.lang.System.nanoTime();
-			System.out.println("objectCache pass: " + (end - start));
-			return false;
-		} else if (value) {
-			long end = java.lang.System.nanoTime();
-			System.out.println("objectCache pass: " + (end - start));
-			return true;
-		} else {
-			long end = java.lang.System.nanoTime();
-			System.out.println("objectCache pass: " + (end - start));
-			return false;
+		Boolean value;
+		switch (permission) {
+		case WasabiPermission.VIEW:
+			value = viewRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.READ:
+			value = readRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.COMMENT:
+			value = commentRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.EXECUTE:
+			value = executeRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.INSERT:
+			value = insertRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.WRITE:
+			value = writeRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
+		case WasabiPermission.GRANT:
+			value = grantRightMap.get(key);
+			if (value == null) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			} else if (value) {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return true;
+			} else {
+				long end = java.lang.System.nanoTime();
+				System.out.println("cache pass: " + (end - start));
+				return false;
+			}
 		}
+		return false;
 	}
 
-	public static void setObjectServiceMap(String user, String objectUUID, int permission, boolean value) {
+	public static void setCertificate(String user, String objectUUID, int permission) {
 		String key = concatInputs(user, objectUUID, permission);
-		if (objectServiceMap.size() == WasabiConstants.OBJECT_SERVICE_MAP_SIZE) {
-			String topOfQueue = objectServiceQueue.poll();
-			objectServiceMap.remove(topOfQueue);
+		switch (permission) {
+		case WasabiPermission.VIEW:
+			if (viewRightMap.size() == WasabiConstants.VIEW_MAP_SIZE) {
+				String topOfQueue = viewRightQueue.poll();
+				viewRightMap.remove(topOfQueue);
+			}
+			viewRightMap.put(key, true);
+			viewRightQueue.add(key);
+		case WasabiPermission.READ:
+			if (readRightMap.size() == WasabiConstants.READ_MAP_SIZE) {
+				String topOfQueue = readRightQueue.poll();
+				readRightMap.remove(topOfQueue);
+			}
+			readRightMap.put(key, true);
+			readRightQueue.add(key);
+		case WasabiPermission.COMMENT:
+			if (commentRightMap.size() == WasabiConstants.COMMENT_MAP_SIZE) {
+				String topOfQueue = commentRightQueue.poll();
+				commentRightMap.remove(topOfQueue);
+			}
+			commentRightMap.put(key, true);
+			commentRightQueue.add(key);
+		case WasabiPermission.EXECUTE:
+			if (executeRightMap.size() == WasabiConstants.EXECUTE_MAP_SIZE) {
+				String topOfQueue = executeRightQueue.poll();
+				executeRightMap.remove(topOfQueue);
+			}
+			executeRightMap.put(key, true);
+			executeRightQueue.add(key);
+		case WasabiPermission.INSERT:
+			if (insertRightMap.size() == WasabiConstants.INSERT_MAP_SIZE) {
+				String topOfQueue = insertRightQueue.poll();
+				insertRightMap.remove(topOfQueue);
+			}
+			insertRightMap.put(key, true);
+			insertRightQueue.add(key);
+		case WasabiPermission.WRITE:
+			if (writeRightMap.size() == WasabiConstants.WRITE_MAP_SIZE) {
+				String topOfQueue = writeRightQueue.poll();
+				writeRightMap.remove(topOfQueue);
+			}
+			writeRightMap.put(key, true);
+			writeRightQueue.add(key);
+		case WasabiPermission.GRANT:
+			if (grantRightMap.size() == WasabiConstants.GRANT_MAP_SIZE) {
+				String topOfQueue = grantRightQueue.poll();
+				grantRightMap.remove(topOfQueue);
+			}
+			grantRightMap.put(key, true);
+			grantRightQueue.add(key);
 		}
-		objectServiceMap.put(key, value);
-		objectServiceQueue.add(key);
-	}
-
-	public static boolean getRoomServiceMap(String user, String objectUUID, int permission) {
-		long start = java.lang.System.nanoTime();
-		String key = concatInputs(user, objectUUID, permission);
-		Boolean value = objectServiceMap.get(key);
-		if (value == null) {
-			long end = java.lang.System.nanoTime();
-			System.out.println("roomCache pass: " + (end - start));
-			return false;
-		} else if (value) {
-			long end = java.lang.System.nanoTime();
-			System.out.println("roomCache pass: " + (end - start));
-			return true;
-		} else {
-			long end = java.lang.System.nanoTime();
-			System.out.println("roomCache pass: " + (end - start));
-			return false;
-		}
-	}
-
-	public static void setRoomServiceMap(String user, String objectUUID, int permission, boolean value) {
-		String key = concatInputs(user, objectUUID, permission);
-		if (objectServiceMap.size() == WasabiConstants.ROOM_SERVICE_MAP_SIZE) {
-			String topOfQueue = roomServiceQueue.poll();
-			objectServiceMap.remove(topOfQueue);
-		}
-		objectServiceMap.put(key, value);
-		roomServiceQueue.add(key);
 	}
 
 	@Override
