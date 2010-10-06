@@ -158,20 +158,21 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		long start1 = java.lang.System.nanoTime();
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-				if (!Certificate
-						.getRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl.getUUID(roomByNameNode)))
-					if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
-						throw new NoPermissionException(WasabiExceptionMessages.get(
-								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-								"RoomService.getRoomByName()", "VIEW"));
-					else
-						Certificate.setRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl
-								.getUUID(roomByNameNode), true);
-			} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
+					if (!Certificate.getRoomServiceMap(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
+							WasabiPermission.VIEW))
+						if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
+							throw new NoPermissionException(WasabiExceptionMessages.get(
+									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+									"RoomService.getRoomByName()", "VIEW"));
+						else
+							Certificate.setRoomServiceMap(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
+									WasabiPermission.VIEW, true);
+				} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
+							"VIEW"));
 		/* Authorization - End */
 		long end1 = java.lang.System.nanoTime();
 		long time = (end1 - start1);

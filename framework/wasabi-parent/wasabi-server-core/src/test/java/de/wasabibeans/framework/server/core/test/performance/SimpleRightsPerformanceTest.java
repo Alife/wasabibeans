@@ -39,11 +39,11 @@ import org.testng.annotations.Test;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
-import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
+import de.wasabibeans.framework.server.core.test.local.WasabiLocalTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
+public class SimpleRightsPerformanceTest extends WasabiLocalTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -86,12 +86,12 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
 
-		//utx.begin();
+		// utx.begin();
 		for (int j = 0; j < 300; j++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
-		//utx.commit();
+		// utx.commit();
 		long endTimeRead = java.lang.System.currentTimeMillis();
 
 		System.out.println("Write pass 1: " + (endTime - startTime));

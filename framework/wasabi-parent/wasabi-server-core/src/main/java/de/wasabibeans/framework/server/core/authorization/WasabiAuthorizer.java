@@ -861,9 +861,6 @@ public class WasabiAuthorizer {
 	}
 
 	public static boolean isAdminUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
-		if (callerPrincipal.equals("root") || callerPrincipal.equals("admin"))
-			return true;
-
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.ADMINS_GROUP_NAME, s), userNode))
 			return true;
