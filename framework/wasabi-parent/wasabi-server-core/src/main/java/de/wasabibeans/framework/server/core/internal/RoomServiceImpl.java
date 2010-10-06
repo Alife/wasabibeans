@@ -48,24 +48,27 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class RoomServiceImpl {
 
-	public static Node create(String name, Node environmentNode, Session s, String callerPrincipal)
+	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
 			// special case when creating the room of the root user or when creating the wasabi home room
 			if (name.equals(WasabiConstants.ROOT_USER_NAME) || name.equals(WasabiConstants.HOME_ROOM_NAME)) {
-				ObjectServiceImpl.created(roomNode, s, null, true);
+				ObjectServiceImpl.created(roomNode, s, false, null, true);
 			} else {
-				ObjectServiceImpl.created(roomNode, s, callerPrincipal, true);
+				ObjectServiceImpl.created(roomNode, s, false, callerPrincipal, true);
 			}
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiRoomACL.ACLEntryForCreate(roomNode, s);
+				WasabiRoomACL.ACLEntryForCreate(roomNode, s, false);
 				WasabiRoomACL.ACLEntryTemplateForCreate(roomNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return roomNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -203,24 +206,28 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void move(Node roomNode, Node newEnvironmentNode, boolean checkIfHomeRoom, String callerPrincipal,
-			Session s) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void move(Node roomNode, Node newEnvironmentNode, boolean checkIfHomeRoom, Session s,
+			boolean doJcrSave, String callerPrincipal) throws UnexpectedInternalProblemException,
+			ObjectAlreadyExistsException {
 		try {
 			if (checkIfHomeRoom
 					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
-							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+							RoomServiceImpl.getRootHome(s).getIdentifier())) {
 				throw new IllegalArgumentException("A user's home-room cannot be removed.");
 			}
 
 			roomNode.getSession().move(roomNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/" + roomNode.getName());
-			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(roomNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiRoomACL.ACLEntryForMove(roomNode, s);
+				WasabiRoomACL.ACLEntryForMove(roomNode, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String name = roomNode.getName();
@@ -234,29 +241,37 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void remove(Node roomNode, boolean checkIfHomeRoom) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void remove(Node roomNode, boolean checkIfHomeRoom, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			if (checkIfHomeRoom
 					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
-							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+							RoomServiceImpl.getRootHome(s).getIdentifier())) {
 				throw new IllegalArgumentException("A user's home-room cannot be removed.");
 			}
-			ObjectServiceImpl.remove(roomNode);
+			ObjectServiceImpl.remove(roomNode, s, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void rename(Node roomNode, String name, boolean checkIfHomeRoom, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void rename(Node roomNode, String name, boolean checkIfHomeRoom, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			if (checkIfHomeRoom
 					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
-							RoomServiceImpl.getRootHome(roomNode.getSession()).getIdentifier())) {
+							RoomServiceImpl.getRootHome(s).getIdentifier())) {
 				throw new IllegalArgumentException("A user's home-room cannot be renamed.");
 			}
-			ObjectServiceImpl.rename(roomNode, name, callerPrincipal);
+			ObjectServiceImpl.rename(roomNode, name, s, false, callerPrincipal);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -264,11 +279,15 @@ public class RoomServiceImpl {
 
 	// ------------------------------------- Wasabi Pipes -----------------------------------------------------
 
-	public static void setPipeline(Node roomNode, Node pipelineNode, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+	public static void setPipeline(Node roomNode, Node pipelineNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			roomNode.setProperty(WasabiNodeProperty.PIPELINE, pipelineNode);
-			ObjectServiceImpl.modified(roomNode, roomNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(roomNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

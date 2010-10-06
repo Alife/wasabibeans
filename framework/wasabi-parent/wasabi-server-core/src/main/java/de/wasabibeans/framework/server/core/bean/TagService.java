@@ -28,7 +28,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -66,46 +65,36 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.COMMENT, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.addTag()", "COMMENT",
-							"object"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.COMMENT, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.addTag()", "COMMENT",
+								"object"));
+		/* Authorization - End */
 
-			TagServiceImpl.addTag(objectNode, tag, s, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		TagServiceImpl.addTag(objectNode, tag, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
 	}
 
 	@Override
 	public void clearTags(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.clearTags()", "WRITE",
-							"object"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.clearTags()", "WRITE",
+						"object"));
+		/* Authorization - End */
 
-			TagServiceImpl.clearTags(objectNode);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		TagServiceImpl.clearTags(objectNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 
 	@Override
@@ -195,22 +184,17 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.removeTag()", "WRITE",
-							"object"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.removeTag()", "WRITE",
+						"object"));
+		/* Authorization - End */
 
-			TagServiceImpl.removeTag(objectNode, tag);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		TagServiceImpl.removeTag(objectNode, tag, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 }

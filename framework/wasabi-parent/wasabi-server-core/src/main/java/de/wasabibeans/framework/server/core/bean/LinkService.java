@@ -29,7 +29,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -79,27 +78,23 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node destinationNode = TransferManager.convertDTO2Node(destination, s);
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node destinationNode = TransferManager.convertDTO2Node(destination, s);
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.create()",
-							"INSERT or WRITE", "environment"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.create()", "INSERT or WRITE",
+						"environment"));
+		/* Authorization - End */
 
-			Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(linkNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(linkNode, environment);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s,
+				WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createCreatedEvent(linkNode, environmentNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(linkNode, environment);
 	}
 
 	@Override
@@ -411,62 +406,52 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node linkNode = TransferManager.convertDTO2Node(link, s);
-			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node linkNode = TransferManager.convertDTO2Node(link, s);
+		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()",
-							"INSERT or WRITE", "newEnvironment"));
-				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()", "WRITE",
-							"link and sub objects"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(linkNode, link, optLockId);
-			LinkServiceImpl.move(linkNode, newEnvironmentNode, callerPrincipal, s);
-			EventCreator.createMovedEvent(linkNode, newEnvironmentNode, jms, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()", "INSERT or WRITE",
+						"newEnvironment"));
+			if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.move()", "WRITE",
+						"link and sub objects"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(linkNode, link, optLockId);
+		LinkServiceImpl.move(linkNode, newEnvironmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createMovedEvent(linkNode, newEnvironmentNode, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiLinkDTO link, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node linkNode = TransferManager.convertDTO2Node(link, s);
-			Locker.checkOptLockId(linkNode, link, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node linkNode = TransferManager.convertDTO2Node(link, s);
+		Locker.checkOptLockId(linkNode, link, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
-							"document"));
-				else {
-					EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
-					WasabiLinkACL.remove(linkNode, callerPrincipal, s);
-				}
-			}
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
+						"document"));
 			else {
 				EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
-				LinkServiceImpl.remove(linkNode);
+				WasabiLinkACL.remove(linkNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 			}
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+		/* Authorization - End */
+		else {
+			EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
+			LinkServiceImpl.remove(linkNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
 	}
 
@@ -480,26 +465,20 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node linkNode = TransferManager.convertDTO2Node(link, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node linkNode = TransferManager.convertDTO2Node(link, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
-							"link"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(linkNode, link, optLockId);
-			LinkServiceImpl.rename(linkNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE", "link"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(linkNode, link, optLockId);
+		LinkServiceImpl.rename(linkNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	@Override
@@ -507,30 +486,24 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException,
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node linkNode = TransferManager.convertDTO2Node(link, s);
-			Node objectNode = null;
-			if (object != null) {
-				objectNode = TransferManager.convertDTO2Node(object, s);
-			}
-
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.setDestination()",
-							"WRITE", "link"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(linkNode, link, optLockId);
-			LinkServiceImpl.setDestination(linkNode, objectNode, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.DESTINATION, objectNode, jms,
-					callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node linkNode = TransferManager.convertDTO2Node(link, s);
+		Node objectNode = null;
+		if (object != null) {
+			objectNode = TransferManager.convertDTO2Node(object, s);
 		}
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.setDestination()", "WRITE",
+						"link"));
+		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(linkNode, link, optLockId);
+		LinkServiceImpl.setDestination(linkNode, objectNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(linkNode, WasabiProperty.DESTINATION, objectNode, jms, callerPrincipal);
 	}
 }

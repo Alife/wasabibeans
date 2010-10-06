@@ -43,8 +43,8 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class GroupServiceImpl {
 
-	public static void addMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void addMember(Node groupNode, Node userNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
@@ -52,6 +52,10 @@ public class GroupServiceImpl {
 			Node groupRef = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).addNode(groupNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			groupRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, groupNode);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already a member of the group
 		} catch (LockException le) {
@@ -62,7 +66,7 @@ public class GroupServiceImpl {
 
 	}
 
-	public static Node create(String name, Node parentGroupNode, Session s, String callerPrincipal)
+	public static Node create(String name, Node parentGroupNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			Node newGroup;
@@ -72,20 +76,23 @@ public class GroupServiceImpl {
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
 				newGroup = rootOfGroupsNode.addNode(name, WasabiNodeType.GROUP);
 			}
-			setDisplayName(newGroup, name, null);
+			setDisplayName(newGroup, name, s, false, null);
 
 			// special case when creating the group wasabi or when creating the group admins
 			if (name.equals(WasabiConstants.WASABI_GROUP_NAME) || name.equals(WasabiConstants.ADMINS_GROUP_NAME)) {
-				ObjectServiceImpl.created(newGroup, s, null, true);
+				ObjectServiceImpl.created(newGroup, s, false, null, true);
 			} else {
-				ObjectServiceImpl.created(newGroup, s, callerPrincipal, true);
+				ObjectServiceImpl.created(newGroup, s, false, callerPrincipal, true);
 			}
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiGroupACL.ACLEntryForCreate(newGroup, s);
+				WasabiGroupACL.ACLEntryForCreate(newGroup, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return newGroup;
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
@@ -249,8 +256,8 @@ public class GroupServiceImpl {
 		return false;
 	}
 
-	public static void move(Node groupNode, Node newParentGroupNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException {
+	public static void move(Node groupNode, Node newParentGroupNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			if (newParentGroupNode != null) {
 				groupNode.getSession().move(groupNode.getPath(),
@@ -258,7 +265,7 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode, s);
+					WasabiGroupACL.ACLEntryForMove(groupNode, s, false);
 				/* ACL Environment - End */
 			} else {
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
@@ -266,28 +273,36 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode, s);
+					WasabiGroupACL.ACLEntryForMove(groupNode, s, false);
 				/* ACL Environment - End */
 			}
-			ObjectServiceImpl.modified(groupNode, groupNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 
 	}
 
-	public static void remove(Node groupNode) throws UnexpectedInternalProblemException,
+	public static void remove(Node groupNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
 			ConcurrentModificationException {
-		ObjectServiceImpl.remove(groupNode);
+		ObjectServiceImpl.remove(groupNode, s, doJcrSave);
 	}
 
-	public static void removeMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void removeMember(Node groupNode, Node userNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node userref = groupNode.getNode(WasabiNodeProperty.MEMBERS).getNode(userNode.getIdentifier());
 			userref.remove();
 			Node groupref = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).getNode(groupNode.getIdentifier());
 			groupref.remove();
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user to be removed is not a member
 		} catch (LockException le) {
@@ -297,7 +312,7 @@ public class GroupServiceImpl {
 		}
 	}
 
-	public static void rename(Node groupNode, String name, String callerPrincipal)
+	public static void rename(Node groupNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			if (getGroupByName(name, groupNode.getSession()) != null) {
@@ -306,7 +321,11 @@ public class GroupServiceImpl {
 			}
 
 			groupNode.getSession().move(groupNode.getPath(), groupNode.getParent().getPath() + "/" + name);
-			ObjectServiceImpl.modified(groupNode, groupNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -322,11 +341,15 @@ public class GroupServiceImpl {
 		return allMembers;
 	}
 
-	public static void setDisplayName(Node groupNode, String displayName, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+	public static void setDisplayName(Node groupNode, String displayName, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			groupNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, displayName);
-			ObjectServiceImpl.modified(groupNode, groupNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

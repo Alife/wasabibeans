@@ -47,7 +47,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class TagServiceImpl {
 
-	public static void addTag(Node objectNode, String tag, Session s, String callerPrincipal)
+	public static void addTag(Node objectNode, String tag, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Calendar timestamp = Calendar.getInstance();
@@ -68,6 +68,10 @@ public class TagServiceImpl {
 			tagNode.setProperty(WasabiNodeProperty.CREATED_ON, timestamp);
 			Node currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
 			tagNode.setProperty(WasabiNodeProperty.CREATED_BY, currentUser);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
 		} catch (RepositoryException re) {
@@ -75,11 +79,15 @@ public class TagServiceImpl {
 		}
 	}
 
-	public static void clearTags(Node objectNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void clearTags(Node objectNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			for (NodeIterator ni = objectNode.getNode(WasabiNodeProperty.TAGS).getNodes(); ni.hasNext();) {
 				ni.nextNode().remove();
+			}
+
+			if (doJcrSave) {
+				s.save();
 			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
@@ -162,14 +170,18 @@ public class TagServiceImpl {
 		}
 	}
 
-	public static void removeTag(Node objectNode, String tag) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void removeTag(Node objectNode, String tag, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			for (NodeIterator ni = objectNode.getNode(WasabiNodeProperty.TAGS).getNodes(); ni.hasNext();) {
 				Node tagNode = ni.nextNode();
 				if (tag.equals(tagNode.getProperty(WasabiNodeProperty.TEXT).getString())) {
 					tagNode.remove();
 				}
+			}
+
+			if (doJcrSave) {
+				s.save();
 			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);

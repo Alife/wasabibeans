@@ -28,7 +28,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -65,23 +64,18 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)
-						|| !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-					throw new NoPermissionException(WasabiExceptionMessages
-							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+		/* Authorization - End */
 
-			Node pipelineNode = FilterServiceImpl.create(name, filter, s, callerPrincipal);
-			s.save();
-			return TransferManager.convertNode2DTO(pipelineNode);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node pipelineNode = FilterServiceImpl.create(name, filter, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		return TransferManager.convertNode2DTO(pipelineNode);
 	}
 
 	@Override
@@ -127,23 +121,17 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 	public void remove(WasabiPipelineDTO pipeline) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)
-						|| !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-					throw new NoPermissionException(WasabiExceptionMessages
-							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+		/* Authorization - End */
 
-			Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
-			FilterServiceImpl.remove(pipelineNode);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
+		FilterServiceImpl.remove(pipelineNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 
 	@Override
@@ -159,21 +147,15 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)
-						|| !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-					throw new NoPermissionException(WasabiExceptionMessages
-							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+		/* Authorization - End */
 
-			FilterServiceImpl.updateOrCreate(name, filter, s, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		FilterServiceImpl.updateOrCreate(name, filter, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
 	}
 }

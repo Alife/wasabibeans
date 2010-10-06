@@ -40,21 +40,29 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiAttributeACL {
 
-	public static void ACLEntryForCreate(Node attributeNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForCreate(Node attributeNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			if (attributeNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(attributeNode, true, s);
+				ACLServiceImpl.setInheritance(attributeNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
-	public static void ACLEntryForMove(Node attributeNode, Session s) throws UnexpectedInternalProblemException {
+
+	public static void ACLEntryForMove(Node attributeNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiAttributeSQL.SQLQueryForMove(attributeNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(attributeNode, inheritance_ids);
 			if (attributeNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(attributeNode, true, s);
+				ACLServiceImpl.setInheritance(attributeNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -98,8 +106,8 @@ public class WasabiAttributeACL {
 		}
 	}
 
-	public static void remove(Node attributeNode, String callerPrincipal, Session s)
+	public static void remove(Node attributeNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(attributeNode, callerPrincipal, s);
+		WasabiObjectACL.remove(attributeNode, callerPrincipal, s, doJcrSave);
 	}
 }

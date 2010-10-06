@@ -43,24 +43,24 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class UserServiceImpl {
 
-	public static Node create(String name, String password, Session s, String callerPrincipal)
+	public static Node create(String name, String password, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			// JCR
 			Node rootOfUsersNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
-			setDisplayName(userNode, name, null);
-			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), s, callerPrincipal);
+			setDisplayName(userNode, name, s, false, null);
+			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), s, false, callerPrincipal);
 			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
-			setStartRoom(userNode, homeRoomNode, null);
-			enter(userNode, homeRoomNode);
-			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode);
+			setStartRoom(userNode, homeRoomNode, s, false, null);
+			enter(userNode, homeRoomNode, s, false);
+			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode, s, false);
 
 			// special case when creating the root user
 			if (name.equals(WasabiConstants.ROOT_USER_NAME)) {
-				ObjectServiceImpl.created(userNode, s, null, true);
+				ObjectServiceImpl.created(userNode, s, false, null, true);
 			} else {
-				ObjectServiceImpl.created(userNode, s, callerPrincipal, true);
+				ObjectServiceImpl.created(userNode, s, false, callerPrincipal, true);
 			}
 
 			/* ACL Environment - Begin */
@@ -69,6 +69,9 @@ public class UserServiceImpl {
 				WasabiUserACL.ACLEntryForCreate(userNode, homeRoomNode, callerPrincipal, s);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return userNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -78,8 +81,8 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static void enter(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void enter(Node userNode, Node roomNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
@@ -87,6 +90,10 @@ public class UserServiceImpl {
 			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).addNode(roomNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already present in room
 		} catch (LockException le) {
@@ -244,13 +251,17 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static void leave(Node userNode, Node roomNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void leave(Node userNode, Node roomNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNode(userNode.getIdentifier());
 			userRef.remove();
 			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNode(roomNode.getIdentifier());
 			roomRef.remove();
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user not present
 		} catch (LockException le) {
@@ -260,41 +271,61 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static void remove(Node userNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
-
-		/* ACL Environment - Begin */
-		WasabiUserSQL.SqlQueryForRemove(userNode);
-		if (WasabiConstants.ACL_ENTRY_ENABLE)
-			WasabiUserSQL.removeRights(userNode);
-		/* ACL Environment - End */
-
-		// JCR
+	public static void remove(Node userNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
-			Node homeRoom = getHomeRoom(userNode);
-			RoomServiceImpl.remove(homeRoom, false);
-		} catch (TargetDoesNotExistException tdnee) {
-			// nothing to remove if home room does not exist
+			/* ACL Environment - Begin */
+			WasabiUserSQL.SqlQueryForRemove(userNode);
+			if (WasabiConstants.ACL_ENTRY_ENABLE)
+				WasabiUserSQL.removeRights(userNode);
+			/* ACL Environment - End */
+
+			// JCR
+			try {
+				Node homeRoom = getHomeRoom(userNode);
+				RoomServiceImpl.remove(homeRoom, false, s, false);
+			} catch (TargetDoesNotExistException tdnee) {
+				// nothing to remove if home room does not exist
+			}
+			ObjectServiceImpl.remove(userNode, s, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-		ObjectServiceImpl.remove(userNode);
 	}
 
-	public static void rename(Node userNode, String name, String callerPrincipal)
+	public static void rename(Node userNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, TargetDoesNotExistException {
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
+		try {
+			String wasabiUser = ObjectServiceImpl.getName(userNode);
 
-		// JCR
-		ObjectServiceImpl.rename(userNode, name, callerPrincipal);
-		RoomServiceImpl.rename(UserServiceImpl.getHomeRoom(userNode), name, false, callerPrincipal);
+			// JCR
+			ObjectServiceImpl.rename(userNode, name, s, false, callerPrincipal);
+			RoomServiceImpl.rename(UserServiceImpl.getHomeRoom(userNode), name, false, s, false, callerPrincipal);
 
-		// Database
-		WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
+			// Database
+			WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
-	public static void setDisplayName(Node userNode, String displayName, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+	public static void setDisplayName(Node userNode, String displayName, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			userNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, displayName);
-			ObjectServiceImpl.modified(userNode, userNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(userNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -304,21 +335,29 @@ public class UserServiceImpl {
 		WasabiUserSQL.SqlQueryForSetPassword(userNode, password);
 	}
 
-	public static void setStartRoom(Node userNode, Node roomNode, String callerPrincipal)
+	public static void setStartRoom(Node userNode, Node roomNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException {
 		try {
 			userNode.setProperty(WasabiNodeProperty.START_ROOM, roomNode);
-			ObjectServiceImpl.modified(userNode, userNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(userNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void setStatus(Node userNode, boolean active, String callerPrincipal)
+	public static void setStatus(Node userNode, boolean active, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException {
 		try {
 			userNode.setProperty(WasabiNodeProperty.ACTIVE, active);
-			ObjectServiceImpl.modified(userNode, userNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(userNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

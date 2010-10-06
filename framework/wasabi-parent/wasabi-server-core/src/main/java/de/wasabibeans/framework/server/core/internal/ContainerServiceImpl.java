@@ -43,20 +43,23 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class ContainerServiceImpl {
 
-	public static Node create(String name, Node environmentNode, Session s, String callerPrincipal)
+	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			Node containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
 					WasabiNodeType.CONTAINER);
-			ObjectServiceImpl.created(containerNode, s, callerPrincipal, true);
+			ObjectServiceImpl.created(containerNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiContainerACL.ACLEntryForCreate(containerNode, s);
+				WasabiContainerACL.ACLEntryForCreate(containerNode, s, false);
 				WasabiContainerACL.ACLEntryTemplateForCreate(containerNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return containerNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -203,18 +206,21 @@ public class ContainerServiceImpl {
 		return ObjectServiceImpl.getEnvironment(containerNode);
 	}
 
-	public static void move(Node containerNode, Node newEnvironmentNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void move(Node containerNode, Node newEnvironmentNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			containerNode.getSession().move(containerNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.CONTAINERS + "/" + containerNode.getName());
-			ObjectServiceImpl.modified(containerNode, containerNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(containerNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiContainerACL.ACLEntryForMove(containerNode, s);
+				WasabiContainerACL.ACLEntryForMove(containerNode, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String name = containerNode.getName();
@@ -229,13 +235,13 @@ public class ContainerServiceImpl {
 
 	}
 
-	public static void remove(Node containerNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
-		ObjectServiceImpl.remove(containerNode);
+	public static void remove(Node containerNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		ObjectServiceImpl.remove(containerNode, s, doJcrSave);
 	}
 
-	public static void rename(Node containerNode, String name, String callerPrincipal)
+	public static void rename(Node containerNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(containerNode, name, callerPrincipal);
+		ObjectServiceImpl.rename(containerNode, name, s, doJcrSave, callerPrincipal);
 	}
 }

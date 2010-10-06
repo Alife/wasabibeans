@@ -25,12 +25,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.kohsuke.MetaInfServices;
 
-import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -59,15 +58,11 @@ public class DocumentSink extends AnnotationBasedFilter implements ContentStore,
 	public void filter(Wire fromWire, DocumentInfo document, byte[] buffer, Session s, JmsConnector jms,
 			SharedFilterBean sharedFilterBean) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			DocumentContentException, ConcurrentModificationException {
-		try {
-			Node documentNode = ObjectServiceImpl.get(document.getDocumentNodeId(), s);
-			DocumentServiceImpl.setContent(documentNode, buffer, document.getCallerPrincipal());
-			DocumentServiceImpl.addContentRef(documentNode, this, document.getName(), document.getContentType()
-					.toString(), (long) buffer.length, true, document.getCallerPrincipal());
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node documentNode = ObjectServiceImpl.get(document.getDocumentNodeId(), s);
+		DocumentServiceImpl.setContent(documentNode, buffer, s, false, document.getCallerPrincipal());
+		boolean doJcrSave = isAsynchronous() ? true : WasabiConstants.JCR_SAVE_PER_METHOD;
+		DocumentServiceImpl.addContentRef(documentNode, this, document.getName(), document.getContentType().toString(),
+				(long) buffer.length, true, s, doJcrSave, document.getCallerPrincipal());
 	}
 
 	@Override

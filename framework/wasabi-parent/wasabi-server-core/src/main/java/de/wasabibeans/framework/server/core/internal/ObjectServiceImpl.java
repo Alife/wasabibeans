@@ -84,11 +84,15 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void rename(Node objectNode, String name, String callerPrincipal)
+	public static void rename(Node objectNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			objectNode.getSession().move(objectNode.getPath(), objectNode.getParent().getPath() + "/" + name);
-			ObjectServiceImpl.modified(objectNode, objectNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(objectNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String what = objectNode.getPrimaryNodeType().getName();
@@ -102,7 +106,7 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void remove(Node objectNode) throws UnexpectedInternalProblemException,
+	public static void remove(Node objectNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
 			ConcurrentModificationException {
 		try {
 			/* ACL Environment - Begin */
@@ -111,6 +115,10 @@ public class ObjectServiceImpl {
 			/* ACL Environment - End */
 
 			objectNode.remove();
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (LockException le) {
 			try {
 				String what = objectNode.getPrimaryNodeType().getName();
@@ -703,15 +711,21 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void setCreatedBy(Node objectNode, Node userNode) throws UnexpectedInternalProblemException {
+	public static void setCreatedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, userNode);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void setCreatedOn(Node objectNode, Date creationTime) throws UnexpectedInternalProblemException {
+	public static void setCreatedOn(Node objectNode, Date creationTime, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		if (creationTime == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"creationTime"));
@@ -720,20 +734,30 @@ public class ObjectServiceImpl {
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(creationTime);
 			objectNode.setProperty(WasabiNodeProperty.CREATED_ON, cal);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void setModifiedBy(Node objectNode, Node userNode) throws UnexpectedInternalProblemException {
+	public static void setModifiedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.MODIFIED_BY, userNode);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void setModifiedOn(Node objectNode, Date modificationTime) throws UnexpectedInternalProblemException {
+	public static void setModifiedOn(Node objectNode, Date modificationTime, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		if (modificationTime == null) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
 					"modificationTime"));
@@ -742,6 +766,10 @@ public class ObjectServiceImpl {
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(modificationTime);
 			objectNode.setProperty(WasabiNodeProperty.MODIFIED_ON, cal);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -755,9 +783,14 @@ public class ObjectServiceImpl {
 		}
 	}
 
-	public static void setOptLockId(Node objectNode, long optLockId) throws UnexpectedInternalProblemException {
+	public static void setOptLockId(Node objectNode, long optLockId, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.OPT_LOCK_ID, optLockId);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -776,22 +809,30 @@ public class ObjectServiceImpl {
 	 * @param nullEntryEnabled
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static void created(Node objectNode, Session s, String callerPrincipal, boolean nullEntryEnabled)
-			throws UnexpectedInternalProblemException {
-		Node currentUser = null;
-		if (callerPrincipal != null) {
-			currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
-		} else {
-			if (!nullEntryEnabled) {
-				return;
+	public static void created(Node objectNode, Session s, boolean doJcrSave, String callerPrincipal,
+			boolean nullEntryEnabled) throws UnexpectedInternalProblemException {
+		try {
+			Node currentUser = null;
+			if (callerPrincipal != null) {
+				currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
+			} else {
+				if (!nullEntryEnabled) {
+					return;
+				}
 			}
+			Date timestamp = Calendar.getInstance().getTime();
+			ObjectServiceImpl.setCreatedOn(objectNode, timestamp, s, false);
+			ObjectServiceImpl.setCreatedBy(objectNode, currentUser, s, false);
+			ObjectServiceImpl.setModifiedOn(objectNode, timestamp, s, false);
+			ObjectServiceImpl.setModifiedBy(objectNode, currentUser, s, false);
+			ObjectServiceImpl.setOptLockId(objectNode, 0, s, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-		Date timestamp = Calendar.getInstance().getTime();
-		ObjectServiceImpl.setCreatedOn(objectNode, timestamp);
-		ObjectServiceImpl.setCreatedBy(objectNode, currentUser);
-		ObjectServiceImpl.setModifiedOn(objectNode, timestamp);
-		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
-		ObjectServiceImpl.setOptLockId(objectNode, 0);
 	}
 
 	/**
@@ -806,23 +847,31 @@ public class ObjectServiceImpl {
 	 * @param nullEntryEnabled
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static void modified(Node objectNode, Session s, String callerPrincipal, boolean nullEntryEnabled)
-			throws UnexpectedInternalProblemException {
-		Node currentUser = null;
-		if (callerPrincipal != null) {
-			currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
-		} else {
-			if (!nullEntryEnabled) {
-				return;
+	public static void modified(Node objectNode, Session s, boolean doJcrSave, String callerPrincipal,
+			boolean nullEntryEnabled) throws UnexpectedInternalProblemException {
+		try {
+			Node currentUser = null;
+			if (callerPrincipal != null) {
+				currentUser = UserServiceImpl.getUserByName(callerPrincipal, s);
+			} else {
+				if (!nullEntryEnabled) {
+					return;
+				}
 			}
+			ObjectServiceImpl.setModifiedOn(objectNode, Calendar.getInstance().getTime(), s, false);
+			ObjectServiceImpl.setModifiedBy(objectNode, currentUser, s, false);
+			long newOptLockId = ObjectServiceImpl.getOptLockId(objectNode) + 1;
+			if (newOptLockId < 0) {
+				// do not use values < 0 (after Long.MAX_VALUE has been reached)
+				newOptLockId = 0;
+			}
+			ObjectServiceImpl.setOptLockId(objectNode, newOptLockId, s, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-		ObjectServiceImpl.setModifiedOn(objectNode, Calendar.getInstance().getTime());
-		ObjectServiceImpl.setModifiedBy(objectNode, currentUser);
-		long newOptLockId = ObjectServiceImpl.getOptLockId(objectNode) + 1;
-		if (newOptLockId < 0) {
-			// do not use values < 0 (after Long.MAX_VALUE has been reached)
-			newOptLockId = 0;
-		}
-		ObjectServiceImpl.setOptLockId(objectNode, newOptLockId);
 	}
 }

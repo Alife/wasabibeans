@@ -40,6 +40,9 @@ import com.aetrion.flickr.photos.Size;
 import com.aetrion.flickr.uploader.UploadMetaData;
 import com.aetrion.flickr.uploader.Uploader;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.pipes.auth.FlickrAuthTokenProvider;
@@ -85,7 +88,8 @@ public class FlickrSink extends AnnotationBasedFilter implements ContentStore, S
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, byte[] buffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws ConcurrentModificationException,
+			UnexpectedInternalProblemException {
 
 		try {
 			Flickr flickr = new Flickr(apiKey);
@@ -123,19 +127,17 @@ public class FlickrSink extends AnnotationBasedFilter implements ContentStore, S
 
 			Collection<Size> sizes = photos.getSizes(ref);
 
+			boolean doJcrSave = isAsynchronous() ? true : WasabiConstants.JCR_SAVE_PER_METHOD;
 			for (Size size : sizes) {
 				DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this, size
 						.getSource(), document.getContentType().toString(), (long) new URL(size.getSource())
-						.openConnection().getContentLength(), true, document.getCallerPrincipal());
+						.openConnection().getContentLength(), true, s, doJcrSave, document.getCallerPrincipal());
 			}
-			s.save();
 		} catch (FlickrException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (SAXException e) {
-			throw new RuntimeException(e);
-		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

@@ -175,25 +175,27 @@ public class WasabiManager {
 				Node workspaceRoot = s.getRootNode();
 				// initial rooms
 				Node wasabiRoot = workspaceRoot.addNode(WasabiConstants.ROOT_ROOM_NAME, WasabiNodeType.ROOM);
-				ObjectServiceImpl.created(wasabiRoot, s, null, true);
-				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, s, WasabiConstants.ROOT_USER_NAME);
+				ObjectServiceImpl.created(wasabiRoot, s, false, null, true);
+				RoomServiceImpl.create(WasabiConstants.HOME_ROOM_NAME, wasabiRoot, s, false,
+						WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi groups and initial groups
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME, WasabiNodeType.OBJECT_COLLECTION);
-				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, s,
+				Node adminGroup = GroupServiceImpl.create(WasabiConstants.ADMINS_GROUP_NAME, null, s, false,
 						WasabiConstants.ROOT_USER_NAME);
-				Node pafUserGroup = GroupServiceImpl.create(WasabiConstants.PAF_GROUP_NAME, null, s,
+				Node pafUserGroup = GroupServiceImpl.create(WasabiConstants.PAF_GROUP_NAME, null, s, false,
 						WasabiConstants.ROOT_USER_NAME);
-				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, s, WasabiConstants.ROOT_USER_NAME);
+				GroupServiceImpl.create(WasabiConstants.WASABI_GROUP_NAME, null, s, false,
+						WasabiConstants.ROOT_USER_NAME);
 				// root node for wasabi users and initial users
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME, WasabiNodeType.OBJECT_COLLECTION);
 				Node rootUser = UserServiceImpl.create(WasabiConstants.ROOT_USER_NAME,
-						WasabiConstants.ROOT_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
+						WasabiConstants.ROOT_USER_PASSWORD, s, false, WasabiConstants.ROOT_USER_NAME);
 				Node adminUser = UserServiceImpl.create(WasabiConstants.ADMIN_USER_NAME,
-						WasabiConstants.ADMIN_USER_PASSWORD, s, WasabiConstants.ROOT_USER_NAME);
-				GroupServiceImpl.addMember(adminGroup, rootUser);
-				GroupServiceImpl.addMember(adminGroup, adminUser);
-				GroupServiceImpl.addMember(pafUserGroup, rootUser);
-				GroupServiceImpl.addMember(pafUserGroup, adminUser);
+						WasabiConstants.ADMIN_USER_PASSWORD, s, false, WasabiConstants.ROOT_USER_NAME);
+				GroupServiceImpl.addMember(adminGroup, rootUser, s, false);
+				GroupServiceImpl.addMember(adminGroup, adminUser, s, false);
+				GroupServiceImpl.addMember(pafUserGroup, rootUser, s, false);
+				GroupServiceImpl.addMember(pafUserGroup, adminUser, s, false);
 				// root for wasabi pipelines
 				workspaceRoot.addNode(WasabiConstants.JCR_ROOT_FOR_PIPELINES, WasabiNodeType.OBJECT_COLLECTION);
 				logger.info("Resetting wasabi content: Initial wasabi content created.");

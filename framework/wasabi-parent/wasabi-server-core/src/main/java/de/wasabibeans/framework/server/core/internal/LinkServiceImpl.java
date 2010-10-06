@@ -46,20 +46,24 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class LinkServiceImpl {
 
-	public static Node create(String name, Node destinationNode, Node environmentNode, Session s, String callerPrincipal)
-			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static Node create(String name, Node destinationNode, Node environmentNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws ObjectAlreadyExistsException, UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			Node linkNode = environmentNode.addNode(WasabiNodeProperty.LINKS + "/" + name, WasabiNodeType.LINK);
-			setDestination(linkNode, destinationNode, null);
-			ObjectServiceImpl.created(linkNode, s, callerPrincipal, true);
+			setDestination(linkNode, destinationNode, s, false, null);
+			ObjectServiceImpl.created(linkNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiLinkACL.ACLEntryForCreate(linkNode, s);
+				WasabiLinkACL.ACLEntryForCreate(linkNode, s, false);
 				WasabiLinkACL.ACLEntryTemplateForCreate(linkNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return linkNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -173,18 +177,21 @@ public class LinkServiceImpl {
 		return ObjectServiceImpl.getNodesOrderedByCreationDate(locationNode, WasabiNodeProperty.LINKS, order);
 	}
 
-	public static void move(Node linkNode, Node newEnvironmentNode, String callerPrincipal, Session s)
+	public static void move(Node linkNode, Node newEnvironmentNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
 		try {
 			linkNode.getSession().move(linkNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.LINKS + "/" + linkNode.getName());
-			ObjectServiceImpl.modified(linkNode, linkNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(linkNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiLinkACL.ACLEntryForMove(linkNode, s);
+				WasabiLinkACL.ACLEntryForMove(linkNode, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String name = linkNode.getName();
@@ -198,20 +205,25 @@ public class LinkServiceImpl {
 		}
 	}
 
-	public static void remove(Node linkNode) throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		ObjectServiceImpl.remove(linkNode);
+	public static void remove(Node linkNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
+		ObjectServiceImpl.remove(linkNode, s, doJcrSave);
 	}
 
-	public static void rename(Node linkNode, String name, String callerPrincipal)
+	public static void rename(Node linkNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(linkNode, name, callerPrincipal);
+		ObjectServiceImpl.rename(linkNode, name, s, doJcrSave, callerPrincipal);
 	}
 
-	public static void setDestination(Node linkNode, Node objectNode, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+	public static void setDestination(Node linkNode, Node objectNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			linkNode.setProperty(WasabiNodeProperty.DESTINATION, objectNode);
-			ObjectServiceImpl.modified(linkNode, linkNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(linkNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
