@@ -155,11 +155,12 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
+		long start1 = java.lang.System.nanoTime();
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
 				if (!Certificate
-						.getRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl.getUUID(roomByNameNode))) {
+						.getRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl.getUUID(roomByNameNode)))
 					if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 						throw new NoPermissionException(WasabiExceptionMessages.get(
 								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
@@ -167,11 +168,15 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 					else
 						Certificate.setRoomServiceMap(userUUID, "getRoomByName", ObjectServiceImpl
 								.getUUID(roomByNameNode), true);
-				} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
-							"VIEW"));
+			} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
+						"VIEW"));
 		/* Authorization - End */
+		long end1 = java.lang.System.nanoTime();
+		long time = (end1 - start1);
+		Certificate.sum = Certificate.sum + time;
+		System.out.println("getRoomByName pass1: " + time);
 
 		return TransferManager.convertNode2DTO(roomByNameNode, room);
 	}

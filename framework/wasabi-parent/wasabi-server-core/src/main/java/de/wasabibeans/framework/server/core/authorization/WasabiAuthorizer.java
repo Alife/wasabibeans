@@ -54,6 +54,8 @@ public class WasabiAuthorizer {
 	public static boolean authorize(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
+			long start1 = java.lang.System.nanoTime(); 
+			
 			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
@@ -69,8 +71,12 @@ public class WasabiAuthorizer {
 //			 } else
 //			 return false;
 
-			// Variante 3		
-			return checkCalcRights(objectUUID, userUUID, userNode, permission, s);
+			// Variante 3	
+			
+			boolean ret= checkCalcRights(objectUUID, userUUID, userNode, permission, s);
+			long end1 = java.lang.System.nanoTime();
+			System.out.println("authorize pass1: " +(end1-start1));
+			return ret;
 
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -325,6 +331,7 @@ public class WasabiAuthorizer {
 	private static boolean checkCalcRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
+			long start0 = java.lang.System.nanoTime();
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 			Vector<String> allGroups = getGroupMemberships(userNode, s);
@@ -333,6 +340,7 @@ public class WasabiAuthorizer {
 			long time = java.lang.System.currentTimeMillis();
 			int[] rights = new int[8];
 
+			
 			String getRights = "SELECT `object_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` "
 					+ "FROM `wasabi_rights` WHERE "
 					+ "`object_id`=? "
@@ -344,10 +352,15 @@ public class WasabiAuthorizer {
 					+ "AND "
 					+ identityCheck
 					+ "ORDER BY `priority`";
-
+			long end0 = java.lang.System.nanoTime();
+			System.out.println("checkCalcRights pass0: " +(end0-start0));
+			long start1 = java.lang.System.nanoTime();
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> result = run.query(getRights, h, objectUUID);
+			long end1 = java.lang.System.nanoTime();
+			System.out.println("checkCalcRights pass1: " +(end1-start1));
 
+			long start2 = java.lang.System.nanoTime();
 			if (result.size() == 0)
 				return false;
 			else {
@@ -394,9 +407,11 @@ public class WasabiAuthorizer {
 						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
 					case WasabiACLPriority.EXPLICIT_GROUP_RIGHT:
-						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1)
+						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1) {
+							long end2 = java.lang.System.nanoTime();
+							System.out.println("checkCalcRights pass2: " +(end2-start2));
 							return true;
-						else if (right == -1)
+						}else if (right == -1)
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
