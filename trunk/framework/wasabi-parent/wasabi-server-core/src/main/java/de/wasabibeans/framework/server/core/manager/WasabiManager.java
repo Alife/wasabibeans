@@ -97,7 +97,7 @@ public class WasabiManager {
 				+ "`inheritance_id` varchar(64) NOT NULL,"
 				+ "`priority` tinyint(2) NOT NULL,"
 				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
-				+ "PRIMARY KEY (`id`,`object_id`,`user_id`,`group_id`,`start_time`,`end_time`,`inheritance_id`)"
+				+ "PRIMARY KEY (`id`)"
 				+ ") ENGINE = InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
@@ -116,7 +116,7 @@ public class WasabiManager {
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
 				+ "`end_time` float NOT NULL DEFAULT '0',"
-				+ "PRIMARY KEY (`id`, `location_id`, `wasabi_type`, `start_time`,`end_time`)" + ") ENGINE = InnoDB ;";
+				+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
 
 		try {
 			run.update(dropWasabiTemplateRightsTable);

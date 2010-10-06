@@ -19,7 +19,7 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.test.remote;
+package de.wasabibeans.framework.server.core.test.local;
 
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
@@ -41,34 +41,33 @@ import de.wasabibeans.framework.server.core.event.WasabiEventType;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
+import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
+import de.wasabibeans.framework.server.core.local.AttributeServiceLocal;
+import de.wasabibeans.framework.server.core.local.AuthorizationServiceLocal;
+import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
+import de.wasabibeans.framework.server.core.local.ContainerServiceLocal;
+import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
+import de.wasabibeans.framework.server.core.local.EventServiceLocal;
+import de.wasabibeans.framework.server.core.local.GroupServiceLocal;
+import de.wasabibeans.framework.server.core.local.LinkServiceLocal;
+import de.wasabibeans.framework.server.core.local.LockingServiceLocal;
+import de.wasabibeans.framework.server.core.local.ObjectServiceLocal;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
+import de.wasabibeans.framework.server.core.local.TagServiceLocal;
+import de.wasabibeans.framework.server.core.local.UserServiceLocal;
+import de.wasabibeans.framework.server.core.local.VersioningServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.pipes.auth.AuthTokenDelegate;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterField;
 import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSource;
-import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
-import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
-import de.wasabibeans.framework.server.core.remote.AuthorizationServiceRemote;
-import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
-import de.wasabibeans.framework.server.core.remote.ContainerServiceRemote;
-import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
-import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
-import de.wasabibeans.framework.server.core.remote.GroupServiceRemote;
-import de.wasabibeans.framework.server.core.remote.LinkServiceRemote;
-import de.wasabibeans.framework.server.core.remote.LockingServiceRemote;
-import de.wasabibeans.framework.server.core.remote.ObjectServiceRemote;
-import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
-import de.wasabibeans.framework.server.core.remote.TagServiceRemote;
-import de.wasabibeans.framework.server.core.remote.UserServiceRemote;
-import de.wasabibeans.framework.server.core.remote.VersioningServiceRemote;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelper;
-import de.wasabibeans.framework.server.core.test.util.RemoteWasabiConnector;
+import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 
-public class WasabiRemoteTest extends Arquillian {
+public class WasabiLocalTest extends Arquillian {
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -89,7 +88,7 @@ public class WasabiRemoteTest extends Arquillian {
 				.addPackage(AuthTokenDelegate.class.getPackage()) // pipes.auth
 				.addPackage(RoomService.class.getPackage()) // bean impl
 				.addPackage(RoomServiceLocal.class.getPackage()) // bean local
-				.addPackage(RoomServiceRemote.class.getPackage()) // bean remote
+				.addPackage(RoomServiceLocal.class.getPackage()) // bean Local
 				.addPackage(RoomServiceImpl.class.getPackage()) // internal
 				.addPackage(DebugInterceptor.class.getPackage()) // debug
 				.addPackage(TestHelper.class.getPackage()); // testhelper
@@ -97,30 +96,30 @@ public class WasabiRemoteTest extends Arquillian {
 		return testArchive;
 	}
 
-	private ACLServiceRemote aclService;
+	private ACLServiceLocal aclService;
 
-	private AttributeServiceRemote attributeService;
-	private AuthorizationServiceRemote authorizationService;
-	private CertificateServiceRemote certificateService;
-	private ContainerServiceRemote containerService;
-	private DocumentServiceRemote documentService;
-	private EventServiceRemote eventService;
-	private GroupServiceRemote groupService;
-	private LinkServiceRemote linkService;
-	private LockingServiceRemote lockingService;
-	private ObjectServiceRemote objectService;
-	protected RemoteWasabiConnector reWaCon;
-	private RoomServiceRemote roomService;
+	private AttributeServiceLocal attributeService;
+	private AuthorizationServiceLocal authorizationService;
+	private CertificateServiceLocal certificateService;
+	private ContainerServiceLocal containerService;
+	private DocumentServiceLocal documentService;
+	private EventServiceLocal eventService;
+	private GroupServiceLocal groupService;
+	private LinkServiceLocal linkService;
+	private LockingServiceLocal lockingService;
+	private ObjectServiceLocal objectService;
+	protected LocalWasabiConnector reWaCon;
+	private RoomServiceLocal roomService;
 	protected WasabiRoomDTO rootRoom;
-	private TagServiceRemote tagService;
-	private UserServiceRemote userService;
+	private TagServiceLocal tagService;
+	private UserServiceLocal userService;
 
-	private VersioningServiceRemote versioningService;
+	private VersioningServiceLocal versioningService;
 
-	public ACLServiceRemote aclService() {
+	public ACLServiceLocal aclService() {
 		try {
 			if (aclService == null) {
-				aclService = (ACLServiceRemote) reWaCon.lookup("ACLService");
+				aclService = (ACLServiceLocal) reWaCon.lookup("ACLService");
 			}
 			return aclService;
 		} catch (Exception e) {
@@ -128,10 +127,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public AttributeServiceRemote attributeService() {
+	public AttributeServiceLocal attributeService() {
 		try {
 			if (attributeService == null) {
-				attributeService = (AttributeServiceRemote) reWaCon.lookup("AttributeService");
+				attributeService = (AttributeServiceLocal) reWaCon.lookup("AttributeService");
 			}
 			return attributeService;
 		} catch (Exception e) {
@@ -139,10 +138,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public AuthorizationServiceRemote authorizationService() {
+	public AuthorizationServiceLocal authorizationService() {
 		try {
 			if (authorizationService == null) {
-				authorizationService = (AuthorizationServiceRemote) reWaCon.lookup("AuthorizationService");
+				authorizationService = (AuthorizationServiceLocal) reWaCon.lookup("AuthorizationService");
 			}
 			return authorizationService;
 		} catch (Exception e) {
@@ -150,10 +149,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public CertificateServiceRemote certificateService() {
+	public CertificateServiceLocal certificateService() {
 		try {
 			if (certificateService == null) {
-				certificateService = (CertificateServiceRemote) reWaCon.lookup("CertificateService");
+				certificateService = (CertificateServiceLocal) reWaCon.lookup("CertificateService");
 			}
 			return certificateService;
 		} catch (Exception e) {
@@ -161,10 +160,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public ContainerServiceRemote containerService() {
+	public ContainerServiceLocal containerService() {
 		try {
 			if (containerService == null) {
-				containerService = (ContainerServiceRemote) reWaCon.lookup("ContainerService");
+				containerService = (ContainerServiceLocal) reWaCon.lookup("ContainerService");
 			}
 			return containerService;
 		} catch (Exception e) {
@@ -172,10 +171,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public DocumentServiceRemote documentService() {
+	public DocumentServiceLocal documentService() {
 		try {
 			if (documentService == null) {
-				documentService = (DocumentServiceRemote) reWaCon.lookup("DocumentService");
+				documentService = (DocumentServiceLocal) reWaCon.lookup("DocumentService");
 			}
 			return documentService;
 		} catch (Exception e) {
@@ -183,10 +182,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public EventServiceRemote eventService() {
+	public EventServiceLocal eventService() {
 		try {
 			if (eventService == null) {
-				eventService = (EventServiceRemote) reWaCon.lookup("EventService");
+				eventService = (EventServiceLocal) reWaCon.lookup("EventService");
 			}
 			return eventService;
 		} catch (Exception e) {
@@ -194,10 +193,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public GroupServiceRemote groupService() {
+	public GroupServiceLocal groupService() {
 		try {
 			if (groupService == null) {
-				groupService = (GroupServiceRemote) reWaCon.lookup("GroupService");
+				groupService = (GroupServiceLocal) reWaCon.lookup("GroupService");
 			}
 			return groupService;
 		} catch (Exception e) {
@@ -205,10 +204,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public LinkServiceRemote linkService() {
+	public LinkServiceLocal linkService() {
 		try {
 			if (linkService == null) {
-				linkService = (LinkServiceRemote) reWaCon.lookup("LinkService");
+				linkService = (LinkServiceLocal) reWaCon.lookup("LinkService");
 			}
 			return linkService;
 		} catch (Exception e) {
@@ -216,10 +215,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public LockingServiceRemote lockingService() {
+	public LockingServiceLocal lockingService() {
 		try {
 			if (lockingService == null) {
-				lockingService = (LockingServiceRemote) reWaCon.lookup("LockingService");
+				lockingService = (LockingServiceLocal) reWaCon.lookup("LockingService");
 			}
 			return lockingService;
 		} catch (Exception e) {
@@ -227,10 +226,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public ObjectServiceRemote objectService() {
+	public ObjectServiceLocal objectService() {
 		try {
 			if (objectService == null) {
-				objectService = (ObjectServiceRemote) reWaCon.lookup("ObjectService");
+				objectService = (ObjectServiceLocal) reWaCon.lookup("ObjectService");
 			}
 			return objectService;
 		} catch (Exception e) {
@@ -238,10 +237,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public RoomServiceRemote roomService() {
+	public RoomServiceLocal roomService() {
 		try {
 			if (roomService == null) {
-				roomService = (RoomServiceRemote) reWaCon.lookup("RoomService");
+				roomService = (RoomServiceLocal) reWaCon.lookup("RoomService");
 			}
 			return roomService;
 		} catch (Exception e) {
@@ -252,14 +251,14 @@ public class WasabiRemoteTest extends Arquillian {
 	@BeforeClass
 	public void setUpBeforeAllMethods() throws LoginException, NamingException {
 		// connect
-		reWaCon = new RemoteWasabiConnector();
+		reWaCon = new LocalWasabiConnector();
 		reWaCon.connect();
 	}
 
-	public TagServiceRemote tagService() {
+	public TagServiceLocal tagService() {
 		try {
 			if (tagService == null) {
-				tagService = (TagServiceRemote) reWaCon.lookup("TagService");
+				tagService = (TagServiceLocal) reWaCon.lookup("TagService");
 			}
 			return tagService;
 		} catch (Exception e) {
@@ -273,10 +272,10 @@ public class WasabiRemoteTest extends Arquillian {
 		reWaCon.disconnect();
 	}
 
-	public UserServiceRemote userService() {
+	public UserServiceLocal userService() {
 		try {
 			if (userService == null) {
-				userService = (UserServiceRemote) reWaCon.lookup("UserService");
+				userService = (UserServiceLocal) reWaCon.lookup("UserService");
 			}
 			return userService;
 		} catch (Exception e) {
@@ -284,10 +283,10 @@ public class WasabiRemoteTest extends Arquillian {
 		}
 	}
 
-	public VersioningServiceRemote versioningService() {
+	public VersioningServiceLocal versioningService() {
 		try {
 			if (versioningService == null) {
-				versioningService = (VersioningServiceRemote) reWaCon.lookup("VersioningService");
+				versioningService = (VersioningServiceLocal) reWaCon.lookup("VersioningService");
 			}
 			return versioningService;
 		} catch (Exception e) {

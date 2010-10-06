@@ -45,13 +45,13 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 	private static ConcurrentLinkedQueue<String> objectServiceQueue = new ConcurrentLinkedQueue<String>();
 	private static ConcurrentLinkedQueue<String> roomServiceQueue = new ConcurrentLinkedQueue<String>();
 
-	private static String concatInputs(String user, String method, String objectUUID) {
-		return user + "::" + method + "::" + objectUUID;
+	private static String concatInputs(String user, String objectUUID, int permission) {
+		return user + "::" + objectUUID + "::" + (new Integer(permission)).toString();
 	}
 
-	public static boolean getObjectServiceMap(String user, String method, String objectUUID) {
+	public static boolean getObjectServiceMap(String user, String objectUUID, int permission) {
 		long start = java.lang.System.nanoTime();
-		String key = concatInputs(user, method, objectUUID);
+		String key = concatInputs(user, objectUUID, permission);
 		Boolean value = objectServiceMap.get(key);
 		if (value == null) {
 			long end = java.lang.System.nanoTime();
@@ -68,8 +68,8 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 		}
 	}
 
-	public static void setObjectServiceMap(String user, String method, String objectUUID, boolean value) {
-		String key = concatInputs(user, method, objectUUID);
+	public static void setObjectServiceMap(String user, String objectUUID, int permission, boolean value) {
+		String key = concatInputs(user, objectUUID, permission);
 		if (objectServiceMap.size() == WasabiConstants.OBJECT_SERVICE_MAP_SIZE) {
 			String topOfQueue = objectServiceQueue.poll();
 			objectServiceMap.remove(topOfQueue);
@@ -78,10 +78,10 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 		objectServiceQueue.add(key);
 	}
 
-	public static boolean getRoomServiceMap(String user, String method, String objectUUID) {
+	public static boolean getRoomServiceMap(String user, String objectUUID, int permission) {
 		long start = java.lang.System.nanoTime();
-		String key = concatInputs(user, method, objectUUID);
-		Boolean value = roomServiceMap.get(key);
+		String key = concatInputs(user, objectUUID, permission);
+		Boolean value = objectServiceMap.get(key);
 		if (value == null) {
 			long end = java.lang.System.nanoTime();
 			System.out.println("roomCache pass: " + (end - start));
@@ -97,13 +97,13 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 		}
 	}
 
-	public static void setRoomServiceMap(String user, String method, String objectUUID, boolean value) {
-		String key = concatInputs(user, method, objectUUID);
-		if (roomServiceMap.size() == WasabiConstants.ROOM_SERVICE_MAP_SIZE) {
+	public static void setRoomServiceMap(String user, String objectUUID, int permission, boolean value) {
+		String key = concatInputs(user, objectUUID, permission);
+		if (objectServiceMap.size() == WasabiConstants.ROOM_SERVICE_MAP_SIZE) {
 			String topOfQueue = roomServiceQueue.poll();
-			roomServiceMap.remove(topOfQueue);
+			objectServiceMap.remove(topOfQueue);
 		}
-		roomServiceMap.put(key, value);
+		objectServiceMap.put(key, value);
 		roomServiceQueue.add(key);
 	}
 
