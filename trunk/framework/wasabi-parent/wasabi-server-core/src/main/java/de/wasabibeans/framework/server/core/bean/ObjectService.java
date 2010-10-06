@@ -264,25 +264,30 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
+		long start1 = java.lang.System.nanoTime();
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE && !WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
 				if (!Certificate.getObjectServiceMap(userUUID, "getName", ObjectServiceImpl.getUUID(objectNode)))
-					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-							WasabiPermission.READ }, s))
+					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 						throw new NoPermissionException(WasabiExceptionMessages.get(
 								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
 								"VIEW or READ", "object"));
 					else
 						Certificate.setObjectServiceMap(userUUID, "getName", ObjectServiceImpl.getUUID(objectNode),
 								true);
-			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ }, s))
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 				throw new NoPermissionException(WasabiExceptionMessages.get(
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
 						"VIEW or READ", "object"));
 		}
 		/* Authorization - End */
+		long end1 = java.lang.System.nanoTime();
+		long time = (end1 - start1);
+		Certificate.sum = Certificate.sum + time;
+		System.out.println("getName pass1: " + time);
+		System.out.println("sum: " + Certificate.sum);
+		System.out.println("-------");
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 		return TransferManager.convertValue2DTO(ObjectServiceImpl.getName(objectNode), optLockId);

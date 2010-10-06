@@ -33,6 +33,8 @@ import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 @Stateless(name = "CertificateService")
 public class Certificate implements CertificateServiceLocal, CertificateServiceRemote {
 
+	public static long sum = 0;
+
 	private static int certAccess = 0;
 	private static int certResultAccess = 0;
 	private static int dbAccess = 0;
@@ -48,14 +50,22 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 	}
 
 	public static boolean getObjectServiceMap(String user, String method, String objectUUID) {
+		long start = java.lang.System.nanoTime();
 		String key = concatInputs(user, method, objectUUID);
 		Boolean value = objectServiceMap.get(key);
-		if (value == null)
+		if (value == null) {
+			long end = java.lang.System.nanoTime();
+			System.out.println("objectCache pass: " + (end - start));
 			return false;
-		else if (value)
+		} else if (value) {
+			long end = java.lang.System.nanoTime();
+			System.out.println("objectCache pass: " + (end - start));
 			return true;
-		else
+		} else {
+			long end = java.lang.System.nanoTime();
+			System.out.println("objectCache pass: " + (end - start));
 			return false;
+		}
 	}
 
 	public static void setObjectServiceMap(String user, String method, String objectUUID, boolean value) {
@@ -69,14 +79,22 @@ public class Certificate implements CertificateServiceLocal, CertificateServiceR
 	}
 
 	public static boolean getRoomServiceMap(String user, String method, String objectUUID) {
+		long start = java.lang.System.nanoTime();
 		String key = concatInputs(user, method, objectUUID);
 		Boolean value = roomServiceMap.get(key);
-		if (value == null)
+		if (value == null) {
+			long end = java.lang.System.nanoTime();
+			System.out.println("roomCache pass: " + (end - start));
 			return false;
-		else if (value)
+		} else if (value) {
+			long end = java.lang.System.nanoTime();
+			System.out.println("roomCache pass: " + (end - start));
 			return true;
-		else
+		} else {
+			long end = java.lang.System.nanoTime();
+			System.out.println("roomCache pass: " + (end - start));
 			return false;
+		}
 	}
 
 	public static void setRoomServiceMap(String user, String method, String objectUUID, boolean value) {
