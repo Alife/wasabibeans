@@ -114,7 +114,9 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 						else
 							Certificate.setObjectServiceMap(userUUID, "getCreatedOn", ObjectServiceImpl
 									.getUUID(objectNode), true);
-				}
+				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_EXISTS));
 			/* Authorization - End */
 
 			s.getNodeByIdentifier(object.getId());
@@ -146,7 +148,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getCreatedBy",
 								ObjectServiceImpl.getUUID(objectNode), true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()", "VIEW",
+						"object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -173,7 +178,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getCreatedOn",
 								ObjectServiceImpl.getUUID(objectNode), true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedOn()", "VIEW",
+						"object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -208,7 +216,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getModifiedBy", ObjectServiceImpl
 								.getUUID(objectNode), true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedBy()", "VIEW",
+						"object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -235,7 +246,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getModifiedOn", ObjectServiceImpl
 								.getUUID(objectNode), true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()", "VIEW",
+						"object"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
@@ -262,7 +276,11 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getName", ObjectServiceImpl.getUUID(objectNode),
 								true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
+						"VIEW or READ", "object"));
 		}
 		/* Authorization - End */
 
@@ -390,7 +408,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 					else
 						Certificate.setObjectServiceMap(userUUID, "getUUID", ObjectServiceImpl.getUUID(objectNode),
 								true);
-			}
+			} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getUUID()", "READ",
+						"object"));
 		}
 		/* Authorization - End */
 
@@ -433,7 +454,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 						else
 							Certificate.setObjectServiceMap(userUUID, "setCreatedBy", ObjectServiceImpl
 									.getUUID(objectNode), true);
-				}
+				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedBy()",
+							"GRANT", "object"));
 			}
 			/* Authorization - End */
 
@@ -468,7 +492,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 						else
 							Certificate.setObjectServiceMap(userUUID, "setCreatedOn", ObjectServiceImpl
 									.getUUID(objectNode), true);
-				}
+				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setCreatedOn()",
+							"GRANT", "object"));
 			}
 			/* Authorization - End */
 
@@ -503,7 +530,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 						else
 							Certificate.setObjectServiceMap(userUUID, "setModifiedBy", ObjectServiceImpl
 									.getUUID(objectNode), true);
-				}
+				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedBy()",
+							"GRANT", "object"));
 			}
 			/* Authorization - End */
 
@@ -539,7 +569,10 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 						else
 							Certificate.setObjectServiceMap(userUUID, "setModifiedOn", ObjectServiceImpl
 									.getUUID(objectNode), true);
-				}
+				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.setModifiedOn()",
+							"GRANT", "object"));
 			}
 			/* Authorization - End */
 
