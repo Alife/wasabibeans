@@ -38,6 +38,7 @@ import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 /**
@@ -114,5 +115,5 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
-			ConcurrentModificationException, NoPermissionException;
+			ConcurrentModificationException, NoPermissionException, TargetDoesNotExistException;
 }

@@ -55,22 +55,25 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 public class AttributeServiceImpl {
 
-	public static Node create(String name, Serializable value, Node affiliationNode, Session s, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException,
-			ConcurrentModificationException {
+	public static Node create(String name, Serializable value, Node affiliationNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			AttributeValueException, ConcurrentModificationException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
-			setValue(attributeNode, value, null);
-			ObjectServiceImpl.created(attributeNode, s, callerPrincipal, true);
+			setValue(attributeNode, value, s, false, null);
+			ObjectServiceImpl.created(attributeNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s);
+				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s, false);
 				WasabiAttributeACL.ACLEntryTemplateForCreate(attributeNode, affiliationNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return attributeNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -83,21 +86,25 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static Node create(String name, Node valueNode, Node affiliationNode, Session s, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+	public static Node create(String name, Node valueNode, Node affiliationNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			ConcurrentModificationException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
-			setWasabiValue(attributeNode, valueNode, null);
-			ObjectServiceImpl.created(attributeNode, s, callerPrincipal, true);
+			setWasabiValue(attributeNode, valueNode, s, false, null);
+			ObjectServiceImpl.created(attributeNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s);
+				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s, false);
 				WasabiAttributeACL.ACLEntryTemplateForCreate(attributeNode, affiliationNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return attributeNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -220,18 +227,21 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static void move(Node attributeNode, Node newAffiliationNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void move(Node attributeNode, Node newAffiliationNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			attributeNode.getSession().move(attributeNode.getPath(),
 					newAffiliationNode.getPath() + "/" + WasabiNodeProperty.ATTRIBUTES + "/" + attributeNode.getName());
-			ObjectServiceImpl.modified(attributeNode, attributeNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(attributeNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiAttributeACL.ACLEntryForMove(attributeNode, s);
+				WasabiAttributeACL.ACLEntryForMove(attributeNode, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String name = attributeNode.getName();
@@ -245,18 +255,18 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static void remove(Node attributeNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
-		ObjectServiceImpl.remove(attributeNode);
+	public static void remove(Node attributeNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		ObjectServiceImpl.remove(attributeNode, s, doJcrSave);
 	}
 
-	public static void rename(Node attributeNode, String name, String callerPrincipal)
+	public static void rename(Node attributeNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(attributeNode, name, callerPrincipal);
+		ObjectServiceImpl.rename(attributeNode, name, s, doJcrSave, callerPrincipal);
 	}
 
-	public static void setValue(Node attributeNode, Serializable value, String callerPrincipal)
-			throws UnexpectedInternalProblemException, AttributeValueException {
+	public static void setValue(Node attributeNode, Serializable value, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, AttributeValueException {
 		try {
 			if (value == null || value instanceof String) {
 				attributeNode.setProperty(WasabiNodeProperty.VALUE, (String) value);
@@ -301,7 +311,11 @@ public class AttributeServiceImpl {
 			} else {
 				attributeNode.setProperty(WasabiNodeProperty.TYPE, (String) null);
 			}
-			ObjectServiceImpl.modified(attributeNode, attributeNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(attributeNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
@@ -310,8 +324,8 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static void setWasabiValue(Node attributeNode, Node valueNode, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+	public static void setWasabiValue(Node attributeNode, Node valueNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException {
 		try {
 			if (valueNode != null) {
 				Value value = attributeNode.getSession().getValueFactory().createValue(valueNode, true);
@@ -321,7 +335,11 @@ public class AttributeServiceImpl {
 				attributeNode.setProperty(WasabiNodeProperty.VALUE, (String) null);
 				attributeNode.setProperty(WasabiNodeProperty.TYPE, (String) null);
 			}
-			ObjectServiceImpl.modified(attributeNode, attributeNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(attributeNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

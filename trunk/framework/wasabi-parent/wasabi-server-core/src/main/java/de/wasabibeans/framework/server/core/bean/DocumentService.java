@@ -31,7 +31,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -84,26 +83,22 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.create()",
-							"INSERT or WRITE", "environment"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.create()",
+						"INSERT or WRITE", "environment"));
+		/* Authorization - End */
 
-			Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(documentNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(documentNode, environment);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createCreatedEvent(documentNode, environmentNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(documentNode, environment);
 	}
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
@@ -484,62 +479,53 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
+		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.move()",
-							"INSERT or WRITE", "newEnvironment"));
-				if (!WasabiAuthorizer.authorizeChildreen(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
-							"document and sub objects"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(documentNode, document, optLockId);
-			DocumentServiceImpl.move(documentNode, newEnvironmentNode, callerPrincipal, s);
-			s.save();
-			EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.move()",
+						"INSERT or WRITE", "newEnvironment"));
+			if (!WasabiAuthorizer.authorizeChildreen(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
+						"document and sub objects"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(documentNode, document, optLockId);
+		DocumentServiceImpl.move(documentNode, newEnvironmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createMovedEvent(documentNode, newEnvironmentNode, jms, callerPrincipal);
 	}
 
 	public void remove(WasabiDocumentDTO document, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node documentNode = TransferManager.convertDTO2Node(document, s);
-			Locker.checkOptLockId(documentNode, document, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
+		Locker.checkOptLockId(documentNode, document, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
-							"document"));
-				else
-					WasabiDocumentACL.remove(documentNode, callerPrincipal, s);
-			}
-			/* Authorization - End */
-			else {
-				// TODO special case for events due to recursive deletion of subtree
-				EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
-				DocumentServiceImpl.remove(documentNode);
-			}
-
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
+						"document"));
+			else
+				WasabiDocumentACL.remove(documentNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
+		/* Authorization - End */
+		else {
+			// TODO special case for events due to recursive deletion of subtree
+			EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
+			DocumentServiceImpl.remove(documentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		}
+
 	}
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId) throws ObjectDoesNotExistException,
@@ -551,52 +537,40 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node documentNode = TransferManager.convertDTO2Node(document, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.rename()", "WRITE",
-							"document"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.rename()", "WRITE",
+						"document"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(documentNode, document, optLockId);
-			DocumentServiceImpl.rename(documentNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(documentNode, document, optLockId);
+		DocumentServiceImpl.rename(documentNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	public void setContent(WasabiDocumentDTO document, Serializable content, Long optLockId)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
-			ConcurrentModificationException, NoPermissionException {
+			ConcurrentModificationException, NoPermissionException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node documentNode = TransferManager.convertDTO2Node(document, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node documentNode = TransferManager.convertDTO2Node(document, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.setContent()",
-							"WRITE", "document"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.setContent()", "WRITE",
+						"document"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(documentNode, document, optLockId);
-			DocumentServiceImpl.setContentPiped(documentNode, content, s, jms, sharedFilterBean, callerPrincipal);
-			s.save();
-			EventCreator
-					.createPropertyChangedEvent(documentNode, WasabiProperty.CONTENT, content, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (TargetDoesNotExistException tdne) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.PIPES_NOT_FOUND, tdne);
-		}
+		Locker.checkOptLockId(documentNode, document, optLockId);
+		DocumentServiceImpl.setContentPiped(documentNode, content, s, WasabiConstants.JCR_SAVE_PER_METHOD, jms,
+				sharedFilterBean, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(documentNode, WasabiProperty.CONTENT, content, jms, callerPrincipal);
 	}
 }

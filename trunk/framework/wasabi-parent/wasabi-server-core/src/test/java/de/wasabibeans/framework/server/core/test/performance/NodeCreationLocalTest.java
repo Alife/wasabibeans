@@ -316,7 +316,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
 			for (int i = 0; i < 5000; i++) {
 				System.out.println(i);
-				RoomServiceImpl.create("node" + i, rootRoomNode, s, WasabiConstants.ROOT_USER_NAME);
+				RoomServiceImpl.create("node" + i, rootRoomNode, s, false, WasabiConstants.ROOT_USER_NAME);
 			}
 			s.save();
 			System.out.println("------ " + (System.currentTimeMillis() - start));
@@ -343,7 +343,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
 			for (int i = 0; i < 5000; i++) {
 				System.out.println(i);
-				RoomServiceImpl.create("node" + i, rootRoomNode, s, WasabiConstants.ROOT_USER_NAME);
+				RoomServiceImpl.create("node" + i, rootRoomNode, s, false, WasabiConstants.ROOT_USER_NAME);
 			}
 			s.save();
 			jcr.cleanup(false);
@@ -371,8 +371,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
 			for (int i = 0; i < 5000; i++) {
 				System.out.println(i);
-				RoomServiceImpl.create("node" + i, rootRoomNode, s, WasabiConstants.ROOT_USER_NAME);
-				s.save();
+				RoomServiceImpl.create("node" + i, rootRoomNode, s, true, WasabiConstants.ROOT_USER_NAME);
 			}
 			jcr.cleanup(false);
 			utx.commit();

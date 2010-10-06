@@ -81,56 +81,44 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node wasabiGroup = GroupServiceImpl.getWasabiGroup(s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node wasabiGroup = GroupServiceImpl.getWasabiGroup(s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(wasabiGroup, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_GROUP, "UserService.create()",
-							"INSERT or WRITE", WasabiConstants.WASABI_GROUP_NAME));
-			}
-			/* Authorization - End */
-
-			Node userNode = UserServiceImpl.create(name, password, s, getCurrentUser());
-			s.save();
-			return TransferManager.convertNode2DTO(userNode);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(wasabiGroup, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_GROUP, "UserService.create()",
+						"INSERT or WRITE", WasabiConstants.WASABI_GROUP_NAME));
 		}
+		/* Authorization - End */
+
+		Node userNode = UserServiceImpl.create(name, password, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		return TransferManager.convertNode2DTO(userNode);
 	}
 
 	@Override
 	public void enter(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
-							"user"));
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
-							"room"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE", "user"));
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE", "room"));
+		/* Authorization - End */
 
-			UserServiceImpl.enter(userNode, roomNode);
-			s.save();
-			EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		UserServiceImpl.enter(userNode, roomNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		EventCreator.createUserMovementEvent(userNode, roomNode, true, jms, callerPrincipal);
 	}
 
 	@Override
@@ -232,8 +220,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				} catch (ItemNotFoundException infe) {
 					try {
 						groupRef.remove();
+						s.save();
 					} catch (RepositoryException re) {
-						// do nothing -> remove failed -> reference already removed by another thread concurrently
+						/*
+						 * do nothing -> remove failed -> reference already removed by another thread concurrently or
+						 * currently locked
+						 */
 					}
 				}
 				if (group != null) {
@@ -365,8 +357,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				} catch (ItemNotFoundException infe) {
 					try {
 						userRef.remove();
+						s.save();
 					} catch (RepositoryException re) {
-						// do nothing -> remove failed -> reference already removed by another thread concurrently
+						/*
+						 * do nothing -> remove failed -> reference already removed by another thread concurrently or
+						 * currently locked
+						 */
 					}
 				}
 				if (user != null) {
@@ -422,15 +418,15 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			Node userNode = TransferManager.convertDTO2Node(user, s);
 			Vector<WasabiRoomDTO> whereabouts = new Vector<WasabiRoomDTO>();
 			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getWhereabouts()", "VIEW",
-							"user"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getWhereabouts()",
+							"VIEW", "user"));
 			/* Authorization - End */
-			
+
 			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
 
 			while (ni.hasNext()) {
@@ -441,8 +437,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				} catch (ItemNotFoundException infe) {
 					try {
 						roomRef.remove();
+						s.save();
 					} catch (RepositoryException re) {
-						// do nothing -> remove failed -> reference already removed by another thread concurrently
+						/*
+						 * do nothing -> remove failed -> reference already removed by another thread concurrently or
+						 * currently locked
+						 */
 					}
 				}
 				if (room != null) {
@@ -467,55 +467,42 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public void leave(WasabiUserDTO user, WasabiRoomDTO room) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE",
-							"user"));
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE",
-							"room"));
-			/* Authorization - End */
-			
-			UserServiceImpl.leave(userNode, roomNode);
-			s.save();
-			EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE", "user"));
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE", "room"));
+		/* Authorization - End */
+
+		UserServiceImpl.leave(userNode, roomNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		EventCreator.createUserMovementEvent(userNode, roomNode, false, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiUserDTO user, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.remove()", "WRITE",
-							"user"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.remove()", "WRITE", "user"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(userNode, user, optLockId);
-			EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
-			UserServiceImpl.remove(userNode);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(userNode, user, optLockId);
+		EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
+		UserServiceImpl.remove(userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 
 	@Override
@@ -528,25 +515,19 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.rename()", "WRITE",
-							"user"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.rename()", "WRITE", "user"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(userNode, user, optLockId);
-			UserServiceImpl.rename(userNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(userNode, user, optLockId);
+		UserServiceImpl.rename(userNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	@Override
@@ -559,26 +540,21 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setDisplayName()",
-							"WRITE", "user"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setDisplayName()", "WRITE",
+						"user"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(userNode, user, optLockId);
-			UserServiceImpl.setDisplayName(userNode, displayName, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.DISPLAY_NAME, displayName, jms,
-					callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(userNode, user, optLockId);
+		UserServiceImpl.setDisplayName(userNode, displayName, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.DISPLAY_NAME, displayName, jms,
+				callerPrincipal);
 	}
 
 	@Override
@@ -609,27 +585,21 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()", "WRITE",
-							"user"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()", "WRITE",
+						"user"));
+		/* Authorization - End */
 
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.checkOptLockId(userNode, user, optLockId);
-			UserServiceImpl.setStartRoom(userNode, roomNode, callerPrincipal);
-			EventCreator
-					.createPropertyChangedEvent(userNode, WasabiProperty.START_ROOM, roomNode, jms, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		Locker.checkOptLockId(userNode, user, optLockId);
+		UserServiceImpl.setStartRoom(userNode, roomNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.START_ROOM, roomNode, jms, callerPrincipal);
 	}
 
 	@Override
@@ -637,24 +607,19 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()", "WRITE",
-							"user"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()", "WRITE",
+								"user"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(userNode, user, optLockId);
-			UserServiceImpl.setStatus(userNode, active, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.STATUS, active, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(userNode, user, optLockId);
+		UserServiceImpl.setStatus(userNode, active, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(userNode, WasabiProperty.STATUS, active, jms, callerPrincipal);
 	}
 }

@@ -39,21 +39,29 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiDocumentACL {
 
-	public static void ACLEntryForCreate(Node documentNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForCreate(Node documentNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(documentNode, true, s);
+				ACLServiceImpl.setInheritance(documentNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
-	public static void ACLEntryForMove(Node documentNode, Session s) throws UnexpectedInternalProblemException {
+
+	public static void ACLEntryForMove(Node documentNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiDocumentSQL.SQLQueryForMove(documentNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(documentNode, inheritance_ids);
 			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(documentNode, true, s);
+				ACLServiceImpl.setInheritance(documentNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -95,8 +103,8 @@ public class WasabiDocumentACL {
 		}
 	}
 
-	public static void remove(Node documentNode, String callerPrincipal, Session s)
+	public static void remove(Node documentNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(documentNode, callerPrincipal, s);
+		WasabiObjectACL.remove(documentNode, callerPrincipal, s, doJcrSave);
 	}
 }

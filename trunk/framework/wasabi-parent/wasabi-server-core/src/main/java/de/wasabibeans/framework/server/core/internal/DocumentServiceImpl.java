@@ -74,20 +74,23 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class DocumentServiceImpl {
 
-	public static Node create(String name, Node environmentNode, Session s, String callerPrincipal)
+	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
 		try {
 			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
 					WasabiNodeType.DOCUMENT);
-			ObjectServiceImpl.created(documentNode, s, callerPrincipal, true);
+			ObjectServiceImpl.created(documentNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiDocumentACL.ACLEntryForCreate(documentNode, s);
+				WasabiDocumentACL.ACLEntryForCreate(documentNode, s, false);
 				WasabiDocumentACL.ACLEntryTemplateForCreate(documentNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return documentNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -222,18 +225,21 @@ public class DocumentServiceImpl {
 		return !getDocumentsByModificationDate(environmentNode, null, new Date(timestamp)).isEmpty();
 	}
 
-	public static void move(Node documentNode, Node newEnvironmentNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+	public static void move(Node documentNode, Node newEnvironmentNode, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		try {
 			documentNode.getSession().move(documentNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/" + documentNode.getName());
-			ObjectServiceImpl.modified(documentNode, documentNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(documentNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiDocumentACL.ACLEntryForMove(documentNode, s);
+				WasabiDocumentACL.ACLEntryForMove(documentNode, s, false);
 			/* ACL Environment - End */
 
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (ItemExistsException iee) {
 			try {
 				String name = documentNode.getName();
@@ -247,19 +253,19 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void remove(Node documentNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
-		ObjectServiceImpl.remove(documentNode);
+	public static void remove(Node documentNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		ObjectServiceImpl.remove(documentNode, s, doJcrSave);
 	}
 
-	public static void rename(Node documentNode, String name, String callerPrincipal)
+	public static void rename(Node documentNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
-		ObjectServiceImpl.rename(documentNode, name, callerPrincipal);
+		ObjectServiceImpl.rename(documentNode, name, s, doJcrSave, callerPrincipal);
 	}
 
-	public static void setContent(Node documentNode, Serializable content, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, DocumentContentException,
-			ConcurrentModificationException {
+	public static void setContent(Node documentNode, Serializable content, Session s, boolean doJcrSave,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException {
 		try {
 			PipedInputStream pipedIn = new PipedInputStream();
 			PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
@@ -275,6 +281,10 @@ public class DocumentServiceImpl {
 			}
 
 			documentNode.setProperty(WasabiNodeProperty.CONTENT, toSave);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException("Object is locked", le);
 		} catch (RepositoryException re) {
@@ -288,8 +298,8 @@ public class DocumentServiceImpl {
 	// -------------------------- Wasabi Pipes --------------------------------------------------------------
 
 	public static void addContentRef(Node documentNode, ContentStore filter, String ref, String mimeType, Long size,
-			boolean isContentAvailable, String callerPrincipal) throws ConcurrentModificationException,
-			UnexpectedInternalProblemException {
+			boolean isContentAvailable, Session s, boolean doJcrSave, String callerPrincipal)
+			throws ConcurrentModificationException, UnexpectedInternalProblemException {
 		try {
 			String name = Calendar.getInstance().getTimeInMillis() + " " + (int) (Math.random() * 1000);
 			Node contentrefNode = documentNode.addNode(WasabiNodeProperty.CONTENT_REFS + "/" + name,
@@ -313,7 +323,11 @@ public class DocumentServiceImpl {
 				}
 			});
 			contentrefNode.setProperty(WasabiNodeProperty.JSONDATA, gsonBuilder.create().toJson(filter));
-			ObjectServiceImpl.modified(documentNode, documentNode.getSession(), callerPrincipal, false);
+			ObjectServiceImpl.modified(documentNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
@@ -322,10 +336,10 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void setContentPiped(Node documentNode, Serializable content, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean, String callerPrincipal) throws UnexpectedInternalProblemException,
-			TargetDoesNotExistException, ObjectDoesNotExistException, DocumentContentException,
-			ConcurrentModificationException {
+	public static void setContentPiped(Node documentNode, Serializable content, Session s, boolean doJcrSave,
+			JmsConnector jms, SharedFilterBean sharedFilterBean, String callerPrincipal)
+			throws UnexpectedInternalProblemException, TargetDoesNotExistException, ObjectDoesNotExistException,
+			DocumentContentException, ConcurrentModificationException {
 		try {
 			Node nearestRoomNode = getNearestRoom(documentNode);
 			Node pipelineNode = RoomServiceImpl.getPipeline(nearestRoomNode);
@@ -335,8 +349,14 @@ public class DocumentServiceImpl {
 			} else {
 				FilterServiceImpl.apply(pipelineNode, documentNode, content, s, jms, sharedFilterBean, callerPrincipal);
 			}
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (IOException io) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_PROBLEM, io);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 

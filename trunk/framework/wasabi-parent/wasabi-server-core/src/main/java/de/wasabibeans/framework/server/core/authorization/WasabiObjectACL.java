@@ -39,9 +39,16 @@ import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 
 public class WasabiObjectACL {
 
-	public static void remove(Node objectNode, String callerPrincipal, Session s)
+	public static void remove(Node objectNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		removeRecursive(objectNode, callerPrincipal, s);
+		try {
+			removeRecursive(objectNode, callerPrincipal, s);
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static void removeACLEntriesRecursive(Node objectNode) throws UnexpectedInternalProblemException {
@@ -128,7 +135,7 @@ public class WasabiObjectACL {
 					if (objectType.equals(WasabiNodeType.CONTAINER))
 						WasabiContainerSQL.SQLQueryForRemove(objectUUID);
 
-					ObjectServiceImpl.remove(objectNode);
+					ObjectServiceImpl.remove(objectNode, s, false);
 
 					return 0;
 				} else
@@ -143,7 +150,7 @@ public class WasabiObjectACL {
 				String objectUUID = objectNode.getIdentifier();
 				WasabiObjectSQL.SqlQueryForRemove(objectUUID);
 				WasabiRoomSQL.SQLQueryForRemove(objectUUID);
-				ObjectServiceImpl.remove(objectNode);
+				ObjectServiceImpl.remove(objectNode, s, false);
 
 				return 0;
 			}

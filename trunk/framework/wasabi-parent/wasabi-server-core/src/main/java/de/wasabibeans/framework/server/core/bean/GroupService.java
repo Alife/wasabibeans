@@ -69,27 +69,22 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public void addMember(WasabiGroupDTO group, WasabiUserDTO user) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Node userNode = TransferManager.convertDTO2Node(user, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()",
-							"INSERT or WRITE", "group"));
-			}
-			/* Authorization - End */
-
-			GroupServiceImpl.addMember(groupNode, userNode);
-			s.save();
-			EventCreator.createMembershipEvent(groupNode, userNode, true, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()",
+						"INSERT or WRITE", "group"));
 		}
+		/* Authorization - End */
+
+		GroupServiceImpl.addMember(groupNode, userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		EventCreator.createMembershipEvent(groupNode, userNode, true, jms, callerPrincipal);
 	}
 
 	@Override
@@ -102,39 +97,35 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			if (GroupServiceImpl.getGroupByName(name, s) != null) {
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
-			}
-
-			Node parentGroupNode = null;
-			if (parentGroup != null) {
-				parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
-			}
-
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (parentGroup == null) {
-					if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-						throw new NoPermissionException(WasabiExceptionMessages
-								.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-				} else if (!WasabiAuthorizer.authorize(parentGroupNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.create()",
-							"INSERT or WRITE", "parentGroup"));
-			}
-			/* Authorization - End */
-
-			Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(groupNode, parentGroupNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(groupNode, parentGroup);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		if (GroupServiceImpl.getGroupByName(name, s) != null) {
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
 		}
+
+		Node parentGroupNode = null;
+		if (parentGroup != null) {
+			parentGroupNode = TransferManager.convertDTO2Node(parentGroup, s);
+		}
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (parentGroup == null) {
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			} else if (!WasabiAuthorizer.authorize(parentGroupNode, callerPrincipal, new int[] {
+					WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.create()",
+						"INSERT or WRITE", "parentGroup"));
+		}
+		/* Authorization - End */
+
+		Node groupNode = GroupServiceImpl.create(name, parentGroupNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createCreatedEvent(groupNode, parentGroupNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(groupNode, parentGroup);
 	}
 
 	@Override
@@ -336,8 +327,12 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				} catch (ItemNotFoundException infe) {
 					try {
 						userRef.remove();
+						s.save();
 					} catch (RepositoryException re) {
-						// do nothing -> remove failed -> reference already removed by another thread concurrently
+						/*
+						 * do nothing -> remove failed -> reference already removed by another thread concurrently or
+						 * currently locked
+						 */
 					}
 				}
 				if (user != null) {
@@ -527,63 +522,53 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node newParentGroupNode = null;
-			if (newParentGroup != null) {
-				newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
-			}
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (newParentGroupNode == null)
-					if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-						throw new NoPermissionException(WasabiExceptionMessages
-								.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
-				if (!WasabiAuthorizer.authorize(newParentGroupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.move()", "WRITE",
-							"newParentGroup"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(groupNode, group, optLockId);
-			GroupServiceImpl.move(groupNode, newParentGroupNode, callerPrincipal, s);
-			s.save();
-			EventCreator.createMovedEvent(groupNode, newParentGroupNode, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node newParentGroupNode = null;
+		if (newParentGroup != null) {
+			newParentGroupNode = TransferManager.convertDTO2Node(newParentGroup, s);
 		}
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (newParentGroupNode == null)
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.authorize(newParentGroupNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.move()", "WRITE",
+						"newParentGroup"));
+		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(groupNode, group, optLockId);
+		GroupServiceImpl.move(groupNode, newParentGroupNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createMovedEvent(groupNode, newParentGroupNode, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiGroupDTO group, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
-			Locker.checkOptLockId(groupNode, group, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Locker.checkOptLockId(groupNode, group, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.remove()", "WRITE",
-							"document"));
-				else
-					WasabiGroupACL.remove(groupNode, callerPrincipal, s);
-			}
-			/* Authorization - End */
-			else {
-				// TODO special case for events due to recursive deletion of subtree
-				EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
-				GroupServiceImpl.remove(groupNode);
-			}
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.remove()", "WRITE",
+						"document"));
+			else
+				WasabiGroupACL.remove(groupNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		}
+		/* Authorization - End */
+		else {
+			// TODO special case for events due to recursive deletion of subtree
+			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
+			GroupServiceImpl.remove(groupNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
 
 	}
@@ -592,25 +577,20 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public void removeMember(WasabiGroupDTO group, WasabiUserDTO user) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.removeMember()",
-							"WRITE", "group"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.removeMember()", "WRITE",
+						"group"));
+		/* Authorization - End */
 
-			Node userNode = TransferManager.convertDTO2Node(user, s);
-			GroupServiceImpl.removeMember(groupNode, userNode);
-			s.save();
-			EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		GroupServiceImpl.removeMember(groupNode, userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
 
 	}
 
@@ -624,25 +604,19 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.rename()", "WRITE",
-							"group"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.rename()", "WRITE", "group"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(groupNode, group, optLockId);
-			GroupServiceImpl.rename(groupNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(groupNode, group, optLockId);
+		GroupServiceImpl.rename(groupNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	@Override
@@ -655,24 +629,19 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node groupNode = TransferManager.convertDTO2Node(group, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node groupNode = TransferManager.convertDTO2Node(group, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.setDisplayName()",
-							"WRITE", "group"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.setDisplayName()", "WRITE",
+						"group"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(groupNode, group, optLockId);
-			GroupServiceImpl.setDisplayName(groupNode, displayName, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(groupNode, group, optLockId);
+		GroupServiceImpl.setDisplayName(groupNode, displayName, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
 	}
 }

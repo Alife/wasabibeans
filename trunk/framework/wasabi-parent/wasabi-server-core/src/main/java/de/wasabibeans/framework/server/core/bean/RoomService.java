@@ -29,7 +29,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -79,26 +78,22 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.create()",
-							"INSERT or WRITE", "environment"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.create()", "INSERT or WRITE",
+						"environment"));
+		/* Authorization - End */
 
-			Node roomNode = RoomServiceImpl.create(name, environmentNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(roomNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(roomNode, environment);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node roomNode = RoomServiceImpl.create(name, environmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createCreatedEvent(roomNode, environmentNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(roomNode, environment);
 	}
 
 	@Override
@@ -444,63 +439,53 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()",
-							"INSERT or WRITE", "newEnvironment"));
-				if (!WasabiAuthorizer.authorizeChildreen(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
-							"room and sub objects"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(roomNode, room, optLockId);
-			RoomServiceImpl.move(roomNode, newEnvironmentNode, true, callerPrincipal, s);
-			s.save();
-			EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "INSERT or WRITE",
+						"newEnvironment"));
+			if (!WasabiAuthorizer.authorizeChildreen(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
+						"room and sub objects"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(roomNode, room, optLockId);
+		RoomServiceImpl
+				.move(roomNode, newEnvironmentNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createMovedEvent(roomNode, newEnvironmentNode, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiRoomDTO room, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Locker.checkOptLockId(roomNode, room, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		Locker.checkOptLockId(roomNode, room, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.remove()", "WRITE",
-							"room"));
-				else
-					WasabiRoomACL.remove(roomNode, callerPrincipal, s);
-			}
-			/* Authorization - End */
-			else {
-				// TODO special case for events due to recursive deletion of subtree
-				EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
-				RoomServiceImpl.remove(roomNode, true);
-			}
-
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.remove()", "WRITE", "room"));
+			else
+				WasabiRoomACL.remove(roomNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
+		/* Authorization - End */
+		else {
+			// TODO special case for events due to recursive deletion of subtree
+			EventCreator.createRemovedEvent(roomNode, jms, callerPrincipal);
+			RoomServiceImpl.remove(roomNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		}
+
 	}
 
 	@Override
@@ -513,25 +498,19 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.rename()", "WRITE",
-							"room"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.rename()", "WRITE", "room"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(roomNode, room, optLockId);
-			RoomServiceImpl.rename(roomNode, name, true, callerPrincipal);
-			EventCreator.createPropertyChangedEvent(roomNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(roomNode, room, optLockId);
+		RoomServiceImpl.rename(roomNode, name, true, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(roomNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	@Override
@@ -539,23 +518,18 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException,
 			ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node roomNode = TransferManager.convertDTO2Node(room, s);
-			Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node roomNode = TransferManager.convertDTO2Node(room, s);
+		Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.GRANT, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.setPipeline()", "GRANT",
-							"room"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.setPipeline()", "GRANT",
+						"room"));
+		/* Authorization - End */
 
-			RoomServiceImpl.setPipeline(roomNode, pipelineNode, callerPrincipal);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		RoomServiceImpl.setPipeline(roomNode, pipelineNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
 	}
 }

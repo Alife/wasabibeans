@@ -46,6 +46,9 @@ import com.google.gdata.data.youtube.YouTubeMediaGroup;
 import com.google.gdata.util.ServiceException;
 import com.google.gson.Gson;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.pipes.auth.YouTubeAuthTokenProvider;
@@ -93,7 +96,8 @@ public class YouTubeSink extends AnnotationBasedFilter implements ContentStore, 
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, byte[] buffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws ConcurrentModificationException,
+			UnexpectedInternalProblemException {
 
 		try {
 
@@ -148,15 +152,15 @@ public class YouTubeSink extends AnnotationBasedFilter implements ContentStore, 
 
 			VideoEntry createdEntry = myService.insert(new URL(uploadUrl), newEntry);
 
+			boolean doJcrSave = isAsynchronous() ? true : WasabiConstants.JCR_SAVE_PER_METHOD;
 			DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this,
-					createdEntry.getHtmlLink().getHref(), null, null, false, document.getCallerPrincipal());
+					createdEntry.getHtmlLink().getHref(), null, null, false, s, doJcrSave, document
+							.getCallerPrincipal());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (ServiceException e) {
 			throw new RuntimeException(e);
 		} catch (OAuthException e) {
-			throw new RuntimeException(e);
-		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

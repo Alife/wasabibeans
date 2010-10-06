@@ -39,22 +39,30 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiRoomACL {
 
-	public static void ACLEntryForCreate(Node roomNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForCreate(Node roomNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(roomNode, true, s);
+				ACLServiceImpl.setInheritance(roomNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 			WasabiRoomSQL.createRandomSQLinserts();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void ACLEntryForMove(Node roomNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForMove(Node roomNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);
 			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(roomNode, true, s);
+				ACLServiceImpl.setInheritance(roomNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -96,8 +104,8 @@ public class WasabiRoomACL {
 		}
 	}
 
-	public static void remove(Node roomNode, String callerPrincipal, Session s)
+	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(roomNode, callerPrincipal, s);
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave);
 	}
 }

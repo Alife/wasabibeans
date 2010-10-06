@@ -35,6 +35,9 @@ import org.jets3t.service.model.S3Object;
 import org.jets3t.service.security.AWSCredentials;
 import org.kohsuke.MetaInfServices;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.pipes.filter.AnnotationBasedFilter;
@@ -88,7 +91,8 @@ public class AmazonS3Sink extends AnnotationBasedFilter implements Sink, Content
 
 	@Override
 	public void filter(Wire fromWire, DocumentInfo document, byte[] buffer, Session s, JmsConnector jms,
-			SharedFilterBean sharedFilterBean) {
+			SharedFilterBean sharedFilterBean) throws ConcurrentModificationException,
+			UnexpectedInternalProblemException {
 
 		AWSCredentials awsCredentials = new AWSCredentials(awsAccessKey, awsSecretKey);
 
@@ -104,13 +108,11 @@ public class AmazonS3Sink extends AnnotationBasedFilter implements Sink, Content
 
 			s3Service.putObject(s3Bucket, s3Object);
 
+			boolean doJcrSave = isAsynchronous() ? true : WasabiConstants.JCR_SAVE_PER_METHOD;
 			DocumentServiceImpl.addContentRef(ObjectServiceImpl.get(document.getDocumentNodeId(), s), this, document
-					.getName(), document.getContentType().toString(), (long) buffer.length, true, document
-					.getCallerPrincipal());
-			s.save();
+					.getName(), document.getContentType().toString(), (long) buffer.length, true, s, doJcrSave,
+					document.getCallerPrincipal());
 		} catch (S3ServiceException e) {
-			throw new RuntimeException(e);
-		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

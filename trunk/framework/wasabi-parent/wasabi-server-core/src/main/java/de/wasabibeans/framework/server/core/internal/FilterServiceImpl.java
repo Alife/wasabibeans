@@ -81,15 +81,18 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class FilterServiceImpl {
 
-	public static Node create(String name, Filter filter, Session s, String callerPrincipal)
+	public static Node create(String name, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
 		try {
 			Node rootOfPipelinesNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node pipelineNode = rootOfPipelinesNode.addNode(name, WasabiNodeType.PIPELINE);
 			pipelineNode.setProperty(WasabiNodeProperty.EMBEDDABLE, filter instanceof EmbeddedFilter);
-			setFilter(pipelineNode, filter, s, null);
-			ObjectServiceImpl.created(pipelineNode, s, callerPrincipal, true);
+			setFilter(pipelineNode, filter, s, false, null);
+			ObjectServiceImpl.created(pipelineNode, s, false, callerPrincipal, true);
 
+			if (doJcrSave) {
+				s.save();
+			}
 			return pipelineNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
@@ -99,14 +102,14 @@ public class FilterServiceImpl {
 		}
 	}
 
-	public static void updateOrCreate(String name, Filter filter, Session s, String callerPrincipal)
+	public static void updateOrCreate(String name, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
 		Node pipelineNode = getPipeline(name, s);
 
 		if (pipelineNode != null) {
-			setFilter(pipelineNode, filter, s, callerPrincipal);
+			setFilter(pipelineNode, filter, s, doJcrSave, callerPrincipal);
 		} else {
-			create(name, filter, s, callerPrincipal);
+			create(name, filter, s, doJcrSave, callerPrincipal);
 		}
 	}
 
@@ -118,7 +121,7 @@ public class FilterServiceImpl {
 		}
 	}
 
-	public static void setFilter(Node pipelineNode, Filter filter, Session s, String callerPrincipal)
+	public static void setFilter(Node pipelineNode, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException {
 		try {
 			// convert filter to inputstream
@@ -130,7 +133,11 @@ public class FilterServiceImpl {
 			ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
 			// store the filter
 			pipelineNode.setProperty(WasabiNodeProperty.FILTER, s.getValueFactory().createBinary(in));
-			ObjectServiceImpl.modified(pipelineNode, s, callerPrincipal, false);
+			ObjectServiceImpl.modified(pipelineNode, s, false, callerPrincipal, false);
+
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
@@ -184,9 +191,9 @@ public class FilterServiceImpl {
 		return map;
 	}
 
-	public static void remove(Node pipelineNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
-		ObjectServiceImpl.remove(pipelineNode);
+	public static void remove(Node pipelineNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		ObjectServiceImpl.remove(pipelineNode, s, doJcrSave);
 	}
 
 	public static void executeFilterAsynchronous(Wire wire, Filter.DocumentInfo info, byte[] data, JmsConnector jms,

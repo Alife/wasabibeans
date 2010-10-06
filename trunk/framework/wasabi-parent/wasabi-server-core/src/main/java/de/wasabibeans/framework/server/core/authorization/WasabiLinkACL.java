@@ -39,21 +39,29 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiLinkACL {
 
-	public static void ACLEntryForCreate(Node linkNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForCreate(Node linkNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			if (linkNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(linkNode, true, s);
+				ACLServiceImpl.setInheritance(linkNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void ACLEntryForMove(Node linkNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForMove(Node linkNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiLinkSQL.SQLQueryForMove(linkNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(linkNode, inheritance_ids);
 			if (linkNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(linkNode, true, s);
+				ACLServiceImpl.setInheritance(linkNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -95,8 +103,8 @@ public class WasabiLinkACL {
 		}
 	}
 
-	public static void remove(Node linkNode, String callerPrincipal, Session s)
+	public static void remove(Node linkNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(linkNode, callerPrincipal, s);
+		WasabiObjectACL.remove(linkNode, callerPrincipal, s, doJcrSave);
 	}
 }

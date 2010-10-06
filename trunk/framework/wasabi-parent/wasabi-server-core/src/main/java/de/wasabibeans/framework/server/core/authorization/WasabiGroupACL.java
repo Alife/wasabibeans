@@ -34,10 +34,14 @@ import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 
 public class WasabiGroupACL {
 
-	public static void ACLEntryForCreate(Node groupNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForCreate(Node groupNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			if (groupNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(groupNode, true, s);
+				ACLServiceImpl.setInheritance(groupNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -50,19 +54,23 @@ public class WasabiGroupACL {
 				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0, s);
 	}
 
-	public static void ACLEntryForMove(Node groupNode, Session s) throws UnexpectedInternalProblemException {
+	public static void ACLEntryForMove(Node groupNode, Session s, boolean doJcrSave)
+			throws UnexpectedInternalProblemException {
 		try {
 			String[] inheritance_ids = WasabiGroupSQL.SQLQueryForMove(groupNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(groupNode, inheritance_ids);
 			if (groupNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(groupNode, true, s);
+				ACLServiceImpl.setInheritance(groupNode, true, s, false);
+			if (doJcrSave) {
+				s.save();
+			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void remove(Node roomNode, String callerPrincipal, Session s)
+	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(roomNode, callerPrincipal, s);
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave);
 	}
 }

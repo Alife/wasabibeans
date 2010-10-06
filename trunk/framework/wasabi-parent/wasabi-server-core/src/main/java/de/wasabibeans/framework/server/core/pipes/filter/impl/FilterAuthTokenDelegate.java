@@ -50,8 +50,8 @@ class FilterAuthTokenDelegate<T extends AuthTokenProvider.Parameter> extends Aut
 	@Override
 	public void deleteToken() {
 		try {
-			AttributeServiceImpl.remove(AttributeServiceImpl.getAttributeByName(userNode, getAttributeName()));
-			userNode.getSession().save();
+			AttributeServiceImpl.remove(AttributeServiceImpl.getAttributeByName(userNode, getAttributeName()), userNode
+					.getSession(), true);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -60,9 +60,8 @@ class FilterAuthTokenDelegate<T extends AuthTokenProvider.Parameter> extends Aut
 	@Override
 	protected void setToken(String token) {
 		try {
-			AttributeServiceImpl.create(getAttributeName(), token, userNode, userNode.getSession(),
+			AttributeServiceImpl.create(getAttributeName(), token, userNode, userNode.getSession(), true,
 					WasabiConstants.ROOT_USER_NAME);
-			userNode.getSession().save();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

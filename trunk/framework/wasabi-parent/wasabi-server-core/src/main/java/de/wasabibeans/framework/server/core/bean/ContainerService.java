@@ -29,7 +29,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -77,26 +76,22 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node environmentNode = TransferManager.convertDTO2Node(environment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node environmentNode = TransferManager.convertDTO2Node(environment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.create()",
-							"INSERT or WRITE", "environment"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.create()",
+						"INSERT or WRITE", "environment"));
+		/* Authorization - End */
 
-			Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(containerNode, environmentNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(containerNode, environment);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createCreatedEvent(containerNode, environmentNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(containerNode, environment);
 	}
 
 	@Override
@@ -395,63 +390,54 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node containerNode = TransferManager.convertDTO2Node(container, s);
-			Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node containerNode = TransferManager.convertDTO2Node(container, s);
+		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()",
-							"INSERT or WRITE", "newEnvironment"));
-				if (!WasabiAuthorizer.authorizeChildreen(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()", "WRITE",
-							"container and sub objects"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(containerNode, container, optLockId);
-			ContainerServiceImpl.move(containerNode, newEnvironmentNode, callerPrincipal, s);
-			s.save();
-			EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()",
+						"INSERT or WRITE", "newEnvironment"));
+			if (!WasabiAuthorizer.authorizeChildreen(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()", "WRITE",
+						"container and sub objects"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(containerNode, container, optLockId);
+		ContainerServiceImpl.move(containerNode, newEnvironmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createMovedEvent(containerNode, newEnvironmentNode, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiContainerDTO container, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node containerNode = TransferManager.convertDTO2Node(container, s);
-			Locker.checkOptLockId(containerNode, container, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node containerNode = TransferManager.convertDTO2Node(container, s);
+		Locker.checkOptLockId(containerNode, container, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
-							"container"));
-				else
-					WasabiContainerACL.remove(containerNode, callerPrincipal, s);
-			}
-			/* Authorization - End */
-			else {
-				// TODO special case for events due to recursive deletion of subtree
-				EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
-				ContainerServiceImpl.remove(containerNode);
-			}
-
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
+						"container"));
+			else
+				WasabiContainerACL.remove(containerNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
+		/* Authorization - End */
+		else {
+			// TODO special case for events due to recursive deletion of subtree
+			EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
+			ContainerServiceImpl.remove(containerNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		}
+
 	}
 
 	@Override
@@ -464,24 +450,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node containerNode = TransferManager.convertDTO2Node(container, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node containerNode = TransferManager.convertDTO2Node(container, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.rename()", "WRITE",
-							"container"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.rename()", "WRITE",
+						"container"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(containerNode, container, optLockId);
-			ContainerServiceImpl.rename(containerNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(containerNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(containerNode, container, optLockId);
+		ContainerServiceImpl.rename(containerNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(containerNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 }

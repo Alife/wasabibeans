@@ -29,7 +29,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -77,26 +76,22 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
-							"INSERT or WRITE", "affiliation"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+						"INSERT or WRITE", "affiliation"));
+		/* Authorization - End */
 
-			Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(attributeNode, affiliation);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s,
+				WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(attributeNode, affiliation);
 	}
 
 	@Override
@@ -109,27 +104,23 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
-			Node valueNode = TransferManager.convertDTO2Node(value, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node affiliationNode = TransferManager.convertDTO2Node(affiliation, s);
+		Node valueNode = TransferManager.convertDTO2Node(value, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
-							"INSERT or WRITE", "affiliation"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+						"INSERT or WRITE", "affiliation"));
+		/* Authorization - End */
 
-			Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s, callerPrincipal);
-			s.save();
-			EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
-			return TransferManager.convertNode2DTO(attributeNode, affiliation);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s,
+				WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createCreatedEvent(attributeNode, affiliationNode, jms, callerPrincipal);
+		return TransferManager.convertNode2DTO(attributeNode, affiliation);
 	}
 
 	@Override
@@ -270,63 +261,54 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(newAffiliationNode, callerPrincipal, new int[] {
-						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()",
-							"INSERT or WRITE", "newEnvironment"));
-				if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
-							"room and sub objects"));
-			}
-			/* Authorization - End */
-
-			Locker.checkOptLockId(attributeNode, attribute, optLockId);
-			AttributeServiceImpl.move(attributeNode, newAffiliationNode, callerPrincipal, s);
-			s.save();
-			EventCreator.createMovedEvent(attributeNode, newAffiliationNode, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(newAffiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+					WasabiPermission.WRITE }, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()",
+						"INSERT or WRITE", "newEnvironment"));
+			if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
+						"room and sub objects"));
 		}
+		/* Authorization - End */
+
+		Locker.checkOptLockId(attributeNode, attribute, optLockId);
+		AttributeServiceImpl.move(attributeNode, newAffiliationNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createMovedEvent(attributeNode, newAffiliationNode, jms, callerPrincipal);
 	}
 
 	@Override
 	public void remove(WasabiAttributeDTO attribute, Long optLockId) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Locker.checkOptLockId(attributeNode, attribute, optLockId);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Locker.checkOptLockId(attributeNode, attribute, optLockId);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
-							"document"));
-				else
-					WasabiAttributeACL.remove(attributeNode, callerPrincipal, s);
-			}
-			/* Authorization - End */
-			else {
-				// TODO special case for events due to recursive deletion of subtree
-				EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
-				AttributeServiceImpl.remove(attributeNode);
-			}
-
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
+						"document"));
+			else
+				WasabiAttributeACL.remove(attributeNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		}
+		/* Authorization - End */
+		else {
+			// TODO special case for events due to recursive deletion of subtree
+			EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
+			AttributeServiceImpl.remove(attributeNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		}
+
 	}
 
 	@Override
@@ -339,25 +321,20 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		}
 
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.rename()", "WRITE",
-							"attribute"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.rename()", "WRITE",
+						"attribute"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(attributeNode, attribute, optLockId);
-			AttributeServiceImpl.rename(attributeNode, name, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.NAME, name, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(attributeNode, attribute, optLockId);
+		AttributeServiceImpl.rename(attributeNode, name, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.NAME, name, jms, callerPrincipal);
 	}
 
 	@Override
@@ -365,25 +342,20 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, AttributeValueException,
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setValue()",
-							"WRITE", "attribute"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setValue()", "WRITE",
+						"attribute"));
+		/* Authorization - End */
 
-			Locker.checkOptLockId(attributeNode, attribute, optLockId);
-			AttributeServiceImpl.setValue(attributeNode, value, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, value, jms, callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		Locker.checkOptLockId(attributeNode, attribute, optLockId);
+		AttributeServiceImpl.setValue(attributeNode, value, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, value, jms, callerPrincipal);
 	}
 
 	@Override
@@ -391,29 +363,24 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
-			Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
-			Node valueNode = null;
-			if (value != null) {
-				valueNode = TransferManager.convertDTO2Node(value, s);
-			}
-
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setWasabiValue()",
-							"WRITE", "attribute"));
-			/* Authorization - End */
-
-			Locker.checkOptLockId(attributeNode, attribute, optLockId);
-			AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, callerPrincipal);
-			s.save();
-			EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, valueNode, jms,
-					callerPrincipal);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node attributeNode = TransferManager.convertDTO2Node(attribute, s);
+		Node valueNode = null;
+		if (value != null) {
+			valueNode = TransferManager.convertDTO2Node(value, s);
 		}
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setWasabiValue()",
+						"WRITE", "attribute"));
+		/* Authorization - End */
+
+		Locker.checkOptLockId(attributeNode, attribute, optLockId);
+		AttributeServiceImpl.setWasabiValue(attributeNode, valueNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+				callerPrincipal);
+		EventCreator.createPropertyChangedEvent(attributeNode, WasabiProperty.VALUE, valueNode, jms, callerPrincipal);
 	}
 }

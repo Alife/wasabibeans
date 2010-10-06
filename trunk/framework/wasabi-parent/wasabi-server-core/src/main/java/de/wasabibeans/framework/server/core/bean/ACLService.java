@@ -34,7 +34,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.interceptor.Interceptors;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -82,24 +81,18 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
 		Session s = jcr.getJCRSession();
-		try {
-			Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
-							"GRANT", "wasabiObject"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
+						"GRANT", "wasabiObject"));
+		/* Authorization - End */
 
-			ACLServiceImpl.setInheritance(objectNode, true, s);
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE + "::"
-					+ re.toString(), re);
-		}
+		ACLServiceImpl.setInheritance(objectNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 
 	@Override
@@ -293,32 +286,25 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 	@Override
 	public void deactivateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
-		try {
-			Session s = jcr.getJCRSession();
-			Node objectNode = TransferManager.convertDTO2Node(object, s);
-			String callerPrincipal = ctx.getCallerPrincipal().getName();
+		Session s = jcr.getJCRSession();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
 
-			/* Authorization - Begin */
-			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
-							"GRANT", "object"));
-			/* Authorization - End */
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
+				throw new NoPermissionException(WasabiExceptionMessages.get(
+						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ACLService.activateInheritance()",
+						"GRANT", "object"));
+		/* Authorization - End */
 
-			ACLServiceImpl.setInheritance(objectNode, false, s);
+		ACLServiceImpl.setInheritance(objectNode, false, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 
-			// Set all rights for user at object
-			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-			ACLServiceImpl.create(objectNode, userNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ,
-					WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.EXECUTE,
-					WasabiPermission.WRITE, WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true,
-					true, true }, 0, 0, s);
-
-			s.save();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+		// Set all rights for user at object
+		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+		ACLServiceImpl.create(objectNode, userNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ,
+				WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
+				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0, s);
 	}
 
 	@Override
@@ -724,6 +710,6 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 						"wasabiwasabiLocation"));
 		/* Authorization - End */
 
-		ACLServiceImpl.reset(objectNode, s);
+		ACLServiceImpl.reset(objectNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 	}
 }
