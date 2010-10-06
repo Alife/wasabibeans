@@ -38,8 +38,13 @@ public interface WasabiConstants {
 	public final static boolean ACL_CERTIFICATE_ENABLE = true;
 
 	/* Storage size of certificate maps */
-	public final static int OBJECT_SERVICE_MAP_SIZE = 1000;
-	public final static int ROOM_SERVICE_MAP_SIZE = 1000;
+	public final static int VIEW_MAP_SIZE = 1000;
+	public final static int READ_MAP_SIZE = 1000;
+	public final static int COMMENT_MAP_SIZE = 1000;
+	public final static int EXECUTE_MAP_SIZE = 1000;
+	public final static int INSERT_MAP_SIZE = 1000;
+	public final static int WRITE_MAP_SIZE = 1000;
+	public final static int GRANT_MAP_SIZE = 1000;
 
 	/* JMS for event-handling */
 	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";

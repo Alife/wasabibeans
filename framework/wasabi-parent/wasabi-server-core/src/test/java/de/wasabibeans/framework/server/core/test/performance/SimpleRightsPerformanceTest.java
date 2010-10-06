@@ -39,11 +39,11 @@ import org.testng.annotations.Test;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
-import de.wasabibeans.framework.server.core.test.local.WasabiLocalTest;
+import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class SimpleRightsPerformanceTest extends WasabiLocalTest {
+public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
