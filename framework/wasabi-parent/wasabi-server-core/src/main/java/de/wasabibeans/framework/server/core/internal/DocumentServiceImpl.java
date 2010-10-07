@@ -265,9 +265,22 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static void remove(Node documentNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		ObjectServiceImpl.remove(documentNode, s, doJcrSave);
+	public static void remove(Node documentNode, Session s, boolean doJcrSave, boolean throwEvents, JmsConnector jms,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		try {
+			ObjectServiceImpl.removeRecursive(documentNode, s, true, jms, callerPrincipal);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static void rename(Node documentNode, String name, Session s, boolean doJcrSave, String callerPrincipal)

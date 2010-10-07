@@ -445,13 +445,12 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 						"document"));
 			else {
 				EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
-				WasabiLinkACL.remove(linkNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+				WasabiLinkACL.remove(linkNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms);
 			}
 		}
 		/* Authorization - End */
 		else {
-			EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
-			LinkServiceImpl.remove(linkNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+			LinkServiceImpl.remove(linkNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms, callerPrincipal);
 		}
 	}
 

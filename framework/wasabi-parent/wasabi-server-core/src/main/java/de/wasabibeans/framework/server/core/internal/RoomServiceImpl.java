@@ -47,6 +47,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class RoomServiceImpl {
 
@@ -217,6 +218,15 @@ public class RoomServiceImpl {
 		}
 	}
 
+	public static boolean isHomeRoom(Node roomNode, Session s) throws UnexpectedInternalProblemException {
+		try {
+			return RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
+					RoomServiceImpl.getRootHome(s).getIdentifier());
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static void move(Node roomNode, Node newEnvironmentNode, boolean checkIfHomeRoom, Session s,
 			boolean doJcrSave, String callerPrincipal) throws UnexpectedInternalProblemException,
 			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException {
@@ -253,15 +263,14 @@ public class RoomServiceImpl {
 		}
 	}
 
-	public static void remove(Node roomNode, boolean checkIfHomeRoom, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void remove(Node roomNode, boolean checkIfHomeRoom, Session s, boolean doJcrSave,
+			boolean throwEvents, JmsConnector jms, String callerPrincipal) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
-			if (checkIfHomeRoom
-					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
-							RoomServiceImpl.getRootHome(s).getIdentifier())) {
+			if (checkIfHomeRoom && isHomeRoom(roomNode, s)) {
 				throw new IllegalArgumentException("A user's home-room cannot be removed.");
 			}
-			ObjectServiceImpl.remove(roomNode, s, false);
+			ObjectServiceImpl.removeRecursive(roomNode, s, throwEvents, jms, callerPrincipal);
 
 			if (doJcrSave) {
 				s.save();

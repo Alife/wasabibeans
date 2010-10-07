@@ -32,18 +32,20 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
+import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
-import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class WasabiObjectACL {
 
-	public static void remove(Node objectNode, String callerPrincipal, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void remove(Node objectNode, String callerPrincipal, Session s, boolean doJcrSave,
+			boolean throwEvents, JmsConnector jms) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
-			removeRecursive(objectNode, callerPrincipal, s);
+			removeRecursive(objectNode, callerPrincipal, s, throwEvents, jms);
 			if (doJcrSave) {
 				s.save();
 			}
@@ -61,8 +63,8 @@ public class WasabiObjectACL {
 				removeACLEntriesRecursive(node);
 	}
 
-	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	private static int removeRecursive(Node objectNode, String callerPrincipal, Session s, boolean throwEvents,
+			JmsConnector jms) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			int childNodes = 0;
 			Vector<Node> childreenNodes = new Vector<Node>();
@@ -136,18 +138,17 @@ public class WasabiObjectACL {
 					if (objectType.equals(WasabiNodeType.CONTAINER))
 						WasabiContainerSQL.SQLQueryForRemove(objectUUID);
 
-					if (objectType.equals(WasabiNodeType.ROOM)) {
-						RoomServiceImpl.remove(objectNode, true, s, false);
-					} else {
-						ObjectServiceImpl.remove(objectNode, s, false);
+					if (throwEvents) {
+						EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
 					}
+					ObjectServiceImpl.remove(objectNode, s, false);
 
 					return 0;
 				} else
 					return 1;
 			} else {
 				for (Node node : childreenNodes) {
-					childNodes = childNodes + removeRecursive(node, callerPrincipal, s);
+					childNodes = childNodes + removeRecursive(node, callerPrincipal, s, throwEvents, jms);
 				}
 			}
 
@@ -155,11 +156,11 @@ public class WasabiObjectACL {
 				String objectUUID = objectNode.getIdentifier();
 				WasabiObjectSQL.SqlQueryForRemove(objectUUID);
 				WasabiRoomSQL.SQLQueryForRemove(objectUUID);
-				if (objectType.equals(WasabiNodeType.ROOM)) {
-					RoomServiceImpl.remove(objectNode, true, s, false);
-				} else {
-					ObjectServiceImpl.remove(objectNode, s, false);
+
+				if (throwEvents) {
+					EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
 				}
+				ObjectServiceImpl.remove(objectNode, s, false);
 
 				return 0;
 			}

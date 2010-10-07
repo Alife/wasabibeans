@@ -51,7 +51,7 @@ class FilterAuthTokenDelegate<T extends AuthTokenProvider.Parameter> extends Aut
 	public void deleteToken() {
 		try {
 			AttributeServiceImpl.remove(AttributeServiceImpl.getAttributeByName(userNode, getAttributeName()), userNode
-					.getSession(), true);
+					.getSession(), true, false, null, WasabiConstants.ROOT_USER_NAME);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

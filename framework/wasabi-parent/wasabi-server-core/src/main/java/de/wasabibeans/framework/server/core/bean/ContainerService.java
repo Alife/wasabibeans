@@ -429,13 +429,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
 						"container"));
 			else
-				WasabiContainerACL.remove(containerNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+				WasabiContainerACL.remove(containerNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
+						jms);
 		}
 		/* Authorization - End */
 		else {
-			// TODO special case for events due to recursive deletion of subtree
-			EventCreator.createRemovedEvent(containerNode, jms, callerPrincipal);
-			ContainerServiceImpl.remove(containerNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+			ContainerServiceImpl.remove(containerNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
+					callerPrincipal);
 		}
 
 	}

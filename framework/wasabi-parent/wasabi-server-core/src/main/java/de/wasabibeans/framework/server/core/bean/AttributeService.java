@@ -300,13 +300,13 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
 						"document"));
 			else
-				WasabiAttributeACL.remove(attributeNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+				WasabiAttributeACL.remove(attributeNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
+						jms);
 		}
 		/* Authorization - End */
 		else {
-			// TODO special case for events due to recursive deletion of subtree
-			EventCreator.createRemovedEvent(attributeNode, jms, callerPrincipal);
-			AttributeServiceImpl.remove(attributeNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+			AttributeServiceImpl.remove(attributeNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
+					callerPrincipal);
 		}
 
 	}

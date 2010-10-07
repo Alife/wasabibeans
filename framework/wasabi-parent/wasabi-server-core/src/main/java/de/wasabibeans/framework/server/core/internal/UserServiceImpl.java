@@ -299,8 +299,8 @@ public class UserServiceImpl {
 		}
 	}
 
-	public static void remove(Node userNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void remove(Node userNode, Session s, boolean doJcrSave, String callerPrincipal)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			/* ACL Environment - Begin */
 			WasabiUserSQL.SqlQueryForRemove(userNode);
@@ -311,7 +311,7 @@ public class UserServiceImpl {
 			// JCR
 			try {
 				Node homeRoom = getHomeRoom(userNode);
-				RoomServiceImpl.remove(homeRoom, false, s, false);
+				RoomServiceImpl.remove(homeRoom, false, s, false, false, null, callerPrincipal);
 			} catch (TargetDoesNotExistException tdnee) {
 				// nothing to remove if home room does not exist
 			}

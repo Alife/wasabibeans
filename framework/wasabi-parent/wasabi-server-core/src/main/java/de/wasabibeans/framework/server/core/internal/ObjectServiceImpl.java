@@ -48,10 +48,12 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
+import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class ObjectServiceImpl {
 
@@ -133,6 +135,81 @@ public class ObjectServiceImpl {
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static void removeRecursive(Node objectNode, Session s, boolean throwEvents, JmsConnector jms,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		try {
+			Vector<Node> childrenNodes = new Vector<Node>();
+			String objectType = objectNode.getPrimaryNodeType().getName();
+
+			if (objectType.equals(WasabiNodeType.ROOM)) {
+				NodeIterator RoomChildren = objectNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
+				NodeIterator ContainerChildren = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
+				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator LinkChildren = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
+				NodeIterator DocumentChildren = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+
+				while (RoomChildren.hasNext())
+					childrenNodes.add(RoomChildren.nextNode());
+
+				while (ContainerChildren.hasNext())
+					childrenNodes.add(ContainerChildren.nextNode());
+
+				while (AttributeChildren.hasNext())
+					childrenNodes.add(AttributeChildren.nextNode());
+
+				while (LinkChildren.hasNext())
+					childrenNodes.add(LinkChildren.nextNode());
+
+				while (DocumentChildren.hasNext())
+					childrenNodes.add(DocumentChildren.nextNode());
+			} else if (objectType.equals(WasabiNodeType.CONTAINER)) {
+				NodeIterator ContainerChildren = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
+				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator LinkChildren = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
+				NodeIterator DocumentChildren = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+
+				while (ContainerChildren.hasNext())
+					childrenNodes.add(ContainerChildren.nextNode());
+
+				while (AttributeChildren.hasNext())
+					childrenNodes.add(AttributeChildren.nextNode());
+
+				while (LinkChildren.hasNext())
+					childrenNodes.add(LinkChildren.nextNode());
+
+				while (DocumentChildren.hasNext())
+					childrenNodes.add(DocumentChildren.nextNode());
+			} else if (objectType.equals(WasabiNodeType.DOCUMENT)) {
+				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+
+				while (AttributeChildren.hasNext())
+					childrenNodes.add(AttributeChildren.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ATTRIBUTE)) {
+				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+
+				while (AttributeChildren.hasNext())
+					childrenNodes.add(AttributeChildren.nextNode());
+			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUP)) {
+				NodeIterator GroupChildren = objectNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
+
+				while (GroupChildren.hasNext())
+					childrenNodes.add(GroupChildren.nextNode());
+			}
+
+			for (Node node : childrenNodes) {
+				removeRecursive(node, s, throwEvents, jms, callerPrincipal);
+			}
+
+			if (throwEvents) {
+				EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
+			}
+			ObjectServiceImpl.remove(objectNode, s, false);
+
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

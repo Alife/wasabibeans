@@ -517,13 +517,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
 						"document"));
 			else
-				WasabiDocumentACL.remove(documentNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+				WasabiDocumentACL.remove(documentNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
+						jms);
 		}
 		/* Authorization - End */
 		else {
-			// TODO special case for events due to recursive deletion of subtree
-			EventCreator.createRemovedEvent(documentNode, jms, callerPrincipal);
-			DocumentServiceImpl.remove(documentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+			DocumentServiceImpl
+					.remove(documentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms, callerPrincipal);
 		}
 
 	}

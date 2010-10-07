@@ -36,6 +36,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiAttributeACL {
@@ -106,8 +107,9 @@ public class WasabiAttributeACL {
 		}
 	}
 
-	public static void remove(Node attributeNode, String callerPrincipal, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(attributeNode, callerPrincipal, s, doJcrSave);
+	public static void remove(Node attributeNode, String callerPrincipal, Session s, boolean doJcrSave,
+			boolean throwEvents, JmsConnector jms) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
+		WasabiObjectACL.remove(attributeNode, callerPrincipal, s, doJcrSave, throwEvents, jms);
 	}
 }

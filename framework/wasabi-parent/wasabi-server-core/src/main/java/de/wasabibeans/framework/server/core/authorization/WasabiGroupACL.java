@@ -31,6 +31,7 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class WasabiGroupACL {
 
@@ -69,8 +70,8 @@ public class WasabiGroupACL {
 		}
 	}
 
-	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave);
+	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave, boolean throwEvents,
+			JmsConnector jms) throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave, throwEvents, jms);
 	}
 }
