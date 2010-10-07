@@ -24,7 +24,7 @@ package de.wasabibeans.framework.server.core.internal;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import de.wasabibeans.framework.server.core.authorization.Certificate;
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -33,10 +33,10 @@ public class AuthorizationServiceImpl {
 	public static boolean hasPermission(String objectUUID, String userUUID, int permission, 
 
 			Node objectNode, Node userNode, Session s) throws UnexpectedInternalProblemException {
-		if (Certificate.getCertificate(userUUID, objectUUID, permission))
+		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
 			return true;
 		else if (WasabiAuthorizer.authorize(objectNode, ObjectServiceImpl.getName(userNode), permission, s)) {
-			Certificate.setCertificate(userUUID, objectUUID, permission);
+			WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
 			return true;
 		} else
 			return false;

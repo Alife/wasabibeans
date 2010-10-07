@@ -49,7 +49,7 @@ public class WasabiRoomACL {
 			if (doJcrSave) {
 				s.save();
 			}
-			WasabiRoomSQL.createRandomSQLinserts();
+			//WasabiRoomSQL.createRandomSQLinserts();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

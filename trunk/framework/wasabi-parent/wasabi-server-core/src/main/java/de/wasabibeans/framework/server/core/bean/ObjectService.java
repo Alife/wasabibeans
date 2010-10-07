@@ -42,7 +42,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
-import de.wasabibeans.framework.server.core.authorization.Certificate;
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -102,13 +102,13 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 			if (WasabiConstants.ACL_CHECK_ENABLE)
 				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 					if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-						if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+						if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 								WasabiPermission.VIEW))
 							if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 								throw new NoPermissionException(WasabiExceptionMessages
 										.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_EXISTS));
 							else
-								Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+								WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 										WasabiPermission.VIEW);
 					} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 						throw new NoPermissionException(WasabiExceptionMessages
@@ -137,14 +137,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getCreatedBy()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -169,14 +169,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getCreatedOn()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -209,14 +209,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getModifiedBy()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -241,14 +241,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getModifiedOn()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -268,19 +268,19 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
-		long start1 = java.lang.System.nanoTime();
+//		long start1 = java.lang.System.nanoTime();
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getModifiedOn()", "VIEW or READ", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -288,12 +288,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 							"VIEW or READ", "object"));
 		}
 		/* Authorization - End */
-		long end1 = java.lang.System.nanoTime();
-		long time = (end1 - start1);
-		Certificate.sum = Certificate.sum + time;
-		System.out.println("getName pass1: " + time);
-		System.out.println("sum: " + Certificate.sum);
-		System.out.println("-------");
+//		long end1 = java.lang.System.nanoTime();
+//		long time = (end1 - start1);
+//		Certificate.sum = Certificate.sum + time;
+//		System.out.println("getName pass1: " + time);
+//		System.out.println("sum: " + Certificate.sum);
+//		System.out.println("-------");
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(objectNode);
 		return TransferManager.convertValue2DTO(ObjectServiceImpl.getName(objectNode), optLockId);
@@ -412,14 +412,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.READ))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getUUID()",
 									"READ", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.READ);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -457,14 +457,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.GRANT))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.setCreatedBy()", "GRANT", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.GRANT);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -490,14 +490,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.GRANT))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.setCreatedOn()", "GRANT", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.GRANT);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -523,14 +523,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.GRANT))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.setModifiedBy()", "GRANT", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.GRANT);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
@@ -557,14 +557,14 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 							WasabiPermission.GRANT))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.setModifiedOn()", "GRANT", "object"));
 						else
-							Certificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
+							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(objectNode),
 									WasabiPermission.GRANT);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.GRANT, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(

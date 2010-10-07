@@ -36,7 +36,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
-import de.wasabibeans.framework.server.core.authorization.Certificate;
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.common.WasabiACLPriority;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -100,7 +100,7 @@ public class ACLServiceImpl {
 			updateInheritedRights(objectNode, identityNode, permission, allow, startTime, endTime, s);
 			updateRights(objectNode, identityNode, permission, allow, startTime, endTime, "");
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				Certificate.invalidateCertificate(objectNode, identityNode, permission, allow);
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allow);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -117,7 +117,7 @@ public class ACLServiceImpl {
 			updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
 			updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -151,7 +151,7 @@ public class ACLServiceImpl {
 
 					// delete certificates of children
 					if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-						Certificate.invalidateCertificate(node, identityNode, permission, allowance);
+						WasabiCertificate.invalidateCertificate(node, identityNode, permission, allowance);
 
 					String objectUUID = node.getIdentifier();
 					if (wasabiType == WasabiType.USER) {
@@ -669,7 +669,7 @@ public class ACLServiceImpl {
 			updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
 			updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -751,7 +751,7 @@ public class ACLServiceImpl {
 
 			// reset certificate for actual node
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				Certificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
 						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
 						0, 0, 0, 0 });
@@ -1042,7 +1042,7 @@ public class ACLServiceImpl {
 
 		// reset certificate for actual node
 		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -1238,7 +1238,7 @@ public class ACLServiceImpl {
 
 		// reset certificate for actual node
 		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
