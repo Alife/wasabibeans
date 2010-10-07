@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.remote;
 import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -33,9 +34,9 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface LockingServiceRemote {
 
 	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
-			LockingException, ObjectDoesNotExistException, NoPermissionException;
+			LockingException, ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 }
