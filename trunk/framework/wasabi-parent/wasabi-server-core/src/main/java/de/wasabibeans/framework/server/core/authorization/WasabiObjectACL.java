@@ -36,6 +36,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 
 public class WasabiObjectACL {
 
@@ -135,7 +136,11 @@ public class WasabiObjectACL {
 					if (objectType.equals(WasabiNodeType.CONTAINER))
 						WasabiContainerSQL.SQLQueryForRemove(objectUUID);
 
-					ObjectServiceImpl.remove(objectNode, s, false);
+					if (objectType.equals(WasabiNodeType.ROOM)) {
+						RoomServiceImpl.remove(objectNode, true, s, false);
+					} else {
+						ObjectServiceImpl.remove(objectNode, s, false);
+					}
 
 					return 0;
 				} else
@@ -150,7 +155,11 @@ public class WasabiObjectACL {
 				String objectUUID = objectNode.getIdentifier();
 				WasabiObjectSQL.SqlQueryForRemove(objectUUID);
 				WasabiRoomSQL.SQLQueryForRemove(objectUUID);
-				ObjectServiceImpl.remove(objectNode, s, false);
+				if (objectType.equals(WasabiNodeType.ROOM)) {
+					RoomServiceImpl.remove(objectNode, true, s, false);
+				} else {
+					ObjectServiceImpl.remove(objectNode, s, false);
+				}
 
 				return 0;
 			}
