@@ -141,7 +141,6 @@ public abstract class Filter implements Serializable, Cloneable {
 
 		private static MimeType getMimeType(Node documentNode) throws UnexpectedInternalProblemException {
 			try {
-				// TODO how can this ever work?????????????????????
 				return new MimeType(new MimetypesFileTypeMap().getContentType(ObjectServiceImpl.getName(documentNode)));
 			} catch (MimeTypeParseException e) {
 				throw new RuntimeException(e);
