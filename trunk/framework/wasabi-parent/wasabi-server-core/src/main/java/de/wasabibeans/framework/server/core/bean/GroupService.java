@@ -92,7 +92,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -100,7 +100,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		if (GroupServiceImpl.getGroupByName(name, s) != null) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name));
 		}
 
 		Node parentGroupNode = null;
@@ -224,7 +224,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public WasabiGroupDTO getGroupByName(String groupName) throws UnexpectedInternalProblemException,
 			NoPermissionException {
 		if (groupName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -247,7 +247,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	@Override
 	public Vector<WasabiGroupDTO> getGroupsByDisplayName(String displayName) throws UnexpectedInternalProblemException {
 		if (displayName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"display-name"));
 		}
 
@@ -276,7 +276,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public WasabiUserDTO getMemberByName(WasabiGroupDTO group, String userName) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
 		if (userName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -386,7 +386,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	public WasabiGroupDTO getSubGroupByName(WasabiGroupDTO group, String name) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -520,7 +520,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 	@Override
 	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
-			NoPermissionException {
+			NoPermissionException, ObjectAlreadyExistsException {
 		Session s = jcr.getJCRSession();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node newParentGroupNode = null;
@@ -599,7 +599,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -624,7 +624,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
 			NoPermissionException {
 		if (displayName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"displayname"));
 		}
 
@@ -641,7 +641,8 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		/* Authorization - End */
 
 		Locker.checkOptLockId(groupNode, group, optLockId);
-		GroupServiceImpl.setDisplayName(groupNode, displayName, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
+		GroupServiceImpl
+				.setDisplayName(groupNode, displayName, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
 		EventCreator.createPropertyChangedEvent(groupNode, WasabiProperty.NAME, displayName, jms, callerPrincipal);
 	}
 }

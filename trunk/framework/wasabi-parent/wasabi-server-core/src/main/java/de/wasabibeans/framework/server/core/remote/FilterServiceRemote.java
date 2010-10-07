@@ -25,6 +25,7 @@ import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiPipelineDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -37,7 +38,8 @@ import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 public interface FilterServiceRemote extends ObjectServiceRemote {
 
 	WasabiPipelineDTO create(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException;
+			ObjectAlreadyExistsException, NoPermissionException, ObjectDoesNotExistException,
+			ConcurrentModificationException;
 
 	WasabiPipelineDTO getPipeline(String name) throws UnexpectedInternalProblemException;
 

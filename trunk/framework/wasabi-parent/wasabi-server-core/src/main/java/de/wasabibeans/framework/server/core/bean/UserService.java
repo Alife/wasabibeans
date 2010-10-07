@@ -70,13 +70,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 	@Override
 	public WasabiUserDTO create(String name, String password) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException {
+			ObjectAlreadyExistsException, ConcurrentModificationException, NoPermissionException,
+			ObjectDoesNotExistException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 		if (password == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"password"));
 		}
 
@@ -132,8 +133,12 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				Vector<String> authorizedUsers = WasabiAuthorizer.authorizePermission(s.getRootNode(), callerPrincipal,
 						WasabiPermission.VIEW, WasabiType.USER, s);
 				for (String id : authorizedUsers) {
-					Node user = UserServiceImpl.getUserById(id, s);
-					users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+					try {
+						Node user = UserServiceImpl.getUserById(id, s);
+						users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+					} catch (ObjectDoesNotExistException odnee) {
+						// ...
+					}
 				}
 			}
 			/* Authorization - End */
@@ -298,7 +303,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public WasabiUserDTO getUserByName(String userName) throws UnexpectedInternalProblemException,
 			NoPermissionException {
 		if (userName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -320,7 +325,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public WasabiUserDTO getUserByName(WasabiRoomDTO room, String userName) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
 		if (userName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -386,7 +391,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	@Override
 	public Vector<WasabiUserDTO> getUsersByDisplayName(String displayName) throws UnexpectedInternalProblemException {
 		if (displayName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"display-name"));
 		}
 
@@ -510,7 +515,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException, TargetDoesNotExistException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -535,7 +540,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
 		if (displayName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"displayname"));
 		}
 
@@ -561,7 +566,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 	public void setPassword(WasabiUserDTO user, String password) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
 		if (password == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"password"));
 		}
 

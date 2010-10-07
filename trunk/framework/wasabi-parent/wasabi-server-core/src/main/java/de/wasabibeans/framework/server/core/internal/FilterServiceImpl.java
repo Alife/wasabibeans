@@ -38,12 +38,14 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Binary;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -82,7 +84,8 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 public class FilterServiceImpl {
 
 	public static Node create(String name, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
-			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		try {
 			Node rootOfPipelinesNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_USERS_NAME);
 			Node pipelineNode = rootOfPipelinesNode.addNode(name, WasabiNodeType.PIPELINE);
@@ -96,14 +99,22 @@ public class FilterServiceImpl {
 			return pipelineNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "pipeline", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void updateOrCreate(String name, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		Node pipelineNode = getPipeline(name, s);
 
 		if (pipelineNode != null) {
@@ -116,13 +127,15 @@ public class FilterServiceImpl {
 	public static boolean isEmbeddable(Node pipelineNode) throws UnexpectedInternalProblemException {
 		try {
 			return pipelineNode.getProperty(WasabiNodeProperty.EMBEDDABLE).getBoolean();
+		} catch (PathNotFoundException pnfe) {
+			return false;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void setFilter(Node pipelineNode, Filter filter, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			// convert filter to inputstream
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -138,11 +151,16 @@ public class FilterServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_VALUE_SAVE, "filter"), io);
+					WasabiExceptionMessages.VALUE_SAVE, "filter"), io);
 		}
 	}
 
@@ -151,11 +169,16 @@ public class FilterServiceImpl {
 			Binary filter = pipelineNode.getProperty(WasabiNodeProperty.FILTER).getBinary();
 			ObjectInputStream oIn = new ObjectInputStream(filter.getStream());
 			return (Filter) oIn.readObject();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_VALUE_LOAD, "filter", "pipeline"), e);
+					WasabiExceptionMessages.VALUE_LOAD, "filter", "pipeline"), e);
+		} catch (ClassNotFoundException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.VALUE_LOAD, "filter", "pipeline"), e);
 		}
 	}
 

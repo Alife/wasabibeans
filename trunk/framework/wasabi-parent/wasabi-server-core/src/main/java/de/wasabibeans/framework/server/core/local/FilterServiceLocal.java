@@ -40,7 +40,8 @@ import de.wasabibeans.framework.server.core.pipes.filter.Filter;
 public interface FilterServiceLocal extends ObjectServiceLocal {
 
 	WasabiPipelineDTO create(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, NoPermissionException;
+			ObjectAlreadyExistsException, NoPermissionException, ObjectDoesNotExistException,
+			ConcurrentModificationException;
 
 	WasabiPipelineDTO getPipeline(String name) throws UnexpectedInternalProblemException, NoPermissionException;
 
@@ -50,5 +51,6 @@ public interface FilterServiceLocal extends ObjectServiceLocal {
 			ConcurrentModificationException, NoPermissionException;
 
 	void updateOrCreate(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, NoPermissionException;
+			ObjectAlreadyExistsException, NoPermissionException, ObjectDoesNotExistException,
+			ConcurrentModificationException;
 }

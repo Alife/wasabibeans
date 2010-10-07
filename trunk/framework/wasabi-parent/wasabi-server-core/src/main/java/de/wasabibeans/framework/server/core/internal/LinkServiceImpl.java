@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.internal;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -41,6 +42,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -48,7 +50,7 @@ public class LinkServiceImpl {
 
 	public static Node create(String name, Node destinationNode, Node environmentNode, Session s, boolean doJcrSave,
 			String callerPrincipal) throws ObjectAlreadyExistsException, UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
 			Node linkNode = environmentNode.addNode(WasabiNodeProperty.LINKS + "/" + name, WasabiNodeType.LINK);
 			setDestination(linkNode, destinationNode, s, false, null);
@@ -67,10 +69,14 @@ public class LinkServiceImpl {
 			return linkNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "link", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "link"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -83,7 +89,7 @@ public class LinkServiceImpl {
 		} catch (PathNotFoundException pnfe) {
 			return null;
 		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -93,9 +99,13 @@ public class LinkServiceImpl {
 		return ObjectServiceImpl.getEnvironment(linkNode);
 	}
 
-	public static Node getLinkById(String id, Session s) throws UnexpectedInternalProblemException {
+	public static Node getLinkById(String id, Session s) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		try {
 			return s.getNodeByIdentifier(id);
+		} catch (ItemNotFoundException infe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.OBJECT_DNE_ID, id), infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -178,7 +188,8 @@ public class LinkServiceImpl {
 	}
 
 	public static void move(Node linkNode, Node newEnvironmentNode, Session s, boolean doJcrSave, String callerPrincipal)
-			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException {
+			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		try {
 			linkNode.getSession().move(linkNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.LINKS + "/" + linkNode.getName());
@@ -193,13 +204,14 @@ public class LinkServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String name = linkNode.getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "link", name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -211,12 +223,13 @@ public class LinkServiceImpl {
 	}
 
 	public static void rename(Node linkNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		ObjectServiceImpl.rename(linkNode, name, s, doJcrSave, callerPrincipal);
 	}
 
 	public static void setDestination(Node linkNode, Node objectNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			linkNode.setProperty(WasabiNodeProperty.DESTINATION, objectNode);
 			ObjectServiceImpl.modified(linkNode, s, false, callerPrincipal, false);
@@ -224,6 +237,11 @@ public class LinkServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

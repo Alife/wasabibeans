@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.internal;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -43,13 +44,15 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class RoomServiceImpl {
 
 	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
 			// special case when creating the room of the root user or when creating the wasabi home room
@@ -72,10 +75,14 @@ public class RoomServiceImpl {
 			return roomNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "room", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "room"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -135,9 +142,13 @@ public class RoomServiceImpl {
 		return authorizedRooms;
 	}
 
-	public static Node getRoomById(String id, Session s) throws UnexpectedInternalProblemException {
+	public static Node getRoomById(String id, Session s) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		try {
 			return s.getNodeByIdentifier(id);
+		} catch (ItemNotFoundException infe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.OBJECT_DNE_ID, id), infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -208,7 +219,7 @@ public class RoomServiceImpl {
 
 	public static void move(Node roomNode, Node newEnvironmentNode, boolean checkIfHomeRoom, Session s,
 			boolean doJcrSave, String callerPrincipal) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException {
+			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
 			if (checkIfHomeRoom
 					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
@@ -229,13 +240,14 @@ public class RoomServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String name = roomNode.getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "room", name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -254,13 +266,19 @@ public class RoomServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void rename(Node roomNode, String name, boolean checkIfHomeRoom, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
 			if (checkIfHomeRoom
 					&& RoomServiceImpl.getEnvironment(roomNode).getIdentifier().equals(
@@ -272,6 +290,16 @@ public class RoomServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (ItemExistsException iee) {
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -280,7 +308,7 @@ public class RoomServiceImpl {
 	// ------------------------------------- Wasabi Pipes -----------------------------------------------------
 
 	public static void setPipeline(Node roomNode, Node pipelineNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			roomNode.setProperty(WasabiNodeProperty.PIPELINE, pipelineNode);
 			ObjectServiceImpl.modified(roomNode, s, false, callerPrincipal, false);
@@ -288,6 +316,11 @@ public class RoomServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -300,7 +333,7 @@ public class RoomServiceImpl {
 		} catch (PathNotFoundException pnfe) {
 			return null;
 		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

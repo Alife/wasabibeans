@@ -99,8 +99,7 @@ public class TransferManager {
 					Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
 					return node;
 				} catch (ItemNotFoundException ie) {
-					throw new ObjectDoesNotExistException(WasabiExceptionMessages.TRANSFER_DTO2NODE_FAILURE,
-							wasabiObjectDTO, ie);
+					throw new ObjectDoesNotExistException(WasabiExceptionMessages.TRANSFER_DTO2NODE_FAILURE, ie);
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				}

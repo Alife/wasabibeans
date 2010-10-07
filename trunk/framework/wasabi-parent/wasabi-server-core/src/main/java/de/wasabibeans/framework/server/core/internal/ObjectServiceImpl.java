@@ -25,7 +25,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -48,13 +50,17 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class ObjectServiceImpl {
 
-	public static Node get(String id, Session s) throws UnexpectedInternalProblemException {
+	public static Node get(String id, Session s) throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		try {
 			return s.getNodeByIdentifier(id);
+		} catch (ItemNotFoundException infe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.OBJECT_DNE_ID, id), infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -85,7 +91,8 @@ public class ObjectServiceImpl {
 	}
 
 	public static void rename(Node objectNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			objectNode.getSession().move(objectNode.getPath(), objectNode.getParent().getPath() + "/" + name);
 			ObjectServiceImpl.modified(objectNode, s, false, callerPrincipal, false);
@@ -94,13 +101,15 @@ public class ObjectServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String what = objectNode.getPrimaryNodeType().getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, what, name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -119,14 +128,11 @@ public class ObjectServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
-			try {
-				String what = objectNode.getPrimaryNodeType().getName();
-				throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_LOCKING_REMOVE_FAILURE, what), le);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -137,6 +143,8 @@ public class ObjectServiceImpl {
 			return objectNode.getProperty(WasabiNodeProperty.CREATED_BY).getNode();
 		} catch (PathNotFoundException pnfe) { // created by not set
 			return null;
+		} catch (ItemNotFoundException infe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -145,6 +153,8 @@ public class ObjectServiceImpl {
 	public static Date getCreatedOn(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.CREATED_ON).getDate().getTime();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -155,6 +165,8 @@ public class ObjectServiceImpl {
 			return objectNode.getProperty(WasabiNodeProperty.MODIFIED_BY).getNode();
 		} catch (PathNotFoundException pnfe) { // modified by not set
 			return null;
+		} catch (ItemNotFoundException infe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -163,6 +175,8 @@ public class ObjectServiceImpl {
 	public static Date getModifiedOn(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.MODIFIED_ON).getDate().getTime();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -712,22 +726,27 @@ public class ObjectServiceImpl {
 	}
 
 	public static void setCreatedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, userNode);
 
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void setCreatedOn(Node objectNode, Date creationTime, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		if (creationTime == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"creationTime"));
 		}
 		try {
@@ -738,28 +757,38 @@ public class ObjectServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void setModifiedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.MODIFIED_BY, userNode);
 
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void setModifiedOn(Node objectNode, Date modificationTime, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		if (modificationTime == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"modificationTime"));
 		}
 		try {
@@ -770,6 +799,11 @@ public class ObjectServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -784,13 +818,18 @@ public class ObjectServiceImpl {
 	}
 
 	public static void setOptLockId(Node objectNode, long optLockId, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			objectNode.setProperty(WasabiNodeProperty.OPT_LOCK_ID, optLockId);
 
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -808,9 +847,10 @@ public class ObjectServiceImpl {
 	 * @param callerPrincipal
 	 * @param nullEntryEnabled
 	 * @throws UnexpectedInternalProblemException
+	 * @throws ConcurrentModificationException
 	 */
 	public static void created(Node objectNode, Session s, boolean doJcrSave, String callerPrincipal,
-			boolean nullEntryEnabled) throws UnexpectedInternalProblemException {
+			boolean nullEntryEnabled) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node currentUser = null;
 			if (callerPrincipal != null) {
@@ -830,6 +870,11 @@ public class ObjectServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -846,9 +891,10 @@ public class ObjectServiceImpl {
 	 * @param callerPrincipal
 	 * @param nullEntryEnabled
 	 * @throws UnexpectedInternalProblemException
+	 * @throws ConcurrentModificationException
 	 */
 	public static void modified(Node objectNode, Session s, boolean doJcrSave, String callerPrincipal,
-			boolean nullEntryEnabled) throws UnexpectedInternalProblemException {
+			boolean nullEntryEnabled) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			Node currentUser = null;
 			if (callerPrincipal != null) {
@@ -870,6 +916,11 @@ public class ObjectServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

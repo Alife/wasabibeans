@@ -71,7 +71,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -98,7 +98,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 	public WasabiContainerDTO getContainerByName(WasabiLocationDTO location, String name)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -445,7 +445,7 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
 			ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

@@ -23,6 +23,7 @@ package de.wasabibeans.framework.server.core.internal;
 
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -39,12 +40,13 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class GroupServiceImpl {
 
 	public static void addMember(Node groupNode, Node userNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
 			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
@@ -58,8 +60,13 @@ public class GroupServiceImpl {
 			}
 		} catch (ItemExistsException iee) {
 			// do nothing, user is already a member of the group
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -67,7 +74,8 @@ public class GroupServiceImpl {
 	}
 
 	public static Node create(String name, Node parentGroupNode, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			Node newGroup;
 			if (parentGroupNode != null) {
@@ -94,9 +102,16 @@ public class GroupServiceImpl {
 				s.save();
 			}
 			return newGroup;
+		} catch (ItemExistsException iee) {
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "group"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -124,6 +139,8 @@ public class GroupServiceImpl {
 	public static String getDisplayName(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getProperty(WasabiNodeProperty.DISPLAY_NAME).getString();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -257,7 +274,8 @@ public class GroupServiceImpl {
 	}
 
 	public static void move(Node groupNode, Node newParentGroupNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException,
+			ObjectAlreadyExistsException, ObjectDoesNotExistException {
 		try {
 			if (newParentGroupNode != null) {
 				groupNode.getSession().move(groupNode.getPath(),
@@ -281,10 +299,18 @@ public class GroupServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (ItemExistsException iee) {
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-
 	}
 
 	public static void remove(Node groupNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
@@ -305,19 +331,23 @@ public class GroupServiceImpl {
 			}
 		} catch (PathNotFoundException pnfe) {
 			// do nothing, user to be removed is not a member
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.INTERNAL_LOCKING_GENERAL_FAILURE, le);
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void rename(Node groupNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			if (getGroupByName(name, groupNode.getSession()) != null) {
 				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "group", name), name);
+						WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name));
 			}
 
 			groupNode.getSession().move(groupNode.getPath(), groupNode.getParent().getPath() + "/" + name);
@@ -326,6 +356,13 @@ public class GroupServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -342,7 +379,7 @@ public class GroupServiceImpl {
 	}
 
 	public static void setDisplayName(Node groupNode, String displayName, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			groupNode.setProperty(WasabiNodeProperty.DISPLAY_NAME, displayName);
 			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);
@@ -350,6 +387,11 @@ public class GroupServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
