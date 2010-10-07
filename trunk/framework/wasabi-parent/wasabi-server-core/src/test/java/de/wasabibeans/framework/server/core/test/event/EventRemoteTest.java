@@ -22,6 +22,7 @@
 package de.wasabibeans.framework.server.core.test.event;
 
 import java.util.HashMap;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJBException;
@@ -98,6 +99,21 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			} catch (JMSException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	// helper class for receiving multiple events
+	private class EventListenerMultiple implements MessageListener {
+
+		private Vector<Message> received;
+
+		public EventListenerMultiple(Vector<Message> received) {
+			this.received = received;
+		}
+
+		@Override
+		public void onMessage(Message message) {
+			received.add(message);
 		}
 	}
 
@@ -179,8 +195,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 
 			WasabiRoomDTO testRoom2 = roomService().create("testRoom2", testRoom1);
 			subscribe(testRoom2);
-//			roomService().move(testRoom2, rootRoom, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// roomService().move(testRoom2, rootRoom, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			roomService().rename(testRoom2, "new", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
@@ -200,8 +216,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 			eventReceived.clear();
 
-//			attributeService().move(attribute, testRoom1, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// attributeService().move(attribute, testRoom1, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			attributeService().setValue(attribute, "newHallo", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
@@ -221,8 +237,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			unsubscribe(rootRoom);
 
 			subscribe(container);
-//			containerService().move(container, testRoom1, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// containerService().move(container, testRoom1, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			containerService().rename(container, "newName", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
@@ -242,8 +258,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 			eventReceived.clear(); // next test has same event type
 
-//			documentService().move(document, testRoom1, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// documentService().move(document, testRoom1, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			documentService().rename(document, "newDoc", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
@@ -265,8 +281,8 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			linkService().rename(link, "newLink", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
 
-//			linkService().move(link, testRoom1, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// linkService().move(link, testRoom1, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			linkService().remove(link, null);
 			assertEvents(WasabiEventType.REMOVED);
@@ -311,9 +327,9 @@ public class EventRemoteTest extends WasabiRemoteTest {
 			groupService().addMember(group, user);
 			assertEvents(WasabiEventType.MEMBER_ADDED);
 
-//			WasabiGroupDTO group2 = groupService().create("group2", wasabi);
-//			groupService().move(group, group2, null);
-//			assertEvents(WasabiEventType.MOVED);
+			// WasabiGroupDTO group2 = groupService().create("group2", wasabi);
+			// groupService().move(group, group2, null);
+			// assertEvents(WasabiEventType.MOVED);
 
 			groupService().rename(group, "newGroup", null);
 			assertEvents(WasabiEventType.PROPERTY_CHANGED);
@@ -340,6 +356,62 @@ public class EventRemoteTest extends WasabiRemoteTest {
 					connections.get(user).stop();
 					connections.get(user).close();
 				}
+			}
+		}
+	}
+
+	@Test
+	// tests that there are also events for objects in the subtree of an object that is removed
+	public void testRecursiveRemove() throws Exception {
+		eventReceived = new ConcurrentHashMap<String, Byte>();
+
+		Connection connection = null;
+		Session session = null;
+		MessageConsumer consumer = null;
+		try {
+			ConnectionFactory factory = (ConnectionFactory) reWaCon.lookupGeneral("ConnectionFactory");
+			// jms connection
+			connection = factory.createConnection("user", "user");
+			// jms session
+			session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+			// temporary queue for receiving events
+			Queue queue = session.createTemporaryQueue();
+			// jms consumer
+			consumer = session.createConsumer(queue);
+			// message listener
+			Vector<Message> received = new Vector<Message>();
+			consumer.setMessageListener(new EventListenerMultiple(received));
+			// start connection
+			connection.start();
+
+			// create test objects
+			WasabiRoomDTO testRoom = roomService().create("testRoom", rootRoom);
+			WasabiContainerDTO testContainer = containerService().create("testContainer", testRoom);
+			WasabiDocumentDTO testDocument = documentService().create("testDocument", testContainer);
+
+			// subscribe for events
+			eventService().subscribe(testRoom, queue.getQueueName(), true);
+			eventService().subscribe(testContainer, queue.getQueueName(), true);
+			eventService().subscribe(testDocument, queue.getQueueName(), true);
+
+			// trigger events
+			roomService().remove(testRoom, null);
+
+			// slow down a little bit so that incorrectly triggered events (if any) are not missed
+			Thread.sleep(500);
+			// assert that 5 events have been received (3 because a node I'm observing has been removed + 2 because a
+			// child of a node I'm observing has been removed)
+			AssertJUnit.assertEquals(5, received.size());
+		} finally {
+			if (consumer != null) {
+				consumer.close();
+			}
+			if (session != null) {
+				session.close();
+			}
+			if (connection != null) {
+				connection.stop();
+				connection.close();
 			}
 		}
 	}
@@ -486,7 +558,7 @@ public class EventRemoteTest extends WasabiRemoteTest {
 					AssertJUnit.fail();
 				}
 			}
-			
+
 			try {
 				eventService().subscribe(rootRoom, "randomName", true);
 				AssertJUnit.fail();

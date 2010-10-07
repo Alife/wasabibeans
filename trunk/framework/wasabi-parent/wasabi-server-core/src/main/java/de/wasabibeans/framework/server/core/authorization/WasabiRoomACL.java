@@ -34,7 +34,9 @@ import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiRoomACL {
@@ -104,8 +106,12 @@ public class WasabiRoomACL {
 		}
 	}
 
-	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave);
+	public static void remove(Node roomNode, String callerPrincipal, Session s, boolean doJcrSave, boolean throwEvents,
+			JmsConnector jms) throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		if (RoomServiceImpl.isHomeRoom(roomNode, s)) {
+			throw new IllegalArgumentException("A user's home-room cannot be removed.");
+		}
+
+		WasabiObjectACL.remove(roomNode, callerPrincipal, s, doJcrSave, throwEvents, jms);
 	}
 }

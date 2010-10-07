@@ -562,13 +562,11 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.remove()", "WRITE",
 						"document"));
 			else
-				WasabiGroupACL.remove(groupNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+				WasabiGroupACL.remove(groupNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms);
 		}
 		/* Authorization - End */
 		else {
-			// TODO special case for events due to recursive deletion of subtree
-			EventCreator.createRemovedEvent(groupNode, jms, callerPrincipal);
-			GroupServiceImpl.remove(groupNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+			GroupServiceImpl.remove(groupNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms, callerPrincipal);
 		}
 
 	}

@@ -54,6 +54,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class AttributeServiceImpl {
 
@@ -271,9 +272,22 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static void remove(Node attributeNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		ObjectServiceImpl.remove(attributeNode, s, doJcrSave);
+	public static void remove(Node attributeNode, Session s, boolean doJcrSave, boolean throwEvents, JmsConnector jms,
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
+		try {
+			ObjectServiceImpl.removeRecursive(attributeNode, s, true, jms, callerPrincipal);
+
+			if (doJcrSave) {
+				s.save();
+			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static void rename(Node attributeNode, String name, Session s, boolean doJcrSave, String callerPrincipal)

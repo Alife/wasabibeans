@@ -507,7 +507,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		Locker.checkOptLockId(userNode, user, optLockId);
 		EventCreator.createRemovedEvent(userNode, jms, callerPrincipal);
-		UserServiceImpl.remove(userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		UserServiceImpl.remove(userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
 	}
 
 	@Override
