@@ -44,7 +44,7 @@ import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
 import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 
 @Stateless(name = "CertificateService")
-public class Certificate implements CertificateServiceLocal, CertificateServiceRemote {
+public class WasabiCertificate implements CertificateServiceLocal, CertificateServiceRemote {
 
 	private static int certAccess = 0;
 

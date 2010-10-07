@@ -36,7 +36,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
-import de.wasabibeans.framework.server.core.authorization.Certificate;
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -84,13 +84,13 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
+					if (!WasabiCertificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getCreatedBy()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
+							WasabiCertificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
@@ -98,13 +98,13 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW))
+					if (!WasabiCertificate.getCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getCreatedBy()", "VIEW", "user"));
 						else
-							Certificate.setCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW);
+							WasabiCertificate.setCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
@@ -129,13 +129,13 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!Certificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
+					if (!WasabiCertificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
 						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 							throw new NoPermissionException(WasabiExceptionMessages.get(
 									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
 									"ObjectService.getCreatedBy()", "VIEW", "object"));
 						else
-							Certificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
+							WasabiCertificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
 				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
