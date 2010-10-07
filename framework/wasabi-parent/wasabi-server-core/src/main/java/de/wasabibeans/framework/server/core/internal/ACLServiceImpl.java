@@ -34,7 +34,9 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
+import de.wasabibeans.framework.server.core.authorization.Certificate;
 import de.wasabibeans.framework.server.core.common.WasabiACLPriority;
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
@@ -83,7 +85,7 @@ public class ACLServiceImpl {
 		return null;
 	}
 
-	public static void create(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, boolean[] allowance,
+	public static void create(Node objectNode, Node identityNode, int[] permission, boolean[] allowance,
 			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException {
 		if (permission.length != allowance.length) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(
@@ -91,25 +93,28 @@ public class ACLServiceImpl {
 		}
 
 		try {
-			updateInheritedRights(wasabiObjectNode, wasabiIdentityNode, permission, allowanceConverter(allowance),
-					startTime, endTime, s);
-			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowanceConverter(allowance), startTime,
-					endTime, "");
+			int[] allow = allowanceConverter(allowance);
+			updateInheritedRights(objectNode, identityNode, permission, allow, startTime, endTime, s);
+			updateRights(objectNode, identityNode, permission, allow, startTime, endTime, "");
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				Certificate.invalidateCertificate(objectNode, identityNode, permission, allow);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static void create(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, int[] allowance,
-			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException {
+	public static void create(Node objectNode, Node identityNode, int[] permission, int[] allowance, long startTime,
+			long endTime, Session s) throws UnexpectedInternalProblemException {
 		if (permission.length != allowance.length) {
 			throw new IllegalArgumentException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.INTERNAL_UNEQUAL_LENGTH, "permission", "allowance"));
 		}
 
 		try {
-			updateInheritedRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, s);
-			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, "");
+			updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
+			updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -131,14 +136,20 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void createInheritanceEntries(String parentId, Session s, WasabiType wasabiType, QueryRunner run,
-			String identityUUID, String parentUUID, int view, int read, int comment, int execute, int insert,
-			int write, int grant, long startTime, long endTime, String inheritance_id)
-			throws UnexpectedInternalProblemException {
+	private static void createInheritanceEntries(Node identityNode, int[] permission, int[] allowance, String parentId,
+			Session s, WasabiType wasabiType, QueryRunner run, String identityUUID, String parentUUID, int view,
+			int read, int comment, int execute, int insert, int write, int grant, long startTime, long endTime,
+			String inheritance_id) throws UnexpectedInternalProblemException, RepositoryException {
+
 		Vector<Node> NodesWithInheritace = getChildrenWithInheritace(parentId, s);
 		try {
 			if (!NodesWithInheritace.isEmpty()) {
 				for (Node node : NodesWithInheritace) {
+
+					// delete certificates of children
+					if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+						Certificate.invalidateCertificate(node, identityNode, permission, allowance);
+
 					String objectUUID = node.getIdentifier();
 					if (wasabiType == WasabiType.USER) {
 						// SQL insert query
@@ -171,8 +182,9 @@ public class ACLServiceImpl {
 							}
 						}
 						// next children
-						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parentId, view, read,
-								comment, execute, insert, write, grant, startTime, endTime, inheritance_id);
+						createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
+								identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
+								endTime, inheritance_id);
 					} else if (wasabiType == WasabiType.GROUP) {
 						// SQL insert query
 						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
@@ -205,8 +217,9 @@ public class ACLServiceImpl {
 						}
 
 						// next children
-						createInheritanceEntries(objectUUID, s, wasabiType, run, identityUUID, parentId, view, read,
-								comment, execute, insert, write, grant, startTime, endTime, inheritance_id);
+						createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
+								identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
+								endTime, inheritance_id);
 					}
 				}
 			}
@@ -642,16 +655,18 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void remove(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, long startTime,
-			long endTime, Session s) throws UnexpectedInternalProblemException {
+	public static void remove(Node objectNode, Node identityNode, int[] permission, long startTime, long endTime,
+			Session s) throws UnexpectedInternalProblemException {
 		int[] allowance = new int[permission.length];
 
 		for (int i = 0; i < allowance.length; i++)
 			allowance[i] = 0;
 
 		try {
-			updateRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, "");
-			updateInheritedRights(wasabiObjectNode, wasabiIdentityNode, permission, allowance, startTime, endTime, s);
+			updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
+			updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -719,6 +734,14 @@ public class ACLServiceImpl {
 	public static void resetInheritance(Node objectNode, String[] inheritance_ids)
 			throws UnexpectedInternalProblemException {
 		try {
+
+			// reset certificate for actual node
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				Certificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
 			String parentId = ObjectServiceImpl.getUUID(objectNode);
@@ -790,8 +813,6 @@ public class ACLServiceImpl {
 			objectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
 			Node parentNode = objectNode.getParent().getParent();
 
-			objectNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean();
-
 			if (inheritance == true) {
 
 				try {
@@ -805,14 +826,14 @@ public class ACLServiceImpl {
 
 							String wasabiUserID = wasabiACLEntry.getUser_Id();
 							String wasabiGroupID = wasabiACLEntry.getGroup_Id();
-							Node wasabiIdentityNode;
+							Node identityNode;
 							int[] allowance = new int[7];
 
 							// Get data from SQL result
 							if (wasabiUserID.isEmpty()) {
-								wasabiIdentityNode = s.getNodeByIdentifier(wasabiGroupID);
+								identityNode = s.getNodeByIdentifier(wasabiGroupID);
 							} else {
-								wasabiIdentityNode = s.getNodeByIdentifier(wasabiUserID);
+								identityNode = s.getNodeByIdentifier(wasabiUserID);
 							}
 
 							allowance[WasabiPermission.VIEW] = wasabiACLEntry.getView();
@@ -830,7 +851,7 @@ public class ACLServiceImpl {
 
 							// Case: explicit right. Inheritance id is equal to parent id.
 							if (inheritance_id.isEmpty()) {
-								updateRights(objectNode, wasabiIdentityNode, new int[] { WasabiPermission.VIEW,
+								updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
 										WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 										WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
 										allowance, startTime, endTime, parentNode.getIdentifier());
@@ -838,7 +859,7 @@ public class ACLServiceImpl {
 							// Case: inherited right. Inheritance id is equal to the given inheritance id (root node of
 							// this inherited right).
 							else {
-								updateRights(objectNode, wasabiIdentityNode, new int[] { WasabiPermission.VIEW,
+								updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
 										WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 										WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
 										allowance, startTime, endTime, inheritance_id);
@@ -846,10 +867,10 @@ public class ACLServiceImpl {
 						}
 
 						// Look child nodes and set entries if inheritance is true
-						Vector<Node> childreenNodes = new Vector<Node>();
-						childreenNodes = getChildren(objectNode);
+						Vector<Node> childrenNodes = new Vector<Node>();
+						childrenNodes = getChildren(objectNode);
 
-						for (Node node : childreenNodes) {
+						for (Node node : childrenNodes) {
 							if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 								setInheritance(node, true, s, false);
 						}
@@ -997,15 +1018,19 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void updateInheritedRights(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission,
-			int[] allowance, long startTime, long endTime, Session s) throws UnexpectedInternalProblemException,
-			RepositoryException {
+	private static void updateInheritedRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
+			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException, RepositoryException {
+
+		// reset certificate for actual node
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
-		String wasabiIdentityType = wasabiIdentityNode.getPrimaryNodeType().getName();
-		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(wasabiObjectNode));
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+		String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
+		String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
 
 		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 
@@ -1090,8 +1115,9 @@ public class ACLServiceImpl {
 							break;
 						}
 					}
-					createInheritanceEntries(objectUUID, s, WasabiType.USER, run, identityUUID, objectUUID, view, read,
-							comment, execute, insert, write, grant, startTime, endTime, objectUUID);
+					createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.USER, run,
+							identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
+							endTime, objectUUID);
 				}
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
@@ -1177,8 +1203,9 @@ public class ACLServiceImpl {
 							break;
 						}
 					}
-					createInheritanceEntries(objectUUID, s, WasabiType.GROUP, run, identityUUID, objectUUID, view,
-							read, comment, execute, insert, write, grant, startTime, endTime, objectUUID);
+					createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.GROUP, run,
+							identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
+							endTime, objectUUID);
 				}
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
@@ -1186,16 +1213,21 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void updateRights(Node wasabiObjectNode, Node wasabiIdentityNode, int[] permission, int[] allowance,
+	private static void updateRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
 			long startTime, long endTime, String inheritance_id) throws RepositoryException,
 			UnexpectedInternalProblemException {
+
+		// reset certificate for actual node
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			Certificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
-		String wasabiIdentityType = wasabiIdentityNode.getPrimaryNodeType().getName();
-		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(wasabiObjectNode));
-		String wasabiType = wasabiObjectNode.getPrimaryNodeType().getName();
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+		String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
+		String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
+		String wasabiType = objectNode.getPrimaryNodeType().getName();
 
 		int view, read, insert, write, execute, comment, grant;
 
