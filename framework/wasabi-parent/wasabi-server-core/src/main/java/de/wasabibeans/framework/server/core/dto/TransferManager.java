@@ -99,7 +99,8 @@ public class TransferManager {
 					Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
 					return node;
 				} catch (ItemNotFoundException ie) {
-					throw new ObjectDoesNotExistException(WasabiExceptionMessages.TRANSFER_DTO2NODE_FAILURE, ie);
+					throw new ObjectDoesNotExistException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.OBJECT_DNE_ID, wasabiObjectDTO.getId()), ie);
 				} catch (RepositoryException re) {
 					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 				}
@@ -107,7 +108,8 @@ public class TransferManager {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLSESSION);
 			}
 		} else {
-			throw new IllegalArgumentException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLDTO);
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
+					"DTO"));
 		}
 	}
 

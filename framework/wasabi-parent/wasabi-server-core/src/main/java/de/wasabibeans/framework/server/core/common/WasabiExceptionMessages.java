@@ -37,12 +37,10 @@ public class WasabiExceptionMessages {
 	public final static String SQL_LOGIN_MODULE_LOGIN_FAILURE = "Username or password incorrect.";
 
 	/* TransferManager */
-	public final static String TRANSFER_DTO2NODE_FAILURE = "Could not convert DTO to internal representation. Internal representation may not exist anymore.";
-	public final static String TRANSFER_DTO2NODE_NULLDTO = "The given DTO must not be null.";
 	public final static String TRANSFER_DTO2NODE_NULLSESSION = "Internal Problem: Attempted to convert DTO to JCR node without a given JCR session.";
 	public final static String TRANSFER_NODE2DTO_NULLNODE = "Internal Problem: Attempted to convert null to DTO.";
 	public final static String TRANSFER_NODE2DTO_REFLECTERROR = "Internal Problem: Could not create corresponding DTO for given JCR node.";
-	public final static String TRANSFER_VALUE2DTO_NULLVERSION = "Internal Problem: Attempted to convert value to DTO with null version";
+	public final static String TRANSFER_VALUE2DTO_NULLVERSION = "Internal Problem: Attempted to convert value to DTO without valid optLockId";
 
 	/* JNDI */
 	public final static String JNDI_FAILED_BIND = "Internal Problem: Could not bind &0 to JNDI context.";
@@ -87,15 +85,16 @@ public class WasabiExceptionMessages {
 	/* Target not found */
 	public final static String TARGET_NOT_FOUND = "The referenced WasabiObject does not exist any more";
 
+	/* Locking */
+	public final static String LOCKING_OPTLOCK = "The given optLockId does not match the actual one. Please refresh your data and try again.";
+	public final static String LOCKING_TOKEN_NULL = "The lock-token of the given DTO must not be null.";
+
+	/* Versioning */
+	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
+
 	/* Internal Services */
 	public final static String INTERNAL_PROBLEM = "Unexpected internal problem.";
-	public final static String INTERNAL_LOCKING_GENERAL = "Exclusive access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification.";
-	public final static String INTERNAL_LOCKING_CREATION_FAILURE = "A new &0 could not be created because there was a deep lock on the parent object.";
-	public final static String INTERNAL_LOCKING_REMOVE_FAILURE = "A &0 could not be removed because there was a deep lock on the parent object.";
-	public final static String INTERNAL_LOCKING_GENERAL_FAILURE = "The operation could not be performed because of an existing lock.";
-	public final static String INTERNAL_LOCKING_OPTLOCK = "Write access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification. Please refresh your data and try again.";
-	public final static String INTERNAL_LOCKING_TOKEN_NULL = "The lock-token of the given WasabiObject-DTO must not be null.";
-	public final static String INTERNAL_LOCKING_NOT_DEEP = "The currently held lock is not deep, but a deep lock is required.";
+	public final static String INTERNAL_EJB_CONTAINER_PROBLEM = "The services of the EJB container could not be used as expected.";
 	public final static String INTERNAL_NO_ROOT_ROOM = "Internal Problem: The root room does not exist.";
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
@@ -111,6 +110,4 @@ public class WasabiExceptionMessages {
 	public final static String AUTHORIZATION_NO_PERMISSION_RETURN = "You don't have the permission to access: &0 requires &1 permission at requested data.";
 	public final static String AUTHORIZATION_NO_PERMISSION_ADMIN = "You don't have the permission to access: Administrative user needed for this operation.";
 
-	/* Versioning */
-	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
 }

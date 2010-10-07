@@ -1,15 +1,18 @@
 package de.wasabibeans.framework.server.core.internal;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class VersioningServiceImpl {
@@ -23,9 +26,10 @@ public class VersioningServiceImpl {
 	 * @param comment
 	 * @param versionManager
 	 * @throws UnexpectedInternalProblemException
+	 * @throws ConcurrentModificationException 
 	 */
 	public static void createVersionRecursively(Node node, String label, String comment, VersionManager versionManager)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			// check whether the node supports versioning
 			VersionHistory versionHistory = null;
@@ -47,6 +51,11 @@ public class VersioningServiceImpl {
 			Version version = versionManager.checkin(node.getPath());
 			versionHistory.addVersionLabel(version.getName(), label, false);
 			versionManager.checkout(node.getPath());
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -60,9 +69,10 @@ public class VersioningServiceImpl {
 	 * @param label
 	 * @param versionManager
 	 * @throws UnexpectedInternalProblemException
+	 * @throws ConcurrentModificationException 
 	 */
 	public static void restoreVersionRecursively(Node node, String label, VersionManager versionManager)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			// check whether the node supports versioning
 			try {
@@ -80,6 +90,11 @@ public class VersioningServiceImpl {
 			// restore the version
 			versionManager.restoreByLabel(node.getPath(), label, true);
 			versionManager.checkout(node.getPath());
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

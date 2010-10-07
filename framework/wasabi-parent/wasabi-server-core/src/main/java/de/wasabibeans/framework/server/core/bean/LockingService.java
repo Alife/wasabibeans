@@ -43,6 +43,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -78,7 +79,7 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 	}
 
 	public <T extends WasabiObjectDTO> T lock(T object, boolean isDeep) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, LockingException, NoPermissionException {
+			ObjectDoesNotExistException, LockingException, NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -107,12 +108,12 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 	}
 
 	public <T extends WasabiObjectDTO> T unlock(T object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
 		if (object == null) {
 			return null;
 		}
 		if (object.getLockToken() == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.INTERNAL_LOCKING_TOKEN_NULL);
+			throw new IllegalArgumentException(WasabiExceptionMessages.LOCKING_TOKEN_NULL);
 		}
 
 		Session s = jcr.getJCRSession();
