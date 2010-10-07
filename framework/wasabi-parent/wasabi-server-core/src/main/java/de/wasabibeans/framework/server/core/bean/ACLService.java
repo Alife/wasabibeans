@@ -52,6 +52,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiACLEntryTemplateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -79,7 +80,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 	@Override
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -285,7 +286,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 	@Override
 	public void deactivateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -697,7 +698,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 	@Override
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();

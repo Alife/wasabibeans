@@ -25,10 +25,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -44,6 +46,7 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.util.SqlConnector;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
@@ -686,20 +689,26 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void reset(Node objectNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException {
+	public static void reset(Node objectNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			setInheritance(objectNode, true, s, false);
 			resetChildren(objectNode, s, false);
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	private static void resetChildren(Node wasabiObjectNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -726,6 +735,11 @@ public class ACLServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -807,7 +821,7 @@ public class ACLServiceImpl {
 	}
 
 	public static void setInheritance(Node objectNode, boolean inheritance, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 			objectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
@@ -904,6 +918,11 @@ public class ACLServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
