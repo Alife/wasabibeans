@@ -71,7 +71,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, ObjectAlreadyExistsException,
 			AttributeValueException, ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -99,7 +99,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, AttributeValueException,
 			ObjectDoesNotExistException, ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -147,7 +147,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 	public WasabiAttributeDTO getAttributeByName(WasabiObjectDTO object, String name)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -217,7 +217,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, AttributeValueException,
 			NoPermissionException {
 		if (type == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"type"));
 		}
 
@@ -316,7 +316,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectAlreadyExistsException,
 			ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

@@ -303,7 +303,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 	public Vector<WasabiObjectDTO> getObjectsByAttributeName(String attributeName)
 			throws UnexpectedInternalProblemException {
 		if (attributeName == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"attributeName"));
 		}
 
@@ -376,7 +376,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 	@Override
 	public Vector<WasabiObjectDTO> getObjectsByName(String name) throws UnexpectedInternalProblemException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

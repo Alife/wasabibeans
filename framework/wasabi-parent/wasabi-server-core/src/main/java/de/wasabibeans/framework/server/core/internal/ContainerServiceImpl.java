@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.internal;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -39,12 +40,14 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class ContainerServiceImpl {
 
 	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			Node containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
 					WasabiNodeType.CONTAINER);
@@ -63,10 +66,14 @@ public class ContainerServiceImpl {
 			return containerNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "container", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "container"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -207,7 +214,8 @@ public class ContainerServiceImpl {
 	}
 
 	public static void move(Node containerNode, Node newEnvironmentNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
 			containerNode.getSession().move(containerNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.CONTAINERS + "/" + containerNode.getName());
@@ -222,17 +230,17 @@ public class ContainerServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String name = containerNode.getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "container", name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-
 	}
 
 	public static void remove(Node containerNode, Session s, boolean doJcrSave)
@@ -241,7 +249,8 @@ public class ContainerServiceImpl {
 	}
 
 	public static void rename(Node containerNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		ObjectServiceImpl.rename(containerNode, name, s, doJcrSave, callerPrincipal);
 	}
 }

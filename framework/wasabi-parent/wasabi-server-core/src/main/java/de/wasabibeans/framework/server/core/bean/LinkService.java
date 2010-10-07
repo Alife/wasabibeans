@@ -73,7 +73,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -140,7 +140,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 	public WasabiLinkDTO getLinkByName(WasabiLocationDTO location, String name) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -460,7 +460,7 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 			ObjectAlreadyExistsException, ObjectDoesNotExistException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

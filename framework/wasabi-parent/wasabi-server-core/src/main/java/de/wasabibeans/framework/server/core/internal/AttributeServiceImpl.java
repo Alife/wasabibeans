@@ -31,6 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import javax.jcr.Binary;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -50,6 +51,7 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.AttributeValueException;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -57,7 +59,7 @@ public class AttributeServiceImpl {
 
 	public static Node create(String name, Serializable value, Node affiliationNode, Session s, boolean doJcrSave,
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
-			AttributeValueException, ConcurrentModificationException {
+			AttributeValueException, ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
@@ -77,10 +79,14 @@ public class AttributeServiceImpl {
 			return attributeNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "attribute", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -88,7 +94,7 @@ public class AttributeServiceImpl {
 
 	public static Node create(String name, Node valueNode, Node affiliationNode, Session s, boolean doJcrSave,
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
-			ConcurrentModificationException {
+			ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
 			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
 					WasabiNodeType.ATTRIBUTE);
@@ -108,10 +114,14 @@ public class AttributeServiceImpl {
 			return attributeNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "attribute", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -149,9 +159,13 @@ public class AttributeServiceImpl {
 		}
 	}
 
-	public static Node getAttributeById(String id, Session s) throws UnexpectedInternalProblemException {
+	public static Node getAttributeById(String id, Session s) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		try {
 			return s.getNodeByIdentifier(id);
+		} catch (ItemNotFoundException infe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.OBJECT_DNE_ID, id), infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -193,17 +207,17 @@ public class AttributeServiceImpl {
 					return (T) oIn.readObject();
 				}
 			} else {
-				throw new AttributeValueException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_ATTRIBUTE_WRONG_TYPE, actualAttributeType));
+				throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_WRONG_TYPE,
+						actualAttributeType));
 			}
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
-			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
-					"value", "attribute"), io);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD, "value",
+					"attribute"), io);
 		} catch (ClassNotFoundException cnfe) {
-			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
-					"value", "attribute"), cnfe);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD, "value",
+					"attribute"), cnfe);
 		}
 	}
 
@@ -217,18 +231,19 @@ public class AttributeServiceImpl {
 			if (actualAttributeType.contains(WasabiConstants.JCR_NS_PREFIX)) {
 				return attributeNode.getProperty(WasabiNodeProperty.VALUE).getNode();
 			} else {
-				throw new AttributeValueException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_ATTRIBUTE_WRONG_TYPE, actualAttributeType));
+				throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_WRONG_TYPE,
+						actualAttributeType));
 			}
 		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void move(Node attributeNode, Node newAffiliationNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
 			attributeNode.getSession().move(attributeNode.getPath(),
 					newAffiliationNode.getPath() + "/" + WasabiNodeProperty.ATTRIBUTES + "/" + attributeNode.getName());
@@ -243,13 +258,14 @@ public class AttributeServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String name = attributeNode.getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "attribute", name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -261,12 +277,14 @@ public class AttributeServiceImpl {
 	}
 
 	public static void rename(Node attributeNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		ObjectServiceImpl.rename(attributeNode, name, s, doJcrSave, callerPrincipal);
 	}
 
 	public static void setValue(Node attributeNode, Serializable value, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException, AttributeValueException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, AttributeValueException,
+			ConcurrentModificationException {
 		try {
 			if (value == null || value instanceof String) {
 				attributeNode.setProperty(WasabiNodeProperty.VALUE, (String) value);
@@ -316,16 +334,21 @@ public class AttributeServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
-			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_SAVE,
-					"value"), io);
+			throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_SAVE, "value"),
+					io);
 		}
 	}
 
 	public static void setWasabiValue(Node attributeNode, Node valueNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			if (valueNode != null) {
 				Value value = attributeNode.getSession().getValueFactory().createValue(valueNode, true);
@@ -340,6 +363,11 @@ public class AttributeServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

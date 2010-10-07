@@ -53,13 +53,14 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 	@Override
 	public WasabiPipelineDTO create(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, NoPermissionException {
+			ObjectAlreadyExistsException, NoPermissionException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 		if (filter == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"filter"));
 		}
 
@@ -81,7 +82,7 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 	@Override
 	public WasabiPipelineDTO getPipeline(String name) throws UnexpectedInternalProblemException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -136,13 +137,14 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 	@Override
 	public void updateOrCreate(String name, Filter filter) throws UnexpectedInternalProblemException,
-			ObjectAlreadyExistsException, NoPermissionException {
+			ObjectAlreadyExistsException, NoPermissionException, ObjectDoesNotExistException,
+			ConcurrentModificationException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 		if (filter == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"filter"));
 		}
 

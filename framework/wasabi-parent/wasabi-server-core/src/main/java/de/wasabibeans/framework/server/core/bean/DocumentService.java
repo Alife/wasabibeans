@@ -78,7 +78,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ObjectDoesNotExistException,
 			ConcurrentModificationException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -122,7 +122,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -532,7 +532,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 			UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

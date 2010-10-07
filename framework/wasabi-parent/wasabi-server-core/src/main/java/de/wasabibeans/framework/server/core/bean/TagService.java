@@ -60,7 +60,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	public void addTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		if (tag == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"tag"));
 		}
 
@@ -101,7 +101,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	public Vector<WasabiDocumentDTO> getDocumentsByTags(WasabiLocationDTO environment, Vector<String> tags)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException {
 		if (tags == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"tags"));
 		}
 
@@ -136,7 +136,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	@Override
 	public Vector<WasabiObjectDTO> getObjectsByTag(String tag) throws UnexpectedInternalProblemException {
 		if (tag == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"tag"));
 		}
 
@@ -179,7 +179,7 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 	public void removeTag(WasabiObjectDTO object, String tag) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException {
 		if (tag == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"tag"));
 		}
 

@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.jcr.Binary;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -75,7 +76,8 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 public class DocumentServiceImpl {
 
 	public static Node create(String name, Node environmentNode, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		try {
 			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
 					WasabiNodeType.DOCUMENT);
@@ -94,10 +96,14 @@ public class DocumentServiceImpl {
 			return documentNode;
 		} catch (ItemExistsException iee) {
 			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "document", name), name, iee);
+					WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_NAME, name), iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "document"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -112,7 +118,7 @@ public class DocumentServiceImpl {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (Exception e) {
-			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
+			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD,
 					"content", "document"), e);
 		}
 	}
@@ -122,15 +128,19 @@ public class DocumentServiceImpl {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.DOCUMENT).getNode();
 		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.INTERNAL_REFERENCE_INVALID, infe);
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
-	public static Node getDocumentById(String id, Session s) throws UnexpectedInternalProblemException {
+	public static Node getDocumentById(String id, Session s) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException {
 		try {
 			return s.getNodeByIdentifier(id);
+		} catch (ItemNotFoundException infe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages
+					.get(WasabiExceptionMessages.OBJECT_DNE_ID, id), infe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -226,7 +236,8 @@ public class DocumentServiceImpl {
 	}
 
 	public static void move(Node documentNode, Node newEnvironmentNode, Session s, boolean doJcrSave,
-			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
+			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
 			documentNode.getSession().move(documentNode.getPath(),
 					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/" + documentNode.getName());
@@ -241,13 +252,14 @@ public class DocumentServiceImpl {
 				s.save();
 			}
 		} catch (ItemExistsException iee) {
-			try {
-				String name = documentNode.getName();
-				throw new ObjectAlreadyExistsException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.INTERNAL_OBJECT_ALREADY_EXISTS, "document", name), name, iee);
-			} catch (RepositoryException re) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-			}
+			throw new ObjectAlreadyExistsException(WasabiExceptionMessages.OBJECT_ALREADY_EXISTS_ENV, iee);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -259,7 +271,8 @@ public class DocumentServiceImpl {
 	}
 
 	public static void rename(Node documentNode, String name, Session s, boolean doJcrSave, String callerPrincipal)
-			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException {
+			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
+			ObjectDoesNotExistException {
 		ObjectServiceImpl.rename(documentNode, name, s, doJcrSave, callerPrincipal);
 	}
 
@@ -285,12 +298,15 @@ public class DocumentServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
-			throw new ConcurrentModificationException("Object is locked", le);
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
-			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_SAVE,
+			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_SAVE,
 					"content"), io);
 		}
 	}
@@ -328,9 +344,11 @@ public class DocumentServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.INTERNAL_LOCKING_CREATION_FAILURE, "attribute"), le);
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -353,10 +371,16 @@ public class DocumentServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
-		} catch (IOException io) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_PROBLEM, io);
+		} catch (InvalidItemStateException iise) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (IOException io) {
+			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_SAVE,
+					"content"), io);
 		}
 	}
 
@@ -397,10 +421,10 @@ public class DocumentServiceImpl {
 				return IOUtil.convert2Serializable(out.toByteArray());
 			}
 		} catch (IOException io) {
-			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
+			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD,
 					"content", "document"), io);
 		} catch (ClassNotFoundException cnfe) {
-			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_VALUE_LOAD,
+			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD,
 					"content", "document"), cnfe);
 		}
 	}
@@ -416,6 +440,8 @@ public class DocumentServiceImpl {
 	public static String getFilterClass(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.FILTER_CLASS).getString();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -424,6 +450,8 @@ public class DocumentServiceImpl {
 	public static String getJsonData(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.JSONDATA).getString();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -432,6 +460,8 @@ public class DocumentServiceImpl {
 	public static String getMimeType(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.MIME_TYPE).getString();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -452,6 +482,8 @@ public class DocumentServiceImpl {
 	public static String getRef(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.REF).getString();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -460,6 +492,8 @@ public class DocumentServiceImpl {
 	public static Long getSize(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.SIZE).getLong();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -468,6 +502,8 @@ public class DocumentServiceImpl {
 	public static Boolean isContentAvailable(Node contentrefNode) throws UnexpectedInternalProblemException {
 		try {
 			return contentrefNode.getProperty(WasabiNodeProperty.IS_CONTENT_AVAILABLE).getBoolean();
+		} catch (PathNotFoundException pnfe) {
+			return false;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

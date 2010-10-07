@@ -53,22 +53,42 @@ public class WasabiExceptionMessages {
 
 	/* JCR */
 	public final static String JCR_REPOSITORY_FAILURE = "Internal Problem: Could not use JCR repository as expected.";
-	
+
 	/* JMS */
 	public final static String JMS_PROVIDER_FAILURE = "Internal Problem: Could not use JMS provider as expected.";
 	public final static String JMS_DESTINATION_INVALID = "The given jmsDestinationName does not belong to an existing JMS &0.";
 
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
-	
+
 	/* Pipes */
 	public final static String PIPES_NOT_FOUND = "The configured wasabi pipe could not be found.";
 
+	/* Concurrent Modification */
+	public final static String CONCURRENT_MOD_LOCKED = "The object &0 is locked.";
+	public final static String CONCURRENT_MOD_INVALIDSTATE = "The operation could not be performed because of a concurrent modification. Please refresh your data and try again.";
+
+	/* Object does not exist */
+	public final static String OBJECT_DNE_ID = "The object with the id &0 does not exist.";
+	public final static String OBJECT_DNE = "An object does not exist any more or has been moved.";
+
+	/* Object already exists */
+	public final static String OBJECT_ALREADY_EXISTS_NAME = "An object with the name '&0' already exists.";
+	public final static String OBJECT_ALREADY_EXISTS_ENV = "An object with the same name already exists in the new environment";
+
+	/* Invalid Argument */
+	public final static String INVALID_ARG_NULL = "The given &0 must not be null.";
+
+	/* Value */
+	public final static String VALUE_WRONG_TYPE = "A value of the requested type is not stored. The currently stored value has the type &0.";
+	public final static String VALUE_SAVE = "An exception occurred while trying to save the given &0.";
+	public final static String VALUE_LOAD = "An exception occurred while trying to load the &0 of the given &1.";
+
+	/* Target not found */
+	public final static String TARGET_NOT_FOUND = "The referenced WasabiObject does not exist any more";
+
 	/* Internal Services */
 	public final static String INTERNAL_PROBLEM = "Unexpected internal problem.";
-	public final static String INTERNAL_VALUE_SAVE = "An exception occurred while trying to save the given &0.";
-	public final static String INTERNAL_VALUE_LOAD = "An exception occurred while trying to load the &0 of the given &1.";
-	public final static String INTERNAL_ATTRIBUTE_WRONG_TYPE = "A value of the requested type is not stored. The currently stored value has the type &0.";
 	public final static String INTERNAL_LOCKING_GENERAL = "Exclusive access to the WasabiObject &0 could not be acquired, because there may have been a concurrent modification.";
 	public final static String INTERNAL_LOCKING_CREATION_FAILURE = "A new &0 could not be created because there was a deep lock on the parent object.";
 	public final static String INTERNAL_LOCKING_REMOVE_FAILURE = "A &0 could not be removed because there was a deep lock on the parent object.";
@@ -80,9 +100,7 @@ public class WasabiExceptionMessages {
 	public final static String INTERNAL_NO_HOME_ROOM = "Internal Problem: The home room does not exist.";
 	public final static String INTERNAL_NO_USER = "User does not exist.";
 	public final static String INTERNAL_NO_WASABI_GROUP = "Internal Problem: The wasabi group does not exist.";
-	public final static String INTERNAL_OBJECT_ALREADY_EXISTS = "The &0 &1 already exists.";
-	public final static String INTERNAL_REFERENCE_INVALID = "The referenced WasabiObject does not exist any more";
-	public final static String INTERNAL_PARAM_NULL = "The given &0 must not be null.";
+
 	public final static String INTERNAL_TYPE_CONFLICT = "Wrong WasabiType.";
 	public final static String INTERNAL_UNEQUAL_LENGTH = "Count of &0 differs to count of &1.";
 
@@ -92,7 +110,7 @@ public class WasabiExceptionMessages {
 	public final static String AUTHORIZATION_NO_PERMISSION_GROUP = "You don't have the permission to access: &0 requires &1 permission at group &2.";
 	public final static String AUTHORIZATION_NO_PERMISSION_RETURN = "You don't have the permission to access: &0 requires &1 permission at requested data.";
 	public final static String AUTHORIZATION_NO_PERMISSION_ADMIN = "You don't have the permission to access: Administrative user needed for this operation.";
-	
+
 	/* Versioning */
 	public final static String VERSIONING_NOT_SUPPORTED = "Versioning is only supported for wasabi-rooms, wasabi-containers, and wasabi-documents.";
 }

@@ -85,7 +85,7 @@ public interface GroupServiceRemote extends ObjectServiceRemote {
 
 	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
-			NoPermissionException;
+			NoPermissionException, ObjectAlreadyExistsException;
 
 	public void remove(WasabiGroupDTO group, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException;

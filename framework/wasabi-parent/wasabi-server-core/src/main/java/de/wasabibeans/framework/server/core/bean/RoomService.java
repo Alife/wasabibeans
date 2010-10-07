@@ -73,7 +73,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, NoPermissionException,
 			ConcurrentModificationException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -139,7 +139,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 	public WasabiRoomDTO getRoomByName(WasabiRoomDTO room, String name) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 
@@ -493,7 +493,7 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 			ObjectDoesNotExistException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			NoPermissionException {
 		if (name == null) {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INTERNAL_PARAM_NULL,
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
 					"name"));
 		}
 

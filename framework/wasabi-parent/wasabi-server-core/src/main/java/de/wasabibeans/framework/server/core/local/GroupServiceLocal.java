@@ -85,7 +85,7 @@ public interface GroupServiceLocal extends ObjectServiceLocal {
 
 	public void move(WasabiGroupDTO group, WasabiGroupDTO newParentGroup, Long optLockId)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, ConcurrentModificationException,
-			NoPermissionException;
+			NoPermissionException, ObjectAlreadyExistsException;
 
 	public void remove(WasabiGroupDTO group, Long optLockId) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, ConcurrentModificationException, NoPermissionException;
