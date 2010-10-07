@@ -21,17 +21,22 @@
 
 package de.wasabibeans.framework.server.core.remote;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
+import de.wasabibeans.framework.server.core.exception.NoPermissionException;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
-@Local
+@Remote
 public interface AuthorizationServiceRemote {
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission);
+	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, int permission);
+	public boolean hasPermission(WasabiObjectDTO wasabiObject, int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public boolean returnTrue();
 

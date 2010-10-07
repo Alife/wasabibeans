@@ -19,25 +19,26 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.local;
+package de.wasabibeans.framework.server.core.internal;
 
-import javax.ejb.Local;
+import javax.jcr.Node;
+import javax.jcr.Session;
 
-import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
-import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.NoPermissionException;
-import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.authorization.Certificate;
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
-@Local
-public interface AuthorizationServiceLocal {
+public class AuthorizationServiceImpl {
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, int permission) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, NoPermissionException;
+	public static boolean hasPermission(String objectUUID, String userUUID, int permission, 
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
-
-	public boolean returnTrue();
-
+			Node objectNode, Node userNode, Session s) throws UnexpectedInternalProblemException {
+		if (Certificate.getCertificate(userUUID, objectUUID, permission))
+			return true;
+		else if (WasabiAuthorizer.authorize(objectNode, ObjectServiceImpl.getName(userNode), permission, s)) {
+			Certificate.setCertificate(userUUID, objectUUID, permission);
+			return true;
+		} else
+			return false;
+	}
 }
