@@ -40,7 +40,7 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 public class WasabiRoomACL {
 
 	public static void ACLEntryForCreate(Node roomNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 				ACLServiceImpl.setInheritance(roomNode, true, s, false);
@@ -54,7 +54,7 @@ public class WasabiRoomACL {
 	}
 
 	public static void ACLEntryForMove(Node roomNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);

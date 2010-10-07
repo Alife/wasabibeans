@@ -32,6 +32,7 @@ import de.wasabibeans.framework.server.core.dto.WasabiACLEntryTemplateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiIdentityDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiLocationDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
+import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -40,7 +41,7 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 public interface ACLServiceLocal {
 
 	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
@@ -73,7 +74,7 @@ public interface ACLServiceLocal {
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
@@ -141,5 +142,5 @@ public interface ACLServiceLocal {
 			NoPermissionException;
 
 	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 }
