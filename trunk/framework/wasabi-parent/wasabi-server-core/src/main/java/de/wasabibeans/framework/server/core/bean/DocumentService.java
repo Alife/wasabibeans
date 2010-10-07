@@ -102,7 +102,7 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 	}
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, DocumentContentException, NoPermissionException {
+			ObjectDoesNotExistException, DocumentContentException, NoPermissionException, TargetDoesNotExistException {
 		Session s = jcr.getJCRSession();
 		Node documentNode = TransferManager.convertDTO2Node(document, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();

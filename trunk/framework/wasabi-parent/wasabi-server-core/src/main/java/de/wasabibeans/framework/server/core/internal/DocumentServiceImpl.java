@@ -400,7 +400,7 @@ public class DocumentServiceImpl {
 	}
 
 	public static Serializable getContentPiped(Node documentNode, Node contentref)
-			throws UnexpectedInternalProblemException, DocumentContentException {
+			throws UnexpectedInternalProblemException, DocumentContentException, TargetDoesNotExistException {
 		try {
 			if (contentref == null && getContentRefs(documentNode).hasNext()) {
 				contentref = getContentRefs(documentNode).nextNode();

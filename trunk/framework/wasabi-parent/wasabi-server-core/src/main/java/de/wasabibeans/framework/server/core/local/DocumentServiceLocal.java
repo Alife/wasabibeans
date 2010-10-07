@@ -52,7 +52,7 @@ public interface DocumentServiceLocal extends ObjectServiceLocal {
 			ConcurrentModificationException, NoPermissionException;
 
 	public WasabiValueDTO getContent(WasabiDocumentDTO document) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, DocumentContentException, NoPermissionException;
+			ObjectDoesNotExistException, DocumentContentException, NoPermissionException, TargetDoesNotExistException;
 
 	public WasabiDocumentDTO getDocumentByName(WasabiLocationDTO location, String name)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;

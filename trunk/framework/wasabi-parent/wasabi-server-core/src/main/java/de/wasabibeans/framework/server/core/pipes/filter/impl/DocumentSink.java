@@ -33,6 +33,7 @@ import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -66,12 +67,8 @@ public class DocumentSink extends AnnotationBasedFilter implements ContentStore,
 	}
 
 	@Override
-	public InputStream getContent(Node ref) {
-		try {
-			return new ByteArrayInputStream((byte[]) DocumentServiceImpl.getContent(DocumentServiceImpl
-					.getDocument(ref)));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	public InputStream getContent(Node ref) throws UnexpectedInternalProblemException, DocumentContentException,
+			TargetDoesNotExistException {
+		return new ByteArrayInputStream((byte[]) DocumentServiceImpl.getContent(DocumentServiceImpl.getDocument(ref)));
 	}
 }
