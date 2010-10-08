@@ -24,9 +24,11 @@ package de.wasabibeans.framework.server.core.authorization;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 
 public class WasabiUserACL {
@@ -37,14 +39,17 @@ public class WasabiUserACL {
 				WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.GRANT };
 		boolean[] allow = { true, true, true, true, true, true, true };
 
-		// user gets all rights at his homeRoom and himself
-		ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0);
-		ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0);
+		if (!ObjectServiceImpl.getName(userNode).equals(WasabiConstants.ROOT_USER_NAME)
+				&& !ObjectServiceImpl.getName(userNode).equals(WasabiConstants.ADMIN_USER_NAME)) {
+			// user gets all rights at his homeRoom and himself
+			ACLServiceImpl.create(userNode, userNode, rights, allow, 0, 0);
+			ACLServiceImpl.create(homeRoomNode, userNode, rights, allow, 0, 0);
 
-		if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
-			Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-			if (callerPrincipalNode != userNode)
-				ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Node callerPrincipalNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+				if (callerPrincipalNode != userNode)
+					ACLServiceImpl.create(userNode, callerPrincipalNode, rights, allow, 0, 0);
+			}
 		}
 	}
 }
