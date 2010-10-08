@@ -59,7 +59,7 @@ public class LinkServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiLinkACL.ACLEntryForCreate(linkNode, s, false);
+				WasabiLinkACL.ACLEntryForCreate(linkNode);
 				WasabiLinkACL.ACLEntryTemplateForCreate(linkNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
@@ -198,7 +198,7 @@ public class LinkServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiLinkACL.ACLEntryForMove(linkNode, s, false);
+				WasabiLinkACL.ACLEntryForMove(linkNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

@@ -96,7 +96,7 @@ public class GroupServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiGroupACL.ACLEntryForCreate(newGroup, s, false);
+				WasabiGroupACL.ACLEntryForCreate(newGroup, callerPrincipal, s);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {
@@ -113,6 +113,17 @@ public class GroupServiceImpl {
 		} catch (LockException le) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
 					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	public static Node getAdminGroup(Session s) throws UnexpectedInternalProblemException {
+		try {
+			return s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getNode(
+					WasabiConstants.ADMINS_GROUP_NAME);
+		} catch (PathNotFoundException pnfe) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_WASABI_GROUP, pnfe);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -284,7 +295,7 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode, s, false);
+					WasabiGroupACL.ACLEntryForMove(groupNode);
 				/* ACL Environment - End */
 			} else {
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
@@ -292,7 +303,7 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode, s, false);
+					WasabiGroupACL.ACLEntryForMove(groupNode);
 				/* ACL Environment - End */
 			}
 			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);

@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
@@ -40,29 +39,19 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiDocumentACL {
 
-	public static void ACLEntryForCreate(Node documentNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(documentNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+	public static void ACLEntryForCreate(Node documentNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
+		if (ACLServiceImpl.getInheritance(documentNode))
+			ACLServiceImpl.setInheritance(documentNode, true);
 	}
 
-	public static void ACLEntryForMove(Node documentNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void ACLEntryForMove(Node documentNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			String[] inheritance_ids = WasabiDocumentSQL.SQLQueryForMove(documentNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(documentNode, inheritance_ids);
-			if (documentNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(documentNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
+			if (ACLServiceImpl.getInheritance(documentNode))
+				ACLServiceImpl.setInheritance(documentNode, true);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -98,7 +87,7 @@ public class WasabiDocumentACL {
 					ACLServiceImpl.create(documentNode, callerPrincipalNode, new int[] { WasabiPermission.VIEW,
 							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, allowance,
-							startTime, endTime, s);
+							startTime, endTime);
 				}
 			}
 		}

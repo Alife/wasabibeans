@@ -239,7 +239,7 @@ public class UserServiceImpl {
 	 * due to efficiency reasons).
 	 * 
 	 * @param roomNode
-	 *            the node representing a wasabi-user
+	 *            the node representing a wasabi-room
 	 * @return {@code NodeIterator} containing nodes of type wasabi:objectref
 	 * @throws UnexpectedInternalProblemException
 	 * @throws UnexpectedInternalProblemException

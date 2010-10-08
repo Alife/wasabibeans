@@ -93,7 +93,8 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 						"GRANT", "wasabiObject"));
 		/* Authorization - End */
 
-		ACLServiceImpl.setInheritance(objectNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.setInheritanceNodeProperty(objectNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.setInheritance(objectNode, true);
 	}
 
 	@Override
@@ -116,7 +117,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		boolean[] allow = new boolean[1];
 		perm[0] = permission;
 		allow[0] = allowance;
-		ACLServiceImpl.create(objectNode, identityNode, perm, allow, 0, 0, s);
+		ACLServiceImpl.create(objectNode, identityNode, perm, allow, 0, 0);
 	}
 
 	@Override
@@ -140,7 +141,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		boolean[] allow = new boolean[1];
 		perm[0] = permission;
 		allow[0] = allowance;
-		ACLServiceImpl.create(objectNode, identityNode, perm, allow, startTime, endTime, s);
+		ACLServiceImpl.create(objectNode, identityNode, perm, allow, startTime, endTime);
 	}
 
 	@Override
@@ -160,7 +161,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		/* Authorization - End */
 
 		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
-		ACLServiceImpl.create(objectNode, identityNode, permission, allowance, 0, 0, s);
+		ACLServiceImpl.create(objectNode, identityNode, permission, allowance, 0, 0);
 	}
 
 	@Override
@@ -187,7 +188,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		Node identityNode = TransferManager.convertDTO2Node(wasabiIdentity, s);
 
 		for (int i = 0; i < endTime.length; i++)
-			ACLServiceImpl.create(objectNode, identityNode, permission, allowance, startTime[i], endTime[i], s);
+			ACLServiceImpl.create(objectNode, identityNode, permission, allowance, startTime[i], endTime[i]);
 	}
 
 	@Override
@@ -299,18 +300,21 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 						"GRANT", "object"));
 		/* Authorization - End */
 
-		ACLServiceImpl.setInheritance(objectNode, false, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.setInheritanceNodeProperty(objectNode, false, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.setInheritance(objectNode, false);
 
 		// Set all rights for user at object
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		ACLServiceImpl.create(objectNode, userNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ,
 				WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
-				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0, s);
+				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0);
 	}
 
 	@Override
 	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException {
+		// TODO nullcheck
+
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(wasabiObject, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
@@ -549,7 +553,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 		int[] perm = new int[1];
 		perm[0] = permission;
-		ACLServiceImpl.remove(objectNode, identityNode, perm, 0, 0, s);
+		ACLServiceImpl.remove(objectNode, identityNode, perm, 0, 0);
 	}
 
 	@Override
@@ -570,7 +574,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 		int[] perm = new int[1];
 		perm[0] = permission;
-		ACLServiceImpl.remove(objectNode, identityNode, perm, startTime, endTime, s);
+		ACLServiceImpl.remove(objectNode, identityNode, perm, startTime, endTime);
 	}
 
 	@Override
@@ -589,7 +593,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 						"wasabiObject"));
 		/* Authorization - End */
 
-		ACLServiceImpl.remove(objectNode, identityNode, permission, 0, 0, s);
+		ACLServiceImpl.remove(objectNode, identityNode, permission, 0, 0);
 	}
 
 	@Override
@@ -615,7 +619,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		/* Authorization - End */
 
 		for (int i = 0; i < endTime.length; i++) {
-			ACLServiceImpl.remove(objectNode, identityNode, permission, startTime[i], endTime[i], s);
+			ACLServiceImpl.remove(objectNode, identityNode, permission, startTime[i], endTime[i]);
 		}
 	}
 

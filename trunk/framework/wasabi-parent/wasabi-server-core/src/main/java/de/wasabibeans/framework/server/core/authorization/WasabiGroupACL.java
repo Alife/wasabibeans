@@ -25,46 +25,46 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class WasabiGroupACL {
 
-	public static void ACLEntryForCreate(Node groupNode, Session s, boolean doJcrSave)
+	public static void ACLEntryForCreate(Node groupNode, String callerPrincipal, Session s)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			if (groupNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(groupNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		if (ACLServiceImpl.getInheritance(groupNode))
+			ACLServiceImpl.setInheritance(groupNode, true);
+
+		if (!ObjectServiceImpl.getName(groupNode).equals(WasabiConstants.ADMINS_GROUP_NAME)) {
+			// Group gets READ and VIEW permission
+			ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
+					new boolean[] { true, true }, 0, 0);
+
+			// Creator of group gets GRANT permission
+			if (!ObjectServiceImpl.getName(groupNode).equals(WasabiConstants.WASABI_GROUP_NAME)
+					&& !ObjectServiceImpl.getName(groupNode).equals(WasabiConstants.PAF_GROUP_NAME))
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					ACLServiceImpl.create(groupNode, UserServiceImpl.getUserByName(callerPrincipal, s), new int[] {
+							WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
+							WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0);
 		}
-		// Group gets READ and VIEW permission
-		ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ },
-				new boolean[] { true, true }, 0, 0, s);
-		// Creator of group gets GRANT permission
-		ACLServiceImpl.create(groupNode, groupNode, new int[] { WasabiPermission.VIEW, WasabiPermission.READ,
-				WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
-				WasabiPermission.GRANT }, new boolean[] { true, true, true, true, true, true, true }, 0, 0, s);
 	}
 
-	public static void ACLEntryForMove(Node groupNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void ACLEntryForMove(Node groupNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			String[] inheritance_ids = WasabiGroupSQL.SQLQueryForMove(groupNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(groupNode, inheritance_ids);
-			if (groupNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(groupNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
+			if (ACLServiceImpl.getInheritance(groupNode))
+				ACLServiceImpl.setInheritance(groupNode, true);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

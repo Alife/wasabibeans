@@ -41,30 +41,19 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class WasabiRoomACL {
 
-	public static void ACLEntryForCreate(Node roomNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(roomNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
-			//WasabiRoomSQL.createRandomSQLinserts();
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+	public static void ACLEntryForCreate(Node roomNode) throws UnexpectedInternalProblemException {
+		if (ACLServiceImpl.getInheritance(roomNode))
+			ACLServiceImpl.setInheritance(roomNode, true);
+		// WasabiRoomSQL.createRandomSQLinserts();
 	}
 
-	public static void ACLEntryForMove(Node roomNode, Session s, boolean doJcrSave)
+	public static void ACLEntryForMove(Node roomNode)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);
-			if (roomNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-				ACLServiceImpl.setInheritance(roomNode, true, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
+			if (ACLServiceImpl.getInheritance(roomNode))
+				ACLServiceImpl.setInheritance(roomNode, true);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -100,7 +89,7 @@ public class WasabiRoomACL {
 					ACLServiceImpl.create(roomNode, callerPrincipalNode, new int[] { WasabiPermission.VIEW,
 							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, allowance,
-							startTime, endTime, s);
+							startTime, endTime);
 				}
 			}
 		}

@@ -61,6 +61,67 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void inheritanceTest2() throws WasabiException {
+		System.out.println("=== inheritanceTest2() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating inheritanceTestRoom at usersHome... ");
+		WasabiRoomDTO inheritanceTestRoom = null;
+		try {
+			inheritanceTestRoom = roomService().create("inheritanceTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+
+		System.out.print("Creating subRoom at inheritanceTestRoom... ");
+		WasabiRoomDTO subRoom = null;
+		try {
+			subRoom = roomService().create("subRoom", inheritanceTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(subRoom, "subRoom");
+
+		System.out.print("Setting COMMENT as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+		displayACLEntry(subRoom, "subRoom");
+
+		System.out.print("Setting EXECUTE and WRITE as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, new int[] { WasabiPermission.EXECUTE, WasabiPermission.WRITE },
+				new boolean[] { true, true });
+		System.out.println("done.");
+
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+		displayACLEntry(subRoom, "subRoom");
+
+		System.out.print("Removing COMMENT as userRight for inheritanceTestRoom... ");
+		aclService().remove(inheritanceTestRoom, user, WasabiPermission.COMMENT);
+		System.out.println("done.");
+
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+		displayACLEntry(subRoom, "subRoom");
+
+		System.out.print("Removing EXECUTE and WRITE as userRight for inheritanceTestRoom... ");
+		aclService().remove(inheritanceTestRoom, user, new int[] { WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+		System.out.println("done.");
+
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
+		displayACLEntry(subRoom, "subRoom");
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void inheritanceTest() throws WasabiException {
 		System.out.println("=== inheritanceTest() ===");
 
@@ -79,10 +140,20 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for inheritanceTestRoom... ");
 		aclService().deactivateInheritance(inheritanceTestRoom);
 		System.out.println("done.");
+		
+		aclService().remove(
+				inheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+		
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 
 		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
 		aclService().create(inheritanceTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
+		
+		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 
 		System.out.print("Creating subRoom1 at inheritanceTestRoom... ");
 		WasabiRoomDTO subRoom1 = null;
@@ -107,19 +178,25 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		displayACLEntry(subSubRoom1, "subSubRoom1");
 
 		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
-		aclService().create(inheritanceTestRoom, user, WasabiPermission.WRITE, true);
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+		
+		System.out.print("Setting COMMENT as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
 
 		displayACLEntry(subRoom1, "subRoom1");
 		displayACLEntry(subSubRoom1, "subSubRoom1");
-		
+
 		System.out.print("Activating inheritance for inheritanceTestRoom... ");
 		aclService().activateInheritance(inheritanceTestRoom);
 		System.out.println("done.");
-		
+
 		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 		displayACLEntry(subRoom1, "subRoom1");
 		displayACLEntry(subSubRoom1, "subSubRoom1");
+		
+		System.out.println("===========================");
 	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
