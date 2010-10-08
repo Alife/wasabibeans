@@ -715,6 +715,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 						"wasabiwasabiLocation"));
 		/* Authorization - End */
 
-		ACLServiceImpl.reset(objectNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.setInheritanceNodeProperty(objectNode, true, s, WasabiConstants.JCR_SAVE_PER_METHOD);
+		ACLServiceImpl.reset(objectNode);
 	}
 }

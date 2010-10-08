@@ -989,59 +989,41 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void reset(Node objectNode, Session s, boolean doJcrSave) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+		String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
-			setInheritance(objectNode, true, s, false);
-			resetChildren(objectNode, s, false);
-			if (doJcrSave) {
-				s.save();
-			}
-		} catch (InvalidItemStateException iise) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			run.update(deleteRights, objectUUID);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
+
+		resetChildren(objectNode, run);
+		//setInheritance(objectNode, true);
 	}
 
-	private static void resetChildren(Node wasabiObjectNode, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException {
+		Vector<Node> Nodes = getChildren(objectNode);
 
-			Vector<Node> Nodes = getChildren(wasabiObjectNode);
-
-			if (!Nodes.isEmpty()) {
-				for (Node node : Nodes) {
-					// clean ACLEntries
-					String objectUUID = ObjectServiceImpl.getUUID(node);
-					String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
-					try {
-						run.update(deleteRights, objectUUID);
-					} catch (SQLException e) {
-						throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-					}
-
-					// set inheritance=true
-					setInheritance(node, true, s, false);
-
-					// next children
-					resetChildren(node, s, false);
+		if (!Nodes.isEmpty()) {
+			for (Node node : Nodes) {
+				// clean ACLEntries
+				String objectUUID = ObjectServiceImpl.getUUID(node);
+				String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
+				try {
+					run.update(deleteRights, objectUUID);
+				} catch (SQLException e) {
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 				}
+				
+				// next children
+				resetChildren(node, run);
+				
+				// set entries from parent
+				setInheritance(objectNode, true);
 			}
-			if (doJcrSave) {
-				s.save();
-			}
-		} catch (InvalidItemStateException iise) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
