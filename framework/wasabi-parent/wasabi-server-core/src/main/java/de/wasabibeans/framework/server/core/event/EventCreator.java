@@ -68,7 +68,8 @@ public class EventCreator {
 			if (value instanceof Node) {
 				event.setStringProperty(WasabiEventProperty.PROPERTY_TYPE, getWasabiType((Node) value));
 			} else {
-				event.setStringProperty(WasabiEventProperty.PROPERTY_TYPE, value.getClass().getName());
+				event.setStringProperty(WasabiEventProperty.PROPERTY_TYPE, value != null ? value.getClass().getName()
+						: null);
 			}
 
 			jmsProducer.send(event);
