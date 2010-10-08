@@ -21,18 +21,18 @@
 package de.wasabibeans.framework.server.core.event;
 
 import java.io.Serializable;
-import java.util.Calendar;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import org.jboss.ejb3.annotation.Service;
 
-public class EventSubscriptions {
+@Service
+public class EventSubscriptions implements EventSubscriptionsLocal {
 
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>> subscriptions = new ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>>();
 
-	public static Set<Entry<String, SubscriptionInfo>> getSubscribers(String objectId) {
+	public Set<Entry<String, SubscriptionInfo>> getSubscribers(String objectId) {
 		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
 			return subscriptionsOfObject.entrySet();
@@ -40,8 +40,7 @@ public class EventSubscriptions {
 		return null;
 	}
 
-	public static synchronized void subscribe(String objectId, String username, String jmsDestinationName,
-			boolean isQueue) {
+	public void subscribe(String objectId, String username, String jmsDestinationName, boolean isQueue) {
 		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject == null) {
 			subscriptionsOfObject = new ConcurrentHashMap<String, SubscriptionInfo>();
@@ -50,31 +49,32 @@ public class EventSubscriptions {
 		subscriptionsOfObject.put(username, new SubscriptionInfo(jmsDestinationName, isQueue));
 	}
 
-	public static void unsubscribe(String objectId, String username) {
+	public void unsubscribe(String objectId, String username) {
 		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject != null) {
 			subscriptionsOfObject.remove(username);
 		}
 	}
 
+	public ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>> getData() {
+		return subscriptions;
+	}
+
 	/**
 	 * Inner class encapsulating additional information of a subscription: the name of the temporary destination used by
-	 * the client to receive events, whether the temporary destination is a queue, and a timestamp for caching read
-	 * permissions
+	 * the client to receive events and whether the temporary destination is a queue.
 	 * 
 	 */
 	public static class SubscriptionInfo implements Serializable {
 
 		private static final long serialVersionUID = -1002710476315617258L;
-		
+
 		private String jmsDestinationName;
 		private boolean isQueue;
-		private Calendar timestamp;
 
 		public SubscriptionInfo(String jmsDestinationName, boolean isQueue) {
 			this.jmsDestinationName = jmsDestinationName;
 			this.isQueue = isQueue;
-			this.timestamp = Calendar.getInstance();
 		}
 
 		public String getJmsDestinationName() {
@@ -83,16 +83,6 @@ public class EventSubscriptions {
 
 		public boolean isQueue() {
 			return isQueue;
-		}
-
-		public boolean isTimestampStillValid(Calendar actualTime) {
-			long actualTimeInMillis = actualTime.getTimeInMillis();
-			actualTime.add(Calendar.MINUTE, -WasabiConstants.JMS_PERMISSION_CACHE_TIME);
-			if (actualTime.after(timestamp)) {
-				timestamp.setTimeInMillis(actualTimeInMillis);
-				return false;
-			}
-			return true;
 		}
 	}
 }

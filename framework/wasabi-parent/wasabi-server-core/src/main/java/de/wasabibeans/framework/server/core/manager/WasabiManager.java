@@ -39,6 +39,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.event.EventAuthorizationCheckerLocal;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
@@ -97,8 +98,7 @@ public class WasabiManager {
 				+ "`inheritance_id` varchar(64) NOT NULL,"
 				+ "`priority` tinyint(2) NOT NULL,"
 				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
-				+ "PRIMARY KEY (`id`)"
-				+ ") ENGINE = InnoDB ;";
+				+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
 		try {
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
@@ -115,8 +115,7 @@ public class WasabiManager {
 				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
 				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
-				+ "`end_time` float NOT NULL DEFAULT '0',"
-				+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
+				+ "`end_time` float NOT NULL DEFAULT '0'," + "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
 
 		try {
 			run.update(dropWasabiTemplateRightsTable);
@@ -125,6 +124,26 @@ public class WasabiManager {
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	/**
+	 * Initializes scheduled background tasks.
+	 * 
+	 * @param earName
+	 *            name of the ear-file which is used to deploy Wasabi
+	 */
+	public static void initScheduledTasks(String earName) {
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		try {
+			String lookupPrefix = earName != null ? earName + "/" : "";
+			EventAuthorizationCheckerLocal eventAuthChecker = (EventAuthorizationCheckerLocal) jndi
+					.lookupLocal(lookupPrefix + "EventAuthorizationChecker");
+			eventAuthChecker.startEventAuthorizationChecker();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			jndi.close();
+		}
 	}
 
 	/**

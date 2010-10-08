@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.bean;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -44,7 +45,7 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.TransferManager;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
-import de.wasabibeans.framework.server.core.event.EventSubscriptions;
+import de.wasabibeans.framework.server.core.event.EventSubscriptionsLocal;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
@@ -62,6 +63,9 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 
 	@Resource
 	protected SessionContext ctx;
+
+	@EJB
+	private EventSubscriptionsLocal eventSubscriptions;
 
 	private JcrConnector jcr;
 	private JmsConnector jms;
@@ -116,7 +120,7 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 						WasabiExceptionMessages.JMS_DESTINATION_INVALID, isQueue ? "queue" : "topic"));
 			}
 
-			EventSubscriptions.subscribe(object.getId(), callerPrincipal, jmsDestinationName, isQueue);
+			eventSubscriptions.subscribe(object.getId(), callerPrincipal, jmsDestinationName, isQueue);
 		} catch (JMSException je) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMS_PROVIDER_FAILURE, je);
 		} finally {
@@ -126,6 +130,6 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 
 	public void unsubscribe(WasabiObjectDTO object) {
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		EventSubscriptions.unsubscribe(object.getId(), callerPrincipal);
+		eventSubscriptions.unsubscribe(object.getId(), callerPrincipal);
 	}
 }

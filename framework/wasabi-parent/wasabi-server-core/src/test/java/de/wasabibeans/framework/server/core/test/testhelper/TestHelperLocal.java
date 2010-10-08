@@ -40,20 +40,22 @@ public interface TestHelperLocal {
 
 	public WasabiRoomDTO initRepository() throws Exception;
 
+	public void initScheduledTasks() throws Exception;
+
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
-	
+
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception;
-	
+
 	public WasabiGroupDTO initGroupServiceTest() throws Exception;
-	
+
 	public WasabiAttributeDTO initAttributeServiceTest() throws Exception;
-	
+
 	public WasabiUserDTO initUserServiceTest() throws Exception;
-	
+
 	public WasabiContainerDTO initContainerServiceTest() throws Exception;
-	
+
 	public WasabiLinkDTO initLinkServiceTest() throws Exception;
-	
+
 	public void initTagServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;

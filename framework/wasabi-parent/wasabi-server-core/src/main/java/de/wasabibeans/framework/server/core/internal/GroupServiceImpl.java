@@ -261,7 +261,7 @@ public class GroupServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-
+	
 	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.MEMBERS).hasNode(userNode.getIdentifier());
