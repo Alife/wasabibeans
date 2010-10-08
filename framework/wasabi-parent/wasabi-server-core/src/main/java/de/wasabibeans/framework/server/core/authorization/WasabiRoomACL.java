@@ -27,13 +27,14 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
@@ -42,13 +43,14 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 public class WasabiRoomACL {
 
 	public static void ACLEntryForCreate(Node roomNode) throws UnexpectedInternalProblemException {
-		if (ACLServiceImpl.getInheritance(roomNode))
-			ACLServiceImpl.setInheritance(roomNode, true);
+		if (!ObjectServiceImpl.getName(roomNode).equals(WasabiConstants.HOME_ROOM_NAME))
+			if (ACLServiceImpl.getInheritance(roomNode))
+				ACLServiceImpl.setInheritance(roomNode, true);
 		// WasabiRoomSQL.createRandomSQLinserts();
 	}
 
-	public static void ACLEntryForMove(Node roomNode)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void ACLEntryForMove(Node roomNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException {
 		try {
 			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
 			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);
