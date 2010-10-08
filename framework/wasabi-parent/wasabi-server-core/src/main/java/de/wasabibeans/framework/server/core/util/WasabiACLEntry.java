@@ -31,6 +31,7 @@ public class WasabiACLEntry {
 	private long start_time, end_time;
 	private String user_id = "";
 	private int view, read, insert, write, comment, execute, grant, priority;
+	private String wasabi_type = "";
 
 	public WasabiACLEntry() {
 	}
@@ -95,6 +96,10 @@ public class WasabiACLEntry {
 		return this.view;
 	}
 
+	public String getWasabi_Type() {
+		return this.wasabi_type;
+	}
+
 	public int getWrite() {
 		return this.write;
 	}
@@ -157,6 +162,10 @@ public class WasabiACLEntry {
 
 	public void setView(int view) {
 		this.view = view;
+	}
+
+	public void setWasabi_Type(String wasabi_type) {
+		this.wasabi_type = wasabi_type;
 	}
 
 	public void setWrite(int write) {

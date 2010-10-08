@@ -342,7 +342,7 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		try {
 			Node user = UserServiceImpl.create("user", "user", s, false, WasabiConstants.ROOT_USER_NAME);
 			ACLServiceImpl.create(GroupServiceImpl.getWasabiGroup(s), user, new int[] { WasabiPermission.GRANT },
-					new boolean[] { true }, 0, 0, s);
+					new boolean[] { true }, 0, 0);
 			s.save();
 		} finally {
 			jcr.cleanup(true);

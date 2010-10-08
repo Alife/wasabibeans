@@ -65,7 +65,7 @@ public class RoomServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiRoomACL.ACLEntryForCreate(roomNode, s, false);
+				WasabiRoomACL.ACLEntryForCreate(roomNode);
 				WasabiRoomACL.ACLEntryTemplateForCreate(roomNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
@@ -243,7 +243,7 @@ public class RoomServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiRoomACL.ACLEntryForMove(roomNode, s, false);
+				WasabiRoomACL.ACLEntryForMove(roomNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

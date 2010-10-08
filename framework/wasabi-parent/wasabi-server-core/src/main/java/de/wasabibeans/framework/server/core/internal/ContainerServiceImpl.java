@@ -56,7 +56,7 @@ public class ContainerServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiContainerACL.ACLEntryForCreate(containerNode, s, false);
+				WasabiContainerACL.ACLEntryForCreate(containerNode);
 				WasabiContainerACL.ACLEntryTemplateForCreate(containerNode, environmentNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
@@ -224,7 +224,7 @@ public class ContainerServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiContainerACL.ACLEntryForMove(containerNode, s, false);
+				WasabiContainerACL.ACLEntryForMove(containerNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

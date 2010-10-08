@@ -69,7 +69,7 @@ public class AttributeServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s, false);
+				WasabiAttributeACL.ACLEntryForCreate(attributeNode);
 				WasabiAttributeACL.ACLEntryTemplateForCreate(attributeNode, affiliationNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
@@ -104,7 +104,7 @@ public class AttributeServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE) {
-				WasabiAttributeACL.ACLEntryForCreate(attributeNode, s, false);
+				WasabiAttributeACL.ACLEntryForCreate(attributeNode);
 				WasabiAttributeACL.ACLEntryTemplateForCreate(attributeNode, affiliationNode, callerPrincipal, s);
 			}
 			/* ACL Environment - End */
@@ -252,7 +252,7 @@ public class AttributeServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiAttributeACL.ACLEntryForMove(attributeNode, s, false);
+				WasabiAttributeACL.ACLEntryForMove(attributeNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {
