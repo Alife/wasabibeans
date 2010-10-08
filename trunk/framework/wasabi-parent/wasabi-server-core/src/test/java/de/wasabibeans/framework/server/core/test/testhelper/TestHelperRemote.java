@@ -38,6 +38,8 @@ public interface TestHelperRemote {
 	public void initDatabase();
 
 	public WasabiRoomDTO initRepository() throws Exception;
+	
+	public void initScheduledTasks() throws Exception;
 
 	public WasabiRoomDTO initRoomServiceTest() throws Exception;
 

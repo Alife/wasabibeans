@@ -25,7 +25,9 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -70,6 +72,9 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@EJB
 	SharedFilterBean sharedFilterBean;
+
+	@Resource
+	SessionContext ctx;
 
 	@PostConstruct
 	public void postConstruct() {
@@ -305,6 +310,16 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initRepository() throws Exception {
 		return TransferManager.convertNode2DTO(WasabiManager.initRepository(null, true));
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void initScheduledTasks() throws Exception {
+		if (ctx.getInvokedBusinessInterface().equals(TestHelperLocal.class)) {
+			WasabiManager.initScheduledTasks("test");
+		} else {
+			WasabiManager.initScheduledTasks(null);
+		}
 	}
 
 	@Override

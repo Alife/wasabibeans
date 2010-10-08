@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -54,6 +55,9 @@ import de.wasabibeans.framework.server.core.util.WasabiLogger;
 public class Event2UserDestinationAllocator implements MessageListener {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(Event2UserDestinationAllocator.class);
+
+	@EJB
+	EventSubscriptionsLocal eventSubscriptions;
 
 	private JndiConnector jndi;
 	private JmsConnector jms;
@@ -110,7 +114,7 @@ public class Event2UserDestinationAllocator implements MessageListener {
 	}
 
 	private void sendEvents(String objectId, Message message, MessageProducer jmsProducer, Session jmsSession) {
-		Set<Entry<String, SubscriptionInfo>> subscribers = EventSubscriptions.getSubscribers(objectId);
+		Set<Entry<String, SubscriptionInfo>> subscribers = eventSubscriptions.getSubscribers(objectId);
 		if (subscribers == null) {
 			return;
 		}
@@ -128,7 +132,7 @@ public class Event2UserDestinationAllocator implements MessageListener {
 			} catch (InvalidDestinationException ide) {
 				// client has closed his jms session and his temporary destination does not exist any more
 				// unsubscribe the client
-				EventSubscriptions.unsubscribe(objectId, subscriber.getKey());
+				eventSubscriptions.unsubscribe(objectId, subscriber.getKey());
 			} catch (JMSException e) {
 				logger.warn("An event could not be dispatched to one subscriber");
 			}
