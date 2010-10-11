@@ -102,9 +102,10 @@ public class NodeCreationLocalTest extends Arquillian {
 		loCon.disconnect();
 	}
 
-	// @Test
+	//@Test
 	/* this is the optimum reachable; no ejb, nodetype or whatsoever overhead */
-	// results are: 1653, 1681, 1551
+	// results are: 1653, 1681, 1551, 1482 (without output), 1407 (without output), 1329 (without output), 1424 (without
+	// output)
 	public void directJCRTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -114,7 +115,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Session s = jcr.getJCRSession();
 			Node rootNode = s.getRootNode();
 			for (int i = 0; i < 5000; i++) {
-				System.out.println(i);
+				// System.out.println(i);
 				rootNode.addNode("node" + i);
 			}
 			s.save();
@@ -202,9 +203,9 @@ public class NodeCreationLocalTest extends Arquillian {
 
 	// -------------------------------------------------------------------------------------------------
 
-	// @Test
+	//@Test
 	/* introducing nodetype overhead; referenceable, lockable etc, all that comes at a cost */
-	// results are: 12483, 12447, 13586, 13824
+	// results are: 12483, 12447, 13586, 13824, 11618 (without output), 13468 (without output), 13256 (without output)
 	public void directJCRNodeTypeTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -214,7 +215,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Session s = jcr.getJCRSession();
 			Node rootNode = s.getRootNode();
 			for (int i = 0; i < 5000; i++) {
-				System.out.println(i);
+				//System.out.println(i);
 				rootNode.addNode("node" + i, WasabiNodeType.ROOM);
 			}
 			s.save();
@@ -300,12 +301,12 @@ public class NodeCreationLocalTest extends Arquillian {
 
 	// --------------------------------------------------------------------------------------
 
-	// @Test
+	//@Test
 	/*
 	 * introducing overhead due to all the extra stuff happening in RoomServiceImpl.create() (like setting creation
 	 * date)
 	 */
-	// results are: 17279, 17479, 16819
+	// results are: 17279, 17479, 16819, 17331, 17007
 	public void directJCRNodeTypeAndExtraAttributesTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -315,7 +316,7 @@ public class NodeCreationLocalTest extends Arquillian {
 			Session s = jcr.getJCRSession();
 			Node rootRoomNode = s.getNodeByIdentifier(rootRoom.getId());
 			for (int i = 0; i < 5000; i++) {
-				System.out.println(i);
+				//System.out.println(i);
 				RoomServiceImpl.create("node" + i, rootRoomNode, s, false, WasabiConstants.ROOT_USER_NAME);
 			}
 			s.save();
@@ -386,6 +387,7 @@ public class NodeCreationLocalTest extends Arquillian {
 	@Test
 	/* introducing ejb overhead */
 	// results are: 59738, 59223, 58966, 60082
+	// on save per tx mode: 27460, 25522, 25164, 26022
 	public void localServiceTest() throws Throwable {
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -394,7 +396,7 @@ public class NodeCreationLocalTest extends Arquillian {
 		long start = System.currentTimeMillis();
 		utx.begin();
 		for (int i = 0; i < 5000; i++) {
-			System.out.println(i);
+			//System.out.println(i);
 			roomService.create("room" + i, rootRoom);
 		}
 		utx.commit();

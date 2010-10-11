@@ -26,6 +26,8 @@ import java.lang.reflect.Method;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.transaction.Synchronization;
+import javax.transaction.TransactionManager;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -114,6 +116,12 @@ public class JcrConnector {
 		try {
 			if (session != null) {
 				/*
+				 * make sure that the transient state of the session is reset 
+				 */
+				if (session.hasPendingChanges()) {
+					session.refresh(false);
+				}
+				/*
 				 * workaround 1: there seems to be a problem when using JCA handles within transactions (which happens
 				 * within the wasabi core almost all the time). normally the cache of a JCR session (to which a JCA
 				 * handle is connected) is updated when changes of other JCR sessions are persisted. within container
@@ -144,7 +152,7 @@ public class JcrConnector {
 							e);
 		}
 	}
-	
+
 	/**
 	 * Clears the item cache of the JCR session to which the given JCA handle {@code s} is connected.
 	 * 
@@ -160,4 +168,131 @@ public class JcrConnector {
 		clearCacheMethod.invoke(cacheOfSession);
 	}
 
+	// ------------ Methods and classes for mode 'WasabiConstants.JCR_SAVE_PER_METHOD = false' ---------------------
+
+	/**
+	 * Prepares the JCR session to which the current JCA handle {@code session} of this instance is connected for being
+	 * returned to the JCA connection pool.
+	 */
+	public void txModeCleanup() {
+		try {
+			if (session != null) {
+				/*
+				 * workaround 1: there seems to be a problem when using JCA handles within transactions (which happens
+				 * within the wasabi core almost all the time). normally the cache of a JCR session (to which a JCA
+				 * handle is connected) is updated when changes of other JCR sessions are persisted. within container
+				 * managed transactions this update procedure seems to fail from to time and consequently even simple
+				 * test cases fail. i have not yet been able to pinpoint this bug in a way that would allow me create a
+				 * very concise test-case that could be handed to the jackrabbit-developers. the bug seems very similar
+				 * to this one https://issues.apache.org/jira/browse/JCR-1953, which is already marked as resolved,
+				 * though.
+				 */
+				clearCache(session);
+				/*
+				 * workaround 2: the automatic logout procedure of the JCA handles does not remove existing lock-tokens
+				 * from JCR sessions. so a client could retrieve a JCR session that still holds lock-tokens from the JCA
+				 * connection pool.
+				 */
+				Locker.cleanUpLockTokens(session);
+				/*
+				 * indicate that the JCR session is no longer used by a transaction
+				 */
+				setTxFlag(session, null);
+
+				session = null;
+			}
+		} catch (Exception e) {
+			logger
+					.error(
+							"Fatal internal error: A JCR session could not be returned to the connection pool properly. Restart the JCR repository to avoid possible consequential errors.",
+							e);
+		}
+	}
+
+	/**
+	 * In mode 'WasabiConstants.JCR_SAVE_PER_METHOD = false', this method is called after each service call.
+	 */
+	public void txModeAfterEachMethod() {
+		if (session != null) {
+			/*
+			 * does not really return the session to the JCA connection pool as a transaction is still active, but is
+			 * necessary to avoid warning messages in the server log
+			 */
+			session.logout();
+			session = null;
+		}
+	}
+
+	/**
+	 * Returns a JCA handle that is connected to a JCR session. Once the transaction within which this method has been
+	 * called completes, the transient state of the JCR session will automatically be saved.
+	 * 
+	 * @param tm
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public Session txModegetJCRSession(TransactionManager tm) throws UnexpectedInternalProblemException {
+		try {
+			if (session == null) {
+				session = getJCRRepository().login(
+						new SimpleCredentials(WasabiConstants.JCR_LOGIN, WasabiConstants.JCR_LOGIN.toCharArray()));
+				if (!checkTxFlag(session)) {
+					/*
+					 * the session is used for the first time within the active transaction -> add a SessionHandler
+					 * instance as a listener to the transaction
+					 */
+					tm.getTransaction().registerSynchronization(new SessionHandler());
+					setTxFlag(session, "notNull");
+				}
+			}
+			return session;
+		} catch (Exception e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, e);
+		}
+	}
+
+	private void setTxFlag(Session s, Object value) throws Exception {
+		JCASessionHandle jcaHandle = (JCASessionHandle) s;
+		Method setAttribute = SessionImpl.class.getDeclaredMethod("setAttribute", String.class, Object.class);
+		setAttribute.setAccessible(true);
+		setAttribute.invoke(jcaHandle.getXAResource(), "wasabiFlag", value);
+
+	}
+
+	private boolean checkTxFlag(Session s) throws Exception {
+		if (s.getAttribute("wasabiFlag") != null) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * In mode 'WasabiConstants.JCR_SAVE_PER_METHOD = false', instances of this class are registered as listeners of the
+	 * transactions. Before a transaction completes, an instance of this class performs a save on the JCR session used
+	 * during the transaction and prepares that JCR session for being returned to the JCA connection pool.
+	 * 
+	 */
+	static class SessionHandler implements Synchronization {
+
+		@Override
+		public void afterCompletion(int status) {
+			// not interested in this
+		}
+
+		@Override
+		public void beforeCompletion() {
+			JndiConnector jndi = JndiConnector.getJNDIConnector();
+			JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+			try {
+				Session s = jcr.getJCRSession();
+				s.save();
+			} catch (Exception e) {
+				// exceptions will cause a rollback of the transaction
+				throw new RuntimeException(e);
+			} finally {
+				jcr.txModeCleanup();
+				jndi.close();
+			}
+		}
+	}
 }

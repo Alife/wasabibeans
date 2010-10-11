@@ -83,7 +83,7 @@ public interface WasabiConstants {
 	public final static String JNDI_JMS_DATASOURCE = "java:/JmsXA";
 
 	/* JCR */
-	public final static boolean JCR_SAVE_PER_METHOD = true;
+	public final static boolean JCR_SAVE_PER_METHOD = false;
 	public final static String JCR_NS_PREFIX = "wasabi";
 	public final static String JCR_NS_PREFIX_STRUCTURE = "wasabiStructure";
 	public final static String JCR_NS_URI = "http://www.wasabibeans.de/jcr/wasabi/1.0";
