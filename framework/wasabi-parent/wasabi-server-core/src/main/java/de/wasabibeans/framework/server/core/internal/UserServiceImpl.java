@@ -31,12 +31,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -307,6 +309,14 @@ public class UserServiceImpl {
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiUserSQL.removeRights(userNode);
 			/* ACL Environment - End */
+
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByIdentity(userNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
 
 			// JCR
 			try {

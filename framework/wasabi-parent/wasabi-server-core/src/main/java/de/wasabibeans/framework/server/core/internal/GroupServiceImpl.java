@@ -33,11 +33,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiGroupACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
@@ -55,6 +57,14 @@ public class GroupServiceImpl {
 			Node groupRef = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).addNode(groupNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			groupRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, groupNode);
+
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByIdentity(userNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
 
 			if (doJcrSave) {
 				s.save();
@@ -261,7 +271,7 @@ public class GroupServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-	
+
 	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.MEMBERS).hasNode(userNode.getIdentifier());
@@ -328,6 +338,14 @@ public class GroupServiceImpl {
 	public static void remove(Node groupNode, Session s, boolean doJcrSave, boolean throwEvents, JmsConnector jms,
 			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByIdentity(groupNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
+
 			ObjectServiceImpl.removeRecursive(groupNode, s, true, jms, callerPrincipal);
 
 			if (doJcrSave) {
@@ -350,6 +368,14 @@ public class GroupServiceImpl {
 			userref.remove();
 			Node groupref = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).getNode(groupNode.getIdentifier());
 			groupref.remove();
+
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByIdentity(userNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
 
 			if (doJcrSave) {
 				s.save();
