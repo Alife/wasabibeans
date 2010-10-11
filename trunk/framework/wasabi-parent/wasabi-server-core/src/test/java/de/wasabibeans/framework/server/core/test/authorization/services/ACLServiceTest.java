@@ -44,245 +44,245 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class ACLServiceTest extends WasabiRemoteTest {
 
-//	@Test
-//	public void activateInheritanceTest() throws WasabiException {
-//		System.out.println("=== activateInheritanceTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating activateInheritanceTestRoom at usersHome... ");
-//		WasabiRoomDTO activateInheritanceTestRoom = null;
-//		try {
-//			activateInheritanceTestRoom = roomService().create("activateInheritanceTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for activateInheritanceTestRoom... ");
-//		aclService().create(activateInheritanceTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for activateInheritanceTestRoom... ");
-//		aclService().create(activateInheritanceTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		displayACLEntry(activateInheritanceTestRoom, "activateInheritanceTestRoom");
-//
-//		System.out.print("Deactivating inheritance for activateInheritanceTestRoom... ");
-//		aclService().deactivateInheritance(activateInheritanceTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				activateInheritanceTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.print("Delete GRANT as userRight for activateInheritanceTestRoom... ");
-//		aclService().remove(activateInheritanceTestRoom, user, WasabiPermission.GRANT);
-//		System.out.println("done.");
-//
-//		System.out.print("Activating inheritance for activateInheritanceTestRoom... ");
-//		try {
-//			aclService().activateInheritance(activateInheritanceTestRoom);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void createDefaultTest() throws WasabiException {
-//		System.out.println("=== createDefaultTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating createDefaultTestRoom at usersHome... ");
-//		WasabiRoomDTO createDefaultTestRoom = null;
-//		try {
-//			createDefaultTestRoom = roomService().create("createDefaultTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT, READ, INSERT as userRight for createDefaultTestRoom... ");
-//		aclService().create(createDefaultTestRoom, user,
-//				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
-//				new boolean[] { true, true, true });
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for createDefaultTestRoom... ");
-//		aclService().deactivateInheritance(createDefaultTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				createDefaultTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.WRITE });
-//
-//		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
-//		aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Creating someRoom at createDefaultTestRoom... ");
-//		WasabiRoomDTO someRoom = null;
-//		try {
-//			someRoom = roomService().create("someRoom", createDefaultTestRoom);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		displayACLEntry(someRoom, "someRoom");
-//
-//		System.out.print("Delete GRANT as userRight for createDefaultTestRoom... ");
-//		aclService().remove(createDefaultTestRoom, user, WasabiPermission.GRANT);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
-//		try {
-//			aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.EXECUTE, true);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void createTest() throws WasabiException {
-//		System.out.println("=== createTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating createTestRoom at usersHome... ");
-//		WasabiRoomDTO createTestRoom = null;
-//		try {
-//			createTestRoom = roomService().create("createTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for createTestRoom... ");
-//		aclService().create(createTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for createTestRoom... ");
-//		aclService().create(createTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		displayACLEntry(createTestRoom, "createTestRoom");
-//
-//		System.out.print("Deactivating inheritance for createTestRoom... ");
-//		aclService().deactivateInheritance(createTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				createTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.print("Delete GRANT as userRight for createTestRoom... ");
-//		aclService().remove(createTestRoom, user, WasabiPermission.GRANT);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for createTestRoom... ");
-//		try {
-//			aclService().create(createTestRoom, user, WasabiPermission.READ, true);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void deactivateInheritanceTest() throws WasabiException {
-//		System.out.println("=== deactivateInheritanceTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating deactivateInheritanceTestRoom at usersHome... ");
-//		WasabiRoomDTO deactivateInheritanceTestRoom = null;
-//		try {
-//			deactivateInheritanceTestRoom = roomService().create("deactivateInheritanceTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT, READ, INSERT as userRight for deactivateInheritanceTestRoom... ");
-//		aclService().create(deactivateInheritanceTestRoom, user,
-//				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
-//				new boolean[] { true, true, true });
-//		System.out.println("done.");
-//
-//		System.out.print("Creating someRoom at deactivateInheritanceTestRoom... ");
-//		WasabiRoomDTO someRoom = null;
-//		try {
-//			someRoom = roomService().create("someRoom", deactivateInheritanceTestRoom);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Creating someSubRoom at someRoom... ");
-//		WasabiRoomDTO someSubRoom = null;
-//		try {
-//			someSubRoom = roomService().create("someSubRoom", someRoom);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting WRITE as userRight for someRoom... ");
-//		aclService().create(someRoom, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for someRoom... ");
-//		aclService().create(someRoom, user, new int[] { WasabiPermission.READ }, new boolean[] { true });
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for someSubRoom... ");
-//		aclService().create(someSubRoom, user, new int[] { WasabiPermission.READ }, new boolean[] { true });
-//		System.out.println("done.");
-//
-//		displayACLEntry(someRoom, "someRoom");
-//		displayACLEntry(someSubRoom, "someSubRoom");
-//
-//		System.out.print("Deactivating inheritance for deactivateInheritanceTestRoom... ");
-//		aclService().deactivateInheritance(deactivateInheritanceTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				deactivateInheritanceTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.WRITE });
-//
-//		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
-//		displayACLEntry(someRoom, "someRoom");
-//		displayACLEntry(someSubRoom, "someSubRoom");
-//
-//		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
-//		displayACLEntry(someRoom, "someRoom");
-//		displayACLEntry(someSubRoom, "someSubRoom");
-//
-//		System.out.println("===========================");
-//	}
+	@Test
+	public void activateInheritanceTest() throws WasabiException {
+		System.out.println("=== activateInheritanceTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating activateInheritanceTestRoom at usersHome... ");
+		WasabiRoomDTO activateInheritanceTestRoom = null;
+		try {
+			activateInheritanceTestRoom = roomService().create("activateInheritanceTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for activateInheritanceTestRoom... ");
+		aclService().create(activateInheritanceTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for activateInheritanceTestRoom... ");
+		aclService().create(activateInheritanceTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		displayACLEntry(activateInheritanceTestRoom, "activateInheritanceTestRoom");
+
+		System.out.print("Deactivating inheritance for activateInheritanceTestRoom... ");
+		aclService().deactivateInheritance(activateInheritanceTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				activateInheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Delete GRANT as userRight for activateInheritanceTestRoom... ");
+		aclService().remove(activateInheritanceTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		System.out.print("Activating inheritance for activateInheritanceTestRoom... ");
+		try {
+			aclService().activateInheritance(activateInheritanceTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void createDefaultTest() throws WasabiException {
+		System.out.println("=== createDefaultTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating createDefaultTestRoom at usersHome... ");
+		WasabiRoomDTO createDefaultTestRoom = null;
+		try {
+			createDefaultTestRoom = roomService().create("createDefaultTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, READ, INSERT as userRight for createDefaultTestRoom... ");
+		aclService().create(createDefaultTestRoom, user,
+				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
+				new boolean[] { true, true, true });
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for createDefaultTestRoom... ");
+		aclService().deactivateInheritance(createDefaultTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				createDefaultTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
+		aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom at createDefaultTestRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", createDefaultTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(someRoom, "someRoom");
+
+		System.out.print("Delete GRANT as userRight for createDefaultTestRoom... ");
+		aclService().remove(createDefaultTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
+		try {
+			aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.EXECUTE, true);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void createTest() throws WasabiException {
+		System.out.println("=== createTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating createTestRoom at usersHome... ");
+		WasabiRoomDTO createTestRoom = null;
+		try {
+			createTestRoom = roomService().create("createTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for createTestRoom... ");
+		aclService().create(createTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for createTestRoom... ");
+		aclService().create(createTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		displayACLEntry(createTestRoom, "createTestRoom");
+
+		System.out.print("Deactivating inheritance for createTestRoom... ");
+		aclService().deactivateInheritance(createTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				createTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Delete GRANT as userRight for createTestRoom... ");
+		aclService().remove(createTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for createTestRoom... ");
+		try {
+			aclService().create(createTestRoom, user, WasabiPermission.READ, true);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void deactivateInheritanceTest() throws WasabiException {
+		System.out.println("=== deactivateInheritanceTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating deactivateInheritanceTestRoom at usersHome... ");
+		WasabiRoomDTO deactivateInheritanceTestRoom = null;
+		try {
+			deactivateInheritanceTestRoom = roomService().create("deactivateInheritanceTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, READ, INSERT as userRight for deactivateInheritanceTestRoom... ");
+		aclService().create(deactivateInheritanceTestRoom, user,
+				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
+				new boolean[] { true, true, true });
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom at deactivateInheritanceTestRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", deactivateInheritanceTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating someSubRoom at someRoom... ");
+		WasabiRoomDTO someSubRoom = null;
+		try {
+			someSubRoom = roomService().create("someSubRoom", someRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for someRoom... ");
+		aclService().create(someRoom, user, new int[] { WasabiPermission.WRITE }, new boolean[] { true });
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for someRoom... ");
+		aclService().create(someRoom, user, new int[] { WasabiPermission.READ }, new boolean[] { true });
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for someSubRoom... ");
+		aclService().create(someSubRoom, user, new int[] { WasabiPermission.READ }, new boolean[] { true });
+		System.out.println("done.");
+
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
+		System.out.print("Deactivating inheritance for deactivateInheritanceTestRoom... ");
+		aclService().deactivateInheritance(deactivateInheritanceTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				deactivateInheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
+		displayACLEntry(deactivateInheritanceTestRoom, "deactivateInheritanceTestRoom");
+		displayACLEntry(someRoom, "someRoom");
+		displayACLEntry(someSubRoom, "someSubRoom");
+
+		System.out.println("===========================");
+	}
 
 	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
 		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
@@ -305,597 +305,597 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		}
 	}
 
-//	@Test
-//	public void getAclEntriesByIdentityTest() throws WasabiException {
-//		System.out.println("=== getAclEntriesByIdentityTest() ===");
-//
-//		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void getAclEntriesTest() throws WasabiException {
-//		System.out.println("=== getAclEntriesTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating getAclEntriesTestRoom at usersHome... ");
-//		WasabiRoomDTO getAclEntriesTestRoom = null;
-//		try {
-//			getAclEntriesTestRoom = roomService().create("getAclEntriesTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for getAclEntriesTestRoom... ");
-//		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting COMMENT as userRight for getAclEntriesTestRoom... ");
-//		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for getAclEntriesTestRoom... ");
-//		aclService().deactivateInheritance(getAclEntriesTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				getAclEntriesTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
-//						WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.println("Try to use getAclEntries for getAclEntriesTestRoom...");
-//		try {
-//			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting READ as userRight for getAclEntriesTestRoom... ");
-//		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply ACLEntries for getAclEntriesTestRoom...");
-//		try {
-//			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Activating inheritance for getAclEntriesTestRoom... ");
-//		aclService().activateInheritance(getAclEntriesTestRoom);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply ACLEntries for getAclEntriesTestRoom...");
-//		try {
-//			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@SuppressWarnings("deprecation")
-//	@Test
-//	public void getACLEntriesTest() throws WasabiException {
-//		System.out.println("=== getACLEntriesTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating getACLEntriesTestRoom at usersHome... ");
-//		WasabiRoomDTO getACLEntriesTestRoom = null;
-//		try {
-//			getACLEntriesTestRoom = roomService().create("getACLEntriesTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for getACLEntriesTestRoom... ");
-//		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting COMMENT as userRight for getACLEntriesTestRoom... ");
-//		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for getACLEntriesTestRoom... ");
-//		aclService().deactivateInheritance(getACLEntriesTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				getACLEntriesTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
-//						WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.println("Try to use getACLEntries for getACLEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
-//			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
-//					+ " (depreciated way)----");
-//
-//			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
-//				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
-//						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
-//						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
-//						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
-//						+ wasabiACLEntryDTODeprecated.getInheritance());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting READ as userRight for getACLEntriesTestRoom... ");
-//		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply ACLEntries for getACLEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
-//			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
-//					+ " (depreciated way)----");
-//
-//			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
-//				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
-//						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
-//						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
-//						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
-//						+ wasabiACLEntryDTODeprecated.getInheritance());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Activating inheritance for getACLEntriesTestRoom... ");
-//		aclService().activateInheritance(getACLEntriesTestRoom);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply ACLEntries for getACLEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
-//			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
-//					+ " (depreciated way)----");
-//
-//			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
-//				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
-//						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
-//						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
-//						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
-//						+ wasabiACLEntryDTODeprecated.getInheritance());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void getACLlEntriesByIdentityTest() throws WasabiException {
-//		System.out.println("=== getACLEntriesByIdentityTest() ===");
-//
-//		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void getDefaultAclEntriesByTypeTest() throws WasabiException {
-//		System.out.println("=== getDefaultAclEntriesByTypeTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating getDefaultAclEntriesByTypeTestRoom at usersHome... ");
-//		WasabiRoomDTO getDefaultAclEntriesByTypeTestRoom = null;
-//		try {
-//			getDefaultAclEntriesByTypeTestRoom = roomService().create("getDefaultAclEntriesByTypeTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT, INSERT as userRight for getDefaultAclEntriesByTypeTestRoom... ");
-//		aclService().create(getDefaultAclEntriesByTypeTestRoom, user,
-//				new int[] { WasabiPermission.INSERT, WasabiPermission.GRANT }, new boolean[] { true, true });
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for getDefaultAclEntriesByTypeTestRoom... ");
-//		aclService().deactivateInheritance(getDefaultAclEntriesByTypeTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				getDefaultAclEntriesByTypeTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
-//						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
-//
-//		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesByTypeTestRoom... ");
-//		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesByTypeTestRoom... ");
-//		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE,
-//				true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesByTypeTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntriesByType(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesByTypeTestRoom) "
-//					+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting READ as userRight for getDefaultAclEntriesByTypeTestRoom... ");
-//		aclService().create(getDefaultAclEntriesByTypeTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesByTypeTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntriesByType(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesByTypeTestRoom) "
-//					+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void getDefaultAclEntriesTest() throws WasabiException {
-//		System.out.println("=== getDefaultAclEntriesTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating getDefaultAclEntriesTestRoom at usersHome... ");
-//		WasabiRoomDTO getDefaultAclEntriesTestRoom = null;
-//		try {
-//			getDefaultAclEntriesTestRoom = roomService().create("getDefaultAclEntriesTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT, INSERT as userRight for getDefaultAclEntriesTestRoom... ");
-//		aclService().create(getDefaultAclEntriesTestRoom, user,
-//				new int[] { WasabiPermission.INSERT, WasabiPermission.GRANT }, new boolean[] { true, true });
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for getDefaultAclEntriesTestRoom... ");
-//		aclService().deactivateInheritance(getDefaultAclEntriesTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				getDefaultAclEntriesTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
-//						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
-//
-//		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesTestRoom... ");
-//		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesTestRoom... ");
-//		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntries(getDefaultAclEntriesTestRoom);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
-//					+ objectService().getUUID(getDefaultAclEntriesTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(getDefaultAclEntriesTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting READ as userRight for getDefaultAclEntriesTestRoom... ");
-//		aclService().create(getDefaultAclEntriesTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntries(getDefaultAclEntriesTestRoom);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
-//					+ objectService().getUUID(getDefaultAclEntriesTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(getDefaultAclEntriesTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void isInheritanceAllowedTest() throws WasabiException {
-//		System.out.println("=== isInheritanceAllowedTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating isInheritanceAllowedTestRoom at usersHome... ");
-//		WasabiRoomDTO isInheritanceAllowedTestRoom = null;
-//		try {
-//			isInheritanceAllowedTestRoom = roomService().create("isInheritanceAllowedTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for isInheritanceAllowedTestRoom... ");
-//		aclService().create(isInheritanceAllowedTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for isInheritanceAllowedTestRoom... ");
-//		aclService().deactivateInheritance(isInheritanceAllowedTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				isInheritanceAllowedTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
-//						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.println("Check inheritance for isInheritanceAllowedTestRoom");
-//		try {
-//			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
-//			System.out.println("Inheritance = " + ihtc);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting READ as userRight for isInheritanceAllowedTestRoom... ");
-//		aclService().create(isInheritanceAllowedTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Check inheritance for isInheritanceAllowedTestRoom");
-//		try {
-//			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
-//			System.out.println("Inheritance = " + ihtc);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Activating inheritance for isInheritanceAllowedTestRoom... ");
-//		aclService().activateInheritance(isInheritanceAllowedTestRoom);
-//		System.out.println("done.");
-//
-//		System.out.println("Check inheritance for isInheritanceAllowedTestRoom...");
-//		try {
-//			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
-//			System.out.println("Inheritance = " + ihtc);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void removeDefaultTest() throws WasabiException {
-//		System.out.println("=== removeDefaultTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating removeDefaultTestRoom at usersHome... ");
-//		WasabiRoomDTO removeDefaultTestRoom = null;
-//		try {
-//			removeDefaultTestRoom = roomService().create("removeDefaultTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT, READ, INSERT as userRight for removeDefaultTestRoom... ");
-//		aclService().create(removeDefaultTestRoom, user,
-//				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
-//				new boolean[] { true, true, true });
-//		System.out.println("done.");
-//
-//		System.out.print("Deactivating inheritance for removeDefaultTestRoom... ");
-//		aclService().deactivateInheritance(removeDefaultTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				removeDefaultTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.WRITE });
-//
-//		System.out.print("Setting TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
-//		aclService().createDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
-//		aclService().createDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
-//					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Removing TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
-//		aclService().removeDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE);
-//		System.out.println("done.");
-//
-//		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
-//		try {
-//			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
-//			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
-//
-//			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
-//					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
-//
-//			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
-//				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
-//						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
-//						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
-//						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
-//						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
-//						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
-//						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
-//						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
-//						+ wasabiDefaultACLEntryDTO.getEndTime());
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Delete GRANT as userRight for removeDefaultTestRoom... ");
-//		aclService().remove(removeDefaultTestRoom, user, WasabiPermission.GRANT);
-//		System.out.println("done.");
-//
-//		System.out.print("Removing TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
-//		try {
-//			aclService().removeDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
-//
-//	@Test
-//	public void removeTest() throws WasabiException {
-//		System.out.println("=== removeTest() ===");
-//
-//		WasabiUserDTO user = userService().getUserByName("user");
-//		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
-//
-//		System.out.print("Creating removeTestRoom at usersHome... ");
-//		WasabiRoomDTO removeTestRoom = null;
-//		try {
-//			removeTestRoom = roomService().create("removeTestRoom", usersHome);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.print("Setting GRANT as userRight for removeTestRoom... ");
-//		aclService().create(removeTestRoom, user, WasabiPermission.GRANT, true);
-//		System.out.println("done.");
-//
-//		System.out.print("Setting READ as userRight for removeTestRoom... ");
-//		aclService().create(removeTestRoom, user, WasabiPermission.READ, true);
-//		System.out.println("done.");
-//
-//		displayACLEntry(removeTestRoom, "removeTestRoom");
-//
-//		System.out.print("Deactivating inheritance for removeTestRoom... ");
-//		aclService().deactivateInheritance(removeTestRoom);
-//		System.out.println("done.");
-//
-//		aclService().remove(
-//				removeTestRoom,
-//				user,
-//				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
-//						WasabiPermission.INSERT, WasabiPermission.WRITE });
-//
-//		System.out.print("Delete GRANT as userRight for removeTestRoom... ");
-//		aclService().remove(removeTestRoom, user, WasabiPermission.GRANT);
-//		System.out.println("done.");
-//
-//		displayACLEntry(removeTestRoom, "removeTestRoom");
-//
-//		System.out.print("Delete READ as userRight for removeTestRoom... ");
-//		try {
-//			aclService().remove(removeTestRoom, user, WasabiPermission.READ);
-//			System.out.println("done.");
-//		} catch (Exception e) {
-//			System.out.println(e.getMessage());
-//		}
-//
-//		System.out.println("===========================");
-//	}
+	@Test
+	public void getAclEntriesByIdentityTest() throws WasabiException {
+		System.out.println("=== getAclEntriesByIdentityTest() ===");
+
+		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getAclEntriesTest() throws WasabiException {
+		System.out.println("=== getAclEntriesTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getAclEntriesTestRoom at usersHome... ");
+		WasabiRoomDTO getAclEntriesTestRoom = null;
+		try {
+			getAclEntriesTestRoom = roomService().create("getAclEntriesTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getAclEntriesTestRoom... ");
+		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting COMMENT as userRight for getAclEntriesTestRoom... ");
+		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getAclEntriesTestRoom... ");
+		aclService().deactivateInheritance(getAclEntriesTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				getAclEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.println("Try to use getAclEntries for getAclEntriesTestRoom...");
+		try {
+			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getAclEntriesTestRoom... ");
+		aclService().create(getAclEntriesTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply ACLEntries for getAclEntriesTestRoom...");
+		try {
+			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Activating inheritance for getAclEntriesTestRoom... ");
+		aclService().activateInheritance(getAclEntriesTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Try to disply ACLEntries for getAclEntriesTestRoom...");
+		try {
+			displayACLEntry(getAclEntriesTestRoom, "getAclEntriesTestRoom");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void getACLEntriesTest() throws WasabiException {
+		System.out.println("=== getACLEntriesTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getACLEntriesTestRoom at usersHome... ");
+		WasabiRoomDTO getACLEntriesTestRoom = null;
+		try {
+			getACLEntriesTestRoom = roomService().create("getACLEntriesTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for getACLEntriesTestRoom... ");
+		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting COMMENT as userRight for getACLEntriesTestRoom... ");
+		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getACLEntriesTestRoom... ");
+		aclService().deactivateInheritance(getACLEntriesTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				getACLEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.println("Try to use getACLEntries for getACLEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
+			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
+					+ " (depreciated way)----");
+
+			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
+						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
+						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
+						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
+						+ wasabiACLEntryDTODeprecated.getInheritance());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getACLEntriesTestRoom... ");
+		aclService().create(getACLEntriesTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply ACLEntries for getACLEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
+			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
+					+ " (depreciated way)----");
+
+			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
+						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
+						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
+						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
+						+ wasabiACLEntryDTODeprecated.getInheritance());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Activating inheritance for getACLEntriesTestRoom... ");
+		aclService().activateInheritance(getACLEntriesTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Try to disply ACLEntries for getACLEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryDTODeprecated> ACLEntries = aclService().getACLEntries(getACLEntriesTestRoom);
+			System.out.println("---- ACL entries for object " + objectService().getUUID(getACLEntriesTestRoom)
+					+ " (depreciated way)----");
+
+			for (WasabiACLEntryDTODeprecated wasabiACLEntryDTODeprecated : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTODeprecated.getId() + ",identity_id="
+						+ wasabiACLEntryDTODeprecated.getIdentity() + ",permission="
+						+ wasabiACLEntryDTODeprecated.getPermission() + ",allowance="
+						+ wasabiACLEntryDTODeprecated.isAllowance() + ",inheritance="
+						+ wasabiACLEntryDTODeprecated.getInheritance());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getACLlEntriesByIdentityTest() throws WasabiException {
+		System.out.println("=== getACLEntriesByIdentityTest() ===");
+
+		// TODO: Entscheidung von Jonas zum übergegeben User abwarten.
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getDefaultAclEntriesByTypeTest() throws WasabiException {
+		System.out.println("=== getDefaultAclEntriesByTypeTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getDefaultAclEntriesByTypeTestRoom at usersHome... ");
+		WasabiRoomDTO getDefaultAclEntriesByTypeTestRoom = null;
+		try {
+			getDefaultAclEntriesByTypeTestRoom = roomService().create("getDefaultAclEntriesByTypeTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, INSERT as userRight for getDefaultAclEntriesByTypeTestRoom... ");
+		aclService().create(getDefaultAclEntriesByTypeTestRoom, user,
+				new int[] { WasabiPermission.INSERT, WasabiPermission.GRANT }, new boolean[] { true, true });
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getDefaultAclEntriesByTypeTestRoom... ");
+		aclService().deactivateInheritance(getDefaultAclEntriesByTypeTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				getDefaultAclEntriesByTypeTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesByTypeTestRoom... ");
+		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesByTypeTestRoom... ");
+		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE,
+				true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesByTypeTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntriesByType(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesByTypeTestRoom) "
+					+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getDefaultAclEntriesByTypeTestRoom... ");
+		aclService().create(getDefaultAclEntriesByTypeTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesByTypeTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntriesByType(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesByTypeTestRoom) "
+					+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(getDefaultAclEntriesByTypeTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void getDefaultAclEntriesTest() throws WasabiException {
+		System.out.println("=== getDefaultAclEntriesTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating getDefaultAclEntriesTestRoom at usersHome... ");
+		WasabiRoomDTO getDefaultAclEntriesTestRoom = null;
+		try {
+			getDefaultAclEntriesTestRoom = roomService().create("getDefaultAclEntriesTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, INSERT as userRight for getDefaultAclEntriesTestRoom... ");
+		aclService().create(getDefaultAclEntriesTestRoom, user,
+				new int[] { WasabiPermission.INSERT, WasabiPermission.GRANT }, new boolean[] { true, true });
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for getDefaultAclEntriesTestRoom... ");
+		aclService().deactivateInheritance(getDefaultAclEntriesTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				getDefaultAclEntriesTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesTestRoom... ");
+		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesTestRoom... ");
+		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(getDefaultAclEntriesTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(getDefaultAclEntriesTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(getDefaultAclEntriesTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for getDefaultAclEntriesTestRoom... ");
+		aclService().create(getDefaultAclEntriesTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(getDefaultAclEntriesTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(getDefaultAclEntriesTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(getDefaultAclEntriesTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void isInheritanceAllowedTest() throws WasabiException {
+		System.out.println("=== isInheritanceAllowedTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating isInheritanceAllowedTestRoom at usersHome... ");
+		WasabiRoomDTO isInheritanceAllowedTestRoom = null;
+		try {
+			isInheritanceAllowedTestRoom = roomService().create("isInheritanceAllowedTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for isInheritanceAllowedTestRoom... ");
+		aclService().create(isInheritanceAllowedTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for isInheritanceAllowedTestRoom... ");
+		aclService().deactivateInheritance(isInheritanceAllowedTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				isInheritanceAllowedTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.println("Check inheritance for isInheritanceAllowedTestRoom");
+		try {
+			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
+			System.out.println("Inheritance = " + ihtc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting READ as userRight for isInheritanceAllowedTestRoom... ");
+		aclService().create(isInheritanceAllowedTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.println("Check inheritance for isInheritanceAllowedTestRoom");
+		try {
+			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
+			System.out.println("Inheritance = " + ihtc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Activating inheritance for isInheritanceAllowedTestRoom... ");
+		aclService().activateInheritance(isInheritanceAllowedTestRoom);
+		System.out.println("done.");
+
+		System.out.println("Check inheritance for isInheritanceAllowedTestRoom...");
+		try {
+			boolean ihtc = aclService().isInheritanceAllowed(isInheritanceAllowedTestRoom);
+			System.out.println("Inheritance = " + ihtc);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeDefaultTest() throws WasabiException {
+		System.out.println("=== removeDefaultTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeDefaultTestRoom at usersHome... ");
+		WasabiRoomDTO removeDefaultTestRoom = null;
+		try {
+			removeDefaultTestRoom = roomService().create("removeDefaultTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT, READ, INSERT as userRight for removeDefaultTestRoom... ");
+		aclService().create(removeDefaultTestRoom, user,
+				new int[] { WasabiPermission.READ, WasabiPermission.INSERT, WasabiPermission.GRANT },
+				new boolean[] { true, true, true });
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for removeDefaultTestRoom... ");
+		aclService().deactivateInheritance(removeDefaultTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				removeDefaultTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Setting TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
+		aclService().createDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
+		aclService().createDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
+		aclService().removeDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE);
+		System.out.println("done.");
+
+		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
+		try {
+			Vector<WasabiACLEntryTemplateDTO> entries = new Vector<WasabiACLEntryTemplateDTO>();
+			entries = aclService().getDefaultAclEntries(removeDefaultTestRoom);
+
+			System.out.println("---- Default ACL entries for location (getDefaultAclEntriesTestRoom) "
+					+ objectService().getUUID(removeDefaultTestRoom) + " ----");
+
+			for (WasabiACLEntryTemplateDTO wasabiDefaultACLEntryDTO : entries) {
+				System.out.println("[id=" + wasabiDefaultACLEntryDTO.getId() + ",location_id="
+						+ objectService().getUUID(removeDefaultTestRoom) + ",wasabi_type="
+						+ wasabiDefaultACLEntryDTO.getWasabiType() + ",view=" + wasabiDefaultACLEntryDTO.getView()
+						+ ",read=" + wasabiDefaultACLEntryDTO.getRead() + ",insert="
+						+ wasabiDefaultACLEntryDTO.getInsert() + ",execute=" + wasabiDefaultACLEntryDTO.getExecute()
+						+ ",write=" + wasabiDefaultACLEntryDTO.getWrite() + ",comment="
+						+ wasabiDefaultACLEntryDTO.getComment() + ",grant=" + wasabiDefaultACLEntryDTO.getGrant()
+						+ ",start_time=" + wasabiDefaultACLEntryDTO.getStartTime() + ",end_time="
+						+ wasabiDefaultACLEntryDTO.getEndTime());
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Delete GRANT as userRight for removeDefaultTestRoom... ");
+		aclService().remove(removeDefaultTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		System.out.print("Removing TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
+		try {
+			aclService().removeDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeTest() throws WasabiException {
+		System.out.println("=== removeTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating removeTestRoom at usersHome... ");
+		WasabiRoomDTO removeTestRoom = null;
+		try {
+			removeTestRoom = roomService().create("removeTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting GRANT as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, WasabiPermission.GRANT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as userRight for removeTestRoom... ");
+		aclService().create(removeTestRoom, user, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		displayACLEntry(removeTestRoom, "removeTestRoom");
+
+		System.out.print("Deactivating inheritance for removeTestRoom... ");
+		aclService().deactivateInheritance(removeTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				removeTestRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
+		System.out.print("Delete GRANT as userRight for removeTestRoom... ");
+		aclService().remove(removeTestRoom, user, WasabiPermission.GRANT);
+		System.out.println("done.");
+
+		displayACLEntry(removeTestRoom, "removeTestRoom");
+
+		System.out.print("Delete READ as userRight for removeTestRoom... ");
+		try {
+			aclService().remove(removeTestRoom, user, WasabiPermission.READ);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
 
 	@Test
 	public void resetTest() throws WasabiException {
