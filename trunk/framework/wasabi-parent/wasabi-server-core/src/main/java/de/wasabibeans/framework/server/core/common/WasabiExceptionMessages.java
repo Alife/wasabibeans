@@ -25,7 +25,7 @@ public class WasabiExceptionMessages {
 
 	public static String get(String msg, String... params) {
 		for (int i = 0; i < params.length; i++) {
-			msg = msg.replaceFirst("&" + i, params[i]);
+			msg = msg.replaceFirst("&" + i, params[i] != null ? params[i] : "");
 		}
 		return msg;
 	}
