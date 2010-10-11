@@ -169,6 +169,7 @@ public class WasabiCertificate {
 					viewRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.READ:
 			keys = readRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -178,6 +179,7 @@ public class WasabiCertificate {
 					readRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.COMMENT:
 			keys = commentRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -187,6 +189,7 @@ public class WasabiCertificate {
 					commentRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.EXECUTE:
 			keys = executeRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -196,6 +199,7 @@ public class WasabiCertificate {
 					executeRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.INSERT:
 			keys = insertRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -205,6 +209,7 @@ public class WasabiCertificate {
 					insertRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.WRITE:
 			keys = writeRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -214,6 +219,7 @@ public class WasabiCertificate {
 					writeRightQueue.remove(key);
 				}
 			}
+			break;
 		case WasabiPermission.GRANT:
 			keys = grantRightMap.keys();
 			while (keys.hasMoreElements()) {
@@ -223,6 +229,7 @@ public class WasabiCertificate {
 					grantRightQueue.remove(key);
 				}
 			}
+			break;
 		}
 	}
 
@@ -234,36 +241,43 @@ public class WasabiCertificate {
 				viewRightMap.remove(key);
 				viewRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.READ:
 			if (readRightMap.containsKey(key)) {
 				readRightMap.remove(key);
 				readRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.COMMENT:
 			if (commentRightMap.containsKey(key)) {
 				commentRightMap.remove(key);
 				commentRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.EXECUTE:
 			if (executeRightMap.containsKey(key)) {
 				executeRightMap.remove(key);
 				executeRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.INSERT:
 			if (insertRightMap.containsKey(key)) {
 				insertRightMap.remove(key);
 				insertRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.WRITE:
 			if (writeRightMap.containsKey(key)) {
 				writeRightMap.remove(key);
 				writeRightQueue.remove(key);
 			}
+			break;
 		case WasabiPermission.GRANT:
 			if (grantRightMap.containsKey(key)) {
 				grantRightMap.remove(key);
 				grantRightQueue.remove(key);
 			}
+			break;
 		}
 	}
 
@@ -328,6 +342,7 @@ public class WasabiCertificate {
 			}
 			viewRightMap.put(key, true);
 			viewRightQueue.add(key);
+			break;
 		case WasabiPermission.READ:
 			if (readRightMap.size() == WasabiConstants.READ_MAP_SIZE) {
 				String topOfQueue = readRightQueue.poll();
@@ -335,6 +350,7 @@ public class WasabiCertificate {
 			}
 			readRightMap.put(key, true);
 			readRightQueue.add(key);
+			break;
 		case WasabiPermission.COMMENT:
 			if (commentRightMap.size() == WasabiConstants.COMMENT_MAP_SIZE) {
 				String topOfQueue = commentRightQueue.poll();
@@ -342,6 +358,7 @@ public class WasabiCertificate {
 			}
 			commentRightMap.put(key, true);
 			commentRightQueue.add(key);
+			break;
 		case WasabiPermission.EXECUTE:
 			if (executeRightMap.size() == WasabiConstants.EXECUTE_MAP_SIZE) {
 				String topOfQueue = executeRightQueue.poll();
@@ -349,6 +366,7 @@ public class WasabiCertificate {
 			}
 			executeRightMap.put(key, true);
 			executeRightQueue.add(key);
+			break;
 		case WasabiPermission.INSERT:
 			if (insertRightMap.size() == WasabiConstants.INSERT_MAP_SIZE) {
 				String topOfQueue = insertRightQueue.poll();
@@ -356,6 +374,7 @@ public class WasabiCertificate {
 			}
 			insertRightMap.put(key, true);
 			insertRightQueue.add(key);
+			break;
 		case WasabiPermission.WRITE:
 			if (writeRightMap.size() == WasabiConstants.WRITE_MAP_SIZE) {
 				String topOfQueue = writeRightQueue.poll();
@@ -363,6 +382,7 @@ public class WasabiCertificate {
 			}
 			writeRightMap.put(key, true);
 			writeRightQueue.add(key);
+			break;
 		case WasabiPermission.GRANT:
 			if (grantRightMap.size() == WasabiConstants.GRANT_MAP_SIZE) {
 				String topOfQueue = grantRightQueue.poll();
@@ -370,6 +390,7 @@ public class WasabiCertificate {
 			}
 			grantRightMap.put(key, true);
 			grantRightQueue.add(key);
+			break;
 		}
 	}
 }

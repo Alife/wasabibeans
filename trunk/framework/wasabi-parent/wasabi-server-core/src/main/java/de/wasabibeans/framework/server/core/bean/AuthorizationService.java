@@ -153,4 +153,25 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public boolean listCertificates(int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean listCertificatesByObject(WasabiUserDTO wasabiUser, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean listCertificatesByUser(WasabiObjectDTO wasabiObject, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
