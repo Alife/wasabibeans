@@ -35,7 +35,6 @@ import javax.jcr.Session;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
-import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
@@ -87,13 +86,14 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Node wasabiGroup = GroupServiceImpl.getWasabiGroup(s);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(wasabiGroup, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_GROUP, "UserService.create()",
-						"INSERT or WRITE", WasabiConstants.WASABI_GROUP_NAME));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(wasabiGroup, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_GROUP, "UserService.create()",
+							"INSERT or WRITE", WasabiConstants.WASABI_GROUP_NAME));
+			}
 		/* Authorization - End */
 
 		Node userNode = UserServiceImpl.create(name, password, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
@@ -110,13 +110,16 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE", "user"));
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE", "room"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
+							"user"));
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.enter()", "EXECUTE",
+							"room"));
+			}
 		/* Authorization - End */
 
 		UserServiceImpl.enter(userNode, roomNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
@@ -129,16 +132,24 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		try {
+
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE) {
-				Vector<String> authorizedUsers = WasabiAuthorizer.authorizePermission(s.getRootNode(), callerPrincipal,
-						WasabiPermission.VIEW, WasabiType.USER, s);
-				for (String id : authorizedUsers) {
-					try {
-						Node user = UserServiceImpl.getUserById(id, s);
-						users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
-					} catch (ObjectDoesNotExistException odnee) {
-						// ...
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+					Vector<String> authorizedUsers = WasabiAuthorizer.authorizePermission(s.getRootNode(),
+							callerPrincipal, WasabiPermission.VIEW, WasabiType.USER, s);
+					for (String id : authorizedUsers) {
+						try {
+							Node user = UserServiceImpl.getUserById(id, s);
+							users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+						} catch (ObjectDoesNotExistException odnee) {
+							// ...
+						}
+					}
+				} else {
+					NodeIterator ni = UserServiceImpl.getAllUsers(s);
+					while (ni.hasNext()) {
+						users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 					}
 				}
 			}
@@ -170,10 +181,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getDisplayName()", "VIEW",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getDisplayName()",
+							"VIEW", "user"));
 		/* Authorization - End */
 
 		long optLockId = ObjectServiceImpl.getOptLockId(userNode);
@@ -191,10 +203,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getDisplayName()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getDisplayName()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertValue2DTO(roomNode, optLockId);
@@ -210,10 +223,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getMemberships()",
-							"VIEW", "user"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getMemberships()",
+								"VIEW", "user"));
 			/* Authorization - End */
 
 			Vector<WasabiGroupDTO> memberships = new Vector<WasabiGroupDTO>();
@@ -254,10 +268,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getPassword()", "WRITE",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getPassword()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		return UserServiceImpl.getPassword(userNode);
@@ -272,10 +287,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getStartRoom()", "READ",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getStartRoom()", "READ",
+							"user"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
@@ -291,9 +307,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getStatus()", "READ", "user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getStatus()", "READ",
+							"user"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(userNode);
@@ -314,9 +332,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getStatus()", "VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getStatus()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(userNode);
@@ -337,10 +357,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getUserByName()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "UserService.getUserByName()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(userNode);
@@ -375,7 +396,10 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 					/* Authorization - Begin */
 					if (WasabiConstants.ACL_CHECK_ENABLE) {
-						if (WasabiAuthorizer.authorize(user, callerPrincipal, WasabiPermission.VIEW, s))
+						if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+							if (WasabiAuthorizer.authorize(user, callerPrincipal, WasabiPermission.VIEW, s))
+								users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
+						} else
 							users.add((WasabiUserDTO) TransferManager.convertNode2DTO(user));
 					}
 					/* Authorization - End */
@@ -403,11 +427,15 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			while (ni.hasNext()) {
-				Node userNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-					users.add((WasabiUserDTO) TransferManager.convertNode2DTO(userNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				while (ni.hasNext()) {
+					Node userNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+						users.add((WasabiUserDTO) TransferManager.convertNode2DTO(userNode));
+				}
+			} else
+				while (ni.hasNext())
+					users.add((WasabiUserDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -427,10 +455,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getWhereabouts()",
-							"VIEW", "user"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.getWhereabouts()",
+								"VIEW", "user"));
 			/* Authorization - End */
 
 			NodeIterator ni = UserServiceImpl.getWhereabouts(userNode);
@@ -454,7 +483,10 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 				if (room != null) {
 					/* Authorization - Begin */
 					if (WasabiConstants.ACL_CHECK_ENABLE) {
-						if (WasabiAuthorizer.authorize(room, callerPrincipal, WasabiPermission.VIEW, s))
+						if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+							if (WasabiAuthorizer.authorize(room, callerPrincipal, WasabiPermission.VIEW, s))
+								whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
+						} else
 							whereabouts.add((WasabiRoomDTO) TransferManager.convertNode2DTO(room));
 					}
 					/* Authorization - End */
@@ -479,13 +511,16 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE", "user"));
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE", "room"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE",
+							"user"));
+				if (!WasabiAuthorizer.authorize(roomNode, callerPrincipal, WasabiPermission.EXECUTE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.leave()", "EXECUTE",
+							"room"));
+			}
 		/* Authorization - End */
 
 		UserServiceImpl.leave(userNode, roomNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
@@ -501,9 +536,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.remove()", "WRITE", "user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.remove()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(userNode, user, optLockId);
@@ -526,9 +563,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.rename()", "WRITE", "user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.rename()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(userNode, user, optLockId);
@@ -551,10 +590,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setDisplayName()", "WRITE",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setDisplayName()",
+							"WRITE", "user"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(userNode, user, optLockId);
@@ -577,10 +617,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setPassword()", "WRITE",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setPassword()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		UserServiceImpl.setPassword(userNode, password);
@@ -596,10 +637,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()", "WRITE",
-						"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStartRoom()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
@@ -618,10 +660,11 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()", "WRITE",
-								"user"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "UserService.setStatus()", "WRITE",
+							"user"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(userNode, user, optLockId);

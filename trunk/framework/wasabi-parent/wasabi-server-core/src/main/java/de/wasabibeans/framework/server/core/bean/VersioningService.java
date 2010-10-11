@@ -80,10 +80,11 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "VersionService.createVersions()",
-							"WRITE", "object"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "VersionService.createVersions()",
+								"WRITE", "object"));
 			/* Authorization - End */
 
 			// get unique version label (that is, unique in the version histories of the affected nodes)
@@ -129,10 +130,11 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "VersionService.getVersions()",
-							"READ", "object"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "VersionService.getVersions()",
+								"READ", "object"));
 			/* Authorization - End */
 
 			VersionHistory versionHistory = s.getWorkspace().getVersionManager()
@@ -191,10 +193,11 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "VersionService.restoreVersions()",
-							"WRITE", "object"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
+								"VersionService.restoreVersions()", "WRITE", "object"));
 			/* Authorization - End */
 
 			// restore versions for entire subtree

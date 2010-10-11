@@ -88,11 +88,12 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.create()",
-						"INSERT or WRITE", "environment"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.create()",
+							"INSERT or WRITE", "environment"));
 		/* Authorization - End */
 
 		Node documentNode = DocumentServiceImpl.create(name, environmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
@@ -109,10 +110,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.getContent()", "READ",
-						"document"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.getContent()",
+							"READ", "document"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
@@ -133,10 +135,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"DocumentService.getDocumentByName()", "VIEW", "document"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"DocumentService.getDocumentByName()", "VIEW", "document"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(documentNode, location);
@@ -151,11 +154,17 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
+				}
+			} else {
+				NodeIterator ni = DocumentServiceImpl.getDocuments(locationNode);
+				while (ni.hasNext())
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 			}
 		}
 		/* Authorization - End */
@@ -178,13 +187,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+				}
+			} else
+				for (Node document : DocumentServiceImpl
+						.getDocumentsByCreationDate(environmentNode, startDate, endDate))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -204,13 +218,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+				}
+			} else
+				for (Node document : DocumentServiceImpl.getDocumentsByCreationDate(environmentNode, startDate,
+						endDate, depth))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -231,11 +250,15 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();) {
-				Node documentNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();) {
+					Node documentNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+				}
+			} else
+				for (NodeIterator ni = DocumentServiceImpl.getDocumentsByCreator(creatorNode); ni.hasNext();)
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -256,9 +279,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node documentNode : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode))
-				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node documentNode : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode))
+					if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			} else
+				for (Node document : DocumentServiceImpl.getDocumentsByCreator(creatorNode, environmentNode))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -278,13 +305,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+				}
+			} else
+				for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate,
+						endDate))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -305,13 +337,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(environmentNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, environment));
+				}
+			} else
+				for (Node document : DocumentServiceImpl.getDocumentsByModificationDate(environmentNode, startDate,
+						endDate, depth))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -332,11 +369,15 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();) {
-				Node documentNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();) {
+					Node documentNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+				}
+			} else
+				for (NodeIterator ni = DocumentServiceImpl.getDocumentsByModifier(modifierNode); ni.hasNext();)
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -357,9 +398,13 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node documentNode : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode))
-				if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node documentNode : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode))
+					if (WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.VIEW, s))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(documentNode));
+			} else
+				for (Node document : DocumentServiceImpl.getDocumentsByModifier(modifierNode, environmentNode))
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(document, environment));
 		}
 		/* Authorization - End */
 		else
@@ -379,13 +424,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
-			for (String id : authorizedDocuments) {
-				Node doc = DocumentServiceImpl.getDocumentById(id, s);
-				if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
-					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(locationNode,
+						callerPrincipal, WasabiPermission.VIEW, WasabiType.DOCUMENT, s);
+				for (String id : authorizedDocuments) {
+					Node doc = DocumentServiceImpl.getDocumentById(id, s);
+					if (authorizedDocuments.contains(ObjectServiceImpl.getUUID(doc)))
+						documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(doc, location));
+				}
+			} else
+				for (NodeIterator ni = DocumentServiceImpl.getDocumentsOrderedByCreationDate(locationNode, order); ni
+						.hasNext();)
+					documents.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 		}
 		/* Authorization - End */
 		else
@@ -405,10 +455,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "DocumentService.getEnvironment()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"DocumentService.getEnvironment()", "VIEW"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(documentNode);
@@ -484,17 +535,18 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.move()",
-						"INSERT or WRITE", "newEnvironment"));
-			if (!WasabiAuthorizer.authorizeChildreen(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
-						"document and sub objects"));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "RoomService.move()", "WRITE",
+							"document and sub objects"));
+			}
 		/* Authorization - End */
 
 		Locker.checkOptLockId(documentNode, document, optLockId);
@@ -512,20 +564,23 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
-						"document"));
-			else
-				WasabiDocumentACL.remove(documentNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
-						jms);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.remove()", "WRITE",
+							"document"));
+				else
+					WasabiDocumentACL.remove(documentNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+							true, jms);
+			} else
+				DocumentServiceImpl.remove(documentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
+						callerPrincipal);
 		}
 		/* Authorization - End */
 		else {
 			DocumentServiceImpl
 					.remove(documentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms, callerPrincipal);
 		}
-
 	}
 
 	public void rename(WasabiDocumentDTO document, String name, Long optLockId) throws ObjectDoesNotExistException,
@@ -542,10 +597,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.rename()", "WRITE",
-						"document"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.rename()", "WRITE",
+							"document"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(documentNode, document, optLockId);
@@ -562,10 +618,11 @@ public class DocumentService extends ObjectService implements DocumentServiceLoc
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.setContent()", "WRITE",
-						"document"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(documentNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "DocumentService.setContent()",
+							"WRITE", "document"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(documentNode, document, optLockId);

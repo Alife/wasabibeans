@@ -36,7 +36,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import de.wasabibeans.framework.server.core.aop.JCRSessionInterceptor;
 import de.wasabibeans.framework.server.core.aop.WasabiAOP;
-import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -64,54 +63,17 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 	@Resource
 	protected SessionContext ctx;
 
-	protected JndiConnector jndi;
 	protected JcrConnector jcr;
+	protected JndiConnector jndi;
 
 	@Override
-	public boolean hasPermission(WasabiObjectDTO object, WasabiUserDTO user, int permission)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
+	public JcrConnector getJcrConnector() {
+		return jcr;
+	}
 
-		Session s = jcr.getJCRSession();
-		Node objectNode = TransferManager.convertDTO2Node(object, s);
-		Node userNode = TransferManager.convertDTO2Node(user, s);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
-		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		Node userCallerNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		String userCallerUUID = ObjectServiceImpl.getUUID(userCallerNode);
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-
-		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!WasabiCertificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
-						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-							throw new NoPermissionException(WasabiExceptionMessages.get(
-									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
-									"ObjectService.getCreatedBy()", "VIEW", "object"));
-						else
-							WasabiCertificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
-				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
-							"VIEW", "object"));
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!WasabiCertificate.getCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW))
-						if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-							throw new NoPermissionException(WasabiExceptionMessages.get(
-									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
-									"ObjectService.getCreatedBy()", "VIEW", "user"));
-						else
-							WasabiCertificate.setCertificate(userCallerUUID, userUUID, WasabiPermission.VIEW);
-				} else if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
-							"VIEW", "user"));
-		/* Authorization - End */
-
-		return AuthorizationServiceImpl.hasPermission(objectUUID, userUUID, permission, objectNode, userNode, s);
+	@Override
+	public JndiConnector getJndiConnector() {
+		return jndi;
 	}
 
 	@Override
@@ -128,15 +90,7 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!WasabiCertificate.getCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW))
-						if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-							throw new NoPermissionException(WasabiExceptionMessages.get(
-									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
-									"ObjectService.getCreatedBy()", "VIEW", "object"));
-						else
-							WasabiCertificate.setCertificate(userCallerUUID, objectUUID, WasabiPermission.VIEW);
-				} else if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
 							"VIEW", "object"));
@@ -146,22 +100,32 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 				userCallerNode, s);
 	}
 
-	/**
-	 * Stupid service method, should be deleted some day...
-	 */
 	@Override
-	public boolean returnTrue() {
-		return true;
-	}
+	public boolean hasPermission(WasabiObjectDTO object, WasabiUserDTO user, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
 
-	@Override
-	public JcrConnector getJcrConnector() {
-		return jcr;
-	}
+		Session s = jcr.getJCRSession();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		String userUUID = ObjectServiceImpl.getUUID(userNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 
-	@Override
-	public JndiConnector getJndiConnector() {
-		return jndi;
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
+							"VIEW", "object"));
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getCreatedBy()",
+							"VIEW", "user"));
+			}
+		/* Authorization - End */
+
+		return AuthorizationServiceImpl.hasPermission(objectUUID, userUUID, permission, objectNode, userNode, s);
 	}
 
 	@PostConstruct
@@ -173,5 +137,13 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 	@PreDestroy
 	public void preDestroy() {
 		jndi.close();
+	}
+
+	/**
+	 * Stupid service method, should be deleted some day...
+	 */
+	@Override
+	public boolean returnTrue() {
+		return true;
 	}
 }

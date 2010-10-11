@@ -70,10 +70,11 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.COMMENT, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.addTag()", "COMMENT",
-								"object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.COMMENT, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.addTag()", "COMMENT",
+							"object"));
 		/* Authorization - End */
 
 		TagServiceImpl.addTag(objectNode, tag, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);
@@ -88,10 +89,11 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.clearTags()", "WRITE",
-						"object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.clearTags()", "WRITE",
+							"object"));
 		/* Authorization - End */
 
 		TagServiceImpl.clearTags(objectNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
@@ -112,8 +114,12 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags))
-				if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags))
+					if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
+			} else
+				for (Node node : TagServiceImpl.getDocumentsByTags(environmentNode, tags))
 					result.add((WasabiDocumentDTO) TransferManager.convertNode2DTO(node, environment));
 		}
 		/* Authorization - End */
@@ -146,8 +152,12 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node node : TagServiceImpl.getObjectsByTag(tag, s))
-				if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node node : TagServiceImpl.getObjectsByTag(tag, s))
+					if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add(TransferManager.convertNode2DTO(node));
+			} else
+				for (Node node : TagServiceImpl.getObjectsByTag(tag, s))
 					result.add(TransferManager.convertNode2DTO(node));
 		}
 		/* Authorization - End */
@@ -167,9 +177,11 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.getTags()", "VIEW", "object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.getTags()", "VIEW",
+							"object"));
 		/* Authorization - End */
 
 		return TagServiceImpl.getTags(objectNode);
@@ -189,10 +201,11 @@ public class TagService extends ObjectService implements TagServiceLocal, TagSer
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.removeTag()", "WRITE",
-						"object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "TagService.removeTag()", "WRITE",
+							"object"));
 		/* Authorization - End */
 
 		TagServiceImpl.removeTag(objectNode, tag, s, WasabiConstants.JCR_SAVE_PER_METHOD);

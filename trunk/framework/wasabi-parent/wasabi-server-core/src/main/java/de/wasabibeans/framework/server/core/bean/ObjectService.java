@@ -239,8 +239,12 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node node : ObjectServiceImpl.getObjectsByAttributeName(attributeName, s))
-				if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node node : ObjectServiceImpl.getObjectsByAttributeName(attributeName, s))
+					if (WasabiAuthorizer.authorize(node, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add(TransferManager.convertNode2DTO(node));
+			} else
+				for (Node node : ObjectServiceImpl.getObjectsByAttributeName(attributeName, s))
 					result.add(TransferManager.convertNode2DTO(node));
 		}
 		/* Authorization - End */
@@ -261,11 +265,15 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = ObjectServiceImpl.getObjectsByCreator(creatorNode); ni.hasNext();) {
-				Node objectNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-					result.add(TransferManager.convertNode2DTO(objectNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByCreator(creatorNode); ni.hasNext();) {
+					Node objectNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add(TransferManager.convertNode2DTO(objectNode));
+				}
+			} else
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByCreator(creatorNode); ni.hasNext();)
+					result.add(TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -285,11 +293,15 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();) {
-				Node objectNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-					result.add(TransferManager.convertNode2DTO(objectNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();) {
+					Node objectNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add(TransferManager.convertNode2DTO(objectNode));
+				}
+			} else
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByModifier(modifierNode); ni.hasNext();)
+					result.add(TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -312,11 +324,15 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();) {
-				Node objectNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
-					result.add(TransferManager.convertNode2DTO(objectNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();) {
+					Node objectNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+						result.add(TransferManager.convertNode2DTO(objectNode));
+				}
+			} else
+				for (NodeIterator ni = ObjectServiceImpl.getObjectsByName(name, s); ni.hasNext();)
+					result.add(TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else

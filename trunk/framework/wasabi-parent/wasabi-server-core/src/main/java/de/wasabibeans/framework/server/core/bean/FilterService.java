@@ -69,9 +69,10 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.isPafUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
 		/* Authorization - End */
 
 		Node pipelineNode = FilterServiceImpl.create(name, filter, s, WasabiConstants.JCR_SAVE_PER_METHOD,
@@ -91,9 +92,10 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.isPafUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(FilterServiceImpl.getPipeline(name, s));
@@ -106,9 +108,10 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.isPafUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
 		/* Authorization - End */
 
 		Vector<WasabiPipelineDTO> pipelines = new Vector<WasabiPipelineDTO>();
@@ -126,9 +129,10 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.isPafUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
 		/* Authorization - End */
 
 		Node pipelineNode = TransferManager.convertDTO2Node(pipeline, s);
@@ -153,9 +157,10 @@ public class FilterService extends ObjectService implements FilterServiceLocal {
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s) || !WasabiAuthorizer.isPafUser(callerPrincipal, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.isPafUser(callerPrincipal, s))
+					throw new NoPermissionException(WasabiExceptionMessages
+							.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_ADMIN));
 		/* Authorization - End */
 
 		FilterServiceImpl.updateOrCreate(name, filter, s, WasabiConstants.JCR_SAVE_PER_METHOD, callerPrincipal);

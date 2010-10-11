@@ -81,11 +81,12 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
-						"INSERT or WRITE", "affiliation"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+							"INSERT or WRITE", "affiliation"));
 		/* Authorization - End */
 
 		Node attributeNode = AttributeServiceImpl.create(name, value, affiliationNode, s,
@@ -110,11 +111,12 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
-						"INSERT or WRITE", "affiliation"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.create()",
+							"INSERT or WRITE", "affiliation"));
 		/* Authorization - End */
 
 		Node attributeNode = AttributeServiceImpl.create(name, valueNode, affiliationNode, s,
@@ -134,10 +136,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"AttributeService.getAffiliation()", "READ"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(affiliationNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"AttributeService.getAffiliation()", "READ"));
 		/* Authorization - End */
 
 		return TransferManager.convertValue2DTO(affiliationNode, optLockId);
@@ -158,10 +161,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"AttributeService.getAttributeByName()", "VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"AttributeService.getAttributeByName()", "VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(attributeNode, object);
@@ -177,11 +181,17 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(objectNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.ATTRIBUTE, s);
-			for (String id : authorizedDocuments) {
-				Node doc = AttributeServiceImpl.getAttributeById(id, s);
-				attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(doc, object));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedDocuments = WasabiAuthorizer.authorizePermission(objectNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.ATTRIBUTE, s);
+				for (String id : authorizedDocuments) {
+					Node doc = AttributeServiceImpl.getAttributeById(id, s);
+					attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(doc, object));
+				}
+			} else {
+				NodeIterator ni = AttributeServiceImpl.getAttributes(objectNode);
+				while (ni.hasNext())
+					attributes.add((WasabiAttributeDTO) TransferManager.convertNode2DTO(ni.nextNode(), object));
 			}
 		}
 		/* Authorization - End */
@@ -203,10 +213,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getAttributeType()",
-						"READ", "attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getAttributeType()",
+							"READ", "attribute"));
 		/* Authorization - End */
 
 		return AttributeServiceImpl.getAttributeType(attributeNode);
@@ -227,10 +238,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getValue()", "READ",
-						"attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getValue()", "READ",
+							"attribute"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
@@ -246,10 +258,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getWasabiValue()",
-						"READ", "attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.getWasabiValue()",
+							"READ", "attribute"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(attributeNode);
@@ -266,17 +279,18 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 		Node newAffiliationNode = TransferManager.convertDTO2Node(newAffiliation, s);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(newAffiliationNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()",
-						"INSERT or WRITE", "newEnvironment"));
-			if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
-						"room and sub objects"));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(newAffiliationNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
+							"room and sub objects"));
+			}
 		/* Authorization - End */
 
 		Locker.checkOptLockId(attributeNode, attribute, optLockId);
@@ -295,13 +309,18 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
-						"document"));
-			else
-				WasabiAttributeACL.remove(attributeNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
-						jms);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.remove()", "WRITE",
+							"document"));
+				else
+					WasabiAttributeACL.remove(attributeNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+							true, jms);
+			} else {
+				AttributeServiceImpl.remove(attributeNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
+						callerPrincipal);
+			}
 		}
 		/* Authorization - End */
 		else {
@@ -326,10 +345,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.rename()", "WRITE",
-						"attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.rename()", "WRITE",
+							"attribute"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(attributeNode, attribute, optLockId);
@@ -347,10 +367,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setValue()", "WRITE",
-						"attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setValue()",
+							"WRITE", "attribute"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(attributeNode, attribute, optLockId);
@@ -372,10 +393,11 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setWasabiValue()",
-						"WRITE", "attribute"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.setWasabiValue()",
+							"WRITE", "attribute"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(attributeNode, attribute, optLockId);
