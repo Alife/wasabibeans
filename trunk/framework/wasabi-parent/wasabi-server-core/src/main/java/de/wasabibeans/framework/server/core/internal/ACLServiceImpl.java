@@ -292,14 +292,6 @@ public class ACLServiceImpl {
 					i++;
 				}
 
-				/* WasabiCertificate - Begin */
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
-							0, 0, 0, 0, 0, 0 });
-				/* WasabiCertificate - End */
-
 				resetInheritance(objectNode, result);
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);

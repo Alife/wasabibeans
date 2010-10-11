@@ -62,11 +62,9 @@ public class WasabiAuthorizer {
 			boolean cert = WasabiCertificate.getCertificate(userUUID, objectUUID, permission);
 
 			if (cert) {
-				System.out.println("cert");
-				return true; }
-			else if (checkCalcRights(objectUUID, userUUID, userNode, permission, s)) {
+				return true;
+			} else if (checkCalcRights(objectUUID, userUUID, userNode, permission, s)) {
 				WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
-				System.out.println("db");
 				return true;
 			} else
 				return false;
@@ -180,6 +178,7 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.INHERITED_USER_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
 							return true;
@@ -187,6 +186,7 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] == 1)
 							return true;
@@ -194,6 +194,7 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
 							return true;
@@ -201,6 +202,7 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.EXPLICIT_USER_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] == 1)
 							return true;
@@ -208,11 +210,13 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							return true;
+						break;
 					case WasabiACLPriority.INHERITED_USER_RIGHT:
 						if (right == -1)
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.EXPLICIT_GROUP_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1) {
 							return true;
@@ -220,6 +224,7 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
+						break;
 					case WasabiACLPriority.INHERITED_GROUP_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
 							return true;
@@ -227,8 +232,22 @@ public class WasabiAuthorizer {
 							return false;
 						else if (right == 1)
 							rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] = 1;
+						break;
 					}
 				}
+
+				if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
+					return true;
+				if (rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] == 1)
+					return true;
+				if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
+					return true;
+				if (rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] == 1)
+					return true;
+				if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1)
+					return true;
+				if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
+					return true;
 				if (rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] == 1)
 					return true;
 			}
