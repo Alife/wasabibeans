@@ -46,7 +46,7 @@ public class WasabiRoomACL {
 		if (!ObjectServiceImpl.getName(roomNode).equals(WasabiConstants.HOME_ROOM_NAME))
 			if (ACLServiceImpl.getInheritance(roomNode))
 				ACLServiceImpl.setInheritance(roomNode, true);
-		WasabiRoomSQL.createRandomSQLinserts();
+		//WasabiRoomSQL.createRandomSQLinserts();
 	}
 
 	public static void ACLEntryForMove(Node roomNode) throws UnexpectedInternalProblemException,

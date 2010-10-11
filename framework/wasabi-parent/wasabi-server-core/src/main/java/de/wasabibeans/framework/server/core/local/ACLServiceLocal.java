@@ -40,23 +40,22 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Local
 public interface ACLServiceLocal {
 
-	public void activateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+	public void activateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, boolean allowance)
+	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission,
-			boolean allowance, long startTime, long endTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
-
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance,
+			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
-	public void create(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException;
+	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int[] permission, boolean[] allowance)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
+
+	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int[] permission, boolean[] allowance,
+			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException;
 
 	public void createDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
@@ -73,23 +72,22 @@ public interface ACLServiceLocal {
 			boolean[] allowance, long[] startTime, long[] endTime) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
-	public void deactivateInheritance(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+	public void deactivateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
-	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO wasabiObject)
+	public Vector<WasabiACLEntryDTO> getAclEntries(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException;
+
+	@Deprecated
+	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO object)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
+
+	public Vector<WasabiACLEntryDTO> getAclEntriesByIdentity(WasabiObjectDTO object, WasabiIdentityDTO identity)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
 	@Deprecated
-	public Vector<WasabiACLEntryDTODeprecated> getACLEntries(WasabiObjectDTO wasabiObject)
-			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
-
-	public Vector<WasabiACLEntryDTO> getAclEntriesByIdentity(WasabiObjectDTO wasabiObject,
-			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException;
-
-	@Deprecated
-	public Vector<WasabiACLEntryDTODeprecated> getACLEntriesByIdentity(WasabiObjectDTO wasabiObject,
-			WasabiIdentityDTO wasabiIdentity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+	public Vector<WasabiACLEntryDTODeprecated> getACLEntriesByIdentity(WasabiObjectDTO object,
+			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
@@ -111,20 +109,20 @@ public interface ACLServiceLocal {
 	@Deprecated
 	public boolean isExplicitRight(WasabiACLEntryDTODeprecated wasabiACLEntry);
 
-	public boolean isInheritanceAllowed(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
+	public boolean isInheritanceAllowed(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission)
+	public void remove(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int permission, long startTime,
-			long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
-
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission)
+	public void remove(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, long startTime, long endTime)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
-	public void remove(WasabiObjectDTO wasabiObject, WasabiIdentityDTO wasabiIdentity, int[] permission,
-			long[] startTime, long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+	public void remove(WasabiObjectDTO object, WasabiIdentityDTO identity, int[] permission)
+			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
+
+	public void remove(WasabiObjectDTO object, WasabiIdentityDTO identity, int[] permission, long[] startTime,
+			long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
 	public void removeDefault(WasabiLocationDTO wasabiLocation, WasabiType wasabiType, int permission)
@@ -141,6 +139,6 @@ public interface ACLServiceLocal {
 			long startTime[], long[] endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
-	public void reset(WasabiObjectDTO wasabiObject) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
+	public void reset(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException, ConcurrentModificationException;
 }
