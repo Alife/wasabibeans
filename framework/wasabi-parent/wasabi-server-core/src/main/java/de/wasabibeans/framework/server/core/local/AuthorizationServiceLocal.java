@@ -40,7 +40,16 @@ public interface AuthorizationServiceLocal {
 
 	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
-	
-	public boolean returnTrue(); 
+
+	public boolean listCertificates(int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException;
+
+	public boolean listCertificatesByObject(WasabiUserDTO wasabiUser, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
+
+	public boolean listCertificatesByUser(WasabiObjectDTO wasabiObject, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
+
+	public boolean returnTrue();
 
 }

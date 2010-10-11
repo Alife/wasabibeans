@@ -29,8 +29,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -41,20 +43,75 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class CertificateTest extends WasabiRemoteTest {
 
-	@BeforeMethod
-	public void setUpBeforeEachMethod() throws Exception {
-		// initialize test
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		rootRoom = testhelper.initRepository();
-		testhelper.initTestUser();
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
+		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
+		if (room != null) {
+			ACLEntries = aclService().getAclEntries(room);
 
-		reWaCon.login("user", "user");
+			System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+
+			for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
+				System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+						+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id="
+						+ wasabiACLEntryDTO.getParentId() + ",view=" + wasabiACLEntryDTO.getView() + ",read="
+						+ wasabiACLEntryDTO.getRead() + ",insert=" + wasabiACLEntryDTO.getInsert() + ",execute="
+						+ wasabiACLEntryDTO.getExecute() + ",write=" + wasabiACLEntryDTO.getWrite() + ",comment="
+						+ wasabiACLEntryDTO.getComment() + ",grant=" + wasabiACLEntryDTO.getGrant() + ",start_time="
+						+ wasabiACLEntryDTO.getStartTime() + ",end_time=" + wasabiACLEntryDTO.getEndTime()
+						+ ",inheritance=" + wasabiACLEntryDTO.getInheritance() + ",inheritance_id="
+						+ wasabiACLEntryDTO.getInheritanceId());
+			}
+		}
 	}
 
-	@AfterMethod
-	public void tearDownAfterEachMethod() throws Exception {
-		reWaCon.logout();
+	@Test
+	public void forbiddanceTest() throws WasabiException {
+		System.out.println("=== forbiddanceTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating aRoom at usersHome... ");
+		WasabiRoomDTO aRoom = null;
+		try {
+			aRoom = roomService().create("aRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for aRoom... ");
+		aclService().deactivateInheritance(aRoom);
+		System.out.println("done.");
+
+		aclService().remove(aRoom, user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Creating someRoom at aRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(aRoom, "aRoom");
+
+		System.out.print("Settin INSERT as forbidden user for aRoom... ");
+		aclService().create(aRoom, user, WasabiPermission.INSERT, false);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at aRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
 	}
 
 	@Test
@@ -96,7 +153,7 @@ public class CertificateTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		System.out.print("Creating someRoom1 at aRoom... ");
 		WasabiRoomDTO someRoom1 = null;
 		try {
@@ -105,15 +162,15 @@ public class CertificateTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		displayACLEntry(someRoom1, "someRoom1");
-		
+
 		System.out.print("Activating inheritance for aRoom... ");
 		aclService().activateInheritance(aRoom);
 		System.out.println("done.");
 
 		displayACLEntry(someRoom1, "someRoom1");
-		
+
 		System.out.print("Creating someRoom2 at someRoom1... ");
 		WasabiRoomDTO someRoom2 = null;
 		try {
@@ -126,24 +183,166 @@ public class CertificateTest extends WasabiRemoteTest {
 		System.out.println("===========================");
 	}
 
-	private void displayACLEntry(WasabiObjectDTO room, String name) throws WasabiException {
-		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
-		if (room != null) {
-			ACLEntries = aclService().getAclEntries(room);
+	@Test
+	public void removeMemberTest() throws WasabiException {
+		System.out.println("=== removeMemberTest() ===");
 
-			System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
 
-			for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
-				System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
-						+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id="
-						+ wasabiACLEntryDTO.getParentId() + ",view=" + wasabiACLEntryDTO.getView() + ",read="
-						+ wasabiACLEntryDTO.getRead() + ",insert=" + wasabiACLEntryDTO.getInsert() + ",execute="
-						+ wasabiACLEntryDTO.getExecute() + ",write=" + wasabiACLEntryDTO.getWrite() + ",comment="
-						+ wasabiACLEntryDTO.getComment() + ",grant=" + wasabiACLEntryDTO.getGrant() + ",start_time="
-						+ wasabiACLEntryDTO.getStartTime() + ",end_time=" + wasabiACLEntryDTO.getEndTime()
-						+ ",inheritance=" + wasabiACLEntryDTO.getInheritance() + ",inheritance_id="
-						+ wasabiACLEntryDTO.getInheritanceId());
-			}
+		System.out.print("Setting INSERT as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
+
+		System.out.print("Creating aRoom at usersHome... ");
+		WasabiRoomDTO aRoom = null;
+		try {
+			aRoom = roomService().create("aRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Adding user to testGroup...");
+		try {
+			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing INSERT as groupRight for group wasabi... ");
+		aclService().remove(wasabiGroup, wasabiGroup, WasabiPermission.INSERT);
+		System.out.println("done.");
+
+		System.out.print("Deactivating inheritance for aRoom... ");
+		aclService().deactivateInheritance(aRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				aRoom,
+				user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.INSERT, WasabiPermission.VIEW,
+						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Setting INSERT as groupRight for aRoom... ");
+		aclService().create(aRoom, testGroup, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE as groupRight for aRoom... ");
+		aclService().create(aRoom, testGroup, WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		displayACLEntry(aRoom, "aRoom");
+
+		System.out.print("Creating someRoom at aRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Removing user from testGroup...");
+		try {
+			groupService().removeMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(aRoom, "aRoom");
+
+		System.out.print("Creating someRoom1 at aRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void removeRightTest() throws WasabiException {
+		System.out.println("=== removeRightTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating aRoom at usersHome... ");
+		WasabiRoomDTO aRoom = null;
+		try {
+			aRoom = roomService().create("aRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for aRoom... ");
+		aclService().deactivateInheritance(aRoom);
+		System.out.println("done.");
+
+		aclService().remove(aRoom, user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Creating someRoom at aRoom... ");
+		WasabiRoomDTO someRoom = null;
+		try {
+			someRoom = roomService().create("someRoom", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		displayACLEntry(aRoom, "aRoom");
+
+		System.out.print("Removing INSERT as user for aRoom... ");
+		aclService().remove(aRoom, user, WasabiPermission.INSERT);
+		System.out.println("done.");
+
+		System.out.print("Creating someRoom1 at aRoom... ");
+		WasabiRoomDTO someRoom1 = null;
+		try {
+			someRoom1 = roomService().create("someRoom1", aRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize test
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
+		testhelper.initTestUser();
+
+		reWaCon.login("user", "user");
+	}
+
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 }
