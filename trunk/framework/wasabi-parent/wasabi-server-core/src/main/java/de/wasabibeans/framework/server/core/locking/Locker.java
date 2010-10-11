@@ -18,7 +18,6 @@ import org.apache.jackrabbit.core.lock.SessionLockManager;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -53,7 +52,9 @@ public class Locker {
 	public static void recognizeLockToken(Session s, String lockToken) throws UnexpectedInternalProblemException {
 		if (lockToken != null) {
 			try {
+				System.out.println(s.getWorkspace().getLockManager().getLockTokens().length);
 				s.getWorkspace().getLockManager().addLockToken(lockToken);
+				System.out.println(s.getWorkspace().getLockManager().getLockTokens().length);
 			} catch (RepositoryException re) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 			}
@@ -117,8 +118,8 @@ public class Locker {
 
 	/**
 	 * Attempts to acquire a lock on the given {@code node}. If the lock cannot be acquired due to an already existing
-	 * lock, a {@code LockingException} is thrown. If the lock can be acquired, the corresponding lock-token will be
-	 * returned.
+	 * lock, a {@code ConcurrentModificationException} is thrown. If the lock can be acquired, the corresponding
+	 * lock-token will be returned.
 	 * 
 	 * @param node
 	 * @param dto
@@ -131,23 +132,22 @@ public class Locker {
 	 *            for the execution of the methods of {@code LockingHelperLocal}.
 	 * @return the lock-token
 	 * @throws UnexpectedInternalProblemException
-	 * @throws LockingException
 	 * @throws ConcurrentModificationException
 	 * @throws ObjectDoesNotExistException
 	 */
-	public static String acquireLock(Node node, WasabiObjectDTO dto, boolean isDeep, LockingHelperLocal locker)
-			throws UnexpectedInternalProblemException, LockingException, ConcurrentModificationException,
+	public static String acquireLock(Node node, WasabiObjectDTO dto, boolean isDeep, Session s,
+			LockingHelperLocal locker) throws UnexpectedInternalProblemException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
 		try {
 			// call the LockingHelperLocal instance to set the lock within a separate transaction
 			return locker.acquireLock(dto.getId(), isDeep);
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (PathNotFoundException pnfe) {
 			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
 		} catch (InvalidItemStateException iise) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -210,13 +210,13 @@ public class Locker {
 			String lockToken = locker.acquireLock(dto.getId(), false);
 			tm.getTransaction().registerSynchronization(new ServiceCallLockUnlocker(dto.getId(), lockToken, locker));
 			return lockToken;
+		} catch (LockException le) {
+			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (PathNotFoundException pnfe) {
 			throw new ObjectDoesNotExistException(WasabiExceptionMessages.OBJECT_DNE);
 		} catch (InvalidItemStateException iise) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (Exception e) {
