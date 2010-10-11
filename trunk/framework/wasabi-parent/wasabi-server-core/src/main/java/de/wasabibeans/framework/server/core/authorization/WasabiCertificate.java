@@ -84,116 +84,75 @@ public class WasabiCertificate {
 		}
 	}
 
+	public static boolean getCertificate(String userUUID, String objectUUID, int[] permission) {
+		for (int i = 0; i < permission.length; i++) {
+			boolean ret = getCertificate(userUUID, objectUUID, permission[i]);
+			if (ret)
+				return true;
+		}
+		return false;
+	}
+
 	public static boolean getCertificate(String userUUID, String objectUUID, int permission) {
-		long start = java.lang.System.nanoTime();
 		String key = concatInputs(userUUID, objectUUID);
 		Boolean value;
 		switch (permission) {
 		case WasabiPermission.VIEW:
 			value = viewRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.READ:
 			value = readRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.COMMENT:
 			value = commentRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.EXECUTE:
 			value = executeRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.INSERT:
 			value = insertRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.WRITE:
 			value = writeRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		case WasabiPermission.GRANT:
 			value = grantRightMap.get(key);
-			if (value == null) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			if (value == null)
 				return false;
-			} else if (value) {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else if (value)
 				return true;
-			} else {
-				long end = java.lang.System.nanoTime();
-				System.out.println("cache pass: " + (end - start));
+			else
 				return false;
-			}
 		}
 		return false;
 	}

@@ -33,7 +33,6 @@ import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.authorization.WasabiRoomACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
@@ -55,7 +54,6 @@ import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistExceptio
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
-import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
@@ -147,32 +145,15 @@ public class RoomService extends ObjectService implements RoomServiceLocal, Room
 		Node roomNode = TransferManager.convertDTO2Node(room, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node roomByNameNode = RoomServiceImpl.getRoomByName(roomNode, name);
-		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
-//		long start1 = java.lang.System.nanoTime();
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
-					if (!WasabiCertificate.getCertificate(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
-							WasabiPermission.VIEW))
-						if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
-							throw new NoPermissionException(WasabiExceptionMessages.get(
-									WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-									"RoomService.getRoomByName()", "VIEW"));
-						else
-							WasabiCertificate.setCertificate(userUUID, ObjectServiceImpl.getUUID(roomByNameNode),
-									WasabiPermission.VIEW);
-				} else if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
+				if (!WasabiAuthorizer.authorize(roomByNameNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "RoomService.getRoomByName()",
 							"VIEW"));
 		/* Authorization - End */
-//		long end1 = java.lang.System.nanoTime();
-//		long time = (end1 - start1);
-//		Certificate.sum = Certificate.sum + time;
-//		System.out.println("getRoomByName pass1: " + time);
 
 		return TransferManager.convertNode2DTO(roomByNameNode, room);
 	}

@@ -53,12 +53,29 @@ public class WasabiAuthorizer {
 
 	public static boolean authorize(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
-		try {
-			// long start1 = java.lang.System.nanoTime();
+		/* WasabiCertificate - Begin */
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
+			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
+			String userUUID = ObjectServiceImpl.getUUID(userNode);
+			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 
+			boolean cert = WasabiCertificate.getCertificate(userUUID, objectUUID, permission);
+
+			if (cert) {
+				System.out.println("cert");
+				return true; }
+			else if (checkCalcRights(objectUUID, userUUID, userNode, permission, s)) {
+				WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
+				System.out.println("db");
+				return true;
+			} else
+				return false;
+		}
+		/* WasabiCertificate - End */
+		else {
 			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-			String userUUID = userNode.getIdentifier();
+			String userUUID = ObjectServiceImpl.getUUID(userNode);
 
 			// Variante 1
 			// return checkRights(objectUUID, userUUID, userNode, permission, s);
@@ -74,12 +91,8 @@ public class WasabiAuthorizer {
 			// Variante 3
 
 			boolean ret = checkCalcRights(objectUUID, userUUID, userNode, permission, s);
-			// long end1 = java.lang.System.nanoTime();
-			// System.out.println("authorize pass1: " + (end1 - start1));
-			return ret;
 
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			return ret;
 		}
 	}
 
