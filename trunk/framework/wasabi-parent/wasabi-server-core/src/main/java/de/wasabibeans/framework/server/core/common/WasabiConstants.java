@@ -35,7 +35,7 @@ public interface WasabiConstants {
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
-	public final static boolean ACL_CERTIFICATE_ENABLE = false;
+	public final static boolean ACL_CERTIFICATE_ENABLE = true;
 
 	/* Storage size of certificate maps */
 	public final static int VIEW_MAP_SIZE = 1000;

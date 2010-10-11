@@ -104,10 +104,10 @@ public class ACLServiceImpl {
 			else
 				updateExplicitGroupRights(objectNode, identityNode, permission, allow, startTime, endTime);
 
-			// updateInheritedRights(objectNode, identityNode, permission, allow, startTime, endTime, s);
-			// updateRights(objectNode, identityNode, permission, allow, startTime, endTime, "");
-			// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			// WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allow);
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allow);
+			/* WasabiCertificate - End */
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -127,10 +127,10 @@ public class ACLServiceImpl {
 			else
 				updateExplicitGroupRights(objectNode, identityNode, permission, allowance, startTime, endTime);
 
-			// updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
-			// updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
-			// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			// WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			/* WasabiCertificate - End */
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -152,97 +152,100 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void createInheritanceEntries(Node identityNode, int[] permission, int[] allowance, String parentId,
-			Session s, WasabiType wasabiType, QueryRunner run, String identityUUID, String parentUUID, int view,
-			int read, int comment, int execute, int insert, int write, int grant, long startTime, long endTime,
-			String inheritance_id) throws UnexpectedInternalProblemException, RepositoryException {
-
-		Vector<Node> NodesWithInheritace = getChildrenWithInheritace(parentId, s);
-		try {
-			if (!NodesWithInheritace.isEmpty()) {
-				for (Node node : NodesWithInheritace) {
-
-					// delete certificates of children
-					if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-						WasabiCertificate.invalidateCertificate(node, identityNode, permission, allowance);
-
-					String objectUUID = node.getIdentifier();
-					if (wasabiType == WasabiType.USER) {
-						// SQL insert query
-						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-								&& grant == 0) {
-							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-									+ "WHERE `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
-							try {
-								run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
-							} catch (SQLException e) {
-								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-							}
-						} else {
-							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
-									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-							try {
-
-								int prio;
-								if (startTime != 0 || endTime != 0)
-									prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
-								else
-									prio = WasabiACLPriority.INHERITED_USER_RIGHT;
-
-								run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
-										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
-										prio, convertNodeType(node.getPrimaryNodeType().getName()));
-							} catch (SQLException e) {
-								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-							}
-						}
-						// next children
-						createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
-								identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
-								endTime, inheritance_id);
-					} else if (wasabiType == WasabiType.GROUP) {
-						// SQL insert query
-						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-								&& grant == 0) {
-							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-									+ "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
-							try {
-								run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
-							} catch (SQLException e) {
-								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-							}
-						} else {
-							String insertACLEntryQuery = "INSERT INTO wasabi_rights "
-									+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
-									+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-							try {
-
-								int prio;
-								if (startTime != 0 || endTime != 0)
-									prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
-								else
-									prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
-
-								run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
-										insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
-										prio, convertNodeType(node.getPrimaryNodeType().getName()));
-							} catch (SQLException e) {
-								throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-							}
-						}
-
-						// next children
-						createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
-								identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
-								endTime, inheritance_id);
-					}
-				}
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
+	// private static void createInheritanceEntries(Node identityNode, int[] permission, int[] allowance, String
+	// parentId,
+	// Session s, WasabiType wasabiType, QueryRunner run, String identityUUID, String parentUUID, int view,
+	// int read, int comment, int execute, int insert, int write, int grant, long startTime, long endTime,
+	// String inheritance_id) throws UnexpectedInternalProblemException, RepositoryException {
+	//
+	// Vector<Node> NodesWithInheritace = getChildrenWithInheritace(parentId, s);
+	// try {
+	// if (!NodesWithInheritace.isEmpty()) {
+	// for (Node node : NodesWithInheritace) {
+	//
+	// // delete certificates of children
+	// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+	// WasabiCertificate.invalidateCertificate(node, identityNode, permission, allowance);
+	//
+	// String objectUUID = node.getIdentifier();
+	// if (wasabiType == WasabiType.USER) {
+	// // SQL insert query
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+	// try {
+	// run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// } else {
+	// String insertACLEntryQuery = "INSERT INTO wasabi_rights "
+	// +
+	// "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+	// + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	// try {
+	//
+	// int prio;
+	// if (startTime != 0 || endTime != 0)
+	// prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
+	// else
+	// prio = WasabiACLPriority.INHERITED_USER_RIGHT;
+	//
+	// run.update(insertACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
+	// insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
+	// prio, convertNodeType(node.getPrimaryNodeType().getName()));
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// }
+	// // next children
+	// createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
+	// identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
+	// endTime, inheritance_id);
+	// } else if (wasabiType == WasabiType.GROUP) {
+	// // SQL insert query
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+	// try {
+	// run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, inheritance_id);
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// } else {
+	// String insertACLEntryQuery = "INSERT INTO wasabi_rights "
+	// +
+	// "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+	// + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	// try {
+	//
+	// int prio;
+	// if (startTime != 0 || endTime != 0)
+	// prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
+	// else
+	// prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
+	//
+	// run.update(insertACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
+	// insert, write, execute, comment, grant, startTime, endTime, inheritance_id,
+	// prio, convertNodeType(node.getPrimaryNodeType().getName()));
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// }
+	//
+	// // next children
+	// createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, wasabiType, run,
+	// identityUUID, parentId, view, read, comment, execute, insert, write, grant, startTime,
+	// endTime, inheritance_id);
+	// }
+	// }
+	// }
+	// } catch (RepositoryException re) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+	// }
+	// }
 
 	private static void deleteInheritedGroupRights(String parentUUID, String groupUUID, long startTime, long endTime,
 			int[] permission, int[] allowance, String wasabiType, QueryRunner run)
@@ -581,7 +584,7 @@ public class ACLServiceImpl {
 			NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
 			NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
 			NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
-			// NodeIterator iteratorGroups = getChildrenNodes(parentNode, WasabiNodeProperty.SUBGROUPS);
+			NodeIterator iteratorGroups = getChildrenNodes(parentNode, WasabiNodeProperty.SUBGROUPS);
 
 			while (iteratorRooms != null && iteratorRooms.hasNext()) {
 				Node aNode = iteratorRooms.nextNode();
@@ -613,58 +616,8 @@ public class ACLServiceImpl {
 					result.add(aNode);
 			}
 
-			// while (iteratorGroups != null && iteratorGroups.hasNext()) {
-			// Node aNode = iteratorGroups.nextNode();
-			// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-			// result.add(aNode);
-			// }
-
-			return result;
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
-	private static Vector<Node> getChildrenWithInheritace(String parentId, Session s)
-			throws UnexpectedInternalProblemException {
-		try {
-
-			Vector<Node> result = new Vector<Node>();
-
-			Node parentNode = s.getNodeByIdentifier(parentId);
-
-			NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
-			NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
-			NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
-			NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
-			NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
-
-			while (iteratorRooms != null && iteratorRooms.hasNext()) {
-				Node aNode = iteratorRooms.nextNode();
-				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-					result.add(aNode);
-			}
-
-			while (iteratorContainers != null && iteratorContainers.hasNext()) {
-				Node aNode = iteratorContainers.nextNode();
-				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-					result.add(aNode);
-			}
-
-			while (iteratorLinks != null && iteratorLinks.hasNext()) {
-				Node aNode = iteratorLinks.nextNode();
-				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-					result.add(aNode);
-			}
-
-			while (iteratorDocuments != null && iteratorDocuments.hasNext()) {
-				Node aNode = iteratorDocuments.nextNode();
-				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-					result.add(aNode);
-			}
-
-			while (iteratorAttributes != null && iteratorAttributes.hasNext()) {
-				Node aNode = iteratorAttributes.nextNode();
+			while (iteratorGroups != null && iteratorGroups.hasNext()) {
+				Node aNode = iteratorGroups.nextNode();
 				if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
 					result.add(aNode);
 			}
@@ -674,6 +627,56 @@ public class ACLServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
+
+	// private static Vector<Node> getChildrenWithInheritace(String parentId, Session s)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	//
+	// Vector<Node> result = new Vector<Node>();
+	//
+	// Node parentNode = s.getNodeByIdentifier(parentId);
+	//
+	// NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
+	// NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
+	// NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
+	// NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
+	// NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
+	//
+	// while (iteratorRooms != null && iteratorRooms.hasNext()) {
+	// Node aNode = iteratorRooms.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorContainers != null && iteratorContainers.hasNext()) {
+	// Node aNode = iteratorContainers.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorLinks != null && iteratorLinks.hasNext()) {
+	// Node aNode = iteratorLinks.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorDocuments != null && iteratorDocuments.hasNext()) {
+	// Node aNode = iteratorDocuments.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorAttributes != null && iteratorAttributes.hasNext()) {
+	// Node aNode = iteratorAttributes.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// return result;
+	// } catch (RepositoryException re) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+	// }
+	// }
 
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntries(Node wasabiLocationNode, Session s)
 			throws UnexpectedInternalProblemException {
@@ -793,6 +796,14 @@ public class ACLServiceImpl {
 					i++;
 				}
 
+				/* WasabiCertificate - Begin */
+				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
+							0, 0, 0, 0, 0, 0 });
+				/* WasabiCertificate - End */
+
 				resetInheritance(objectNode, result);
 			} catch (SQLException e) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
@@ -841,9 +852,27 @@ public class ACLServiceImpl {
 					if (userUUID.length() > 0) {
 						propagateUserInheritance(objectUUID, parentUUID, userUUID, view, read, comment, execute,
 								insert, write, grant, inheritance, startTime, endTime, wasabiType, run);
+
+						/* WasabiCertificate - Begin */
+						if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+							WasabiCertificate.invalidateCertificate(objectNode, objectNode.getSession()
+									.getNodeByIdentifier(userUUID), new int[] { WasabiPermission.VIEW,
+									WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+									WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+									new int[] { 0, 0, 0, 0, 0, 0, 0 });
+						/* WasabiCertificate - End */
 					} else {
 						propagateGroupInheritance(objectUUID, parentUUID, groupUUID, view, read, comment, execute,
 								insert, write, grant, inheritance, startTime, endTime, wasabiType, run);
+
+						/* WasabiCertificate - Begin */
+						if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+							WasabiCertificate.invalidateCertificate(objectNode, objectNode.getSession()
+									.getNodeByIdentifier(groupUUID), new int[] { WasabiPermission.VIEW,
+									WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+									WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+									new int[] { 0, 0, 0, 0, 0, 0, 0 });
+						/* WasabiCertificate - End */
 					}
 				}
 				// propagate to children
@@ -966,10 +995,10 @@ public class ACLServiceImpl {
 			else
 				updateExplicitGroupRights(objectNode, identityNode, permission, allowance, startTime, endTime);
 
-			// updateRights(objectNode, identityNode, permission, allowance, startTime, endTime, "");
-			// updateInheritedRights(objectNode, identityNode, permission, allowance, startTime, endTime, s);
-			// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			// WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+			/* WasabiCertificate - End */
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -990,40 +1019,63 @@ public class ACLServiceImpl {
 	}
 
 	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
-			run.update(deleteRights, objectUUID);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
-		resetChildren(objectNode, run);
-		//setInheritance(objectNode, true);
+			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+			String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
+			try {
+				run.update(deleteRights, objectUUID);
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
+
+			resetChildren(objectNode, run);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException {
-		Vector<Node> Nodes = getChildren(objectNode);
+		try {
+			Vector<Node> Nodes = getChildren(objectNode);
 
-		if (!Nodes.isEmpty()) {
-			for (Node node : Nodes) {
-				// clean ACLEntries
-				String objectUUID = ObjectServiceImpl.getUUID(node);
-				String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
-				try {
-					run.update(deleteRights, objectUUID);
-				} catch (SQLException e) {
-					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			if (!Nodes.isEmpty()) {
+				for (Node node : Nodes) {
+					// clean ACLEntries
+					String objectUUID = ObjectServiceImpl.getUUID(node);
+					String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
+					try {
+						run.update(deleteRights, objectUUID);
+					} catch (SQLException e) {
+						throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+					}
+
+					/* WasabiCertificate - Begin */
+					if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+						WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+								WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+								WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] {
+								0, 0, 0, 0, 0, 0, 0 });
+					/* WasabiCertificate - End */
+
+					// next children
+					resetChildren(node, run);
+
+					// set entries from parent
+					setInheritance(objectNode, true);
 				}
-				
-				// next children
-				resetChildren(node, run);
-				
-				// set entries from parent
-				setInheritance(objectNode, true);
 			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
@@ -1031,12 +1083,13 @@ public class ACLServiceImpl {
 			throws UnexpectedInternalProblemException {
 		try {
 
-			// reset certificate for actual node
+			/* WasabiCertificate - Begin */
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
 				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
 						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
 						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
 						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
 
 			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -1110,113 +1163,113 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void setInheritance(Node objectNode, boolean inheritance, Session s, boolean doJcrSave)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-			objectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
-			Node parentNode = objectNode.getParent().getParent();
-
-			if (inheritance == true) {
-
-				try {
-					String getParentACLEntries = "SELECT * FROM wasabi_rights " + "WHERE `object_id`=?";
-
-					ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-					List<WasabiACLEntry> result = run.query(getParentACLEntries, h, parentNode.getIdentifier());
-
-					if (!result.isEmpty()) {
-						for (WasabiACLEntry wasabiACLEntry : result) {
-
-							String wasabiUserID = wasabiACLEntry.getUser_Id();
-							String wasabiGroupID = wasabiACLEntry.getGroup_Id();
-							Node identityNode;
-							int[] allowance = new int[7];
-
-							// Get data from SQL result
-							if (wasabiUserID.isEmpty()) {
-								identityNode = s.getNodeByIdentifier(wasabiGroupID);
-							} else {
-								identityNode = s.getNodeByIdentifier(wasabiUserID);
-							}
-
-							allowance[WasabiPermission.VIEW] = wasabiACLEntry.getView();
-							allowance[WasabiPermission.READ] = wasabiACLEntry.getRead();
-							allowance[WasabiPermission.EXECUTE] = wasabiACLEntry.getExecute();
-							allowance[WasabiPermission.COMMENT] = wasabiACLEntry.getComment();
-							allowance[WasabiPermission.INSERT] = wasabiACLEntry.getInsert();
-							allowance[WasabiPermission.WRITE] = wasabiACLEntry.getWrite();
-							allowance[WasabiPermission.GRANT] = wasabiACLEntry.getGrant();
-
-							long startTime = wasabiACLEntry.getStart_Time();
-							long endTime = wasabiACLEntry.getEnd_Time();
-
-							String inheritance_id = wasabiACLEntry.getInheritance_Id();
-
-							// Case: explicit right. Inheritance id is equal to parent id.
-							if (inheritance_id.isEmpty()) {
-								updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
-										WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-										WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
-										allowance, startTime, endTime, parentNode.getIdentifier());
-							}
-							// Case: inherited right. Inheritance id is equal to the given inheritance id (root node of
-							// this inherited right).
-							else {
-								updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
-										WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-										WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
-										allowance, startTime, endTime, inheritance_id);
-							}
-						}
-
-						// Look child nodes and set entries if inheritance is true
-						Vector<Node> childrenNodes = new Vector<Node>();
-						childrenNodes = getChildren(objectNode);
-
-						for (Node node : childrenNodes) {
-							if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-								setInheritance(node, true, s, false);
-						}
-					}
-				} catch (SQLException e) {
-					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-				}
-			} else {
-				try {
-					String objectUUID = objectNode.getIdentifier();
-
-					String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
-							+ "WHERE `object_id`=? AND `inheritance_id`!=''";
-
-					ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-					List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
-
-					String[] result = new String[results.size()];
-					int i = 0;
-
-					for (WasabiACLEntry wasabiACLEntry : results) {
-						result[i] = wasabiACLEntry.getInheritance_Id();
-						i++;
-					}
-
-					resetInheritance(objectNode, result);
-				} catch (SQLException e) {
-					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-				}
-			}
-			if (doJcrSave) {
-				s.save();
-			}
-		} catch (InvalidItemStateException iise) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
-		} catch (LockException le) {
-			throw new ConcurrentModificationException(WasabiExceptionMessages.get(
-					WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
+	// public static void setInheritance(Node objectNode, boolean inheritance, Session s, boolean doJcrSave)
+	// throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	// objectNode.setProperty(WasabiNodeProperty.INHERITANCE, inheritance);
+	// Node parentNode = objectNode.getParent().getParent();
+	//
+	// if (inheritance == true) {
+	//
+	// try {
+	// String getParentACLEntries = "SELECT * FROM wasabi_rights " + "WHERE `object_id`=?";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getParentACLEntries, h, parentNode.getIdentifier());
+	//
+	// if (!result.isEmpty()) {
+	// for (WasabiACLEntry wasabiACLEntry : result) {
+	//
+	// String wasabiUserID = wasabiACLEntry.getUser_Id();
+	// String wasabiGroupID = wasabiACLEntry.getGroup_Id();
+	// Node identityNode;
+	// int[] allowance = new int[7];
+	//
+	// // Get data from SQL result
+	// if (wasabiUserID.isEmpty()) {
+	// identityNode = s.getNodeByIdentifier(wasabiGroupID);
+	// } else {
+	// identityNode = s.getNodeByIdentifier(wasabiUserID);
+	// }
+	//
+	// allowance[WasabiPermission.VIEW] = wasabiACLEntry.getView();
+	// allowance[WasabiPermission.READ] = wasabiACLEntry.getRead();
+	// allowance[WasabiPermission.EXECUTE] = wasabiACLEntry.getExecute();
+	// allowance[WasabiPermission.COMMENT] = wasabiACLEntry.getComment();
+	// allowance[WasabiPermission.INSERT] = wasabiACLEntry.getInsert();
+	// allowance[WasabiPermission.WRITE] = wasabiACLEntry.getWrite();
+	// allowance[WasabiPermission.GRANT] = wasabiACLEntry.getGrant();
+	//
+	// long startTime = wasabiACLEntry.getStart_Time();
+	// long endTime = wasabiACLEntry.getEnd_Time();
+	//
+	// String inheritance_id = wasabiACLEntry.getInheritance_Id();
+	//
+	// // Case: explicit right. Inheritance id is equal to parent id.
+	// if (inheritance_id.isEmpty()) {
+	// updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
+	// WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+	// WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+	// allowance, startTime, endTime, parentNode.getIdentifier());
+	// }
+	// // Case: inherited right. Inheritance id is equal to the given inheritance id (root node of
+	// // this inherited right).
+	// else {
+	// updateRights(objectNode, identityNode, new int[] { WasabiPermission.VIEW,
+	// WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+	// WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+	// allowance, startTime, endTime, inheritance_id);
+	// }
+	// }
+	//
+	// // Look child nodes and set entries if inheritance is true
+	// Vector<Node> childrenNodes = new Vector<Node>();
+	// childrenNodes = getChildren(objectNode);
+	//
+	// for (Node node : childrenNodes) {
+	// if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// setInheritance(node, true, s, false);
+	// }
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// } else {
+	// try {
+	// String objectUUID = objectNode.getIdentifier();
+	//
+	// String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+	// + "WHERE `object_id`=? AND `inheritance_id`!=''";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
+	//
+	// String[] result = new String[results.size()];
+	// int i = 0;
+	//
+	// for (WasabiACLEntry wasabiACLEntry : results) {
+	// result[i] = wasabiACLEntry.getInheritance_Id();
+	// i++;
+	// }
+	//
+	// resetInheritance(objectNode, result);
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// }
+	// if (doJcrSave) {
+	// s.save();
+	// }
+	// } catch (InvalidItemStateException iise) {
+	// throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
+	// } catch (LockException le) {
+	// throw new ConcurrentModificationException(WasabiExceptionMessages.get(
+	// WasabiExceptionMessages.CONCURRENT_MOD_LOCKED, le.getFailureNodePath()), le);
+	// } catch (RepositoryException re) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+	// }
+	// }
 
 	/**
 	 * Sets the inheritance flag as a node property. The inheritance flag is true if inheritance is active, otherwise
@@ -1644,200 +1697,200 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void updateInheritedRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
-			long startTime, long endTime, Session s) throws UnexpectedInternalProblemException, RepositoryException {
-
-		// reset certificate for actual node
-		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
-
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
-		String identityUUID = ObjectServiceImpl.getUUID(identityNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
-
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
-
-		if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
-			try {
-				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
-						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
-				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
-						identityUUID, "");
-
-				if (!result.isEmpty()) {
-					view = result.get(0).getView();
-					read = result.get(0).getRead();
-					insert = result.get(0).getInsert();
-					write = result.get(0).getWrite();
-					execute = result.get(0).getExecute();
-					comment = result.get(0).getComment();
-					grant = result.get(0).getGrant();
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-					if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-							&& grant == 0) {
-						String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-								+ "WHERE `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
-						run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
-					} else {
-						String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
-								+ "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
-								+ " WHERE `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-						run.update(updateUserACLEntryQuery, view, read, insert, write, execute, comment, grant,
-								identityUUID, startTime, endTime, objectUUID);
-					}
-
-				} else {
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-					createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.USER, run,
-							identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
-							endTime, objectUUID);
-				}
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-		} else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
-			try {
-				String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
-						+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
-				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
-						identityUUID, "");
-
-				if (!result.isEmpty()) {
-					view = result.get(0).getView();
-					read = result.get(0).getRead();
-					insert = result.get(0).getInsert();
-					write = result.get(0).getWrite();
-					execute = result.get(0).getExecute();
-					comment = result.get(0).getComment();
-					grant = result.get(0).getGrant();
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-					if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-							&& grant == 0) {
-						String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-								+ "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
-						run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
-					} else {
-						String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
-								+ "`parent_id`=?, `view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
-								+ " WHERE `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-						run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment,
-								grant, identityUUID, startTime, endTime, objectUUID);
-					}
-
-				} else {
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-					createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.GROUP, run,
-							identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
-							endTime, objectUUID);
-				}
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-		}
-	}
+	// private static void updateInheritedRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
+	// long startTime, long endTime, Session s) throws UnexpectedInternalProblemException, RepositoryException {
+	//
+	// // reset certificate for actual node
+	// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+	// WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+	//
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+	// String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
+	// String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+	// String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
+	//
+	// int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+	//
+	// if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
+	// try {
+	// String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
+	// + "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+	// identityUUID, "");
+	//
+	// if (!result.isEmpty()) {
+	// view = result.get(0).getView();
+	// read = result.get(0).getRead();
+	// insert = result.get(0).getInsert();
+	// write = result.get(0).getWrite();
+	// execute = result.get(0).getExecute();
+	// comment = result.get(0).getComment();
+	// grant = result.get(0).getGrant();
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+	// run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
+	// } else {
+	// String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
+	// + "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
+	// + " WHERE `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQuery, view, read, insert, write, execute, comment, grant,
+	// identityUUID, startTime, endTime, objectUUID);
+	// }
+	//
+	// } else {
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	// createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.USER, run,
+	// identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
+	// endTime, objectUUID);
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// } else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
+	// try {
+	// String getUserACLEntryQuery = "SELECT * FROM wasabi_rights "
+	// + "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+	// identityUUID, "");
+	//
+	// if (!result.isEmpty()) {
+	// view = result.get(0).getView();
+	// read = result.get(0).getRead();
+	// insert = result.get(0).getInsert();
+	// write = result.get(0).getWrite();
+	// execute = result.get(0).getExecute();
+	// comment = result.get(0).getComment();
+	// grant = result.get(0).getGrant();
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+	// run.update(deleteACLEntryQuery, startTime, endTime, identityUUID, objectUUID);
+	// } else {
+	// String updateUserACLEntryQuery = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
+	// + " WHERE `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQuery, parentUUID, view, read, insert, write, execute, comment,
+	// grant, identityUUID, startTime, endTime, objectUUID);
+	// }
+	//
+	// } else {
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	// createInheritanceEntries(identityNode, permission, allowance, objectUUID, s, WasabiType.GROUP, run,
+	// identityUUID, objectUUID, view, read, comment, execute, insert, write, grant, startTime,
+	// endTime, objectUUID);
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// }
+	// }
 
 	private static void updateInheritedUserRights(String parentUUID, String userUUID, int view, int read, int comment,
 			int execute, int insert, int write, int grant, long startTime, long endTime, int[] permission,
@@ -1853,360 +1906,362 @@ public class ACLServiceImpl {
 		}
 	}
 
-	private static void updateRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
-			long startTime, long endTime, String inheritance_id) throws RepositoryException,
-			UnexpectedInternalProblemException {
-
-		// reset certificate for actual node
-		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
-
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
-		String identityUUID = ObjectServiceImpl.getUUID(identityNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
-		String wasabiType = objectNode.getPrimaryNodeType().getName();
-
-		int view, read, insert, write, execute, comment, grant;
-
-		if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
-			try {
-				String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
-						+ "FROM wasabi_rights "
-						+ "WHERE `object_id`=? "
-						+ "AND `start_time`=? "
-						+ "AND `end_time`=? "
-						+ "AND `user_id`=? " + "AND `inheritance_id`=?";
-
-				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
-						identityUUID, inheritance_id);
-
-				if (result.isEmpty()) {
-					view = 0;
-					read = 0;
-					insert = 0;
-					write = 0;
-					execute = 0;
-					comment = 0;
-					grant = 0;
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-
-					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
-							|| grant != 0) {
-						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-						int prio;
-						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
-							prio = WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT;
-						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
-							prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
-						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
-							prio = WasabiACLPriority.EXPLICIT_USER_RIGHT;
-						else
-							prio = WasabiACLPriority.INHERITED_USER_RIGHT;
-
-						run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
-								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
-								convertNodeType(wasabiType));
-					}
-				} else {
-					view = result.get(0).getView();
-					read = result.get(0).getRead();
-					insert = result.get(0).getInsert();
-					write = result.get(0).getWrite();
-					execute = result.get(0).getExecute();
-					comment = result.get(0).getComment();
-					grant = result.get(0).getGrant();
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-
-						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-								&& grant == 0) {
-							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-									+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
-							run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
-									inheritance_id);
-						} else {
-							for (int j = 0; j < permission.length; j++) {
-								switch (permission[j]) {
-								case WasabiPermission.VIEW:
-									String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `view`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
-											startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.READ:
-									String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `read`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
-											startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.INSERT:
-									String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `insert`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.WRITE:
-									String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `write`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.EXECUTE:
-									String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `execute`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.COMMENT:
-									String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `comment`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.GRANT:
-									String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `grant`=?"
-											+ " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								}
-							}
-						}
-					}
-				}
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-		} else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
-			try {
-				String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
-						+ "FROM wasabi_rights "
-						+ "WHERE `object_id`=? "
-						+ "AND `start_time`=? "
-						+ "AND `end_time`=? "
-						+ "AND `group_id`=? " + "AND `inheritance_id`=?";
-
-				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
-						identityUUID, inheritance_id);
-
-				if (result.isEmpty()) {
-					view = 0;
-					read = 0;
-					insert = 0;
-					write = 0;
-					execute = 0;
-					comment = 0;
-					grant = 0;
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-					}
-
-					if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
-							|| grant != 0) {
-						String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-								+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
-								+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-						int prio;
-						if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
-							prio = WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT;
-						else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
-							prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
-						else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
-							prio = WasabiACLPriority.EXPLICIT_GROUP_RIGHT;
-						else
-							prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
-
-						run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
-								insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
-								convertNodeType(wasabiType));
-					}
-				} else {
-					view = result.get(0).getView();
-					read = result.get(0).getRead();
-					insert = result.get(0).getInsert();
-					write = result.get(0).getWrite();
-					execute = result.get(0).getExecute();
-					comment = result.get(0).getComment();
-					grant = result.get(0).getGrant();
-
-					for (int i = 0; i < permission.length; i++) {
-						switch (permission[i]) {
-						case WasabiPermission.VIEW:
-							view = allowance[i];
-							break;
-						case WasabiPermission.READ:
-							read = allowance[i];
-							break;
-						case WasabiPermission.INSERT:
-							insert = allowance[i];
-							break;
-						case WasabiPermission.WRITE:
-							write = allowance[i];
-							break;
-						case WasabiPermission.EXECUTE:
-							execute = allowance[i];
-							break;
-						case WasabiPermission.COMMENT:
-							comment = allowance[i];
-							break;
-						case WasabiPermission.GRANT:
-							grant = allowance[i];
-							break;
-						}
-
-						if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
-								&& grant == 0) {
-							String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
-									+ "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
-							run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
-									inheritance_id);
-						} else {
-							for (int j = 0; j < permission.length; j++) {
-								switch (permission[j]) {
-								case WasabiPermission.VIEW:
-									String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `view`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
-											startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.READ:
-									String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `read`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
-											startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.INSERT:
-									String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `insert`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.WRITE:
-									String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `write`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.EXECUTE:
-									String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `execute`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.COMMENT:
-									String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `comment`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								case WasabiPermission.GRANT:
-									String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
-											+ "`parent_id`=?, `grant`=?"
-											+ " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
-									run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
-											identityUUID, startTime, endTime, inheritance_id);
-									break;
-								}
-							}
-						}
-					}
-				}
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-		}
-	}
+	// private static void updateRights(Node objectNode, Node identityNode, int[] permission, int[] allowance,
+	// long startTime, long endTime, String inheritance_id) throws RepositoryException,
+	// UnexpectedInternalProblemException {
+	//
+	// // reset certificate for actual node
+	// if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+	// WasabiCertificate.invalidateCertificate(objectNode, identityNode, permission, allowance);
+	//
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+	// String wasabiIdentityType = identityNode.getPrimaryNodeType().getName();
+	// String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+	// String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
+	// String wasabiType = objectNode.getPrimaryNodeType().getName();
+	//
+	// int view, read, insert, write, execute, comment, grant;
+	//
+	// if (wasabiIdentityType.equals(WasabiNodeType.USER)) {
+	// try {
+	// String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
+	// + "FROM wasabi_rights "
+	// + "WHERE `object_id`=? "
+	// + "AND `start_time`=? "
+	// + "AND `end_time`=? "
+	// + "AND `user_id`=? " + "AND `inheritance_id`=?";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+	// identityUUID, inheritance_id);
+	//
+	// if (result.isEmpty()) {
+	// view = 0;
+	// read = 0;
+	// insert = 0;
+	// write = 0;
+	// execute = 0;
+	// comment = 0;
+	// grant = 0;
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	//
+	// if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
+	// || grant != 0) {
+	// String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+	// +
+	// "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+	// + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	//
+	// int prio;
+	// if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT;
+	// else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.INHERITED_USER_TIME_RIGHT;
+	// else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.EXPLICIT_USER_RIGHT;
+	// else
+	// prio = WasabiACLPriority.INHERITED_USER_RIGHT;
+	//
+	// run.update(insertUserACLEntryQuery, objectUUID, identityUUID, parentUUID, "", view, read,
+	// insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
+	// convertNodeType(wasabiType));
+	// }
+	// } else {
+	// view = result.get(0).getView();
+	// read = result.get(0).getRead();
+	// insert = result.get(0).getInsert();
+	// write = result.get(0).getWrite();
+	// execute = result.get(0).getExecute();
+	// comment = result.get(0).getComment();
+	// grant = result.get(0).getGrant();
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	//
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `user_id`=? AND `inheritance_id`=?";
+	// run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
+	// inheritance_id);
+	// } else {
+	// for (int j = 0; j < permission.length; j++) {
+	// switch (permission[j]) {
+	// case WasabiPermission.VIEW:
+	// String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `view`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
+	// startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.READ:
+	// String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `read`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
+	// startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.INSERT:
+	// String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `insert`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.WRITE:
+	// String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `write`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `execute`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.COMMENT:
+	// String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `comment`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.GRANT:
+	// String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `grant`=?"
+	// + " WHERE `object_id`=? AND `user_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// }
+	// }
+	// }
+	// }
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// } else if (wasabiIdentityType.equals(WasabiNodeType.GROUP)) {
+	// try {
+	// String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
+	// + "FROM wasabi_rights "
+	// + "WHERE `object_id`=? "
+	// + "AND `start_time`=? "
+	// + "AND `end_time`=? "
+	// + "AND `group_id`=? " + "AND `inheritance_id`=?";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getUserACLEntryQuery, h, objectUUID, startTime, endTime,
+	// identityUUID, inheritance_id);
+	//
+	// if (result.isEmpty()) {
+	// view = 0;
+	// read = 0;
+	// insert = 0;
+	// write = 0;
+	// execute = 0;
+	// comment = 0;
+	// grant = 0;
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	// }
+	//
+	// if (view != 0 || read != 0 || insert != 0 || write != 0 || execute != 0 || comment != 0
+	// || grant != 0) {
+	// String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+	// +
+	// "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+	// + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	//
+	// int prio;
+	// if ((startTime != 0 || endTime != 0) && inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT;
+	// else if ((startTime != 0 || endTime != 0) && !inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT;
+	// else if (startTime == 0 && endTime == 0 && inheritance_id.isEmpty())
+	// prio = WasabiACLPriority.EXPLICIT_GROUP_RIGHT;
+	// else
+	// prio = WasabiACLPriority.INHERITED_GROUP_RIGHT;
+	//
+	// run.update(insertUserACLEntryQuery, objectUUID, "", parentUUID, identityUUID, view, read,
+	// insert, write, execute, comment, grant, startTime, endTime, inheritance_id, prio,
+	// convertNodeType(wasabiType));
+	// }
+	// } else {
+	// view = result.get(0).getView();
+	// read = result.get(0).getRead();
+	// insert = result.get(0).getInsert();
+	// write = result.get(0).getWrite();
+	// execute = result.get(0).getExecute();
+	// comment = result.get(0).getComment();
+	// grant = result.get(0).getGrant();
+	//
+	// for (int i = 0; i < permission.length; i++) {
+	// switch (permission[i]) {
+	// case WasabiPermission.VIEW:
+	// view = allowance[i];
+	// break;
+	// case WasabiPermission.READ:
+	// read = allowance[i];
+	// break;
+	// case WasabiPermission.INSERT:
+	// insert = allowance[i];
+	// break;
+	// case WasabiPermission.WRITE:
+	// write = allowance[i];
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// execute = allowance[i];
+	// break;
+	// case WasabiPermission.COMMENT:
+	// comment = allowance[i];
+	// break;
+	// case WasabiPermission.GRANT:
+	// grant = allowance[i];
+	// break;
+	// }
+	//
+	// if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0
+	// && grant == 0) {
+	// String deleteACLEntryQuery = "DELETE FROM wasabi_rights "
+	// + "WHERE `object_id`=? AND `start_time`=? AND `end_time`=? AND `group_id`=? AND `inheritance_id`=?";
+	// run.update(deleteACLEntryQuery, objectUUID, startTime, endTime, identityUUID,
+	// inheritance_id);
+	// } else {
+	// for (int j = 0; j < permission.length; j++) {
+	// switch (permission[j]) {
+	// case WasabiPermission.VIEW:
+	// String updateUserACLEntryQueryView = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `view`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryView, parentUUID, view, objectUUID, identityUUID,
+	// startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.READ:
+	// String updateUserACLEntryQueryRead = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `read`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryRead, parentUUID, read, objectUUID, identityUUID,
+	// startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.INSERT:
+	// String updateUserACLEntryQueryInsert = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `insert`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryInsert, parentUUID, insert, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.WRITE:
+	// String updateUserACLEntryQueryWrite = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `write`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryWrite, parentUUID, write, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.EXECUTE:
+	// String updateUserACLEntryQueryExecute = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `execute`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryExecute, parentUUID, execute, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.COMMENT:
+	// String updateUserACLEntryQueryComment = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `comment`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryComment, parentUUID, comment, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// case WasabiPermission.GRANT:
+	// String updateUserACLEntryQueryGrant = "UPDATE wasabi_rights SET "
+	// + "`parent_id`=?, `grant`=?"
+	// + " WHERE `object_id`=? AND `group_id`=? AND `start_time`=? AND `end_time`=? AND `inheritance_id`=?";
+	// run.update(updateUserACLEntryQueryGrant, parentUUID, grant, objectUUID,
+	// identityUUID, startTime, endTime, inheritance_id);
+	// break;
+	// }
+	// }
+	// }
+	// }
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// }
+	// }
 }
