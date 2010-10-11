@@ -44,7 +44,6 @@ import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.local.AttributeServiceLocal;
 import de.wasabibeans.framework.server.core.local.AuthorizationServiceLocal;
-import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
 import de.wasabibeans.framework.server.core.local.ContainerServiceLocal;
 import de.wasabibeans.framework.server.core.local.DocumentServiceLocal;
 import de.wasabibeans.framework.server.core.local.EventServiceLocal;
@@ -100,7 +99,6 @@ public class WasabiLocalTest extends Arquillian {
 
 	private AttributeServiceLocal attributeService;
 	private AuthorizationServiceLocal authorizationService;
-	private CertificateServiceLocal certificateService;
 	private ContainerServiceLocal containerService;
 	private DocumentServiceLocal documentService;
 	private EventServiceLocal eventService;
@@ -144,17 +142,6 @@ public class WasabiLocalTest extends Arquillian {
 				authorizationService = (AuthorizationServiceLocal) reWaCon.lookup("AuthorizationService");
 			}
 			return authorizationService;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public CertificateServiceLocal certificateService() {
-		try {
-			if (certificateService == null) {
-				certificateService = (CertificateServiceLocal) reWaCon.lookup("CertificateService");
-			}
-			return certificateService;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

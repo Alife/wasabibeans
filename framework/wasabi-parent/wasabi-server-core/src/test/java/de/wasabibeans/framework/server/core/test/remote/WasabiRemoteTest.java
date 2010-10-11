@@ -51,7 +51,6 @@ import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSource;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
 import de.wasabibeans.framework.server.core.remote.AttributeServiceRemote;
 import de.wasabibeans.framework.server.core.remote.AuthorizationServiceRemote;
-import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 import de.wasabibeans.framework.server.core.remote.ContainerServiceRemote;
 import de.wasabibeans.framework.server.core.remote.DocumentServiceRemote;
 import de.wasabibeans.framework.server.core.remote.EventServiceRemote;
@@ -101,7 +100,6 @@ public class WasabiRemoteTest extends Arquillian {
 
 	private AttributeServiceRemote attributeService;
 	private AuthorizationServiceRemote authorizationService;
-	private CertificateServiceRemote certificateService;
 	private ContainerServiceRemote containerService;
 	private DocumentServiceRemote documentService;
 	private EventServiceRemote eventService;
@@ -145,17 +143,6 @@ public class WasabiRemoteTest extends Arquillian {
 				authorizationService = (AuthorizationServiceRemote) reWaCon.lookup("AuthorizationService");
 			}
 			return authorizationService;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public CertificateServiceRemote certificateService() {
-		try {
-			if (certificateService == null) {
-				certificateService = (CertificateServiceRemote) reWaCon.lookup("CertificateService");
-			}
-			return certificateService;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
