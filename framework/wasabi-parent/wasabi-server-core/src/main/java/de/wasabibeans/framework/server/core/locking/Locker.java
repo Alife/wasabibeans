@@ -52,9 +52,7 @@ public class Locker {
 	public static void recognizeLockToken(Session s, String lockToken) throws UnexpectedInternalProblemException {
 		if (lockToken != null) {
 			try {
-				System.out.println(s.getWorkspace().getLockManager().getLockTokens().length);
 				s.getWorkspace().getLockManager().addLockToken(lockToken);
-				System.out.println(s.getWorkspace().getLockManager().getLockTokens().length);
 			} catch (RepositoryException re) {
 				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 			}
