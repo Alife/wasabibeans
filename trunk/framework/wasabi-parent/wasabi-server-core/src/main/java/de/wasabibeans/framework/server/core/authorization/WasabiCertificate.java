@@ -37,33 +37,23 @@ import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
-import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
-import de.wasabibeans.framework.server.core.local.CertificateServiceLocal;
-import de.wasabibeans.framework.server.core.remote.CertificateServiceRemote;
 
 @Stateless(name = "CertificateService")
-public class WasabiCertificate implements CertificateServiceLocal, CertificateServiceRemote {
+public class WasabiCertificate {
 
-	private static int certAccess = 0;
-
-	private static int certResultAccess = 0;
 	private static ConcurrentHashMap<String, Boolean> commentRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> commentRightQueue = new ConcurrentLinkedQueue<String>();
-
-	private static int dbAccess = 0;
 	private static ConcurrentHashMap<String, Boolean> executeRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> executeRightQueue = new ConcurrentLinkedQueue<String>();
 	private static ConcurrentHashMap<String, Boolean> grantRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> grantRightQueue = new ConcurrentLinkedQueue<String>();
 	private static ConcurrentHashMap<String, Boolean> insertRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> insertRightQueue = new ConcurrentLinkedQueue<String>();
-
 	private static ConcurrentHashMap<String, Boolean> readRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> readRightQueue = new ConcurrentLinkedQueue<String>();
-	public static long sum = 0;
 	private static ConcurrentHashMap<String, Boolean> viewRightMap = new ConcurrentHashMap<String, Boolean>();
 	private static ConcurrentLinkedQueue<String> viewRightQueue = new ConcurrentLinkedQueue<String>();
 	private static ConcurrentHashMap<String, Boolean> writeRightMap = new ConcurrentHashMap<String, Boolean>();
@@ -322,11 +312,11 @@ public class WasabiCertificate implements CertificateServiceLocal, CertificateSe
 
 	public static void invalidateCertificate(Node objectNode, Node identityNode, int[] permission, int[] allowance)
 			throws RepositoryException, UnexpectedInternalProblemException {
+		String identityType = identityNode.getPrimaryNodeType().getName();
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+
 		for (int i = 0; i < allowance.length; i++) {
 			if (allowance[i] == -1 || allowance[i] == 0) {
-				String identityType = identityNode.getPrimaryNodeType().getName();
-				String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-
 				if (identityType.equals(WasabiNodeType.USER)) {
 					String userUUID = ObjectServiceImpl.getUUID(identityNode);
 					invalidate(userUUID, objectUUID, permission[i]);
@@ -341,11 +331,31 @@ public class WasabiCertificate implements CertificateServiceLocal, CertificateSe
 		}
 	}
 
-	public static void invalidateCertificateByObject(Node objectNode, int[] permission, int[] allowance)
+	public static void invalidateCertificateByIdentity(Node identityNode, int[] permission, int[] allowance)
 			throws RepositoryException, UnexpectedInternalProblemException {
+		String identityType = identityNode.getPrimaryNodeType().getName();
+		String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+
+		if (identityType.equals(WasabiNodeType.USER)) {
+			for (int i = 0; i < allowance.length; i++) {
+				if (allowance[i] == -1 || allowance[i] == 0) {
+					invalidate(identityUUID, permission[i]);
+				} else if (identityType.equals(WasabiNodeType.GROUP)) {
+					Vector<Node> users = getAllUserByGroup(identityNode);
+					for (Node userNode : users) {
+						invalidate(ObjectServiceImpl.getUUID(userNode), permission[i]);
+					}
+				}
+			}
+		}
+	}
+
+	public static void invalidateCertificateByObject(Node objectNode, int[] permission, int[] allowance)
+			throws UnexpectedInternalProblemException {
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+
 		for (int i = 0; i < allowance.length; i++) {
 			if (allowance[i] == -1 || allowance[i] == 0) {
-				String objectUUID = ObjectServiceImpl.getUUID(objectNode);
 				invalidate(objectUUID, permission[i]);
 			}
 		}
@@ -404,35 +414,5 @@ public class WasabiCertificate implements CertificateServiceLocal, CertificateSe
 			grantRightMap.put(key, true);
 			grantRightQueue.add(key);
 		}
-	}
-
-	@Override
-	public int getCertAccess() {
-		return certAccess;
-	}
-
-	@Override
-	public int getDbAccess() {
-		return dbAccess;
-	}
-
-	@Override
-	public int getResultCertAccess() {
-		return certResultAccess;
-	}
-
-	@Override
-	public void setCertAccess() {
-		certAccess = certAccess + 1;
-	}
-
-	@Override
-	public void setDbAccess() {
-		dbAccess = dbAccess + 1;
-	}
-
-	@Override
-	public void setResultCertAccess() {
-		certResultAccess = certResultAccess + 1;
 	}
 }

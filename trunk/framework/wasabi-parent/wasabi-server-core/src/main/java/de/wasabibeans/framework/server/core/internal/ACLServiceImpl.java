@@ -271,6 +271,44 @@ public class ACLServiceImpl {
 		}
 	}
 
+	private static void dispropagateInheritance(Node objectNode) throws UnexpectedInternalProblemException {
+		try {
+			try {
+				QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+				String objectUUID = objectNode.getIdentifier();
+
+				String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+						+ "WHERE `object_id`=? AND `inheritance_id`!=''";
+
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
+
+				String[] result = new String[results.size()];
+				int i = 0;
+
+				for (WasabiACLEntry wasabiACLEntry : results) {
+					result[i] = wasabiACLEntry.getInheritance_Id();
+					i++;
+				}
+
+				/* WasabiCertificate - Begin */
+				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
+							0, 0, 0, 0, 0, 0 });
+				/* WasabiCertificate - End */
+
+				resetInheritance(objectNode, result);
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	public static List<WasabiACLEntry> getAclEntries(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -574,6 +612,56 @@ public class ACLServiceImpl {
 		}
 	}
 
+	// private static Vector<Node> getChildrenWithInheritace(String parentId, Session s)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	//
+	// Vector<Node> result = new Vector<Node>();
+	//
+	// Node parentNode = s.getNodeByIdentifier(parentId);
+	//
+	// NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
+	// NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
+	// NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
+	// NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
+	// NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
+	//
+	// while (iteratorRooms != null && iteratorRooms.hasNext()) {
+	// Node aNode = iteratorRooms.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorContainers != null && iteratorContainers.hasNext()) {
+	// Node aNode = iteratorContainers.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorLinks != null && iteratorLinks.hasNext()) {
+	// Node aNode = iteratorLinks.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorDocuments != null && iteratorDocuments.hasNext()) {
+	// Node aNode = iteratorDocuments.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// while (iteratorAttributes != null && iteratorAttributes.hasNext()) {
+	// Node aNode = iteratorAttributes.nextNode();
+	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// result.add(aNode);
+	// }
+	//
+	// return result;
+	// } catch (RepositoryException re) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+	// }
+	// }
+
 	private static Vector<Node> getChildrenWithInheritace(Node parentNode) throws UnexpectedInternalProblemException {
 		try {
 
@@ -627,56 +715,6 @@ public class ACLServiceImpl {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
-
-	// private static Vector<Node> getChildrenWithInheritace(String parentId, Session s)
-	// throws UnexpectedInternalProblemException {
-	// try {
-	//
-	// Vector<Node> result = new Vector<Node>();
-	//
-	// Node parentNode = s.getNodeByIdentifier(parentId);
-	//
-	// NodeIterator iteratorRooms = getChildrenNodes(parentNode, WasabiNodeProperty.ROOMS);
-	// NodeIterator iteratorContainers = getChildrenNodes(parentNode, WasabiNodeProperty.CONTAINERS);
-	// NodeIterator iteratorLinks = getChildrenNodes(parentNode, WasabiNodeProperty.LINKS);
-	// NodeIterator iteratorDocuments = getChildrenNodes(parentNode, WasabiNodeProperty.DOCUMENTS);
-	// NodeIterator iteratorAttributes = getChildrenNodes(parentNode, WasabiNodeProperty.ATTRIBUTES);
-	//
-	// while (iteratorRooms != null && iteratorRooms.hasNext()) {
-	// Node aNode = iteratorRooms.nextNode();
-	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-	// result.add(aNode);
-	// }
-	//
-	// while (iteratorContainers != null && iteratorContainers.hasNext()) {
-	// Node aNode = iteratorContainers.nextNode();
-	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-	// result.add(aNode);
-	// }
-	//
-	// while (iteratorLinks != null && iteratorLinks.hasNext()) {
-	// Node aNode = iteratorLinks.nextNode();
-	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-	// result.add(aNode);
-	// }
-	//
-	// while (iteratorDocuments != null && iteratorDocuments.hasNext()) {
-	// Node aNode = iteratorDocuments.nextNode();
-	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-	// result.add(aNode);
-	// }
-	//
-	// while (iteratorAttributes != null && iteratorAttributes.hasNext()) {
-	// Node aNode = iteratorAttributes.nextNode();
-	// if (aNode.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-	// result.add(aNode);
-	// }
-	//
-	// return result;
-	// } catch (RepositoryException re) {
-	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-	// }
-	// }
 
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntries(Node wasabiLocationNode, Session s)
 			throws UnexpectedInternalProblemException {
@@ -772,44 +810,6 @@ public class ACLServiceImpl {
 					execute, comment, grant, startTime, endTime, prio, inheritanceID, wasabiType);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-	}
-
-	private static void dispropagateInheritance(Node objectNode) throws UnexpectedInternalProblemException {
-		try {
-			try {
-				QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-				String objectUUID = objectNode.getIdentifier();
-
-				String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
-						+ "WHERE `object_id`=? AND `inheritance_id`!=''";
-
-				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, objectUUID);
-
-				String[] result = new String[results.size()];
-				int i = 0;
-
-				for (WasabiACLEntry wasabiACLEntry : results) {
-					result[i] = wasabiACLEntry.getInheritance_Id();
-					i++;
-				}
-
-				/* WasabiCertificate - Begin */
-				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
-							0, 0, 0, 0, 0, 0 });
-				/* WasabiCertificate - End */
-
-				resetInheritance(objectNode, result);
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
@@ -1019,104 +1019,89 @@ public class ACLServiceImpl {
 	}
 
 	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+		String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-			String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
-			try {
-				run.update(deleteRights, objectUUID);
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-
-			/* WasabiCertificate - Begin */
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
-						0, 0, 0, 0 });
-			/* WasabiCertificate - End */
-
-			resetChildren(objectNode, run);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			run.update(deleteRights, objectUUID);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 		}
+
+		/* WasabiCertificate - Begin */
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.INSERT,
+					WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0, 0, 0, 0, 0 });
+		/* WasabiCertificate - End */
+
+		resetChildren(objectNode, run);
 	}
 
 	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException {
-		try {
-			Vector<Node> Nodes = getChildren(objectNode);
+		Vector<Node> Nodes = getChildren(objectNode);
 
-			if (!Nodes.isEmpty()) {
-				for (Node node : Nodes) {
-					// clean ACLEntries
-					String objectUUID = ObjectServiceImpl.getUUID(node);
-					String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
-					try {
-						run.update(deleteRights, objectUUID);
-					} catch (SQLException e) {
-						throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-					}
-
-					/* WasabiCertificate - Begin */
-					if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-						WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-								WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-								WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] {
-								0, 0, 0, 0, 0, 0, 0 });
-					/* WasabiCertificate - End */
-
-					// next children
-					resetChildren(node, run);
-
-					// set entries from parent
-					setInheritance(objectNode, true);
+		if (!Nodes.isEmpty()) {
+			for (Node node : Nodes) {
+				// clean ACLEntries
+				String objectUUID = ObjectServiceImpl.getUUID(node);
+				String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=?";
+				try {
+					run.update(deleteRights, objectUUID);
+				} catch (SQLException e) {
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
 				}
+
+				/* WasabiCertificate - Begin */
+				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
+							0, 0, 0, 0, 0, 0 });
+				/* WasabiCertificate - End */
+
+				// next children
+				resetChildren(node, run);
+
+				// set entries from parent
+				setInheritance(objectNode, true);
 			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
 	public static void resetInheritance(Node objectNode, String[] inheritance_ids)
 			throws UnexpectedInternalProblemException {
+		/* WasabiCertificate - Begin */
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.INSERT,
+					WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0, 0, 0, 0, 0 });
+		/* WasabiCertificate - End */
+
+		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+		String parentId = ObjectServiceImpl.getUUID(objectNode);
+		Vector<Node> Nodes = getChildren(objectNode);
+
+		String inheritanceQuery = " (";
+		for (int i = 0; i < inheritance_ids.length; i++) {
+			inheritanceQuery = inheritanceQuery + " `inheritance_id`='" + inheritance_ids[i] + "' OR";
+		}
+		inheritanceQuery = inheritanceQuery + "`inheritance_id`='placeHolderValue')";
+
+		String deleteRight = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND" + inheritanceQuery;
 		try {
+			run.update(deleteRight, parentId);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		}
 
-			/* WasabiCertificate - Begin */
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
-						0, 0, 0, 0 });
-			/* WasabiCertificate - End */
-
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			String parentId = ObjectServiceImpl.getUUID(objectNode);
-			Vector<Node> Nodes = getChildren(objectNode);
-
-			String inheritanceQuery = " (";
-			for (int i = 0; i < inheritance_ids.length; i++) {
-				inheritanceQuery = inheritanceQuery + " `inheritance_id`='" + inheritance_ids[i] + "' OR";
+		if (!Nodes.isEmpty()) {
+			for (Node node : Nodes) {
+				if (ACLServiceImpl.getInheritance(node))
+					resetInheritance(node, inheritance_ids);
 			}
-			inheritanceQuery = inheritanceQuery + "`inheritance_id`='placeHolderValue')";
-
-			String deleteRight = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND" + inheritanceQuery;
-			try {
-				run.update(deleteRight, parentId);
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-
-			if (!Nodes.isEmpty()) {
-				for (Node node : Nodes) {
-					if (ACLServiceImpl.getInheritance(node))
-						resetInheritance(node, inheritance_ids);
-				}
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 

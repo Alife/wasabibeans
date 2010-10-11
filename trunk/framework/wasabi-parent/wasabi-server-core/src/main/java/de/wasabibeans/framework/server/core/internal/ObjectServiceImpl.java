@@ -42,11 +42,13 @@ import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiObjectACL;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.common.WasabiConstants.SortType;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
@@ -208,6 +210,15 @@ public class ObjectServiceImpl {
 			if (throwEvents) {
 				EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
 			}
+			
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
+						0, 0, 0, 0, 0, 0 });
+			/* WasabiCertificate - End */
+			
 			ObjectServiceImpl.remove(objectNode, s, false);
 
 		} catch (RepositoryException re) {
