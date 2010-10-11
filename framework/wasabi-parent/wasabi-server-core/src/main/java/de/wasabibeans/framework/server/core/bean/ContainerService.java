@@ -81,11 +81,12 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.create()",
-						"INSERT or WRITE", "environment"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.create()",
+							"INSERT or WRITE", "environment"));
 		/* Authorization - End */
 
 		Node containerNode = ContainerServiceImpl.create(name, environmentNode, s, WasabiConstants.JCR_SAVE_PER_METHOD,
@@ -109,10 +110,11 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"ContainerService.getContainerByName()", "VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"ContainerService.getContainerByName()", "VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(containerNode, location);
@@ -128,12 +130,16 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
-			for (String string : authorizedRooms) {
-				Node aNode = RoomServiceImpl.getRoomById(string, s);
-				containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(aNode, location));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+				for (String string : authorizedRooms) {
+					Node aNode = RoomServiceImpl.getRoomById(string, s);
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(aNode, location));
+				}
+			} else
+				for (NodeIterator ni = ContainerServiceImpl.getContainers(locationNode); ni.hasNext();)
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 		}
 		/* Authorization - End */
 		else
@@ -153,13 +159,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
 
-			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+				for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate,
+						endDate)) {
+					if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+				}
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate,
+						endDate))
 					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
-			}
 		}
 		/* Authorization - End */
 		else
@@ -179,13 +191,19 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
 
-			for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate, endDate)) {
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+				for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate,
+						endDate)) {
+					if (authorizedRooms.contains(ObjectServiceImpl.getUUID(container)))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
+				}
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByCreationDate(environmentNode, startDate,
+						endDate, depth))
 					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
-			}
 		}
 		/* Authorization - End */
 		else
@@ -206,11 +224,15 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();) {
-				Node containerNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();) {
+					Node containerNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+				}
+			} else
+				for (NodeIterator ni = ContainerServiceImpl.getContainersByCreator(creatorNode); ni.hasNext();)
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -231,9 +253,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node containerNode : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode))
-				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node containerNode : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode))
+					if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByCreator(creatorNode, environmentNode))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 		}
 		/* Authorization - End */
 		else
@@ -253,12 +279,18 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
-			for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
-					endDate))
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+				for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode,
+						startDate, endDate))
+					if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+						containers
+								.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+						endDate))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 		}
 		/* Authorization - End */
 		else
@@ -279,12 +311,18 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
-			for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
-					endDate, depth))
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+				for (Node containerNode : ContainerServiceImpl.getContainersByModificationDate(environmentNode,
+						startDate, endDate, depth))
+					if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+						containers
+								.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByModificationDate(environmentNode, startDate,
+						endDate, depth))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 		}
 		/* Authorization - End */
 		else
@@ -305,11 +343,15 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();) {
-				Node containerNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();) {
+					Node containerNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+				}
+			} else
+				for (NodeIterator ni = ContainerServiceImpl.getContainersByModifier(modifierNode); ni.hasNext();)
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -330,9 +372,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (Node containerNode : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode))
-				if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (Node containerNode : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode))
+					if (WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.VIEW, s))
+						containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode));
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByModifier(modifierNode, environmentNode))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 		}
 		/* Authorization - End */
 		else
@@ -352,11 +398,16 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.CONTAINER, s);
-			for (Node containerNode : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern))
-				if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
-					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedRooms = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.CONTAINER, s);
+				for (Node containerNode : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern))
+					if (authorizedRooms.contains(ObjectServiceImpl.getUUID(containerNode)))
+						containers
+								.add((WasabiContainerDTO) TransferManager.convertNode2DTO(containerNode, environment));
+			} else
+				for (Node container : ContainerServiceImpl.getContainersByNamePattern(environmentNode, pattern))
+					containers.add((WasabiContainerDTO) TransferManager.convertNode2DTO(container, environment));
 		}
 		/* Authorization - End */
 		else
@@ -376,11 +427,13 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
-						"ContainerService.getEnvironment()", "VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"ContainerService.getEnvironment()", "VIEW"));
 		/* Authorization - End */
+
 		Long optLockId = ObjectServiceImpl.getOptLockId(containerNode);
 		return TransferManager.convertValue2DTO(environmentNode, optLockId);
 	}
@@ -395,17 +448,18 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 		Node newEnvironmentNode = TransferManager.convertDTO2Node(newEnvironment, s);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()",
-						"INSERT or WRITE", "newEnvironment"));
-			if (!WasabiAuthorizer.authorizeChildreen(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()", "WRITE",
-						"container and sub objects"));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(newEnvironmentNode, callerPrincipal, new int[] {
+						WasabiPermission.INSERT, WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()",
+							"INSERT or WRITE", "newEnvironment"));
+				if (!WasabiAuthorizer.authorizeChildreen(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.move()", "WRITE",
+							"container and sub objects"));
+			}
 		/* Authorization - End */
 
 		Locker.checkOptLockId(containerNode, container, optLockId);
@@ -424,20 +478,23 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
-						"container"));
-			else
-				WasabiContainerACL.remove(containerNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true,
-						jms);
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.remove()", "WRITE",
+							"container"));
+				else
+					WasabiContainerACL.remove(containerNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD,
+							true, jms);
+			} else
+				ContainerServiceImpl.remove(containerNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
+						callerPrincipal);
 		}
 		/* Authorization - End */
 		else {
 			ContainerServiceImpl.remove(containerNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms,
 					callerPrincipal);
 		}
-
 	}
 
 	@Override
@@ -455,10 +512,11 @@ public class ContainerService extends ObjectService implements ContainerServiceL
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.rename()", "WRITE",
-						"container"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(containerNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ContainerService.rename()", "WRITE",
+							"container"));
 		/* Authorization - End */
 
 		Locker.checkOptLockId(containerNode, container, optLockId);

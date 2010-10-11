@@ -100,10 +100,11 @@ public class EventService implements EventServiceLocal, EventServiceRemote, Wasa
 
 			/* Authorization - Begin */
 			if (WasabiConstants.ACL_CHECK_ENABLE)
-				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "EventService.subscribe()", "READ",
-							"object"));
+				if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+					if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.READ, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "EventService.subscribe()",
+								"READ", "object"));
 			/* Authorization - End */
 
 			Connection jmsConnection = jms.getJmsConnection();

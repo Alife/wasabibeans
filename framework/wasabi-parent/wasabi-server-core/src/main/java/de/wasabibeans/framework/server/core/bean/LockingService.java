@@ -85,10 +85,11 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages
-						.get(WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.lock()", "WRITE",
-								"object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.lock()", "WRITE",
+							"object"));
 		/* Authorization - End */
 
 		String lockToken = Locker.acquireLock(objectNode, object, isDeep, s, locker);
@@ -121,10 +122,11 @@ public class LockingService implements LockingServiceLocal, LockingServiceRemote
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.unlock()", "WRITE",
-						"object"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LockingService.unlock()", "WRITE",
+							"object"));
 		/* Authorization - End */
 
 		Locker.releaseLock(objectNode, s);

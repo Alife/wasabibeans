@@ -84,11 +84,12 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-					WasabiPermission.WRITE }, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.create()", "INSERT or WRITE",
-						"environment"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+						WasabiPermission.WRITE }, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.create()",
+							"INSERT or WRITE", "environment"));
 		/* Authorization - End */
 
 		Node linkNode = LinkServiceImpl.create(name, destinationNode, environmentNode, s,
@@ -106,10 +107,11 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.READ, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.getDestination()", "READ",
-						"document"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.getDestination()",
+							"READ", "document"));
 		/* Authorization - End */
 
 		Long optLockId = ObjectServiceImpl.getOptLockId(linkNode);
@@ -127,10 +129,11 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getEnvironment()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(environmentNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getEnvironment()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertValue2DTO(environmentNode, optLockId);
@@ -151,10 +154,11 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getLinkByName()",
-						"VIEW"));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN, "LinkService.getLinkByName()",
+							"VIEW"));
 		/* Authorization - End */
 
 		return TransferManager.convertNode2DTO(linkNode, location);
@@ -170,12 +174,16 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (String id : authorizedLinks) {
-				Node link = LinkServiceImpl.getLinkById(id, s);
-				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, location));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(locationNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (String id : authorizedLinks) {
+					Node link = LinkServiceImpl.getLinkById(id, s);
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, location));
+				}
+			} else
+				for (NodeIterator ni = LinkServiceImpl.getLinks(locationNode); ni.hasNext();)
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 		}
 		/* Authorization - End */
 		else
@@ -195,10 +203,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
@@ -219,10 +231,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByCreationDate(environmentNode, startDate, endDate, depth))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
@@ -243,11 +259,15 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
-				Node linkNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
-					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();) {
+					Node linkNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
+				}
+			} else
+				for (NodeIterator ni = LinkServiceImpl.getLinksByCreator(creatorNode); ni.hasNext();)
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		else
@@ -268,16 +288,21 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
 		else
 			for (Node link : LinkServiceImpl.getLinksByCreator(creatorNode, environmentNode))
 				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+
 		return links;
 	}
 
@@ -291,10 +316,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
@@ -315,10 +344,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByModificationDate(environmentNode, startDate, endDate, depth))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
@@ -339,11 +372,15 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
-				Node linkNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
-					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();) {
+					Node linkNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode));
+				}
 			}
+			for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();)
+				links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode()));
 		}
 		/* Authorization - End */
 		for (NodeIterator ni = LinkServiceImpl.getLinksByModifier(modifierNode); ni.hasNext();)
@@ -363,10 +400,14 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
-					WasabiPermission.VIEW, WasabiType.LINK, s);
-			for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode))
-				if (authorizedLinks.contains(link))
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				Vector<String> authorizedLinks = WasabiAuthorizer.authorizePermission(environmentNode, callerPrincipal,
+						WasabiPermission.VIEW, WasabiType.LINK, s);
+				for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode))
+					if (authorizedLinks.contains(link))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
+			} else
+				for (Node link : LinkServiceImpl.getLinksByModifier(modifierNode, environmentNode))
 					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(link, environment));
 		}
 		/* Authorization - End */
@@ -387,11 +428,15 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
-				Node linkNode = ni.nextNode();
-				if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
-					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode, location));
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();) {
+					Node linkNode = ni.nextNode();
+					if (WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.VIEW, s))
+						links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(linkNode, location));
+				}
+			} else
+				for (NodeIterator ni = LinkServiceImpl.getLinksOrderedByCreationDate(locationNode, order); ni.hasNext();)
+					links.add((WasabiLinkDTO) TransferManager.convertNode2DTO(ni.nextNode(), location));
 		}
 		/* Authorization - End */
 		else
@@ -439,14 +484,17 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
-						"document"));
-			else {
-				EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
-				WasabiLinkACL.remove(linkNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms);
-			}
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
+							"document"));
+				else {
+					EventCreator.createRemovedEvent(linkNode, jms, callerPrincipal);
+					WasabiLinkACL.remove(linkNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms);
+				}
+			} else
+				LinkServiceImpl.remove(linkNode, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms, callerPrincipal);
 		}
 		/* Authorization - End */
 		else {
@@ -468,11 +516,13 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		Node linkNode = TransferManager.convertDTO2Node(link, s);
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE", "link"));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.remove()", "WRITE",
+							"link"));
+			}
 		/* Authorization - End */
 
 		Locker.checkOptLockId(linkNode, link, optLockId);
@@ -493,12 +543,13 @@ public class LinkService extends ObjectService implements LinkServiceLocal, Link
 		}
 
 		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE) {
-			if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
-				throw new NoPermissionException(WasabiExceptionMessages.get(
-						WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.setDestination()", "WRITE",
-						"link"));
-		}
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorizeChildreen(linkNode, callerPrincipal, WasabiPermission.WRITE, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "LinkService.setDestination()",
+							"WRITE", "link"));
+			}
 		/* Authorization - End */
 
 		Locker.checkOptLockId(linkNode, link, optLockId);
