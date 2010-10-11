@@ -6,6 +6,7 @@ import javax.interceptor.InvocationContext;
 import javax.jcr.Session;
 import javax.transaction.TransactionManager;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.locking.Locker;
@@ -42,7 +43,12 @@ public class JCRSessionInterceptor {
 		}
 
 		// get a JCR session from the JCA connection pool
-		Session s = service.getJcrConnector().getJCRSession();
+		Session s;
+		if (WasabiConstants.JCR_SAVE_PER_METHOD) {
+			s = service.getJcrConnector().getJCRSession();
+		} else {
+			s = service.getJcrConnector().txModegetJCRSession(getTransactionManager(service.getJndiConnector()));
+		}
 
 		// associate existing lock-tokens with the JCR session
 		Locker.recognizeLockToken(s, lockToken);
@@ -52,12 +58,27 @@ public class JCRSessionInterceptor {
 			}
 		}
 
-		try {
-			// execute the service method
-			return invocationContext.proceed();
-		} finally {
-			// prepare the used JCR session to be returned to the JCA connection pool
-			service.getJcrConnector().cleanup(false);
+		if (WasabiConstants.JCR_SAVE_PER_METHOD) {
+			try {
+				// execute the service method
+				return invocationContext.proceed();
+			} finally {
+				// prepare the used JCR session to be returned to the JCA connection pool
+				service.getJcrConnector().cleanup(false);
+			}
+		} else {
+			try {
+				// execute the service method
+				return invocationContext.proceed();
+			} catch (Exception e) {
+				// any exception during a transaction in the 'WasabiConstants.JCR_SAVE_PER_METHOD = false'-mode must be
+				// followed by an immediate rollback
+				service.getJcrConnector().txModeCleanup();
+				throw e;
+			} finally {
+				service.getJcrConnector().txModeAfterEachMethod();
+			}
 		}
+
 	}
 }
