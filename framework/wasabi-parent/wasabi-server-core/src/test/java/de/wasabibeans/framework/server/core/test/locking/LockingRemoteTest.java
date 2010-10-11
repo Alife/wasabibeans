@@ -36,7 +36,6 @@ import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
-import de.wasabibeans.framework.server.core.exception.LockingException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
@@ -94,7 +93,7 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 			lockingService().unlock(lockContainer);
 		}
 	}
-	
+
 	@Test
 	// user acquires deep lock and then adds object on a deeper level
 	public void deepLockAndWrite2() throws Exception {
@@ -195,18 +194,18 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 		WasabiRoomDTO lockRoom = null;
 		try {
 			lockRoom = lockingService().lock(room, false);
-			
+
 			try {
 				lockingService().lock(lockRoom, false);
 				AssertJUnit.fail();
-			} catch (LockingException e) {
+			} catch (ConcurrentModificationException e) {
 				// passed
 			}
 
 			try {
 				lockingService().lock(lockRoom, true);
 				AssertJUnit.fail();
-			} catch (LockingException e) {
+			} catch (ConcurrentModificationException e) {
 				// passed
 			}
 		} finally {
@@ -229,7 +228,7 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 				AssertJUnit.fail();
 			}
 		}
-		
+
 		// lock and unlock
 		WasabiDocumentDTO lockDocument = null;
 		try {
@@ -240,7 +239,7 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 		// try to release non-existing lock
 		lockingService().unlock(lockDocument);
 	}
-	
+
 	@Test
 	// tests that locks remain active until explicitly removed
 	public void lockRemainsActiveDuringMultipleWrites() throws Exception {
@@ -264,41 +263,41 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 			lockingService().unlock(lockDocument);
 		}
 	}
-	
+
 	@Test
 	// tests a service that uses multiple locks at once
 	public void multipleLocksAtOnce() throws Exception {
 		WasabiGroupDTO group = groupService().create("group", null);
 		WasabiUserDTO member = userService().create("member", "member");
-		
+
 		WasabiGroupDTO lockGroup = null;
 		WasabiUserDTO lockMember = null;
 		try {
 			// lock both the group and the member
 			lockGroup = lockingService().lock(group, true);
 			lockMember = lockingService().lock(member, true);
-			
+
 			try {
 				groupService().addMember(group, member);
 				AssertJUnit.fail();
 			} catch (ConcurrentModificationException e) {
 				// passed
 			}
-			
+
 			try {
 				groupService().addMember(lockGroup, member);
 				AssertJUnit.fail();
 			} catch (ConcurrentModificationException e) {
 				// passed
 			}
-			
+
 			try {
 				groupService().addMember(group, lockMember);
 				AssertJUnit.fail();
 			} catch (ConcurrentModificationException e) {
 				// passed
 			}
-			
+
 			groupService().addMember(lockGroup, lockMember);
 			AssertJUnit.assertTrue(groupService().getMembers(lockGroup).contains(lockMember));
 		} finally {
@@ -306,7 +305,7 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 			lockingService().unlock(lockMember);
 		}
 	}
-	
+
 	@Test
 	// tests that a service fails when called with the wrong optLockId
 	public void wrongOptLockUsed() throws Exception {
@@ -317,9 +316,9 @@ public class LockingRemoteTest extends WasabiRemoteTest {
 		} catch (ConcurrentModificationException e) {
 			// passed
 		}
-		
+
 		// no problem
 		documentService().setContent(document, "hallo", 0L);
 	}
-	
+
 }
