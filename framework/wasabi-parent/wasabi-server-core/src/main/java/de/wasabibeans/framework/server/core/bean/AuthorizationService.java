@@ -146,4 +146,11 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 	public boolean returnTrue() {
 		return true;
 	}
+
+	@Override
+	public boolean existsCertificate(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

@@ -32,11 +32,14 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface AuthorizationServiceRemote {
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+	public boolean existsCertificate(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
 	public boolean hasPermission(WasabiObjectDTO wasabiObject, int permission) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException;
+
+	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
 	public boolean returnTrue();
 
