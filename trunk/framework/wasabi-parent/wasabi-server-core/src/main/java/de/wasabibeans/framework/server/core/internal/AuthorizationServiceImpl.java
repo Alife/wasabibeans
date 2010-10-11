@@ -24,21 +24,28 @@ package de.wasabibeans.framework.server.core.internal;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
+import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public class AuthorizationServiceImpl {
 
-	public static boolean hasPermission(String objectUUID, String userUUID, int permission, 
+	public static boolean hasPermission(String objectUUID, String userUUID, int permission,
 
-			Node objectNode, Node userNode, Session s) throws UnexpectedInternalProblemException {
+	Node objectNode, Node userNode, Session s) throws UnexpectedInternalProblemException {
 		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
 			return true;
 		else if (WasabiAuthorizer.authorize(objectNode, ObjectServiceImpl.getName(userNode), permission, s)) {
 			WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
 			return true;
 		} else
+			return false;
+	}
+
+	public static boolean existsCertificate(String objectUUID, String userUUID, int permission) {
+		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
+			return true;
+		else
 			return false;
 	}
 }

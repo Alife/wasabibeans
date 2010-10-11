@@ -29,8 +29,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
@@ -63,11 +65,94 @@ public class AuthorizationServiceTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void existsCertificateTest() throws WasabiException {
+		System.out.println("=== existsCertificateTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating room testRoom...");
+		WasabiRoomDTO testRoom = null;
+		try {
+			testRoom = roomService().create("testRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for testRoom... ");
+		aclService().deactivateInheritance(testRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				testRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Setting VIEW forbiddance as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.print("Check if Cert for user, testRoom and INSERT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.INSERT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for testRoom... ");
+		aclService().create(testRoom, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Check if Cert for user, testRoom and INSERT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.INSERT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW as userRight for user... ");
+		aclService().create(user, user, WasabiPermission.VIEW, true);
+		System.out.println("done.");
+
+		System.out.print("Check if Cert for user, testRoom and INSERT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.INSERT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating room testRoom2...");
+		WasabiRoomDTO testRoom2 = null;
+		try {
+			testRoom2 = roomService().create("testRoom2", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if Cert for user, testRoom and INSERT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.INSERT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void hasPermission1Test() throws WasabiException {
 		System.out.println("=== hasPermission1Test() ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.INSERT, true);
+		System.out.println("done.");
 
 		System.out.print("Creating user newUser...");
 		WasabiUserDTO newUser = null;

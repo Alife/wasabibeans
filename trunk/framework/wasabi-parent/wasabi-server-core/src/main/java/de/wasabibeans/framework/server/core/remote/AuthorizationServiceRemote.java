@@ -32,23 +32,23 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 @Remote
 public interface AuthorizationServiceRemote {
 
-	public boolean existsCertificate(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+	public boolean existsCertificate(WasabiObjectDTO object, WasabiUserDTO user, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, int permission) throws ObjectDoesNotExistException,
+	public boolean hasPermission(WasabiObjectDTO object, int permission) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean hasPermission(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+	public boolean hasPermission(WasabiObjectDTO object, WasabiUserDTO user, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
 	public boolean listCertificates(int permission) throws ObjectDoesNotExistException,
 			UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean listCertificatesByObject(WasabiUserDTO wasabiUser, int permission)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
+	public boolean listCertificatesByObject(WasabiUserDTO user, int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean listCertificatesByUser(WasabiObjectDTO wasabiObject, int permission)
-			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
+	public boolean listCertificatesByUser(WasabiObjectDTO object, int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException;
 
 	public boolean returnTrue();
 
