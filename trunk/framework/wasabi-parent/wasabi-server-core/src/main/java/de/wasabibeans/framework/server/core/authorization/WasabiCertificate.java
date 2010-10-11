@@ -41,7 +41,6 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 
-@Stateless(name = "CertificateService")
 public class WasabiCertificate {
 
 	private static ConcurrentHashMap<String, Boolean> commentRightMap = new ConcurrentHashMap<String, Boolean>();
