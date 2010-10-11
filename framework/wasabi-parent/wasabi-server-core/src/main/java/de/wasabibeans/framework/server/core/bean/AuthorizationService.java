@@ -148,10 +148,30 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 	}
 
 	@Override
-	public boolean existsCertificate(WasabiObjectDTO wasabiObject, WasabiUserDTO wasabiUser, int permission)
+	public boolean existsCertificate(WasabiObjectDTO object, WasabiUserDTO user, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException {
-		// TODO Auto-generated method stub
-		return false;
+		Session s = jcr.getJCRSession();
+		Node objectNode = TransferManager.convertDTO2Node(object, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		String userUUID = ObjectServiceImpl.getUUID(userNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.existsCertificate()",
+							"VIEW", "object"));
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.existsCertificate()",
+							"VIEW", "user"));
+			}
+		/* Authorization - End */
+
+		return AuthorizationServiceImpl.existsCertificate(objectUUID, userUUID, permission);
 	}
 
 	@Override
