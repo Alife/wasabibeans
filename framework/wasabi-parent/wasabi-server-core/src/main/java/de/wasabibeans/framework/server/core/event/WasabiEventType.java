@@ -31,6 +31,5 @@ public class WasabiEventType {
 	public static final byte ROOM_LEFT = 5;
 	public static final byte MEMBER_ADDED = 6;
 	public static final byte MEMBER_REMOVED = 7;
-	public static final byte NO_PERMISSION = 8;
 	
 }
