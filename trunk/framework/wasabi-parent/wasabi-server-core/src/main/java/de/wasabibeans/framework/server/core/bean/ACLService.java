@@ -57,7 +57,6 @@ import de.wasabibeans.framework.server.core.exception.NoPermissionException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
-import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
 import de.wasabibeans.framework.server.core.local.ACLServiceLocal;
 import de.wasabibeans.framework.server.core.remote.ACLServiceRemote;
@@ -579,9 +578,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		Node identityNode = TransferManager.convertDTO2Node(identity, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
-
+		
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
@@ -603,8 +600,6 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		Node identityNode = TransferManager.convertDTO2Node(identity, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
@@ -652,8 +647,6 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		Session s = jcr.getJCRSession();
 		Node locationNode = TransferManager.convertDTO2Node(location, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
-		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
