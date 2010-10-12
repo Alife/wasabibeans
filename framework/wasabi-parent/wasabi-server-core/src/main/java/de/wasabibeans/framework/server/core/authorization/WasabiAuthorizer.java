@@ -51,8 +51,20 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiAuthorizer {
 
+	/**
+	 * Checks if a requesting user is allowed to access a given objectNode by given permission. If WasabiCertificate is
+	 * enable and result of check is true, a certificate for objectNode and requesting user will be created.
+	 * 
+	 * @param objectNode
+	 * @param callerPrincipal
+	 * @param permission
+	 * @param s
+	 * @return true if a requesting user has given permission on given object, otherwise false
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static boolean authorize(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
+
 		/* WasabiCertificate - Begin */
 		if (WasabiConstants.ACL_CERTIFICATE_ENABLE) {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
@@ -87,9 +99,7 @@ public class WasabiAuthorizer {
 			// return false;
 
 			// Variante 3
-
 			boolean ret = checkCalcRights(objectUUID, userUUID, userNode, permission, s);
-
 			return ret;
 		}
 	}
@@ -103,6 +113,17 @@ public class WasabiAuthorizer {
 		return false;
 	}
 
+	/**
+	 * Checks recursive if children has permission. If not the result is 1. The count of recursive calls is a sum over
+	 * this calls -> If one child has not the permission, the sum is greater than 0.
+	 * 
+	 * @param objectNode
+	 * @param callerPrincipal
+	 * @param permission
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static int authorizeChild(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		int sum = 0;
@@ -119,6 +140,17 @@ public class WasabiAuthorizer {
 		return sum;
 	}
 
+	/**
+	 * Checks if a requesting user is allowed to access a given objectNode and its children by given permission.
+	 * Recursion at {@link authorizeChild}
+	 * 
+	 * @param objectNode
+	 * @param callerPrincipal
+	 * @param permission
+	 * @param s
+	 * @return true if a requesting user has given permission on given object and children, otherwise false
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static boolean authorizeChildreen(Node objectNode, String callerPrincipal, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		if (authorizeChild(objectNode, callerPrincipal, permission, s) > 0)
@@ -127,6 +159,18 @@ public class WasabiAuthorizer {
 			return true;
 	}
 
+	/**
+	 * Returns a set of objectUUIDs with given permission and which parent is objectNode. The result set is provides by
+	 * {@link permissionFilter}.
+	 * 
+	 * @param objectNode
+	 * @param callerPrincipal
+	 * @param permission
+	 * @param wasabiType
+	 * @param s
+	 * @return a set of objectUUIDs with given permission and which parent is objectNode
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static Vector<String> authorizePermission(Node objectNode, String callerPrincipal, int permission,
 			WasabiType wasabiType, Session s) throws UnexpectedInternalProblemException {
 		try {
@@ -140,6 +184,19 @@ public class WasabiAuthorizer {
 		}
 	}
 
+	/**
+	 * Core method for {@link authorize}, returns if permission on a given objectNode is allowed. First step a query
+	 * selects all rights for a given objectNode filtered by permission and ordered by priority. Second step a loop
+	 * checks for each right its permission.
+	 * 
+	 * @param objectUUID
+	 * @param userUUID
+	 * @param userNode
+	 * @param permission
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static boolean checkCalcRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
@@ -757,6 +814,12 @@ public class WasabiAuthorizer {
 		return false;
 	}
 
+	/**
+	 * Build a part of a SQL query, that contains all group memberships.
+	 * 
+	 * @param allGroups
+	 * @return part of a SQL query, that contains all group memberships
+	 */
 	private static String getGroupMembershipQuery(Vector<String> allGroups) {
 		String groupMembershipQuery = "(";
 
@@ -769,6 +832,15 @@ public class WasabiAuthorizer {
 		return groupMembershipQuery;
 	}
 
+	/**
+	 * Builds a {@code Vector<String>}, that contains all group memberships of a given userNode. {@code Vector<String>}
+	 * of groups is needed by {@link getGroupMembershipQuery}.
+	 * 
+	 * @param userNode
+	 * @param s
+	 * @return all group memberships
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static Vector<String> getGroupMemberships(Node userNode, Session s)
 			throws UnexpectedInternalProblemException {
 		Vector<String> groups = new Vector<String>();
@@ -813,6 +885,13 @@ public class WasabiAuthorizer {
 		return allGroups;
 	}
 
+	/**
+	 * Returns right of a given ACL entry by given permission.
+	 * 
+	 * @param wasabiACLEntry
+	 * @param permission
+	 * @return right of a given ACL entry by given permission
+	 */
 	private static int getRight(WasabiACLEntry wasabiACLEntry, int permission) {
 		switch (permission) {
 		case WasabiPermission.VIEW:
@@ -833,6 +912,12 @@ public class WasabiAuthorizer {
 		return 0;
 	}
 
+	/**
+	 * Build a part of a SQL query.
+	 * 
+	 * @param permission
+	 * @return
+	 */
 	private static String getRightQueryAllow(int permission) {
 		String rightQuery = "`view`=1 ";
 
@@ -862,6 +947,12 @@ public class WasabiAuthorizer {
 		return rightQuery;
 	}
 
+	/**
+	 * Build a part of a SQL query.
+	 * 
+	 * @param permission
+	 * @return
+	 */
 	private static String getRightQueryDeny(int permission) {
 		String rightQuery = "`view`=-1 ";
 
@@ -891,6 +982,14 @@ public class WasabiAuthorizer {
 		return rightQuery;
 	}
 
+	/**
+	 * Checks if a requesting user is an administrator.
+	 * 
+	 * @param callerPrincipal
+	 * @param s
+	 * @return true is requesting user is an administrator, false if not
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static boolean isAdminUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		if (GroupServiceImpl.isMember(GroupServiceImpl.getAdminGroup(s), userNode))
@@ -898,6 +997,14 @@ public class WasabiAuthorizer {
 		return false;
 	}
 
+	/**
+	 * Checks if a requesting user is member at group "pipes and filter".
+	 * 
+	 * @param callerPrincipal
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static boolean isPafUser(String callerPrincipal, Session s) throws UnexpectedInternalProblemException {
 		Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 		if (GroupServiceImpl.isMember(GroupServiceImpl.getGroupByName(WasabiConstants.PAF_GROUP_NAME, s), userNode))
