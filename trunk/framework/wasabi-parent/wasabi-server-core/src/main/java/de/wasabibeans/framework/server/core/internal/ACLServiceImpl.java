@@ -1278,6 +1278,15 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Resets given objectNode and its children recursive (recursion at {@link resetChildren}. That means all rights
+	 * will be removed at subtree excluding the root node. At root node only inherited rights will be deleted.
+	 * Inheritance will be enables at all nodes of subtree and rights will be propagated top down from root node.
+	 * Additionally, if WasabiCertificate is enabled, for each right an certificate invalidation will happened.
+	 * 
+	 * @param objectNode
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -1299,6 +1308,13 @@ public class ACLServiceImpl {
 		resetChildren(objectNode, run);
 	}
 
+	/**
+	 * Recursive procedure of {@link reset}
+	 * 
+	 * @param objectNode
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException {
 		Vector<Node> Nodes = getChildren(objectNode);
 
