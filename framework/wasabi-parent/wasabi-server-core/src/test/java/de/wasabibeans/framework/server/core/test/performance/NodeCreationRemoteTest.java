@@ -47,12 +47,12 @@ public class NodeCreationRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	// results: 41306, 41623 
+	// results: 44709, 43717, 43440, 43275
 	public void create() throws Exception {
 		long start = System.currentTimeMillis();
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		utx.begin();
-		for (int i = 0; i < 5000; i++) {
+		for (int i = 0; i < 4800; i++) {
 			//System.out.println(i);
 			roomService().create("hu" + i, rootRoom);
 		}

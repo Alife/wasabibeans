@@ -385,9 +385,9 @@ public class NodeCreationLocalTest extends Arquillian {
 	// --------------------------------------------------------------------------------------------
 
 	@Test
-	/* introducing ejb overhead */
+	/* introducing ejb overhead + events */
 	// results are: 59738, 59223, 58966, 60082
-	// on save per tx mode: 27460, 25522, 25164, 26022
+	// on save per tx mode: 27225, 27010, 28020, 27982
 	public void localServiceTest() throws Throwable {
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -395,7 +395,7 @@ public class NodeCreationLocalTest extends Arquillian {
 		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 		long start = System.currentTimeMillis();
 		utx.begin();
-		for (int i = 0; i < 5000; i++) {
+		for (int i = 0; i < 4800; i++) {
 			//System.out.println(i);
 			roomService.create("room" + i, rootRoom);
 		}
