@@ -340,6 +340,24 @@ public class AuthorizationServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Setting VIEW forbidance as userRight for testRoom... ");
+		aclService().create(testRoom, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
+
+		System.out.println("List certificates by object...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificatesByObject(testRoom,
+					WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
 		System.out.println("===========================");
 	}
 
@@ -374,6 +392,24 @@ public class AuthorizationServiceTest extends WasabiRemoteTest {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.println("List certificates by user...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificatesByUser(user,
+					WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting VIEW forbidance as userRight for testRoom... ");
+		aclService().create(testRoom, user, WasabiPermission.VIEW, false);
+		System.out.println("done.");
 
 		System.out.println("List certificates by user...");
 		try {
