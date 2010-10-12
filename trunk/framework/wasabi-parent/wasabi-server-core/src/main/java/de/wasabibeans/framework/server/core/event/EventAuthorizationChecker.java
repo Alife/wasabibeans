@@ -29,14 +29,26 @@ import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.jcr.Node;
+import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.Service;
 
+import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
+import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.event.EventSubscriptions.SubscriptionInfo;
+import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
+import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 @Service
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class EventAuthorizationChecker implements EventAuthorizationCheckerLocal {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(EventAuthorizationChecker.class);
@@ -56,16 +68,47 @@ public class EventAuthorizationChecker implements EventAuthorizationCheckerLocal
 
 	@Timeout
 	public void check(Timer timer) {
-		logger.info("Checking event listener permissions...");
-		for (Entry<String, ConcurrentHashMap<String, SubscriptionInfo>> objectSubcriptions : eventSubscriptions
-				.getData().entrySet()) {
-			String objectId = objectSubcriptions.getKey();
-			for (String username : objectSubcriptions.getValue().keySet()) {
-				if (false /* TODO check user's read permission on object */) {
-					eventSubscriptions.unsubscribe(objectId, username);
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		try {
+			Session s = jcr.getJCRSession();
+			logger.info("Checking event listener permissions...");
+
+			for (Entry<String, ConcurrentHashMap<String, SubscriptionInfo>> objectSubcriptions : eventSubscriptions
+					.getData().entrySet()) {
+				String objectId = objectSubcriptions.getKey();
+				try {
+					Node objectNode = ObjectServiceImpl.get(objectId, s);
+					for (String username : objectSubcriptions.getValue().keySet()) {
+						if (!checkPermission(objectNode, username, s)) {
+							eventSubscriptions.unsubscribe(objectId, username);
+						}
+					}
+				} catch (ObjectDoesNotExistException odnee) {
+					// the object has been removed in the meantime -> remove subscriptions
+					eventSubscriptions.removeSubscriptions(objectId);
+				}
+			}
+
+			logger.info("Checking event listener permissions... done.");
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.warn("Checking permissions of users listening to events failed.", e);
+		} finally {
+			jcr.cleanup(true);
+			jndi.close();
+		}
+	}
+
+	private boolean checkPermission(Node objectNode, String username, Session s)
+			throws UnexpectedInternalProblemException {
+		if (WasabiConstants.ACL_CHECK_ENABLE) {
+			if (!WasabiAuthorizer.isAdminUser(username, s)) {
+				if (!WasabiAuthorizer.authorize(objectNode, username, WasabiPermission.READ, s)) {
+					return false;
 				}
 			}
 		}
-		logger.info("Checking event listener permissions... done.");
+		return true;
 	}
 }

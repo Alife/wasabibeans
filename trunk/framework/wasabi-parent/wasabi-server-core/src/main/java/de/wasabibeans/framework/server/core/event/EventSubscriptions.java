@@ -41,7 +41,17 @@ public class EventSubscriptions implements EventSubscriptionsLocal {
 		return null;
 	}
 
-	public void subscribe(String objectId, String username, String jmsDestinationName, boolean isQueue) {
+	public boolean hasSubscribers(String objectId) {
+		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
+		if (subscriptionsOfObject != null) {
+			if (!subscriptionsOfObject.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public synchronized void subscribe(String objectId, String username, String jmsDestinationName, boolean isQueue) {
 		ConcurrentHashMap<String, SubscriptionInfo> subscriptionsOfObject = subscriptions.get(objectId);
 		if (subscriptionsOfObject == null) {
 			subscriptionsOfObject = new ConcurrentHashMap<String, SubscriptionInfo>();
@@ -55,6 +65,10 @@ public class EventSubscriptions implements EventSubscriptionsLocal {
 		if (subscriptionsOfObject != null) {
 			subscriptionsOfObject.remove(username);
 		}
+	}
+	
+	public void removeSubscriptions(String objectId) {
+		subscriptions.remove(objectId);
 	}
 
 	public ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>> getData() {
