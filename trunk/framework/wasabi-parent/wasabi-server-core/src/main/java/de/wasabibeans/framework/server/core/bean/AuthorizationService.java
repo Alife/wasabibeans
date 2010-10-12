@@ -195,6 +195,17 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
+							"ObjectService.listCertificatesByObject()", "VIEW", "object"));
+			}
+		/* Authorization - End */
 
 		Vector<WasabiCertificateDTO> certificates = new Vector<WasabiCertificateDTO>();
 		Vector<WasabiCertificateHandle> certs = AuthorizationServiceImpl.listCertificatesByObject(objectUUID,
@@ -216,6 +227,17 @@ public class AuthorizationService implements AuthorizationServiceLocal, Authoriz
 		Session s = jcr.getJCRSession();
 		Node userNode = TransferManager.convertDTO2Node(user, s);
 		String userUUID = ObjectServiceImpl.getUUID(userNode);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s)) {
+				if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, WasabiPermission.VIEW, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
+							"ObjectService.listCertificatesByUser()", "VIEW", "user"));
+			}
+		/* Authorization - End */
 
 		Vector<WasabiCertificateDTO> certificates = new Vector<WasabiCertificateDTO>();
 		Vector<WasabiCertificateHandle> certs = AuthorizationServiceImpl.listCertificatesByUser(userUUID, permission);
