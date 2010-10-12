@@ -52,6 +52,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.PROPERTY_CHANGED);
@@ -86,6 +87,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.CREATED);
@@ -120,6 +122,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.REMOVED);
@@ -154,6 +157,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			event.setByteProperty(WasabiEventProperty.EVENT_TYPE, WasabiEventType.MOVED);
@@ -185,6 +189,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			if (entered) {
@@ -215,6 +220,7 @@ public class EventCreator {
 			Session jmsSession = jmsConnection.createSession(true, 0);
 			MessageProducer jmsProducer = jmsSession.createProducer(jms.getAllocatorQueue());
 			jmsProducer.setDeliveryMode(DELIVERY_MODE);
+			jmsProducer.setDisableMessageID(true);
 			Message event = jmsSession.createMessage();
 
 			if (added) {
