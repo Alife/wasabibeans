@@ -55,6 +55,13 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
 
 public class ACLServiceImpl {
 
+	/**
+	 * Converts given allowance from boolean to integer.
+	 * 
+	 * @param allowance
+	 *            the allowance as boolean
+	 * @return the allowance as an integer
+	 */
 	private static int[] allowanceConverter(boolean[] allowance) {
 		int[] allow = new int[allowance.length];
 
@@ -70,6 +77,13 @@ public class ACLServiceImpl {
 		return allow;
 	}
 
+	/**
+	 * Converts given string nodeType to a {@code WasabiType}
+	 * 
+	 * @param nodeType
+	 *            the node type as a string
+	 * @return the node type as a {@code WasabiType}
+	 */
 	private static String convertNodeType(String nodeType) {
 		if (nodeType.equals(WasabiNodeType.USER))
 			return WasabiType.USER.toString();
@@ -88,6 +102,17 @@ public class ACLServiceImpl {
 		return null;
 	}
 
+	/**
+	 * Creates an ACL entry for a given objectNode and identityNode.
+	 * 
+	 * @param objectNode
+	 * @param identityNode
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void create(Node objectNode, Node identityNode, int[] permission, boolean[] allowance,
 			long startTime, long endTime) throws UnexpectedInternalProblemException {
 		if (permission.length != allowance.length) {
@@ -113,6 +138,17 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Creates an ACL entry for a given objectNode and identityNode.
+	 * 
+	 * @param objectNode
+	 * @param identityNode
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void create(Node objectNode, Node identityNode, int[] permission, int[] allowance, long startTime,
 			long endTime) throws UnexpectedInternalProblemException {
 		if (permission.length != allowance.length) {
@@ -136,6 +172,17 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Creates an template ACL entry for a given location.
+	 * 
+	 * @param wasabiLocationNode
+	 * @param wasabiType
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void createDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException {
 		try {
@@ -247,6 +294,19 @@ public class ACLServiceImpl {
 	// }
 	// }
 
+	/**
+	 * Deletes ACL entry with group rights at database.
+	 * 
+	 * @param parentUUID
+	 * @param groupUUID
+	 * @param startTime
+	 * @param endTime
+	 * @param permission
+	 * @param allowance
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void deleteInheritedGroupRights(String parentUUID, String groupUUID, long startTime, long endTime,
 			int[] permission, int[] allowance, String wasabiType, QueryRunner run)
 			throws UnexpectedInternalProblemException {
@@ -259,6 +319,19 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Deletes ACL entry with user rights at database.
+	 * 
+	 * @param parentUUID
+	 * @param userUUID
+	 * @param startTime
+	 * @param endTime
+	 * @param permission
+	 * @param allowance
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void deleteInheritedUserRights(String parentUUID, String userUUID, long startTime, long endTime,
 			int[] permission, int[] allowance, String wasabiType, QueryRunner run)
 			throws UnexpectedInternalProblemException {
@@ -271,6 +344,14 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Collects all inherited ACL entries of given objectNode calls {@link resetInheritance} with collected ACL entries
+	 * and objectNode.
+	 * 
+	 * @param objectNode
+	 *            the node representing a root node of subtree
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void dispropagateInheritance(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			try {
@@ -301,6 +382,13 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns a {@code List<WasabiACLEntry>} with all ACL entries by given objectNode.
+	 * 
+	 * @param objectNode
+	 * @return a list with ACL entries
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static List<WasabiACLEntry> getAclEntries(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
 
@@ -317,6 +405,14 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns a {@code List<WasabiACLEntry>} with all ACL entries by given objectNode and identityNode.
+	 * 
+	 * @param objectNode
+	 * @param identityNode
+	 * @return a list with ACL entries
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static List<WasabiACLEntry> getAclEntriesByIdentity(Node wasabiObjectNode, Node wasabiIdentityNode)
 			throws UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
@@ -337,9 +433,18 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns a {@code Vector<WasabiACLEntryDeprecated>} with all ACL entries by given objectNode and identityNode.
+	 * 
+	 * @param objectNode
+	 * @param identityNode
+	 * @param s
+	 * @return a list with ACL entries
+	 * @throws UnexpectedInternalProblemException
+	 */
 	@Deprecated
-	public static Vector<WasabiACLEntryDeprecated> getACLEntriesDeprecated(Node wasabiObjectNode,
-			Node wasabiIdentityNode, Session s) throws UnexpectedInternalProblemException {
+	public static Vector<WasabiACLEntryDeprecated> getACLEntriesDeprecated(Node objectNode, Node identityNode, Session s)
+			throws UnexpectedInternalProblemException {
 
 		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 		long id;
@@ -348,10 +453,10 @@ public class ACLServiceImpl {
 		List<WasabiACLEntry> wasabiACLEntry;
 
 		Vector<WasabiACLEntryDeprecated> aclEntries = new Vector<WasabiACLEntryDeprecated>();
-		if (wasabiIdentityNode == null) {
-			wasabiACLEntry = getAclEntries(wasabiObjectNode);
+		if (identityNode == null) {
+			wasabiACLEntry = getAclEntries(objectNode);
 		} else {
-			wasabiACLEntry = getAclEntriesByIdentity(wasabiObjectNode, wasabiIdentityNode);
+			wasabiACLEntry = getAclEntriesByIdentity(objectNode, identityNode);
 		}
 
 		for (int i = 0; i < wasabiACLEntry.size(); i++) {
@@ -550,6 +655,13 @@ public class ACLServiceImpl {
 
 	}
 
+	/**
+	 * Returns all children of an given objectNode.
+	 * 
+	 * @param objectNode
+	 *            the node representing a object
+	 * @return all children of an given objectNode
+	 */
 	public static Vector<Node> getChildren(Node objectNode) {
 		Vector<Node> result = new Vector<Node>();
 
@@ -595,6 +707,15 @@ public class ACLServiceImpl {
 		return result;
 	}
 
+	/**
+	 * Returns all children of an given objectNode filtered by node type.
+	 * 
+	 * @param parentNode
+	 *            the node representing a object
+	 * @param nodeType
+	 *            the node type filtering the children by type
+	 * @return all children of an given objectNode filtered by node type
+	 */
 	private static NodeIterator getChildrenNodes(Node parentNode, String nodeType) {
 		try {
 			NodeIterator iteratorRooms = parentNode.getNode(nodeType).getNodes();
@@ -654,6 +775,14 @@ public class ACLServiceImpl {
 	// }
 	// }
 
+	/**
+	 * Returns all children of an given objectNode where inheritance is active.
+	 * 
+	 * @param objectNode
+	 *            the node representing a object
+	 * @return all children of an given objectNode where inheritance is active
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static Vector<Node> getChildrenWithInheritace(Node parentNode) throws UnexpectedInternalProblemException {
 		try {
 
@@ -708,6 +837,14 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns a list with template ACL entries.
+	 * 
+	 * @param locationNode
+	 * @param s
+	 * @return a list with template ACL entries
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntries(Node wasabiLocationNode, Session s)
 			throws UnexpectedInternalProblemException {
 		try {
@@ -737,6 +874,15 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns a list with template ACL entries filtered by given wasabiType.
+	 * 
+	 * @param locationNode
+	 * @param wasabiType
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static List<WasabiACLEntryTemplate> getDefaultACLEntriesByType(Node wasabiLocationNode,
 			WasabiType wasabiType, Session s) throws UnexpectedInternalProblemException {
 		try {
@@ -768,6 +914,14 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Returns inheritance of a given objectNode. True if inheritance is active. False if inheritance is not active.
+	 * 
+	 * @param objectNode
+	 *            the node representing a object
+	 * @return inheritance of a node
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static boolean getInheritance(Node objectNode) throws UnexpectedInternalProblemException {
 		if (objectNode == null)
 			return false;
@@ -782,6 +936,26 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Inserts group rights controlled by {@link propagateInheritance}.
+	 * 
+	 * @param objectUUID
+	 * @param parentUUID
+	 * @param groupUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param inheritanceID
+	 * @param startTime
+	 * @param endTime
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void propagateGroupInheritance(String objectUUID, String parentUUID, String groupUUID, int view,
 			int read, int comment, int execute, int insert, int write, int grant, String inheritanceID, long startTime,
 			long endTime, String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
@@ -805,6 +979,22 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Propagates starting from given objectNode recursive down to children and children's children etc. where
+	 * inheritance is active. The given objectNode is root node of the actual subtree. The initialization start with an
+	 * empty {@code List<WasabiACLEntry>}. If the given {@code List<WasabiACLEntry>} is empty the actual node is the
+	 * root node. In this case all ACL entries (explicit and inherited) from parent object are collected in a {@code
+	 * List<WasabiACLEntry>} and written to actual node. The write process decides user right / group right or inherited
+	 * right / explicit right. The other case, if {@code List<WasabiACLEntry>} is not empty, is the recursion step,
+	 * because the previously collected rights from roots parent are forwarded to each recursion step. Recursion starts
+	 * for each child and child's children etc. where inheritance is active an ends if no more children exists.
+	 * 
+	 * @param objectNode
+	 *            the node representing a root node of subtree
+	 * @param result
+	 *            the collected ACL entries of roots parent node
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void propagateInheritance(Node objectNode, List<WasabiACLEntry> result)
 			throws UnexpectedInternalProblemException {
 		try {
@@ -881,6 +1071,25 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Inserts inherited group rights controlled by {@link updateExplicitGroupRights}.
+	 * 
+	 * @param parentNode
+	 * @param groupUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param startTime
+	 * @param endTime
+	 * @param inheritanceID
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void propagateInheritedGroupRights(Node parentNode, String groupUUID, int view, int read,
 			int comment, int execute, int insert, int write, int grant, long startTime, long endTime,
 			String inheritanceID, String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
@@ -915,6 +1124,25 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Inserts inherited user rights controlled by {@link updateExplicitUserRights}.
+	 * 
+	 * @param parentNode
+	 * @param userUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param startTime
+	 * @param endTime
+	 * @param inheritanceID
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void propagateInheritedUserRights(Node parentNode, String userUUID, int view, int read, int comment,
 			int execute, int insert, int write, int grant, long startTime, long endTime, String inheritanceID,
 			String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
@@ -949,6 +1177,26 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Inserts user rights controlled by {@link propagateInheritance}.
+	 * 
+	 * @param objectUUID
+	 * @param parentUUID
+	 * @param userUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param inheritanceID
+	 * @param startTime
+	 * @param endTime
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void propagateUserInheritance(String objectUUID, String parentUUID, String userUUID, int view,
 			int read, int comment, int execute, int insert, int write, int grant, String inheritanceID, long startTime,
 			long endTime, String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
@@ -972,6 +1220,16 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Removes an ACL entry for a given objectNode and identityNode.
+	 * 
+	 * @param objectNode
+	 * @param identityNode
+	 * @param permission
+	 * @param startTime
+	 * @param endTime
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void remove(Node objectNode, Node identityNode, int[] permission, long startTime, long endTime)
 			throws UnexpectedInternalProblemException {
 		int[] allowance = new int[permission.length];
@@ -996,6 +1254,16 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Removes a template ACL entry for a given locationNode and identityNode.
+	 * 
+	 * @param wasabiLocationNode
+	 * @param wasabiType
+	 * @param permission
+	 * @param startTime
+	 * @param endTime
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void removeDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission, long startTime,
 			long endTime) throws UnexpectedInternalProblemException {
 		int[] allowance = new int[permission.length];
@@ -1062,6 +1330,18 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Deletes recursive starting from given objectNode all ACL entries where inheritanceID is equal to an inheritanceID
+	 * of given string array of inheritanceIDs. The recursion does the same for children and children's children of
+	 * initial root node, where inheritance is active. Additionally, if WasabiCertificates are enabled, at each
+	 * recursion step an invalidation of certificates happens.
+	 * 
+	 * @param objectNode
+	 *            the node representing a root node of subtree
+	 * @param inheritance_ids
+	 *            a string array of inheritance which can be deleted
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void resetInheritance(Node objectNode, String[] inheritance_ids)
 			throws UnexpectedInternalProblemException {
 		/* WasabiCertificate - Begin */
@@ -1097,41 +1377,52 @@ public class ACLServiceImpl {
 		}
 	}
 
-	public static void resetInheritanceForGroups(Node groupNode, String[] inheritance_ids)
-			throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	// public static void resetInheritanceForGroups(Node groupNode, String[] inheritance_ids)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// String parentId = ObjectServiceImpl.getUUID(groupNode);
+	// Vector<Node> Nodes = new Vector<Node>();
+	// NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
+	// while (ni.hasNext())
+	// Nodes.add(ni.nextNode());
+	//
+	// String inheritanceQuery = " (";
+	// for (int i = 0; i < inheritance_ids.length; i++) {
+	// inheritanceQuery = inheritanceQuery + " `inheritance_id`='" + inheritance_ids[i] + "' OR";
+	// }
+	// inheritanceQuery = inheritanceQuery + "`inheritance_id`='placeHolderValue')";
+	//
+	// String deleteRight = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND" + inheritanceQuery;
+	// try {
+	// run.update(deleteRight, parentId);
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	//
+	// if (!Nodes.isEmpty()) {
+	// for (Node node : Nodes) {
+	// if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
+	// resetInheritanceForGroups(node, inheritance_ids);
+	// }
+	// }
+	// } catch (RepositoryException re) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+	// }
+	// }
 
-			String parentId = ObjectServiceImpl.getUUID(groupNode);
-			Vector<Node> Nodes = new Vector<Node>();
-			NodeIterator ni = GroupServiceImpl.getSubGroups(groupNode);
-			while (ni.hasNext())
-				Nodes.add(ni.nextNode());
-
-			String inheritanceQuery = " (";
-			for (int i = 0; i < inheritance_ids.length; i++) {
-				inheritanceQuery = inheritanceQuery + " `inheritance_id`='" + inheritance_ids[i] + "' OR";
-			}
-			inheritanceQuery = inheritanceQuery + "`inheritance_id`='placeHolderValue')";
-
-			String deleteRight = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND" + inheritanceQuery;
-			try {
-				run.update(deleteRight, parentId);
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-			}
-
-			if (!Nodes.isEmpty()) {
-				for (Node node : Nodes) {
-					if (node.getProperty(WasabiNodeProperty.INHERITANCE).getBoolean())
-						resetInheritanceForGroups(node, inheritance_ids);
-				}
-			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
-	}
-
+	/**
+	 * Propagates if given inheritance is true, the inheritance starting from given objectNode to all children and
+	 * children's children where inheritance is active. Otherwise removes inheritance ACL entries propagate by root node
+	 * of subtree for each children and children's children where inheritance is active.
+	 * 
+	 * @param objectNode
+	 *            the node representing a root node of subtree
+	 * @param inheritance
+	 *            the flag for propagation or opposite
+	 * @throws UnexpectedInternalProblemException
+	 */
 	public static void setInheritance(Node objectNode, boolean inheritance) throws UnexpectedInternalProblemException {
 		if (inheritance)
 			propagateInheritance(objectNode, new Vector<WasabiACLEntry>());
@@ -1253,7 +1544,7 @@ public class ACLServiceImpl {
 	 * false.
 	 * 
 	 * @param objectNode
-	 *            the node representing a wasabi-object
+	 *            the node representing a object
 	 * @param inheritance
 	 * @param s
 	 * @param doJcrSave
@@ -1277,6 +1568,18 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Updates template rights.
+	 * 
+	 * @param wasabiLocationNode
+	 * @param wasabiType
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws RepositoryException
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void updateDefaultRights(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			int[] allowance, long startTime, long endTime) throws RepositoryException,
 			UnexpectedInternalProblemException {
@@ -1386,6 +1689,22 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Updates explicit group rights depending on several cases. First of all a check if an entry for given objectNode
+	 * and userNode already exist in the database or not. If an entry exist and the new new values of the seven rights
+	 * are all 0 -> entry will be deleted. If an entry exist and minimum one value of the seven rights is 1 or -1 ->
+	 * entry will be updated. If no entry exist (and no value is 0) -> create an entry at database. Additionally
+	 * propagate rights to children where inheritance is active.
+	 * 
+	 * @param objectNode
+	 * @param groupNode
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws RepositoryException
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void updateExplicitGroupRights(Node objectNode, Node groupNode, int[] permission, int[] allowance,
 			long startTime, long endTime) throws RepositoryException, UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
@@ -1523,6 +1842,22 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Updates explicit user rights depending on several cases. First of all a check if an entry for given objectNode
+	 * and userNode already exist in the database or not. If an entry exist and the new new values of the seven rights
+	 * are all 0 -> entry will be deleted. If an entry exist and minimum one value of the seven rights is 1 or -1 ->
+	 * entry will be updated. If no entry exist (and no value is 0) -> create an entry at database. Additionally
+	 * propagate rights to children where inheritance is active.
+	 * 
+	 * @param objectNode
+	 * @param userNode
+	 * @param permission
+	 * @param allowance
+	 * @param startTime
+	 * @param endTime
+	 * @throws RepositoryException
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void updateExplicitUserRights(Node objectNode, Node userNode, int[] permission, int[] allowance,
 			long startTime, long endTime) throws RepositoryException, UnexpectedInternalProblemException {
 		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
@@ -1660,6 +1995,24 @@ public class ACLServiceImpl {
 		}
 	}
 
+	/**
+	 * Inserts group rights controlled by {@link updateExplicitGroupRights}.
+	 * 
+	 * @param parentUUID
+	 * @param groupUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param startTime
+	 * @param endTime
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void updateInheritedGroupRights(String parentUUID, String groupUUID, int view, int read,
 			int comment, int execute, int insert, int write, int grant, long startTime, long endTime,
 			String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
@@ -1869,6 +2222,26 @@ public class ACLServiceImpl {
 	// }
 	// }
 
+	/**
+	 * Inserts user rights controlled by {@link updateExplicitUserRights}.
+	 * 
+	 * @param parentUUID
+	 * @param userUUID
+	 * @param view
+	 * @param read
+	 * @param comment
+	 * @param execute
+	 * @param insert
+	 * @param write
+	 * @param grant
+	 * @param startTime
+	 * @param endTime
+	 * @param permission
+	 * @param allowance
+	 * @param wasabiType
+	 * @param run
+	 * @throws UnexpectedInternalProblemException
+	 */
 	private static void updateInheritedUserRights(String parentUUID, String userUUID, int view, int read, int comment,
 			int execute, int insert, int write, int grant, long startTime, long endTime, int[] permission,
 			int[] allowance, String wasabiType, QueryRunner run) throws UnexpectedInternalProblemException {
