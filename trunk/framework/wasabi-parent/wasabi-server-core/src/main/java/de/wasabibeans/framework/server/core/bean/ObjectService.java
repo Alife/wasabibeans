@@ -216,7 +216,7 @@ public class ObjectService implements ObjectServiceLocal, ObjectServiceRemote, W
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (!WasabiAuthorizer.authorize(objectNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getModifiedOn()",
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "ObjectService.getName()",
 							"VIEW", "object"));
 		}
 		/* Authorization - End */

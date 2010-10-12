@@ -23,6 +23,9 @@ package de.wasabibeans.framework.server.core.test.authorization.services;
 
 import java.util.Vector;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
 import org.testng.annotations.AfterMethod;
@@ -32,6 +35,7 @@ import org.testng.annotations.Test;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
+import de.wasabibeans.framework.server.core.dto.WasabiCertificateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiGroupDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
@@ -283,6 +287,219 @@ public class AuthorizationServiceTest extends WasabiRemoteTest {
 		System.out.print("Using hasPermission:");
 		try {
 			System.out.println(authorizationService().hasPermission(testRoom, WasabiPermission.COMMENT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void listCertificateByObjectTest() throws WasabiException, ItemNotFoundException, RepositoryException {
+		System.out.println("=== listCertificateByObjectTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating room testRoom...");
+		WasabiRoomDTO testRoom = null;
+		try {
+			testRoom = roomService().create("testRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for testRoom... ");
+		aclService().deactivateInheritance(testRoom);
+		System.out.println("done.");
+
+		aclService().remove(testRoom, user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Creating room testRoom2...");
+		WasabiRoomDTO testRoom2 = null;
+		try {
+			testRoom2 = roomService().create("testRoom2", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("List certificates by object...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificatesByObject(testRoom,
+					WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void listCertificateByUserTest() throws WasabiException, ItemNotFoundException, RepositoryException {
+		System.out.println("=== listCertificateByUserTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating room testRoom...");
+		WasabiRoomDTO testRoom = null;
+		try {
+			testRoom = roomService().create("testRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for testRoom... ");
+		aclService().deactivateInheritance(testRoom);
+		System.out.println("done.");
+
+		aclService().remove(testRoom, user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		System.out.print("Creating room testRoom2...");
+		WasabiRoomDTO testRoom2 = null;
+		try {
+			testRoom2 = roomService().create("testRoom2", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("List certificates by user...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificatesByUser(user,
+					WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void listCertificateTest() throws WasabiException, ItemNotFoundException, RepositoryException {
+		System.out.println("=== listCertificateTest() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating room testRoom...");
+		WasabiRoomDTO testRoom = null;
+		try {
+			testRoom = roomService().create("testRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for testRoom... ");
+		aclService().deactivateInheritance(testRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				testRoom,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Creating room testRoom2...");
+		WasabiRoomDTO testRoom2 = null;
+		try {
+			testRoom2 = roomService().create("testRoom2", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("List certificates...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificates(WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()) + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()) + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting WRITE as userRight for group admin... ");
+		aclService().create(groupService().getGroupByName(WasabiConstants.ADMINS_GROUP_NAME), user,
+				WasabiPermission.WRITE, true);
+		System.out.println("done.");
+
+		System.out.print("Add user to admin group...");
+		try {
+			groupService().addMember(groupService().getGroupByName(WasabiConstants.ADMINS_GROUP_NAME), user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("List certificates...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificates(WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating room testRoom3...");
+		WasabiRoomDTO testRoom3 = null;
+		try {
+			testRoom3 = roomService().create("testRoom3", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating room testRoom4...");
+		WasabiRoomDTO testRoom4 = null;
+		try {
+			testRoom4 = roomService().create("testRoom4", testRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if Cert for user, testRoom and INSERT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.INSERT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("List certificates...");
+		try {
+			Vector<WasabiCertificateDTO> cert = authorizationService().listCertificates(WasabiPermission.INSERT);
+			for (WasabiCertificateDTO wasabiCertificateDTO : cert) {
+				System.out.println("[id=" + wasabiCertificateDTO.getId() + ", user="
+						+ objectService().getName(wasabiCertificateDTO.getUser()).getValue() + ", object="
+						+ objectService().getName(wasabiCertificateDTO.getObject()).getValue() + ", permission="
+						+ wasabiCertificateDTO.getPermission() + "]");
+			}
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

@@ -41,11 +41,34 @@ import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryDeprecated;
 import de.wasabibeans.framework.server.core.util.WasabiACLEntryTemplate;
+import de.wasabibeans.framework.server.core.util.WasabiCertificateHandle;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
 public class TransferManager {
 
 	private static WasabiLogger logger = WasabiLogger.getLogger(TransferManager.class);
+
+	public static Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException {
+		if (wasabiObjectDTO != null) {
+			if (s != null) {
+				try {
+					Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
+					return node;
+				} catch (ItemNotFoundException ie) {
+					throw new ObjectDoesNotExistException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.OBJECT_DNE_ID, wasabiObjectDTO.getId()), ie);
+				} catch (RepositoryException re) {
+					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+				}
+			} else {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLSESSION);
+			}
+		} else {
+			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
+					"DTO"));
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	public static <T extends WasabiObjectDTO> T convertNode2DTO(Node wasabiObject)
@@ -81,38 +104,6 @@ public class TransferManager {
 		return dto;
 	}
 
-	public static <T extends WasabiObjectDTO> T enrichWithLockToken(T wasabiObjectDTO, String lockToken, boolean isDeep) {
-		wasabiObjectDTO.setLockToken(lockToken, isDeep);
-		return wasabiObjectDTO;
-	}
-
-	public static <T extends WasabiObjectDTO> T removeLockToken(T wasabiObjectDTO) {
-		wasabiObjectDTO.setLockToken(null, false);
-		return wasabiObjectDTO;
-	}
-
-	public static Node convertDTO2Node(WasabiObjectDTO wasabiObjectDTO, Session s) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException {
-		if (wasabiObjectDTO != null) {
-			if (s != null) {
-				try {
-					Node node = s.getNodeByIdentifier(wasabiObjectDTO.getId());
-					return node;
-				} catch (ItemNotFoundException ie) {
-					throw new ObjectDoesNotExistException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.OBJECT_DNE_ID, wasabiObjectDTO.getId()), ie);
-				} catch (RepositoryException re) {
-					throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-				}
-			} else {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.TRANSFER_DTO2NODE_NULLSESSION);
-			}
-		} else {
-			throw new IllegalArgumentException(WasabiExceptionMessages.get(WasabiExceptionMessages.INVALID_ARG_NULL,
-					"DTO"));
-		}
-	}
-
 	public static WasabiValueDTO convertValue2DTO(Node wasabiObject, Long optLockId)
 			throws UnexpectedInternalProblemException {
 		if (optLockId != null) {
@@ -132,21 +123,16 @@ public class TransferManager {
 		}
 	}
 
-	public static WasabiACLEntryTemplateDTO convertWasabiACLEntryTemplate2DTO(
-			WasabiACLEntryTemplate wasabiDefaultACLEntry) {
-		WasabiACLEntryTemplateDTO dto = new WasabiACLEntryTemplateDTO();
-		dto.setId(wasabiDefaultACLEntry.getId());
-		dto.setWasabiType(wasabiDefaultACLEntry.getWasabi_Type());
-		dto.setView(wasabiDefaultACLEntry.getView());
-		dto.setRead(wasabiDefaultACLEntry.getRead());
-		dto.setInsert(wasabiDefaultACLEntry.getInsert());
-		dto.setWrite(wasabiDefaultACLEntry.getWrite());
-		dto.setComment(wasabiDefaultACLEntry.getComment());
-		dto.setExecute(wasabiDefaultACLEntry.getExecute());
-		dto.setGrant(wasabiDefaultACLEntry.getGrant());
-		dto.setStartTime(wasabiDefaultACLEntry.getStart_Time());
-		dto.setEndTime(wasabiDefaultACLEntry.getEnd_Time());
-		return dto;
+	public static WasabiVersionDTO convertVersion2DTO(Version version, VersionHistory versionHistory)
+			throws UnexpectedInternalProblemException {
+		try {
+			String label = versionHistory.getVersionLabels(version)[0];
+			Date creationDate = new Date(Long.parseLong(label));
+			String comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
+			return new WasabiVersionDTO(label, comment, creationDate);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
 	}
 
 	public static WasabiACLEntryDTODeprecated convertWasabiACLEntryDeprecated2DTO(
@@ -183,21 +169,46 @@ public class TransferManager {
 		return dto;
 	}
 
-	public static WasabiVersionDTO convertVersion2DTO(Version version, VersionHistory versionHistory)
-			throws UnexpectedInternalProblemException {
-		try {
-			String label = versionHistory.getVersionLabels(version)[0];
-			Date creationDate = new Date(Long.parseLong(label));
-			String comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
-			return new WasabiVersionDTO(label, comment, creationDate);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+	public static WasabiACLEntryTemplateDTO convertWasabiACLEntryTemplate2DTO(
+			WasabiACLEntryTemplate wasabiDefaultACLEntry) {
+		WasabiACLEntryTemplateDTO dto = new WasabiACLEntryTemplateDTO();
+		dto.setId(wasabiDefaultACLEntry.getId());
+		dto.setWasabiType(wasabiDefaultACLEntry.getWasabi_Type());
+		dto.setView(wasabiDefaultACLEntry.getView());
+		dto.setRead(wasabiDefaultACLEntry.getRead());
+		dto.setInsert(wasabiDefaultACLEntry.getInsert());
+		dto.setWrite(wasabiDefaultACLEntry.getWrite());
+		dto.setComment(wasabiDefaultACLEntry.getComment());
+		dto.setExecute(wasabiDefaultACLEntry.getExecute());
+		dto.setGrant(wasabiDefaultACLEntry.getGrant());
+		dto.setStartTime(wasabiDefaultACLEntry.getStart_Time());
+		dto.setEndTime(wasabiDefaultACLEntry.getEnd_Time());
+		return dto;
+	}
+
+	public static WasabiCertificateDTO convertWasabiCertificate2DTO(WasabiCertificateHandle certificate,
+			WasabiUserDTO user, WasabiObjectDTO object) {
+		WasabiCertificateDTO dto = new WasabiCertificateDTO();
+		dto.setId(certificate.getID());
+		dto.setObject(object);
+		dto.setUser(user);
+		dto.setPermission(certificate.getPermission());
+		return dto;
+	}
+
+	public static <T extends WasabiObjectDTO> T enrichWithLockToken(T wasabiObjectDTO, String lockToken, boolean isDeep) {
+		wasabiObjectDTO.setLockToken(lockToken, isDeep);
+		return wasabiObjectDTO;
 	}
 
 	private static String generateWasabiObjectDTOName(String nodeTypeName) {
 		String[] tmp = nodeTypeName.split(":");
 		String firstLetter = tmp[1].substring(0, 1).toUpperCase(Locale.ENGLISH);
 		return WasabiConstants.DTO_PREFIX + firstLetter + tmp[1].substring(1) + WasabiConstants.DTO_SUFFIX;
+	}
+
+	public static <T extends WasabiObjectDTO> T removeLockToken(T wasabiObjectDTO) {
+		wasabiObjectDTO.setLockToken(null, false);
+		return wasabiObjectDTO;
 	}
 }
