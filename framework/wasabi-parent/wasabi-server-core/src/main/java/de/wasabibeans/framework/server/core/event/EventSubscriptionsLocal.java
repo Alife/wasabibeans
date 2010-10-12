@@ -36,7 +36,11 @@ public interface EventSubscriptionsLocal {
 
 	public void subscribe(String objectId, String username, String jmsDestinationName, boolean isQueue);
 
+	public boolean hasSubscribers(String objectId);
+
 	public void unsubscribe(String objectId, String username);
+
+	public void removeSubscriptions(String objectId);
 
 	public ConcurrentHashMap<String, ConcurrentHashMap<String, SubscriptionInfo>> getData();
 }
