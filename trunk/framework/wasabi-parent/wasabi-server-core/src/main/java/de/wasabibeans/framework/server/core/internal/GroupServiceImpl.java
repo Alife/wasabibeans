@@ -192,7 +192,15 @@ public class GroupServiceImpl {
 				try {
 					aMember = aMemberRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
 				} catch (ItemNotFoundException infe) {
-					aMemberRef.remove();
+					try {
+						aMemberRef.remove();
+						groupNode.getSession().save();
+					} catch (RepositoryException re) {
+						/*
+						 * do nothing -> remove failed -> reference already removed by another thread concurrently or
+						 * currently locked
+						 */
+					}
 				}
 				if (aMember != null && aMember.getName().equals(userName)) {
 					return aMember;
