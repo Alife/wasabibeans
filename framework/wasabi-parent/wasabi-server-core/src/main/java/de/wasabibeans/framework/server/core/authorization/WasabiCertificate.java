@@ -39,6 +39,7 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.util.WasabiCertificateHandle;
 
 public class WasabiCertificate {
 
@@ -59,6 +60,267 @@ public class WasabiCertificate {
 
 	private static String concatInputs(String userUUID, String objectUUID) {
 		return userUUID + "::" + objectUUID;
+	}
+
+	public static Vector<WasabiCertificateHandle> filterCertificateByObject(String objectUUID, int[] permission) {
+		Vector<WasabiCertificateHandle> certificates = new Vector<WasabiCertificateHandle>();
+
+		for (int i = 0; i < permission.length; i++) {
+			switch (permission[i]) {
+			case WasabiPermission.VIEW:
+				for (String entry : viewRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.READ:
+				for (String entry : readRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.COMMENT:
+				for (String entry : commentRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.EXECUTE:
+				for (String entry : executeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.INSERT:
+				for (String entry : insertRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.WRITE:
+				for (String entry : writeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.GRANT:
+				for (String entry : grantRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String object = getObjectUUID(entry);
+					if (object.equals(objectUUID)) {
+						cert.setObjectUUID(object);
+						cert.setUserUUID(getUserUUID(entry));
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			}
+		}
+		return certificates;
+	}
+
+	public static Vector<WasabiCertificateHandle> filterCertificateByPermission(int[] permission) {
+		Vector<WasabiCertificateHandle> certificates = new Vector<WasabiCertificateHandle>();
+
+		for (int i = 0; i < permission.length; i++) {
+			switch (permission[i]) {
+			case WasabiPermission.VIEW:
+				for (String entry : viewRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.READ:
+				for (String entry : readRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.COMMENT:
+				for (String entry : commentRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.EXECUTE:
+				for (String entry : executeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.INSERT:
+				for (String entry : insertRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.WRITE:
+				for (String entry : writeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			case WasabiPermission.GRANT:
+				for (String entry : grantRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					cert.setObjectUUID(getObjectUUID(entry));
+					cert.setUserUUID(getUserUUID(entry));
+					cert.setPermission(permission[i]);
+					certificates.add(cert);
+				}
+				break;
+			}
+		}
+		return certificates;
+	}
+
+	public static Vector<WasabiCertificateHandle> filterCertificateByUser(String userUUID, int[] permission) {
+		Vector<WasabiCertificateHandle> certificates = new Vector<WasabiCertificateHandle>();
+
+		for (int i = 0; i < permission.length; i++) {
+			switch (permission[i]) {
+			case WasabiPermission.VIEW:
+				for (String entry : viewRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.READ:
+				for (String entry : readRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.COMMENT:
+				for (String entry : commentRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.EXECUTE:
+				for (String entry : executeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.INSERT:
+				for (String entry : insertRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.WRITE:
+				for (String entry : writeRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			case WasabiPermission.GRANT:
+				for (String entry : grantRightMap.keySet()) {
+					WasabiCertificateHandle cert = new WasabiCertificateHandle();
+					String user = getUserUUID(entry);
+					if (user.equals(userUUID)) {
+						cert.setObjectUUID(getObjectUUID(entry));
+						cert.setUserUUID(user);
+						cert.setPermission(permission[i]);
+						certificates.add(cert);
+					}
+				}
+				break;
+			}
+		}
+		return certificates;
 	}
 
 	private static Vector<Node> getAllUserByGroup(Node groupNode) throws UnexpectedInternalProblemException {
@@ -82,15 +344,6 @@ public class WasabiCertificate {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
-	}
-
-	public static boolean getCertificate(String userUUID, String objectUUID, int[] permission) {
-		for (int i = 0; i < permission.length; i++) {
-			boolean ret = getCertificate(userUUID, objectUUID, permission[i]);
-			if (ret)
-				return true;
-		}
-		return false;
 	}
 
 	public static boolean getCertificate(String userUUID, String objectUUID, int permission) {
@@ -155,6 +408,25 @@ public class WasabiCertificate {
 				return false;
 		}
 		return false;
+	}
+
+	public static boolean getCertificate(String userUUID, String objectUUID, int[] permission) {
+		for (int i = 0; i < permission.length; i++) {
+			boolean ret = getCertificate(userUUID, objectUUID, permission[i]);
+			if (ret)
+				return true;
+		}
+		return false;
+	}
+
+	private static String getObjectUUID(String key) {
+		String[] split = key.split("::");
+		return split[1];
+	}
+
+	private static String getUserUUID(String key) {
+		String[] split = key.split("::");
+		return split[0];
 	}
 
 	private static void invalidate(String objectUUID, int permission) {

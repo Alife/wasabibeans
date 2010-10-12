@@ -21,8 +21,13 @@
 
 package de.wasabibeans.framework.server.core.remote;
 
-import javax.ejb.Remote;
+import java.util.Vector;
 
+import javax.ejb.Remote;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
+import de.wasabibeans.framework.server.core.dto.WasabiCertificateDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiObjectDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.NoPermissionException;
@@ -41,14 +46,16 @@ public interface AuthorizationServiceRemote {
 	public boolean hasPermission(WasabiObjectDTO object, WasabiUserDTO user, int permission)
 			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException;
 
-	public boolean listCertificates(int permission) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, NoPermissionException;
+	public Vector<WasabiCertificateDTO> listCertificates(int permission) throws ObjectDoesNotExistException,
+			UnexpectedInternalProblemException, NoPermissionException, ItemNotFoundException, RepositoryException;
 
-	public boolean listCertificatesByObject(WasabiUserDTO user, int permission) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, NoPermissionException;
+	public Vector<WasabiCertificateDTO> listCertificatesByObject(WasabiObjectDTO object, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException,
+			ItemNotFoundException, RepositoryException;
 
-	public boolean listCertificatesByUser(WasabiObjectDTO object, int permission) throws ObjectDoesNotExistException,
-			UnexpectedInternalProblemException, NoPermissionException;
+	public Vector<WasabiCertificateDTO> listCertificatesByUser(WasabiUserDTO user, int permission)
+			throws ObjectDoesNotExistException, UnexpectedInternalProblemException, NoPermissionException,
+			ItemNotFoundException, RepositoryException;
 
 	public boolean returnTrue();
 

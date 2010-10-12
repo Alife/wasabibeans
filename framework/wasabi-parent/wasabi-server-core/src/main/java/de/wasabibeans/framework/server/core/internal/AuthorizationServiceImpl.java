@@ -21,14 +21,24 @@
 
 package de.wasabibeans.framework.server.core.internal;
 
+import java.util.Vector;
+
 import javax.jcr.Node;
 import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiAuthorizer;
 import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.WasabiCertificateHandle;
 
 public class AuthorizationServiceImpl {
+
+	public static boolean existsCertificate(String objectUUID, String userUUID, int permission) {
+		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
+			return true;
+		else
+			return false;
+	}
 
 	public static boolean hasPermission(String objectUUID, String userUUID, int permission,
 
@@ -42,10 +52,15 @@ public class AuthorizationServiceImpl {
 			return false;
 	}
 
-	public static boolean existsCertificate(String objectUUID, String userUUID, int permission) {
-		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
-			return true;
-		else
-			return false;
+	public static Vector<WasabiCertificateHandle> listCertificate(int permission) {
+		return WasabiCertificate.filterCertificateByPermission(new int[] { permission });
+	}
+
+	public static Vector<WasabiCertificateHandle> listCertificatesByObject(String objectUUID, int permission) {
+		return WasabiCertificate.filterCertificateByObject(objectUUID, new int[] { permission });
+	}
+
+	public static Vector<WasabiCertificateHandle> listCertificatesByUser(String userUUID, int permission) {
+		return WasabiCertificate.filterCertificateByUser(userUUID, new int[] { permission });
 	}
 }
