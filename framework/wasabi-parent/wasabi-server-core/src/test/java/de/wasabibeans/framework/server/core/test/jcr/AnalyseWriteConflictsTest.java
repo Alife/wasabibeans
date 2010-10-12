@@ -79,11 +79,12 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 	private static final String VERSIONLABEL = "versionLabel";
 	private static String TESTNODE;
 	private static String TESTPARENT;
+	private static String TESTCHILD;
 	private static final String TESTPROPERTY = "testproperty";
-	private static final String TESTCHILD = "testchild";
+	private static final String TESTCHILDNAME = "testchild";
 	private static final byte SET_DIFF_PROPERTY = 0, SET_SAME_PROPERTY = 1, ADD_DIFF_CHILD = 2, ADD_SAME_CHILD = 3,
 			REMOVE_DIFF_CHILD = 4, REMOVE_SAME_CHILD = 5, MOVE = 6, MOVE_DIFF_DEST = 7, REMOVE = 8, REMOVE_PARENT = 9,
-			VERSION = 10, RESTORE = 11, VERSION_DIFF = 12, RESTORE_DIFF = 13;
+			VERSION = 10, RESTORE = 11, VERSION_DIFF = 12, RESTORE_DIFF = 13, EDIT_CHILD = 14;
 
 	@Deployment
 	public static JavaArchive deploy() {
@@ -206,7 +207,7 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 		try {
 			Session session = jcr.getJCRSession();
 			TESTNODE = session.getRootNode().addNode(TESTNODENAME, NodeType.NT_FOLDER).getIdentifier();
-			session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILD, NodeType.NT_FOLDER);
+			session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILDNAME, NodeType.NT_FOLDER);
 			session.save();
 			jcr.cleanup(true);
 
@@ -461,6 +462,44 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 			UserThread user1 = new TestUserVS(USER1, REMOVE_PARENT);
 			UserThread user2 = new TestUserVS(USER2, MOVE);
 			executeAndPrintResult("MoveVsRemoveParent", false, user1, user2);
+		} finally {
+			afterTest();
+		}
+	}
+	
+	@Test
+	public void moveVseditChild() throws Throwable {
+		beforeTest();
+		try {
+			Session session = jcr.getJCRSession();
+			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
+			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
+			TESTCHILD = session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILDNAME).getIdentifier();
+			session.save();
+			jcr.cleanup(true);
+
+			UserThread user1 = new TestUserVS(USER1, EDIT_CHILD);
+			UserThread user2 = new TestUserVS(USER2, MOVE);
+			executeAndPrintResult("MoveVsEditChild", false, user1, user2);
+		} finally {
+			afterTest();
+		}
+	}
+	
+	@Test
+	public void editChildVsmove() throws Throwable {
+		beforeTest();
+		try {
+			Session session = jcr.getJCRSession();
+			TESTNODE = session.getRootNode().addNode(TESTNODENAME).getIdentifier();
+			TESTPARENT = session.getRootNode().addNode(TESTPARENTNAME).getIdentifier();
+			TESTCHILD = session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILDNAME).getIdentifier();
+			session.save();
+			jcr.cleanup(true);
+
+			UserThread user1 = new TestUserVS(USER1, MOVE);
+			UserThread user2 = new TestUserVS(USER2, EDIT_CHILD);
+			executeAndPrintResult("EditChildVsMove", false, user1, user2);
 		} finally {
 			afterTest();
 		}
@@ -1127,14 +1166,16 @@ public class AnalyseWriteConflictsTest extends Arquillian {
 					session.getNodeByIdentifier(TESTNODE).addNode(username, NodeType.NT_FOLDER);
 					break;
 				case ADD_SAME_CHILD:
-					session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILD, NodeType.NT_FOLDER);
+					session.getNodeByIdentifier(TESTNODE).addNode(TESTCHILDNAME, NodeType.NT_FOLDER);
 					break;
 				case REMOVE_DIFF_CHILD:
 					session.getNodeByIdentifier(TESTNODE).getNode(username).remove();
 					break;
 				case REMOVE_SAME_CHILD:
-					session.getNodeByIdentifier(TESTNODE).getNode(TESTCHILD).remove();
+					session.getNodeByIdentifier(TESTNODE).getNode(TESTCHILDNAME).remove();
 					break;
+				case EDIT_CHILD:
+					session.getNodeByIdentifier(TESTCHILD).setProperty(TESTPROPERTY, username);
 				case MOVE:
 					session.move(session.getNodeByIdentifier(TESTNODE).getPath(), session.getNodeByIdentifier(
 							TESTPARENT).getPath()
