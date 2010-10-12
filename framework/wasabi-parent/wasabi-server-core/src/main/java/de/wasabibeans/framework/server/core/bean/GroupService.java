@@ -183,7 +183,15 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 					try {
 						user = userRef.getProperty(WasabiNodeProperty.REFERENCED_OBJECT).getNode();
 					} catch (ItemNotFoundException infe) {
-						userRef.remove();
+						try {
+							userRef.remove();
+							s.save();
+						} catch (RepositoryException re) {
+							/*
+							 * do nothing -> remove failed -> reference already removed by another thread concurrently
+							 * or currently locked
+							 */
+						}
 					}
 					if (user != null) {
 						WasabiUserDTO userDTO = (WasabiUserDTO) TransferManager.convertNode2DTO(user);
