@@ -81,6 +81,7 @@ public class Event2UserDestinationAllocator implements MessageListener {
 			// create producer without specified destination
 			MessageProducer jmsProducer = jmsSession.createProducer(null);
 			jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			jmsProducer.setDisableMessageID(true);
 
 			// subscribers of the affected object (e.g. create new document in room, the document is the affected
 			// object)
