@@ -32,6 +32,7 @@ public class WasabiCertificateHandle {
 		counter++;
 	}
 
+	@SuppressWarnings("static-access")
 	public long getID() {
 		return this.counter;
 	}
