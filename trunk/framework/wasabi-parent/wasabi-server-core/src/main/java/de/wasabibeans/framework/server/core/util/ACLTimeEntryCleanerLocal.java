@@ -26,5 +26,5 @@ import javax.ejb.Local;
 @Local
 public interface ACLTimeEntryCleanerLocal {
 	
-	public void startEventAuthorizationChecker();
+	public void startACLTimeEntryCleaner();
 }

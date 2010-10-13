@@ -41,37 +41,45 @@ import de.wasabibeans.framework.server.core.util.WasabiUserEntry;
 public class WasabiUserSQL {
 
 	public static void removeRights(Node userNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUserUUID = ObjectServiceImpl.getUUID(userNode);
-		String removeUserQuery = "DELETE FROM wasabi_rights WHERE `user`=?";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String wasabiUserUUID = ObjectServiceImpl.getUUID(userNode);
+			String removeUserQuery = "DELETE FROM wasabi_rights WHERE `user`=?";
+
 			run.update(removeUserQuery, wasabiUserUUID);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void SqlQueryForCreate(String name, String password) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
+			String insertUserQuery = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
+
 			run.update(insertUserQuery, name, passwordCrypt);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static String SqlQueryForGetPassword(Node userNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
 		try {
+			String wasabiUser = ObjectServiceImpl.getName(userNode);
+			String getPasswordQuery = "SELECT password FROM wasabi_user WHERE username=?";
+
 			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler<WasabiUserEntry>(WasabiUserEntry.class);
 
 			List<WasabiUserEntry> result = run.query(getPasswordQuery, h, wasabiUser);
@@ -82,45 +90,56 @@ public class WasabiUserSQL {
 				return result.get(0).getPassword();
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void SqlQueryForRemove(Node userNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String removeUserQuery = "DELETE FROM wasabi_user WHERE username=?";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String wasabiUser = ObjectServiceImpl.getName(userNode);
+			String removeUserQuery = "DELETE FROM wasabi_user WHERE username=?";
+
 			run.update(removeUserQuery, wasabiUser);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void SqlQueryForRename(String wasabiUser, String name) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String renameUserQuery = "UPDATE wasabi_user SET username=? WHERE username=?";
+
 			run.update(renameUserQuery, name, wasabiUser);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void SqlQueryForSetPassword(Node userNode, String password) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String wasabiUser = ObjectServiceImpl.getName(userNode);
-		String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
-		String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE username=?";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String wasabiUser = ObjectServiceImpl.getName(userNode);
+			String passwordCrypt = HashGenerator.generateHash(password, hashAlgorithms.SHA);
+			String setPasswordQuery = "UPDATE wasabi_user SET password=? WHERE username=?";
+
 			run.update(setPasswordQuery, passwordCrypt, wasabiUser);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.INTERNAL_NO_USER, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 }

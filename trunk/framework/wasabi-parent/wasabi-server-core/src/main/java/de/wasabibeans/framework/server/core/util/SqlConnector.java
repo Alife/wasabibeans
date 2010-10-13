@@ -45,4 +45,8 @@ public class SqlConnector {
 		return dataSource;
 
 	}
+	
+	public void close() {
+		jndi.close();
+	}
 }

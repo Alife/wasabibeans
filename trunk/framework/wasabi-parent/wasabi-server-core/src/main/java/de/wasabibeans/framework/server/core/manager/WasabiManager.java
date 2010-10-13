@@ -56,66 +56,69 @@ public class WasabiManager {
 	private static WasabiLogger logger = WasabiLogger.getLogger(WasabiManager.class);
 
 	public static void initDatabase() {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		/* Create user table and entries */
-		String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
-		String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
-				+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL,"
-				+ "PRIMARY KEY (username)) ENGINE = InnoDB ;";
 		try {
+			/* Create user table and entries */
+			String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
+			String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
+					+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL,"
+					+ "PRIMARY KEY (username)) ENGINE = InnoDB ;";
+
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 
-		/* Create the internally used JMS_EVENT_ADMIN (administers the JMS queues used for event handling) */
-		String insertWasabiEventAdmin = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
-		try {
+			/* Create the internally used JMS_EVENT_ADMIN (administers the JMS queues used for event handling) */
+			String insertWasabiEventAdmin = "INSERT INTO wasabi_user (username, password) VALUES (?,?)";
+
 			run.update(insertWasabiEventAdmin, WasabiConstants.JMS_EVENT_ADMIN, HashGenerator.generateHash(
 					WasabiConstants.JMS_EVENT_ADMIN_PASSWORD, WasabiConstants.hashAlgorithms.SHA));
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 
-		/* Create user rights table and entries */
-		String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
-		String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` (" + "`id` bigint(20) NOT NULL AUTO_INCREMENT,"
-				+ "`object_id` varchar(64) NOT NULL," + "`user_id` varchar(64) NOT NULL,"
-				+ "`parent_id` varchar(64) NOT NULL," + "`group_id` varchar(64) NOT NULL,"
-				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
-				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
-				+ "`grant` tinyint(2) NOT NULL," + "`start_time` bigint(20) NOT NULL DEFAULT '0',"
-				+ "`end_time` bigint(20) NOT NULL DEFAULT '0'," + "`inheritance_id` varchar(64) NOT NULL,"
-				+ "`priority` tinyint(2) NOT NULL,"
-				+ "`wasabi_type` enum('ROOM', 'CONTAINER', 'DOCUMENT', 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
-				+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
-		try {
+			/* Create user rights table and entries */
+			String dropWasabiRightsTable = "DROP TABLE IF EXISTS wasabi_rights";
+			String createWasabiRightsTable = "CREATE TABLE `wasabi_rights` ("
+					+ "`id` bigint(20) NOT NULL AUTO_INCREMENT,"
+					+ "`object_id` varchar(64) NOT NULL,"
+					+ "`user_id` varchar(64) NOT NULL,"
+					+ "`parent_id` varchar(64) NOT NULL,"
+					+ "`group_id` varchar(64) NOT NULL,"
+					+ "`view` tinyint(2) NOT NULL,"
+					+ "`read` tinyint(2) NOT NULL,"
+					+ "`insert` tinyint(2) NOT NULL,"
+					+ "`write` tinyint(2) NOT NULL,"
+					+ "`comment` tinyint(2) NOT NULL,"
+					+ "`execute` tinyint(2) NOT NULL,"
+					+ "`grant` tinyint(2) NOT NULL,"
+					+ "`start_time` bigint(20) NOT NULL DEFAULT '0',"
+					+ "`end_time` bigint(20) NOT NULL DEFAULT '0',"
+					+ "`inheritance_id` varchar(64) NOT NULL,"
+					+ "`priority` tinyint(2) NOT NULL,"
+					+ "`wasabi_type` enum('ROOM', 'CONTAINER', 'DOCUMENT', 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
+					+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
+
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 
-		/* Create template rights table */
-		String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
-		String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
-				+ "`id` int(11) NOT NULL AUTO_INCREMENT,"
-				+ "`location_id` varchar(64) NOT NULL,"
-				+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP', 'ALL') NOT NULL,"
-				+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
-				+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL," + "`execute` tinyint(2) NOT NULL,"
-				+ "`grant` tinyint(2) NOT NULL," + "`start_time` float NOT NULL DEFAULT '0',"
-				+ "`end_time` float NOT NULL DEFAULT '0'," + "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
+			/* Create template rights table */
+			String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
+			String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
+					+ "`id` int(11) NOT NULL AUTO_INCREMENT,"
+					+ "`location_id` varchar(64) NOT NULL,"
+					+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP', 'ALL') NOT NULL,"
+					+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
+					+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL,"
+					+ "`execute` tinyint(2) NOT NULL," + "`grant` tinyint(2) NOT NULL,"
+					+ "`start_time` float NOT NULL DEFAULT '0'," + "`end_time` float NOT NULL DEFAULT '0',"
+					+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
 
-		try {
 			run.update(dropWasabiTemplateRightsTable);
 			run.update(createWasabiTeplateRightsTable);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
+		} finally {
+			sqlConnector.close();
 		}
-
 	}
 
 	/**
@@ -130,7 +133,7 @@ public class WasabiManager {
 			String lookupPrefix = earName != null ? earName + "/" : "";
 			ACLTimeEntryCleanerLocal eventAuthChecker = (ACLTimeEntryCleanerLocal) jndi.lookupLocal(lookupPrefix
 					+ "ACLTimeEntryCleaner");
-			eventAuthChecker.startEventAuthorizationChecker();
+			eventAuthChecker.startACLTimeEntryCleaner();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {

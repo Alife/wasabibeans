@@ -46,20 +46,23 @@ public class ACLTimeEntryCleaner implements ACLTimeEntryCleanerLocal {
 
 	@Timeout
 	public void check(Timer timer) {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String cleanupACLTimeEntries = "DELETE FROM `wasabi_rights` WHERE `end_time`<? AND `end_time`!=0";
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String cleanupACLTimeEntries = "DELETE FROM `wasabi_rights` " + "WHERE `end_time`<? AND `end_time`!=0";
+
 			long time = java.lang.System.currentTimeMillis();
 			run.update(cleanupACLTimeEntries, time);
 			logger.info("ACL time entry cleanup at " + time);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
-	public void startEventAuthorizationChecker() {
+	public void startACLTimeEntryCleaner() {
 		ctx.getTimerService().createTimer(WasabiConstants.ACL_TIME_ENTRY_CLEANUP * 60 * 1000,
 				WasabiConstants.ACL_TIME_ENTRY_CLEANUP * 60 * 1000, null);
 	}

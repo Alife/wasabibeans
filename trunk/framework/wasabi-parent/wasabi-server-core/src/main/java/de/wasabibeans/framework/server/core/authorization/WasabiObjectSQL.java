@@ -32,13 +32,16 @@ import de.wasabibeans.framework.server.core.util.SqlConnector;
 public class WasabiObjectSQL {
 
 	public static void SqlQueryForRemove(String objectUUID) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String deleteEntryQuery = "DELETE FROM wasabi_rights WHERE `object_id`=?";
-		try {
+		try {String deleteEntryQuery = "DELETE FROM wasabi_rights WHERE `object_id`=?";
+		
 			run.update(deleteEntryQuery, objectUUID);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 }
