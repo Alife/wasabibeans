@@ -46,6 +46,7 @@ public class Init extends HttpServlet {
 						WasabiManager.initDatabase();
 						WasabiManager.initRepository(WasabiConstants.JCR_NODETYPES_RESOURCE_PATH, true);
 						WasabiManager.initScheduledTasks("wasabibeans");
+						WasabiManager.initACLTimeEntryCleaner("wasabibeans");
 						logger.info("Wasabi initialization completed.");
 						break;
 					} catch (Exception e) {
