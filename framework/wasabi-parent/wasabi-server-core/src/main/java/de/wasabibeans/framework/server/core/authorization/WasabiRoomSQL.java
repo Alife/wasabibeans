@@ -36,11 +36,13 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 public class WasabiRoomSQL {
 
 	public static String[] SQLQueryForMove(String roomUUID) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
-				+ "WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
+			String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+					+ "WHERE `object_id`=? AND `inheritance_id`!=''";
+
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, roomUUID);
 
@@ -55,33 +57,43 @@ public class WasabiRoomSQL {
 			return result;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void SQLQueryForRemove(String roomUUID) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String deleteEntryQuery = "DELETE FROM `wasabi_template_rights` WHERE `location_id`=?";
 		try {
+			String deleteEntryQuery = "DELETE FROM `wasabi_template_rights` WHERE `location_id`=?";
+
 			run.update(deleteEntryQuery, roomUUID);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
 	public static void createRandomSQLinserts() throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
-				+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
-				+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try {
+			String insertUserACLEntryQuery = "INSERT INTO wasabi_rights "
+					+ "(`object_id`, `user_id`, `parent_id`, `group_id` , `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`, `inheritance_id`, `priority`, `wasabi_type`)"
+					+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
 			for (int i = 0; i < randNr(8000); i++)
 				run.update(insertUserACLEntryQuery, randNr(1000000), randNr(1000000), randNr(1000000), "", randNr(1),
 						randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1), randNr(1),
 						randNr(1000000), randNr(8), "ROOM");
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 
 	}

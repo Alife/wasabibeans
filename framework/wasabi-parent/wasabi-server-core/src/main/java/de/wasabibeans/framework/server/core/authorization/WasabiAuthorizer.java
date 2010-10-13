@@ -99,8 +99,7 @@ public class WasabiAuthorizer {
 			// return false;
 
 			// Variante 3
-			boolean ret = checkCalcRights(objectUUID, userUUID, userNode, permission, s);
-			return ret;
+			return checkCalcRights(objectUUID, userUUID, userNode, permission, s);
 		}
 	}
 
@@ -199,9 +198,10 @@ public class WasabiAuthorizer {
 	 */
 	private static boolean checkCalcRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
 			throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
+		try {
 			Vector<String> allGroups = getGroupMemberships(userNode, s);
 			String allGroupsQuery = getGroupMembershipQuery(allGroups);
 			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
@@ -310,509 +310,516 @@ public class WasabiAuthorizer {
 			}
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 		return false;
 	}
 
-	private static boolean checkNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
-			Session s) throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	// private static boolean checkNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
+	// Session s) throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// Vector<String> allGroups = getGroupMemberships(userNode, s);
+	// String allGroupsQuery = getGroupMembershipQuery(allGroups);
+	// String rightQueryAllow = getRightQueryAllow(permission);
+	// String rightQueryDeny = getRightQueryDeny(permission);
+	// String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	//
+	// String explicitUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT
+	// + " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck;
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result1 = run.query(explicitUserRights, h1, objectUUID);
+	//
+	// if (result1.size() > 0)
+	// return true;
+	// else {
+	// String inheritedUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
+	// + " AND `start_time`=0 AND `end_time`=0" + " AND " + identityCheck + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
+	// + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
+	// + " AND `start_time`=0 AND `end_time`=0 " + " AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result2 = run.query(inheritedUserRights, h2, objectUUID, objectUUID);
+	//
+	// if (result2.size() > 0)
+	// return true;
+	// else {
+	// String explicitGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND " + rightQueryAllow + "AND" + "`priority`="
+	// + WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 " + "AND "
+	// + identityCheck + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
+	// + "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT
+	// + " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
+	// WasabiACLEntry.class);
+	// List<WasabiACLEntry> result3 = run.query(explicitGroupRights, h3, objectUUID, objectUUID);
+	//
+	// if (result3.size() > 0)
+	// return true;
+	// else {
+	// String inheritedGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND " + rightQueryAllow + "AND " + "`priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 "
+	// + "AND " + identityCheck + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryDeny + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_GROUP_RIGHT
+	// + " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
+	// WasabiACLEntry.class);
+	// List<WasabiACLEntry> result4 = run.query(inheritedGroupRights, h4, objectUUID, objectUUID);
+	//
+	// if (result4.size() > 0)
+	// return true;
+	// }
+	// }
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// return false;
+	// }
 
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-			String rightQueryAllow = getRightQueryAllow(permission);
-			String rightQueryDeny = getRightQueryDeny(permission);
-			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	// private static boolean checkRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// Vector<String> allGroups = getGroupMemberships(userNode, s);
+	//
+	// String allGroupsQuery = getGroupMembershipQuery(allGroups);
+	// String rightQueryAllow = getRightQueryAllow(permission);
+	// String rightQueryDeny = getRightQueryDeny(permission);
+	// String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	// String userCheck = "`user_id`='" + userUUID + "' ";
+	//
+	// long time = java.lang.System.currentTimeMillis();
+	//
+	// String getACLEntries =
+	// "SELECT `object_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` "
+	// + "FROM `wasabi_rights` WHERE " + "(`object_id`='"
+	// + objectUUID
+	// + "' AND `priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_RIGHT
+	// + " AND "
+	// + identityCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// +
+	// "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5 OR `priority`=6 OR `priority`=7))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.EXPLICIT_GROUP_RIGHT
+	// + " AND "
+	// + identityCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// +
+	// "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5 OR `priority`=6))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.INHERITED_USER_RIGHT
+	// + " AND "
+	// + userCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.EXPLICIT_USER_RIGHT
+	// + " AND "
+	// + userCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
+	// + " AND "
+	// + identityCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
+	// + " AND "
+	// + identityCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND (`priority`=0 OR `priority`=1 OR `priority`=2))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.INHERITED_USER_TIME_RIGHT
+	// + " AND "
+	// + userCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND (`priority`=0 OR `priority`=1))) "
+	// + "OR "
+	// + "(`object_id`='"
+	// + objectUUID
+	// + "' "
+	// + " AND `priority`="
+	// + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
+	// + " AND "
+	// + userCheck
+	// + " AND "
+	// + rightQueryAllow
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + ") OR (`start_time`=0 AND `end_time`=0)) "
+	// + "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + rightQueryDeny
+	// + "AND `object_id`='"
+	// + objectUUID
+	// + "' "
+	// + "AND "
+	// + identityCheck
+	// + "AND ((`start_time`<="
+	// + time
+	// + " AND `end_time`>=" + time + ") OR (`start_time`=0 AND `end_time`=0)) " + "AND `priority`=0)) ";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(getACLEntries, h);
+	//
+	// if (result.size() > 0)
+	// return true;
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// return false;
+	// }
 
-			String explicitUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-					+ rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT
-					+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck;
+	// private static boolean checkTimeRights(String objectUUID, String userUUID, Node userNode, int permission, Session
+	// s)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// Vector<String> allGroups = getGroupMemberships(userNode, s);
+	// String allGroupsQuery = getGroupMembershipQuery(allGroups);
+	// String rightQueryAllow = getRightQueryAllow(permission);
+	// String rightQueryDeny = getRightQueryDeny(permission);
+	// String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	// long time = java.lang.System.currentTimeMillis();
+	//
+	// String explicitUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryAllow + "AND" + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
+	// + " AND `start_time`<=" + time + " AND `end_time`>=" + time + " AND " + identityCheck
+	// + "AND `object_id` NOT IN(" + "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND " + rightQueryDeny + "AND" + "`priority`="
+	// + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " AND `start_time`<=" + time + " AND `end_time`>="
+	// + time + "AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result1 = run.query(explicitUserTimeRights, h1, objectUUID, objectUUID);
+	//
+	// if (result1.size() > 0)
+	// return true;
+	// else {
+	// String inheritedUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryAllow
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.INHERITED_USER_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + " AND "
+	// + identityCheck
+	// + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryDeny
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.INHERITED_USER_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>=" + time + "AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result2 = run.query(inheritedUserTimeRights, h2, objectUUID, objectUUID);
+	//
+	// if (result2.size() > 0)
+	// return true;
+	// else {
+	// String explicitGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryAllow
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + "AND "
+	// + identityCheck
+	// + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryDeny
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>=" + time + "AND " + identityCheck + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
+	// WasabiACLEntry.class);
+	// List<WasabiACLEntry> result3 = run.query(explicitGroupTimeRights, h3, objectUUID, objectUUID);
+	//
+	// if (result3.size() > 0)
+	// return true;
+	// else {
+	// String inheritedGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryAllow
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + " AND "
+	// + identityCheck
+	// + "AND `object_id` NOT IN("
+	// + "SELECT `object_id` FROM `wasabi_rights` WHERE "
+	// + "`object_id`=? AND "
+	// + rightQueryDeny
+	// + "AND"
+	// + "`priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
+	// + " AND `start_time`<="
+	// + time
+	// + " AND `end_time`>="
+	// + time
+	// + "AND "
+	// + identityCheck
+	// + ")";
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
+	// WasabiACLEntry.class);
+	// List<WasabiACLEntry> result4 = run.query(inheritedGroupTimeRights, h4, objectUUID, objectUUID);
+	//
+	// if (result4.size() > 0)
+	// return true;
+	// }
+	// }
+	// }
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// return false;
+	// }
 
-			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result1 = run.query(explicitUserRights, h1, objectUUID);
+	// private static boolean existsNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
+	// Session s) throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// Vector<String> allGroups = getGroupMemberships(userNode, s);
+	// String allGroupsQuery = getGroupMembershipQuery(allGroups);
+	// String rightQueryAllow = getRightQueryAllow(permission);
+	// String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	//
+	// String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT + " OR "
+	// + "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " OR " + "`priority`="
+	// + WasabiACLPriority.INHERITED_USER_RIGHT + " OR " + "`priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_RIGHT + ") " + "AND " + identityCheck;
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
+	//
+	// if (result.size() > 0)
+	// return true;
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// return false;
+	// }
 
-			if (result1.size() > 0)
-				return true;
-			else {
-				String inheritedUserRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-						+ rightQueryAllow + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
-						+ " AND `start_time`=0 AND `end_time`=0" + " AND " + identityCheck + "AND `object_id` NOT IN("
-						+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
-						+ "AND " + "`priority`=" + WasabiACLPriority.INHERITED_USER_RIGHT
-						+ " AND `start_time`=0 AND `end_time`=0 " + " AND " + identityCheck + ")";
-
-				ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result2 = run.query(inheritedUserRights, h2, objectUUID, objectUUID);
-
-				if (result2.size() > 0)
-					return true;
-				else {
-					String explicitGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
-							+ "`object_id`=? AND " + rightQueryAllow + "AND" + "`priority`="
-							+ WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 " + "AND "
-							+ identityCheck + "AND `object_id` NOT IN("
-							+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND " + rightQueryDeny
-							+ "AND " + "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT
-							+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
-
-					ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
-							WasabiACLEntry.class);
-					List<WasabiACLEntry> result3 = run.query(explicitGroupRights, h3, objectUUID, objectUUID);
-
-					if (result3.size() > 0)
-						return true;
-					else {
-						String inheritedGroupRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
-								+ "`object_id`=? AND " + rightQueryAllow + "AND " + "`priority`="
-								+ WasabiACLPriority.INHERITED_GROUP_RIGHT + " AND `start_time`=0 AND `end_time`=0 "
-								+ "AND " + identityCheck + "AND `object_id` NOT IN("
-								+ "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-								+ rightQueryDeny + "AND " + "`priority`=" + WasabiACLPriority.INHERITED_GROUP_RIGHT
-								+ " AND `start_time`=0 AND `end_time`=0 " + "AND " + identityCheck + ")";
-
-						ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
-								WasabiACLEntry.class);
-						List<WasabiACLEntry> result4 = run.query(inheritedGroupRights, h4, objectUUID, objectUUID);
-
-						if (result4.size() > 0)
-							return true;
-					}
-				}
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return false;
-	}
-
-	private static boolean checkRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
-			throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-			String rightQueryAllow = getRightQueryAllow(permission);
-			String rightQueryDeny = getRightQueryDeny(permission);
-			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
-			String userCheck = "`user_id`='" + userUUID + "' ";
-
-			long time = java.lang.System.currentTimeMillis();
-
-			String getACLEntries = "SELECT `object_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` "
-					+ "FROM `wasabi_rights` WHERE " + "(`object_id`='"
-					+ objectUUID
-					+ "' AND `priority`="
-					+ WasabiACLPriority.INHERITED_GROUP_RIGHT
-					+ " AND "
-					+ identityCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5 OR `priority`=6 OR `priority`=7))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.EXPLICIT_GROUP_RIGHT
-					+ " AND "
-					+ identityCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5 OR `priority`=6))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.INHERITED_USER_RIGHT
-					+ " AND "
-					+ userCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4 OR `priority`=5))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.EXPLICIT_USER_RIGHT
-					+ " AND "
-					+ userCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3 OR `priority`=4))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
-					+ " AND "
-					+ identityCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2 OR `priority`=3))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
-					+ " AND "
-					+ identityCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1 OR `priority`=2))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT
-					+ " AND "
-					+ userCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND (`priority`=0 OR `priority`=1))) "
-					+ "OR "
-					+ "(`object_id`='"
-					+ objectUUID
-					+ "' "
-					+ " AND `priority`="
-					+ WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
-					+ " AND "
-					+ userCheck
-					+ " AND "
-					+ rightQueryAllow
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND `object_id` NOT IN(SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ rightQueryDeny
-					+ "AND `object_id`='"
-					+ objectUUID
-					+ "' "
-					+ "AND "
-					+ identityCheck
-					+ "AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>=" + time + ") OR (`start_time`=0 AND `end_time`=0)) " + "AND `priority`=0)) ";
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getACLEntries, h);
-
-			if (result.size() > 0)
-				return true;
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return false;
-	}
-
-	private static boolean checkTimeRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
-			throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-			String rightQueryAllow = getRightQueryAllow(permission);
-			String rightQueryDeny = getRightQueryDeny(permission);
-			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
-			long time = java.lang.System.currentTimeMillis();
-
-			String explicitUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-					+ rightQueryAllow + "AND" + "`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT
-					+ " AND `start_time`<=" + time + " AND `end_time`>=" + time + " AND " + identityCheck
-					+ "AND `object_id` NOT IN(" + "SELECT `object_id` FROM `wasabi_rights` WHERE "
-					+ "`object_id`=? AND " + rightQueryDeny + "AND" + "`priority`="
-					+ WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " AND `start_time`<=" + time + " AND `end_time`>="
-					+ time + "AND " + identityCheck + ")";
-
-			ResultSetHandler<List<WasabiACLEntry>> h1 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result1 = run.query(explicitUserTimeRights, h1, objectUUID, objectUUID);
-
-			if (result1.size() > 0)
-				return true;
-			else {
-				String inheritedUserTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
-						+ "`object_id`=? AND "
-						+ rightQueryAllow
-						+ "AND"
-						+ "`priority`="
-						+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT
-						+ " AND `start_time`<="
-						+ time
-						+ " AND `end_time`>="
-						+ time
-						+ " AND "
-						+ identityCheck
-						+ "AND `object_id` NOT IN("
-						+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
-						+ "`object_id`=? AND "
-						+ rightQueryDeny
-						+ "AND"
-						+ "`priority`="
-						+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT
-						+ " AND `start_time`<="
-						+ time
-						+ " AND `end_time`>=" + time + "AND " + identityCheck + ")";
-
-				ResultSetHandler<List<WasabiACLEntry>> h2 = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-				List<WasabiACLEntry> result2 = run.query(inheritedUserTimeRights, h2, objectUUID, objectUUID);
-
-				if (result2.size() > 0)
-					return true;
-				else {
-					String explicitGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
-							+ "`object_id`=? AND "
-							+ rightQueryAllow
-							+ "AND"
-							+ "`priority`="
-							+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
-							+ " AND `start_time`<="
-							+ time
-							+ " AND `end_time`>="
-							+ time
-							+ "AND "
-							+ identityCheck
-							+ "AND `object_id` NOT IN("
-							+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
-							+ "`object_id`=? AND "
-							+ rightQueryDeny
-							+ "AND"
-							+ "`priority`="
-							+ WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT
-							+ " AND `start_time`<="
-							+ time
-							+ " AND `end_time`>=" + time + "AND " + identityCheck + ")";
-
-					ResultSetHandler<List<WasabiACLEntry>> h3 = new BeanListHandler<WasabiACLEntry>(
-							WasabiACLEntry.class);
-					List<WasabiACLEntry> result3 = run.query(explicitGroupTimeRights, h3, objectUUID, objectUUID);
-
-					if (result3.size() > 0)
-						return true;
-					else {
-						String inheritedGroupTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE "
-								+ "`object_id`=? AND "
-								+ rightQueryAllow
-								+ "AND"
-								+ "`priority`="
-								+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
-								+ " AND `start_time`<="
-								+ time
-								+ " AND `end_time`>="
-								+ time
-								+ " AND "
-								+ identityCheck
-								+ "AND `object_id` NOT IN("
-								+ "SELECT `object_id` FROM `wasabi_rights` WHERE "
-								+ "`object_id`=? AND "
-								+ rightQueryDeny
-								+ "AND"
-								+ "`priority`="
-								+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT
-								+ " AND `start_time`<="
-								+ time
-								+ " AND `end_time`>="
-								+ time
-								+ "AND "
-								+ identityCheck
-								+ ")";
-
-						ResultSetHandler<List<WasabiACLEntry>> h4 = new BeanListHandler<WasabiACLEntry>(
-								WasabiACLEntry.class);
-						List<WasabiACLEntry> result4 = run.query(inheritedGroupTimeRights, h4, objectUUID, objectUUID);
-
-						if (result4.size() > 0)
-							return true;
-					}
-				}
-			}
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return false;
-	}
-
-	private static boolean existsNormalRights(String objectUUID, String userUUID, Node userNode, int permission,
-			Session s) throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-			String rightQueryAllow = getRightQueryAllow(permission);
-			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
-
-			String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-					+ rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_RIGHT + " OR "
-					+ "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_RIGHT + " OR " + "`priority`="
-					+ WasabiACLPriority.INHERITED_USER_RIGHT + " OR " + "`priority`="
-					+ WasabiACLPriority.INHERITED_GROUP_RIGHT + ") " + "AND " + identityCheck;
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
-
-			if (result.size() > 0)
-				return true;
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return false;
-	}
-
-	private static boolean existsTimeRights(String objectUUID, String userUUID, Node userNode, int permission, Session s)
-			throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			Vector<String> allGroups = getGroupMemberships(userNode, s);
-			String allGroupsQuery = getGroupMembershipQuery(allGroups);
-			String rightQueryAllow = getRightQueryAllow(permission);
-			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
-
-			String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
-					+ rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " OR "
-					+ "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT + " OR " + "`priority`="
-					+ WasabiACLPriority.INHERITED_USER_TIME_RIGHT + " OR " + "`priority`="
-					+ WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT + ") " + "AND " + identityCheck;
-
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
-
-			if (result.size() > 0)
-				return true;
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		}
-		return false;
-	}
+	// private static boolean existsTimeRights(String objectUUID, String userUUID, Node userNode, int permission,
+	// Session s)
+	// throws UnexpectedInternalProblemException {
+	// try {
+	// QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+	//
+	// Vector<String> allGroups = getGroupMemberships(userNode, s);
+	// String allGroupsQuery = getGroupMembershipQuery(allGroups);
+	// String rightQueryAllow = getRightQueryAllow(permission);
+	// String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+	//
+	// String existTimeRights = "SELECT `object_id` FROM `wasabi_rights` WHERE " + "`object_id`=? AND "
+	// + rightQueryAllow + "AND " + "(`priority`=" + WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT + " OR "
+	// + "`priority`=" + WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT + " OR " + "`priority`="
+	// + WasabiACLPriority.INHERITED_USER_TIME_RIGHT + " OR " + "`priority`="
+	// + WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT + ") " + "AND " + identityCheck;
+	//
+	// ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+	// List<WasabiACLEntry> result = run.query(existTimeRights, h, objectUUID);
+	//
+	// if (result.size() > 0)
+	// return true;
+	// } catch (SQLException e) {
+	// throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+	// }
+	// return false;
+	// }
 
 	/**
 	 * Build a part of a SQL query, that contains all group memberships.
@@ -1014,9 +1021,10 @@ public class WasabiAuthorizer {
 
 	private static Vector<String> permissionFilter(String parentUUID, String userUUID, Node userNode,
 			WasabiType wasabiType, int permission, Session s) throws UnexpectedInternalProblemException {
-		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
+		try {
 			Vector<String> results = new Vector<String>();
 			Vector<String> allGroups = getGroupMemberships(userNode, s);
 
@@ -1181,6 +1189,8 @@ public class WasabiAuthorizer {
 			return results;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 

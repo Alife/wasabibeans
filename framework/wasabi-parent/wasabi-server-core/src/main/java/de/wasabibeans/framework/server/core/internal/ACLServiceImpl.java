@@ -353,10 +353,11 @@ public class ACLServiceImpl {
 	 * @throws UnexpectedInternalProblemException
 	 */
 	private static void dispropagateInheritance(Node objectNode) throws UnexpectedInternalProblemException {
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
+
 		try {
 			try {
-				QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
 				String objectUUID = objectNode.getIdentifier();
 
 				String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
@@ -374,11 +375,13 @@ public class ACLServiceImpl {
 				}
 
 				resetInheritance(objectNode, result);
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			} catch (RepositoryException re) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -390,18 +393,22 @@ public class ACLServiceImpl {
 	 * @throws UnexpectedInternalProblemException
 	 */
 	public static List<WasabiACLEntry> getAclEntries(Node wasabiObjectNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
-
-		String getACLEntriesQuery = "SELECT * FROM wasabi_rights WHERE `object_id`=?";
-
-		ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 		try {
+			String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
+
+			String getACLEntriesQuery = "SELECT * FROM wasabi_rights WHERE `object_id`=?";
+
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> result = run.query(getACLEntriesQuery, h, objectUUID);
+
 			return result;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -415,21 +422,25 @@ public class ACLServiceImpl {
 	 */
 	public static List<WasabiACLEntry> getAclEntriesByIdentity(Node wasabiObjectNode, Node wasabiIdentityNode)
 			throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
-		String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
-
-		String getACLEntriesByIdentityQuery = "SELECT * FROM wasabi_rights "
-				+ "WHERE object_id=? AND (group_id=? OR user_id=?)";
-
-		ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 		try {
+			String objectUUID = ObjectServiceImpl.getUUID(wasabiObjectNode);
+			String identityUUID = ObjectServiceImpl.getUUID(wasabiIdentityNode);
+
+			String getACLEntriesByIdentityQuery = "SELECT * FROM wasabi_rights "
+					+ "WHERE object_id=? AND (group_id=? OR user_id=?)";
+
+			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> result = run.query(getACLEntriesByIdentityQuery, h, objectUUID, identityUUID,
 					identityUUID);
+
 			return result;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -651,8 +662,8 @@ public class ACLServiceImpl {
 				aclEntries.add(wasabiACLEntryDeprecated);
 			}
 		}
-		return aclEntries;
 
+		return aclEntries;
 	}
 
 	/**
@@ -997,14 +1008,15 @@ public class ACLServiceImpl {
 	 */
 	private static void propagateInheritance(Node objectNode, List<WasabiACLEntry> result)
 			throws UnexpectedInternalProblemException {
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
+
 		try {
-			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-			Node parentNode = objectNode.getParent().getParent();
-			String parentUUID = ObjectServiceImpl.getUUID(parentNode);
-
 			try {
+				String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+				Node parentNode = objectNode.getParent().getParent();
+				String parentUUID = ObjectServiceImpl.getUUID(parentNode);
+
 				if (result.isEmpty()) {
 					String getParentACLEntries = "SELECT * FROM `wasabi_rights` " + "WHERE `object_id`=?";
 					ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
@@ -1062,12 +1074,13 @@ public class ACLServiceImpl {
 				for (Node node : children) {
 					propagateInheritance(node, result);
 				}
-
-			} catch (SQLException e) {
-				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			} catch (RepositoryException re) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 			}
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -1288,24 +1301,29 @@ public class ACLServiceImpl {
 	 * @throws UnexpectedInternalProblemException
 	 */
 	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
 		try {
+			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+			String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
+
 			run.update(deleteRights, objectUUID);
+
+			/* WasabiCertificate - Begin */
+			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
+						0, 0, 0, 0 });
+			/* WasabiCertificate - End */
+
+			resetChildren(objectNode, run);
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
-
-		/* WasabiCertificate - Begin */
-		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-			WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-					WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.INSERT,
-					WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0, 0, 0, 0, 0 });
-		/* WasabiCertificate - End */
-
-		resetChildren(objectNode, run);
 	}
 
 	/**
@@ -1599,13 +1617,14 @@ public class ACLServiceImpl {
 	private static void updateDefaultRights(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
 			int[] allowance, long startTime, long endTime) throws RepositoryException,
 			UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
-
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
+
+			int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+
 			String getDefaultACLEntryQuery = "SELECT * FROM wasabi_template_rights "
 					+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
 
@@ -1702,6 +1721,8 @@ public class ACLServiceImpl {
 			}
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -1723,16 +1744,17 @@ public class ACLServiceImpl {
 	 */
 	private static void updateExplicitGroupRights(Node objectNode, Node groupNode, int[] permission, int[] allowance,
 			long startTime, long endTime) throws RepositoryException, UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String groupUUID = ObjectServiceImpl.getUUID(groupNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
-		String wasabiType = objectNode.getPrimaryNodeType().getName();
-
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+			String groupUUID = ObjectServiceImpl.getUUID(groupNode);
+			String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
+			String wasabiType = objectNode.getPrimaryNodeType().getName();
+
+			int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+
 			// check if an entry exists in the database
 			String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
 					+ "FROM `wasabi_rights` " + "WHERE `object_id`=? " + "AND `start_time`=? " + "AND `end_time`=? "
@@ -1855,6 +1877,8 @@ public class ACLServiceImpl {
 
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 
@@ -1876,16 +1900,17 @@ public class ACLServiceImpl {
 	 */
 	private static void updateExplicitUserRights(Node objectNode, Node userNode, int[] permission, int[] allowance,
 			long startTime, long endTime) throws RepositoryException, UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
-
-		String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-		String userUUID = ObjectServiceImpl.getUUID(userNode);
-		String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
-		String wasabiType = objectNode.getPrimaryNodeType().getName();
-
-		int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+			String userUUID = ObjectServiceImpl.getUUID(userNode);
+			String parentUUID = ObjectServiceImpl.getUUID(ObjectServiceImpl.getEnvironment(objectNode));
+			String wasabiType = objectNode.getPrimaryNodeType().getName();
+
+			int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
+
 			// check if an entry exists in the database
 			String getUserACLEntryQuery = "SELECT `view`, `read`, `execute`, `comment`, `insert`, `write`, `grant` "
 					+ "FROM `wasabi_rights` " + "WHERE `object_id`=? " + "AND `start_time`=? " + "AND `end_time`=? "
@@ -2008,6 +2033,8 @@ public class ACLServiceImpl {
 
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 

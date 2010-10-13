@@ -36,11 +36,12 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 public class WasabiLinkSQL {
 
 	public static String[] SQLQueryForMove(String linkUUID) throws UnexpectedInternalProblemException {
-		QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-		String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
+		try {String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
 				+ "WHERE `object_id`=? AND `inheritance_id`!=''";
-		try {
+		
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> results = run.query(getInheritanceEntries, h, linkUUID);
 
@@ -55,6 +56,8 @@ public class WasabiLinkSQL {
 			return result;
 		} catch (SQLException e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
 		}
 	}
 }
