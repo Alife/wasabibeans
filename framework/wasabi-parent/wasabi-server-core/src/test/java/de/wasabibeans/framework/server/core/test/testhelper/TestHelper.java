@@ -18,6 +18,7 @@
  *
  *  Further information are online available at: http://www.wasabibeans.de
  */
+
 package de.wasabibeans.framework.server.core.test.testhelper;
 
 import java.util.Vector;
@@ -66,27 +67,15 @@ import de.wasabibeans.framework.server.core.util.JndiConnector;
 @Stateless
 public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
+	@Resource
+	SessionContext ctx;
 	private JcrConnector jcr;
 	private JmsConnector jms;
+
 	private JndiConnector jndi;
 
 	@EJB
 	SharedFilterBean sharedFilterBean;
-
-	@Resource
-	SessionContext ctx;
-
-	@PostConstruct
-	public void postConstruct() {
-		this.jndi = JndiConnector.getJNDIConnector();
-		this.jcr = JcrConnector.getJCRConnector(jndi);
-		this.jms = JmsConnector.getJmsConnector(jndi);
-	}
-
-	@PreDestroy
-	public void preDestroy() {
-		jndi.close();
-	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public <V> V call(Callable<V> callable) throws Exception {
@@ -211,6 +200,16 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void initACLTimeEntryCleaner() throws Exception {
+		if (ctx.getInvokedBusinessInterface().equals(TestHelperLocal.class)) {
+			WasabiManager.initACLTimeEntryCleaner("test");
+		} else {
+			WasabiManager.initACLTimeEntryCleaner(null);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiAttributeDTO initAttributeServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
@@ -314,16 +313,6 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void initScheduledTasks() throws Exception {
-		if (ctx.getInvokedBusinessInterface().equals(TestHelperLocal.class)) {
-			WasabiManager.initScheduledTasks("test");
-		} else {
-			WasabiManager.initScheduledTasks(null);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public WasabiRoomDTO initRoomServiceTest() throws Exception {
 		Session s = jcr.getJCRSession();
 		try {
@@ -333,6 +322,16 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 			return TransferManager.convertNode2DTO(room1Node);
 		} finally {
 			jcr.cleanup(true);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void initScheduledTasks() throws Exception {
+		if (ctx.getInvokedBusinessInterface().equals(TestHelperLocal.class)) {
+			WasabiManager.initScheduledTasks("test");
+		} else {
+			WasabiManager.initScheduledTasks(null);
 		}
 	}
 
@@ -381,5 +380,17 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 		} finally {
 			jcr.cleanup(true);
 		}
+	}
+
+	@PostConstruct
+	public void postConstruct() {
+		this.jndi = JndiConnector.getJNDIConnector();
+		this.jcr = JcrConnector.getJCRConnector(jndi);
+		this.jms = JmsConnector.getJmsConnector(jndi);
+	}
+
+	@PreDestroy
+	public void preDestroy() {
+		jndi.close();
 	}
 }

@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.internal.UserServiceImpl;
+import de.wasabibeans.framework.server.core.util.ACLTimeEntryCleanerLocal;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
@@ -115,6 +116,26 @@ public class WasabiManager {
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	/**
+	 * Initializes schedule to cleanup ACL time entries.
+	 * 
+	 * @param earName
+	 *            name of the ear-file which is used to deploy Wasabi
+	 */
+	public static void initACLTimeEntryCleaner(String earName) {
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		try {
+			String lookupPrefix = earName != null ? earName + "/" : "";
+			ACLTimeEntryCleanerLocal eventAuthChecker = (ACLTimeEntryCleanerLocal) jndi.lookupLocal(lookupPrefix
+					+ "ACLTimeEntryCleaner");
+			eventAuthChecker.startEventAuthorizationChecker();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			jndi.close();
+		}
 	}
 
 	/**

@@ -18,6 +18,7 @@
  *
  *  Further information are online available at: http://www.wasabibeans.de
  */
+
 package de.wasabibeans.framework.server.core.test.testhelper;
 
 import java.util.Vector;
@@ -36,35 +37,37 @@ import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 @Local
 public interface TestHelperLocal {
 
+	public <V> V call(Callable<V> callable) throws Exception;
+
+	public Vector<String> createManyNodes(int number) throws Exception;
+
+	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception;
+
+	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;
+
+	public void initACLTimeEntryCleaner() throws Exception;
+
+	public WasabiAttributeDTO initAttributeServiceTest() throws Exception;
+
+	public WasabiContainerDTO initContainerServiceTest() throws Exception;
+
 	public void initDatabase();
-
-	public WasabiRoomDTO initRepository() throws Exception;
-
-	public void initScheduledTasks() throws Exception;
-
-	public WasabiRoomDTO initRoomServiceTest() throws Exception;
 
 	public WasabiDocumentDTO initDocumentServiceTest() throws Exception;
 
 	public WasabiGroupDTO initGroupServiceTest() throws Exception;
 
-	public WasabiAttributeDTO initAttributeServiceTest() throws Exception;
-
-	public WasabiUserDTO initUserServiceTest() throws Exception;
-
-	public WasabiContainerDTO initContainerServiceTest() throws Exception;
-
 	public WasabiLinkDTO initLinkServiceTest() throws Exception;
+
+	public WasabiRoomDTO initRepository() throws Exception;
+
+	public WasabiRoomDTO initRoomServiceTest() throws Exception;
+
+	public void initScheduledTasks() throws Exception;
 
 	public void initTagServiceTest() throws Exception;
 
 	public void initTestUser() throws Exception;
 
-	public <V> V call(Callable<V> callable) throws Exception;
-
-	public Vector<String> createManyNodes(int number) throws Exception;
-
-	public Vector<String> getManyNodesByIdLookup(Vector<String> nodeIds) throws Exception;
-
-	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception;
+	public WasabiUserDTO initUserServiceTest() throws Exception;
 }
