@@ -48,6 +48,7 @@ public interface WasabiConstants {
 	public final static int GRANT_MAP_SIZE = 2000;
 
 	/* JMS for event-handling */
+	public final static boolean JMS_EVENTS_ENABLED = true;
 	public final static String JMS_QUEUE_ALLOCATOR = "queue/allocator";
 	public final static String JMS_EVENT_ADMIN = "event_admin";
 	public final static String JMS_EVENT_ADMIN_PASSWORD = "event_admin";
