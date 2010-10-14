@@ -54,6 +54,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class AttributeServiceImpl {
@@ -62,8 +63,15 @@ public class AttributeServiceImpl {
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
 			AttributeValueException, ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
-			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
-					WasabiNodeType.ATTRIBUTE);
+			Node attributeNode;
+			if (affiliationNode.hasNode(WasabiNodeProperty.ATTRIBUTES)) {
+				attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
+						WasabiNodeType.ATTRIBUTE);
+			} else {
+				Node attributes = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES,
+						WasabiNodeType.OBJECT_COLLECTION);
+				attributeNode = attributes.addNode(name, WasabiNodeType.ATTRIBUTE);
+			}
 			setValue(attributeNode, value, s, false, null);
 			ObjectServiceImpl.created(attributeNode, s, false, callerPrincipal, true);
 
@@ -97,8 +105,15 @@ public class AttributeServiceImpl {
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
 			ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
-			Node attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
-					WasabiNodeType.ATTRIBUTE);
+			Node attributeNode;
+			if (affiliationNode.hasNode(WasabiNodeProperty.ATTRIBUTES)) {
+				attributeNode = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES + "/" + name,
+						WasabiNodeType.ATTRIBUTE);
+			} else {
+				Node attributes = affiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES,
+						WasabiNodeType.OBJECT_COLLECTION);
+				attributeNode = attributes.addNode(name, WasabiNodeType.ATTRIBUTE);
+			}
 			setWasabiValue(attributeNode, valueNode, s, false, null);
 			ObjectServiceImpl.created(attributeNode, s, false, callerPrincipal, true);
 
@@ -155,6 +170,8 @@ public class AttributeServiceImpl {
 	public static NodeIterator getAttributes(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -246,8 +263,14 @@ public class AttributeServiceImpl {
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
-			attributeNode.getSession().move(attributeNode.getPath(),
-					newAffiliationNode.getPath() + "/" + WasabiNodeProperty.ATTRIBUTES + "/" + attributeNode.getName());
+			if (newAffiliationNode.hasNode(WasabiNodeProperty.ATTRIBUTES)) {
+				s.move(attributeNode.getPath(), newAffiliationNode.getPath() + "/" + WasabiNodeProperty.ATTRIBUTES
+						+ "/" + attributeNode.getName());
+			} else {
+				Node attributes = newAffiliationNode.addNode(WasabiNodeProperty.ATTRIBUTES,
+						WasabiNodeType.OBJECT_COLLECTION);
+				s.move(attributeNode.getPath(), attributes.getPath() + "/" + attributeNode.getName());
+			}
 			ObjectServiceImpl.modified(attributeNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */

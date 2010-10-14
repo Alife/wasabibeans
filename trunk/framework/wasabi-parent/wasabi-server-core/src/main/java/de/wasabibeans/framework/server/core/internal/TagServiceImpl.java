@@ -30,6 +30,7 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
@@ -51,6 +52,10 @@ public class TagServiceImpl {
 	public static void addTag(Node objectNode, String tag, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
+			if (!objectNode.hasNode(WasabiNodeProperty.TAGS)) {
+				objectNode.addNode(WasabiNodeProperty.TAGS, WasabiNodeType.TAGS);
+			}
+
 			Calendar timestamp = Calendar.getInstance();
 			Node tagNode = null;
 			boolean ok = false;
@@ -93,6 +98,8 @@ public class TagServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (PathNotFoundException pnfe) {
+			// not tags exist -> do nothing
 		} catch (InvalidItemStateException iise) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
@@ -156,7 +163,7 @@ public class TagServiceImpl {
 			// execute and return result
 			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = query.execute().getNodes(); ni.hasNext();) {
-				result.add(ni.nextNode().getParent().getParent());
+				result.add(ObjectServiceImpl.getEnvironment(ni.nextNode()));
 			}
 			return result;
 		} catch (RepositoryException re) {
@@ -166,11 +173,13 @@ public class TagServiceImpl {
 	}
 
 	public static Vector<String> getTags(Node objectNode) throws UnexpectedInternalProblemException {
+		Vector<String> result = new Vector<String>();
 		try {
-			Vector<String> result = new Vector<String>();
 			for (NodeIterator ni = objectNode.getNode(WasabiNodeProperty.TAGS).getNodes(); ni.hasNext();) {
 				result.add(ni.nextNode().getProperty(WasabiNodeProperty.TEXT).getString());
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -190,6 +199,8 @@ public class TagServiceImpl {
 			if (doJcrSave) {
 				s.save();
 			}
+		} catch (PathNotFoundException pnfe) {
+			// no tags exist -> do nothing
 		} catch (InvalidItemStateException iise) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {

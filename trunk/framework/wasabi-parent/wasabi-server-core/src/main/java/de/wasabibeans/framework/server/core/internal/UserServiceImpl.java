@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 
 public class UserServiceImpl {
 
@@ -96,6 +97,13 @@ public class UserServiceImpl {
 	public static void enter(Node userNode, Node roomNode, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
+			if (!roomNode.hasNode(WasabiNodeProperty.PRESENT_USERS)) {
+				roomNode.addNode(WasabiNodeProperty.PRESENT_USERS, WasabiNodeType.REF_COLLECTION);
+			}
+			if (!userNode.hasNode(WasabiNodeProperty.WHEREABOUTS)) {
+				userNode.addNode(WasabiNodeProperty.WHEREABOUTS, WasabiNodeType.REF_COLLECTION);
+			}
+
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
@@ -163,6 +171,8 @@ public class UserServiceImpl {
 	public static NodeIterator getMemberships(Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -249,6 +259,8 @@ public class UserServiceImpl {
 	public static NodeIterator getUsers(Node roomNode) throws UnexpectedInternalProblemException {
 		try {
 			return roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -273,6 +285,8 @@ public class UserServiceImpl {
 	public static NodeIterator getWhereabouts(Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return userNode.getNode(WasabiNodeProperty.WHEREABOUTS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

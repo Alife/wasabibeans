@@ -20,21 +20,21 @@
 	
 [wasabi:object] > nt:base, mix:referenceable, mix:lockable, wasabiMix:created, wasabiMix:lastModified
 	abstract
-	+ wasabi:attributes (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated
-	+ wasabi:tags (wasabiStructure:tags) = 'wasabiStructure:tags' autocreated
+	+ wasabi:attributes (wasabiStructure:objectCollection)
+	+ wasabi:tags (wasabiStructure:tags)
 	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
 	- wasabi:optLockId (LONG) 
 	
 [wasabi:location] > wasabi:object
 	abstract
-	+ wasabi:documents (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
-	+ wasabi:containers (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
-	+ wasabi:links (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
+	+ wasabi:documents (wasabiStructure:objectCollection) 
+	+ wasabi:containers (wasabiStructure:objectCollection)
+	+ wasabi:links (wasabiStructure:objectCollection) 
 	
 [wasabi:room] > wasabi:location
 	- wasabi:pipeline (WEAKREFERENCE)
-	+ wasabi:rooms (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
-	+ wasabi:presentUsers (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
+	+ wasabi:rooms (wasabiStructure:objectCollection)
+	+ wasabi:presentUsers (wasabiStructure:refCollection) 
 	
 [wasabi:container] > wasabi:location
 
@@ -43,20 +43,20 @@
 	- wasabi:displayName (STRING) 
 	
 [wasabi:group] > wasabi:identity
-	+ wasabi:subgroups (wasabiStructure:objectCollection) = 'wasabiStructure:objectCollection' autocreated 
-	+ wasabi:members (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
+	+ wasabi:subgroups (wasabiStructure:objectCollection)
+	+ wasabi:members (wasabiStructure:refCollection)
 	
 [wasabi:user] > wasabi:identity
 	- wasabi:homeRoom (WEAKREFERENCE)
 	- wasabi:startRoom (WEAKREFERENCE) 
 	- wasabi:active (BOOLEAN) = 'true' autocreated
-	+ wasabi:memberships (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated 
-	+ wasabi:whereabouts (wasabiStructure:refCollection) = 'wasabiStructure:refCollection' autocreated
+	+ wasabi:memberships (wasabiStructure:refCollection)
+	+ wasabi:whereabouts (wasabiStructure:refCollection) 
 
 [wasabi:document] > wasabi:object
 	primaryitem 'wasabi:content'
 	- wasabi:content (BINARY) 
-	+ wasabi:contentrefs (wasabiStructure:contentrefs) = 'wasabiStructure:contentrefs' autocreated  
+	+ wasabi:contentrefs (wasabiStructure:contentrefs) 
 	
 [wasabi:link] > wasabi:object
 	- wasabi:destination (WEAKREFERENCE) 

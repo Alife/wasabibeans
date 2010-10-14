@@ -44,6 +44,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class GroupServiceImpl {
@@ -51,6 +52,13 @@ public class GroupServiceImpl {
 	public static void addMember(Node groupNode, Node userNode, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
+			if (!groupNode.hasNode(WasabiNodeProperty.MEMBERS)) {
+				groupNode.addNode(WasabiNodeProperty.MEMBERS, WasabiNodeType.REF_COLLECTION);
+			}
+			if (!userNode.hasNode(WasabiNodeProperty.MEMBERSHIPS)) {
+				userNode.addNode(WasabiNodeProperty.MEMBERSHIPS, WasabiNodeType.REF_COLLECTION);
+			}
+
 			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
 			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
@@ -90,7 +98,14 @@ public class GroupServiceImpl {
 		try {
 			Node newGroup;
 			if (parentGroupNode != null) {
-				newGroup = parentGroupNode.getNode(WasabiNodeProperty.SUBGROUPS).addNode(name, WasabiNodeType.GROUP);
+				if (parentGroupNode.hasNode(WasabiNodeProperty.SUBGROUPS)) {
+					newGroup = parentGroupNode.getNode(WasabiNodeProperty.SUBGROUPS)
+							.addNode(name, WasabiNodeType.GROUP);
+				} else {
+					Node subgroups = parentGroupNode.addNode(WasabiNodeProperty.SUBGROUPS,
+							WasabiNodeType.OBJECT_COLLECTION);
+					newGroup = subgroups.addNode(name, WasabiNodeType.GROUP);
+				}
 			} else {
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
 				newGroup = rootOfGroupsNode.addNode(name, WasabiNodeType.GROUP);
@@ -207,6 +222,8 @@ public class GroupServiceImpl {
 				}
 			}
 			return null;
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -225,6 +242,8 @@ public class GroupServiceImpl {
 	public static NodeIterator getMembers(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.MEMBERS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -255,6 +274,8 @@ public class GroupServiceImpl {
 	public static NodeIterator getSubGroups(Node groupNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -283,6 +304,8 @@ public class GroupServiceImpl {
 	public static boolean isDirectMember(Node groupNode, Node userNode) throws UnexpectedInternalProblemException {
 		try {
 			return groupNode.getNode(WasabiNodeProperty.MEMBERS).hasNode(userNode.getIdentifier());
+		} catch (PathNotFoundException pnfe) {
+			return false;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -308,8 +331,14 @@ public class GroupServiceImpl {
 			ObjectAlreadyExistsException, ObjectDoesNotExistException {
 		try {
 			if (newParentGroupNode != null) {
-				groupNode.getSession().move(groupNode.getPath(),
-						newParentGroupNode.getPath() + "/" + WasabiNodeProperty.SUBGROUPS + "/" + groupNode.getName());
+				if (newParentGroupNode.hasNode(WasabiNodeProperty.SUBGROUPS)) {
+					s.move(groupNode.getPath(), newParentGroupNode.getPath() + "/" + WasabiNodeProperty.SUBGROUPS + "/"
+							+ groupNode.getName());
+				} else {
+					Node subgroups = newParentGroupNode.addNode(WasabiNodeProperty.SUBGROUPS,
+							WasabiNodeType.OBJECT_COLLECTION);
+					s.move(groupNode.getPath(), subgroups.getPath() + "/" + groupNode.getName());
+				}
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)

@@ -36,6 +36,7 @@ public class WasabiNodeType {
 
 	// node types for structuring
 	public static final String CONTENT_REF = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":contentref";
+	public static final String CONTENT_REFS = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":contentrefs";
 	public static final String TAG = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tag";
 	public static final String TAGS = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":tags";
 	public static final String OBJECT_COLLECTION = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":objectCollection";

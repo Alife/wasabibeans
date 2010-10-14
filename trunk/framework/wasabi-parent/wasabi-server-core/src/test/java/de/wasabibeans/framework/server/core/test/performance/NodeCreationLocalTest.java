@@ -206,6 +206,7 @@ public class NodeCreationLocalTest extends Arquillian {
 	//@Test
 	/* introducing nodetype overhead; referenceable, lockable etc, all that comes at a cost */
 	// results are: 12483, 12447, 13586, 13824, 11618 (without output), 13468 (without output), 13256 (without output)
+	// results without autocreated elements: 2793, 1950, 2184, 1856, 1966
 	public void directJCRNodeTypeTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -307,6 +308,7 @@ public class NodeCreationLocalTest extends Arquillian {
 	 * date)
 	 */
 	// results are: 17279, 17479, 16819, 17331, 17007
+	// results without autocreated elements: 4555, 4338, 4478
 	public void directJCRNodeTypeAndExtraAttributesTest() throws Throwable {
 		beforeTest();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
@@ -388,6 +390,8 @@ public class NodeCreationLocalTest extends Arquillian {
 	/* introducing ejb overhead + events */
 	// results are: 59738, 59223, 58966, 60082
 	// on save per tx mode: 27225, 27010, 28020, 27982
+	// without autocreated, without events: 13262, 12544, 12638, 12637
+	// without autocreated; with events: 15446, 16497
 	public void localServiceTest() throws Throwable {
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -395,7 +399,7 @@ public class NodeCreationLocalTest extends Arquillian {
 		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 		long start = System.currentTimeMillis();
 		utx.begin();
-		for (int i = 0; i < 4800; i++) {
+		for (int i = 0; i < 4700; i++) {
 			//System.out.println(i);
 			roomService.create("room" + i, rootRoom);
 		}
