@@ -29,6 +29,7 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.WasabiLogger;
 
@@ -40,6 +41,9 @@ public class EventCreator {
 
 	public static void createPropertyChangedEvent(Node objectNode, String propertyName, Object value, JmsConnector jms,
 			String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Node envNode = null;
 			try {
@@ -82,6 +86,9 @@ public class EventCreator {
 	}
 
 	public static void createCreatedEvent(Node objectNode, Node envNode, JmsConnector jms, String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(true, 0);
@@ -110,6 +117,9 @@ public class EventCreator {
 	}
 
 	public static void createRemovedEvent(Node objectNode, JmsConnector jms, String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Node envNode = null;
 			try {
@@ -145,6 +155,9 @@ public class EventCreator {
 	}
 
 	public static void createMovedEvent(Node objectNode, Node newEnv, JmsConnector jms, String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Node envNode = null;
 			try {
@@ -184,6 +197,9 @@ public class EventCreator {
 
 	public static void createUserMovementEvent(Node userNode, Node roomNode, boolean entered, JmsConnector jms,
 			String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(true, 0);
@@ -215,6 +231,9 @@ public class EventCreator {
 
 	public static void createMembershipEvent(Node groupNode, Node userNode, boolean added, JmsConnector jms,
 			String triggeredBy) {
+		if (!WasabiConstants.JMS_EVENTS_ENABLED) {
+			return;
+		}
 		try {
 			Connection jmsConnection = jms.getJmsConnection();
 			Session jmsSession = jmsConnection.createSession(true, 0);
