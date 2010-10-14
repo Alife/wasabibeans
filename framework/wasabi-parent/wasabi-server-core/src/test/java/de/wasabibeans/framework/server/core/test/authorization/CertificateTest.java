@@ -65,6 +65,83 @@ public class CertificateTest extends WasabiRemoteTest {
 	}
 
 	@Test
+	public void TimeEntryTest() throws WasabiException, InterruptedException {
+		System.out.println("=== TimeEntryTest() ===");
+
+		// Create user
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO home = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating room testRoom...");
+		WasabiRoomDTO testRoom = null;
+		try {
+			testRoom = roomService().create("testRoom", home);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for testRoom... ");
+		aclService().deactivateInheritance(testRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				testRoom,
+				user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Setting a ACL time entry for testRoom... ");
+		aclService().create(testRoom, user, WasabiPermission.EXECUTE, true, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 50000));
+		System.out.println("done.");
+
+		System.out.print("Setting a ACL time entry for testRoom... ");
+		aclService().create(testRoom, user, WasabiPermission.COMMENT, true, java.lang.System.currentTimeMillis(),
+				(java.lang.System.currentTimeMillis() + 50000));
+		System.out.println("done.");
+
+		displayACLEntry(testRoom, "testRoom");
+
+		System.out.print("Check if Cert for user, testRoom and COMMENT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.COMMENT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Using hasPermission...");
+		try {
+			authorizationService().hasPermission(testRoom, user, WasabiPermission.COMMENT);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Check if Cert for user, testRoom and COMMENT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.COMMENT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("Lets sleep some minutes...ZZZzzzZZZ...zzzzZZZZzzz...");
+		Thread.sleep(120000);
+		System.out.println("Waking up...what a wonderful day :-)");
+
+		displayACLEntry(testRoom, "testRoom");
+
+		System.out.print("Check if Cert for user, testRoom and COMMENT exists:");
+		try {
+			System.out.println(authorizationService().existsCertificate(testRoom, user, WasabiPermission.COMMENT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
 	public void forbiddanceTest() throws WasabiException {
 		System.out.println("=== forbiddanceTest() ===");
 
