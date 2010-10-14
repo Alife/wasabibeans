@@ -29,14 +29,19 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
-import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.event.EventCreator;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ACLServiceImpl;
+import de.wasabibeans.framework.server.core.internal.AttributeServiceImpl;
+import de.wasabibeans.framework.server.core.internal.ContainerServiceImpl;
+import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
+import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
+import de.wasabibeans.framework.server.core.internal.LinkServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class WasabiObjectACL {
@@ -71,11 +76,11 @@ public class WasabiObjectACL {
 			String objectType = objectNode.getPrimaryNodeType().getName();
 
 			if (objectType.equals(WasabiNodeType.ROOM)) {
-				NodeIterator RoomChildreen = objectNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
-				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
-				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-				NodeIterator LinkChildreen = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
-				NodeIterator DocumentChildreen = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+				NodeIterator RoomChildreen = RoomServiceImpl.getRooms(objectNode);
+				NodeIterator ContainerChildreen = ContainerServiceImpl.getContainers(objectNode);
+				NodeIterator AttributeChildreen = AttributeServiceImpl.getAttributes(objectNode);
+				NodeIterator LinkChildreen = LinkServiceImpl.getLinks(objectNode);
+				NodeIterator DocumentChildreen = DocumentServiceImpl.getDocuments(objectNode);
 
 				while (RoomChildreen.hasNext())
 					childreenNodes.add(RoomChildreen.nextNode());
@@ -92,10 +97,10 @@ public class WasabiObjectACL {
 				while (DocumentChildreen.hasNext())
 					childreenNodes.add(DocumentChildreen.nextNode());
 			} else if (objectType.equals(WasabiNodeType.CONTAINER)) {
-				NodeIterator ContainerChildreen = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
-				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-				NodeIterator LinkChildreen = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
-				NodeIterator DocumentChildreen = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+				NodeIterator ContainerChildreen = ContainerServiceImpl.getContainers(objectNode);
+				NodeIterator AttributeChildreen = AttributeServiceImpl.getAttributes(objectNode);
+				NodeIterator LinkChildreen = LinkServiceImpl.getLinks(objectNode);
+				NodeIterator DocumentChildreen = DocumentServiceImpl.getDocuments(objectNode);
 
 				while (ContainerChildreen.hasNext())
 					childreenNodes.add(ContainerChildreen.nextNode());
@@ -109,17 +114,17 @@ public class WasabiObjectACL {
 				while (DocumentChildreen.hasNext())
 					childreenNodes.add(DocumentChildreen.nextNode());
 			} else if (objectType.equals(WasabiNodeType.DOCUMENT)) {
-				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator AttributeChildreen = AttributeServiceImpl.getAttributes(objectNode);
 
 				while (AttributeChildreen.hasNext())
 					childreenNodes.add(AttributeChildreen.nextNode());
 			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ATTRIBUTE)) {
-				NodeIterator AttributeChildreen = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
+				NodeIterator AttributeChildreen = AttributeServiceImpl.getAttributes(objectNode);
 
 				while (AttributeChildreen.hasNext())
 					childreenNodes.add(AttributeChildreen.nextNode());
 			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUP)) {
-				NodeIterator GroupChildreen = objectNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
+				NodeIterator GroupChildreen = GroupServiceImpl.getSubGroups(objectNode);
 
 				while (GroupChildreen.hasNext())
 					childreenNodes.add(GroupChildreen.nextNode());

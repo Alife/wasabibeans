@@ -42,6 +42,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class ContainerServiceImpl {
@@ -50,8 +51,14 @@ public class ContainerServiceImpl {
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
 		try {
-			Node containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
-					WasabiNodeType.CONTAINER);
+			Node containerNode;
+			if (environmentNode.hasNode(WasabiNodeProperty.CONTAINERS)) {
+				containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
+						WasabiNodeType.CONTAINER);
+			} else {
+				Node containers = environmentNode.addNode(WasabiNodeProperty.CONTAINERS, WasabiNodeType.OBJECT_COLLECTION);
+				containerNode = containers.addNode(name, WasabiNodeType.CONTAINER);
+			}
 			ObjectServiceImpl.created(containerNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
@@ -93,6 +100,8 @@ public class ContainerServiceImpl {
 	public static NodeIterator getContainers(Node locationNode) throws UnexpectedInternalProblemException {
 		try {
 			return locationNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -218,8 +227,14 @@ public class ContainerServiceImpl {
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
-			containerNode.getSession().move(containerNode.getPath(),
-					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.CONTAINERS + "/" + containerNode.getName());
+			if (newEnvironmentNode.hasNode(WasabiNodeProperty.CONTAINERS)) {
+				s.move(containerNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.CONTAINERS
+						+ "/" + containerNode.getName());
+			} else {
+				Node containers = newEnvironmentNode.addNode(WasabiNodeProperty.CONTAINERS,
+						WasabiNodeType.OBJECT_COLLECTION);
+				s.move(containerNode.getPath(), containers.getPath() + "/" + containerNode.getName());
+			}
 			ObjectServiceImpl.modified(containerNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */

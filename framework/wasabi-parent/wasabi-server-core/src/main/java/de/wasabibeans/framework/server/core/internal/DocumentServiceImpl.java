@@ -70,6 +70,7 @@ import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
 import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterInput;
 import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterOutput;
 import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSink;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.IOUtil;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
@@ -79,8 +80,15 @@ public class DocumentServiceImpl {
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
 		try {
-			Node documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
-					WasabiNodeType.DOCUMENT);
+			Node documentNode;
+			if (environmentNode.hasNode(WasabiNodeProperty.DOCUMENTS)) {
+				documentNode = environmentNode.addNode(WasabiNodeProperty.DOCUMENTS + "/" + name,
+						WasabiNodeType.DOCUMENT);
+			} else {
+				Node documents = environmentNode
+						.addNode(WasabiNodeProperty.DOCUMENTS, WasabiNodeType.OBJECT_COLLECTION);
+				documentNode = documents.addNode(name, WasabiNodeType.DOCUMENT);
+			}
 			ObjectServiceImpl.created(documentNode, s, false, callerPrincipal, true);
 
 			/* ACL Environment - Begin */
@@ -159,6 +167,8 @@ public class DocumentServiceImpl {
 	public static NodeIterator getDocuments(Node locationNode) throws UnexpectedInternalProblemException {
 		try {
 			return locationNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -239,8 +249,14 @@ public class DocumentServiceImpl {
 			String callerPrincipal) throws UnexpectedInternalProblemException, ObjectAlreadyExistsException,
 			ObjectDoesNotExistException, ConcurrentModificationException {
 		try {
-			documentNode.getSession().move(documentNode.getPath(),
-					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/" + documentNode.getName());
+			if (newEnvironmentNode.hasNode(WasabiNodeProperty.DOCUMENTS)) {
+				s.move(documentNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.DOCUMENTS + "/"
+						+ documentNode.getName());
+			} else {
+				Node documents = newEnvironmentNode.addNode(WasabiNodeProperty.DOCUMENTS,
+						WasabiNodeType.OBJECT_COLLECTION);
+				s.move(documentNode.getPath(), documents.getPath() + "/" + documentNode.getName());
+			}
 			ObjectServiceImpl.modified(documentNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
@@ -330,9 +346,26 @@ public class DocumentServiceImpl {
 			boolean isContentAvailable, Session s, boolean doJcrSave, String callerPrincipal)
 			throws ConcurrentModificationException, UnexpectedInternalProblemException {
 		try {
-			String name = Calendar.getInstance().getTimeInMillis() + " " + (int) (Math.random() * 1000);
-			Node contentrefNode = documentNode.addNode(WasabiNodeProperty.CONTENT_REFS + "/" + name,
-					WasabiNodeType.CONTENT_REF);
+			if (!documentNode.hasNode(WasabiNodeProperty.CONTENT_REFS)) {
+				documentNode.addNode(WasabiNodeProperty.CONTENT_REFS, WasabiNodeType.CONTENT_REFS);
+			}
+
+			Calendar timestamp = Calendar.getInstance();
+			Node contentrefNode = null;
+			boolean ok = false;
+			while (!ok) {
+				try {
+					// Math.random() in node name -> in case contentrefs are created too quickly
+					// while-loop -> in case that even the use of Math.random() does not lead to a unique node-name
+					String nodeName = "" + timestamp.getTimeInMillis() + ((int) (Math.random() * 1000));
+					contentrefNode = documentNode.addNode(WasabiNodeProperty.CONTENT_REFS + "/" + nodeName,
+							WasabiNodeType.CONTENT_REF);
+					ok = true;
+				} catch (ItemExistsException iee) {
+					// do nothing -> stay in while-loop
+				}
+			}
+
 			contentrefNode.setProperty(WasabiNodeProperty.DOCUMENT, documentNode);
 			contentrefNode.setProperty(WasabiNodeProperty.FILTER_CLASS, filter.getClass().getName());
 			contentrefNode.setProperty(WasabiNodeProperty.REF, ref);
@@ -445,6 +478,8 @@ public class DocumentServiceImpl {
 	public static NodeIterator getContentRefs(Node documentNode) throws UnexpectedInternalProblemException {
 		try {
 			return documentNode.getNode(WasabiNodeProperty.CONTENT_REFS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}

@@ -47,6 +47,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class RoomServiceImpl {
@@ -55,7 +56,13 @@ public class RoomServiceImpl {
 			throws UnexpectedInternalProblemException, ObjectAlreadyExistsException, ConcurrentModificationException,
 			ObjectDoesNotExistException {
 		try {
-			Node roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
+			Node roomNode;
+			if (environmentNode.hasNode(WasabiNodeProperty.ROOMS)) {
+				roomNode = environmentNode.addNode(WasabiNodeProperty.ROOMS + "/" + name, WasabiNodeType.ROOM);
+			} else {
+				Node rooms = environmentNode.addNode(WasabiNodeProperty.ROOMS, WasabiNodeType.OBJECT_COLLECTION);
+				roomNode = rooms.addNode(name, WasabiNodeType.ROOM);
+			}
 			// special case when creating the room of the root user or when creating the wasabi home room
 			if (name.equals(WasabiConstants.ROOT_USER_NAME) || name.equals(WasabiConstants.HOME_ROOM_NAME)) {
 				ObjectServiceImpl.created(roomNode, s, false, null, true);
@@ -106,6 +113,8 @@ public class RoomServiceImpl {
 	public static NodeIterator getRooms(Node roomNode) throws UnexpectedInternalProblemException {
 		try {
 			return roomNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -237,8 +246,13 @@ public class RoomServiceImpl {
 				throw new IllegalArgumentException("A user's home-room cannot be removed.");
 			}
 
-			roomNode.getSession().move(roomNode.getPath(),
-					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/" + roomNode.getName());
+			if (newEnvironmentNode.hasNode(WasabiNodeProperty.ROOMS)) {
+				s.move(roomNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.ROOMS + "/"
+						+ roomNode.getName());
+			} else {
+				Node rooms = newEnvironmentNode.addNode(WasabiNodeProperty.ROOMS, WasabiNodeType.OBJECT_COLLECTION);
+				s.move(roomNode.getPath(), rooms.getPath() + "/" + roomNode.getName());
+			}
 			ObjectServiceImpl.modified(roomNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */

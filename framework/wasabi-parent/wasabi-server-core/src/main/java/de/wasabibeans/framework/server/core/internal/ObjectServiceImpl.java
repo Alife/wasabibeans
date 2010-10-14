@@ -55,6 +55,7 @@ import de.wasabibeans.framework.server.core.exception.ConcurrentModificationExce
 import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsException;
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class ObjectServiceImpl {
@@ -144,86 +145,22 @@ public class ObjectServiceImpl {
 
 	public static void removeRecursive(Node objectNode, Session s, boolean throwEvents, JmsConnector jms,
 			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
-		try {
-			Vector<Node> childrenNodes = new Vector<Node>();
-			String objectType = objectNode.getPrimaryNodeType().getName();
-
-			if (objectType.equals(WasabiNodeType.ROOM)) {
-				NodeIterator RoomChildren = objectNode.getNode(WasabiNodeProperty.ROOMS).getNodes();
-				NodeIterator ContainerChildren = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
-				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-				NodeIterator LinkChildren = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
-				NodeIterator DocumentChildren = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
-
-				while (RoomChildren.hasNext())
-					childrenNodes.add(RoomChildren.nextNode());
-
-				while (ContainerChildren.hasNext())
-					childrenNodes.add(ContainerChildren.nextNode());
-
-				while (AttributeChildren.hasNext())
-					childrenNodes.add(AttributeChildren.nextNode());
-
-				while (LinkChildren.hasNext())
-					childrenNodes.add(LinkChildren.nextNode());
-
-				while (DocumentChildren.hasNext())
-					childrenNodes.add(DocumentChildren.nextNode());
-			} else if (objectType.equals(WasabiNodeType.CONTAINER)) {
-				NodeIterator ContainerChildren = objectNode.getNode(WasabiNodeProperty.CONTAINERS).getNodes();
-				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-				NodeIterator LinkChildren = objectNode.getNode(WasabiNodeProperty.LINKS).getNodes();
-				NodeIterator DocumentChildren = objectNode.getNode(WasabiNodeProperty.DOCUMENTS).getNodes();
-
-				while (ContainerChildren.hasNext())
-					childrenNodes.add(ContainerChildren.nextNode());
-
-				while (AttributeChildren.hasNext())
-					childrenNodes.add(AttributeChildren.nextNode());
-
-				while (LinkChildren.hasNext())
-					childrenNodes.add(LinkChildren.nextNode());
-
-				while (DocumentChildren.hasNext())
-					childrenNodes.add(DocumentChildren.nextNode());
-			} else if (objectType.equals(WasabiNodeType.DOCUMENT)) {
-				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-
-				while (AttributeChildren.hasNext())
-					childrenNodes.add(AttributeChildren.nextNode());
-			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ATTRIBUTE)) {
-				NodeIterator AttributeChildren = objectNode.getNode(WasabiNodeProperty.ATTRIBUTES).getNodes();
-
-				while (AttributeChildren.hasNext())
-					childrenNodes.add(AttributeChildren.nextNode());
-			} else if (objectNode.getPrimaryNodeType().getName().equals(WasabiNodeType.GROUP)) {
-				NodeIterator GroupChildren = objectNode.getNode(WasabiNodeProperty.SUBGROUPS).getNodes();
-
-				while (GroupChildren.hasNext())
-					childrenNodes.add(GroupChildren.nextNode());
-			}
-
-			for (Node node : childrenNodes) {
-				removeRecursive(node, s, throwEvents, jms, callerPrincipal);
-			}
-
-			if (throwEvents) {
-				EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
-			}
-			
-			/* WasabiCertificate - Begin */
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
-						0, 0, 0, 0, 0, 0 });
-			/* WasabiCertificate - End */
-			
-			ObjectServiceImpl.remove(objectNode, s, false);
-
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		for (Node node : ACLServiceImpl.getChildren(objectNode)) {
+			removeRecursive(node, s, throwEvents, jms, callerPrincipal);
 		}
+
+		if (throwEvents) {
+			EventCreator.createRemovedEvent(objectNode, jms, callerPrincipal);
+		}
+
+		/* WasabiCertificate - Begin */
+		if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+			WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+					WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT, WasabiPermission.INSERT,
+					WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0, 0, 0, 0, 0 });
+		/* WasabiCertificate - End */
+
+		ObjectServiceImpl.remove(objectNode, s, false);
 	}
 
 	public static Node getCreatedBy(Node objectNode) throws UnexpectedInternalProblemException {
@@ -446,8 +383,8 @@ public class ObjectServiceImpl {
 	 */
 	public static Vector<Node> getNodesByCreationDate(Node parentNode, String whichChildren, Date startDate,
 			Date endDate) throws UnexpectedInternalProblemException {
+		Vector<Node> result = new Vector<Node>();
 		try {
-			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				Date creationDate = ObjectServiceImpl.getCreatedOn(node);
@@ -465,6 +402,8 @@ public class ObjectServiceImpl {
 					}
 				}
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -509,6 +448,8 @@ public class ObjectServiceImpl {
 
 			// execute and return result
 			return query.execute().getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -581,8 +522,8 @@ public class ObjectServiceImpl {
 	 */
 	public static Vector<Node> getNodesByModificationDate(Node parentNode, String whichChildren, Date startDate,
 			Date endDate) throws UnexpectedInternalProblemException {
+		Vector<Node> result = new Vector<Node>();
 		try {
-			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				Date modificationDate = ObjectServiceImpl.getModifiedOn(node);
@@ -600,6 +541,8 @@ public class ObjectServiceImpl {
 					}
 				}
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -706,8 +649,8 @@ public class ObjectServiceImpl {
 	 */
 	public static Vector<Node> getNodesByCreator(Node creatorNode, Node parentNode, String whichChildren)
 			throws UnexpectedInternalProblemException {
+		Vector<Node> result = new Vector<Node>();
 		try {
-			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				Node actualCreator = ObjectServiceImpl.getCreatedBy(node);
@@ -715,6 +658,8 @@ public class ObjectServiceImpl {
 					result.add(node);
 				}
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -769,8 +714,8 @@ public class ObjectServiceImpl {
 	 */
 	public static Vector<Node> getNodesByModifier(Node modifierNode, Node parentNode, String whichChildren)
 			throws UnexpectedInternalProblemException {
+		Vector<Node> result = new Vector<Node>();
 		try {
-			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				Node actualModifier = ObjectServiceImpl.getModifiedBy(node);
@@ -778,6 +723,8 @@ public class ObjectServiceImpl {
 					result.add(node);
 				}
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -799,14 +746,16 @@ public class ObjectServiceImpl {
 	 */
 	public static Vector<Node> getNodesByNamePattern(Node parentNode, String regex, String whichChildren)
 			throws UnexpectedInternalProblemException {
+		Vector<Node> result = new Vector<Node>();
 		try {
-			Vector<Node> result = new Vector<Node>();
 			for (NodeIterator ni = parentNode.getNode(whichChildren).getNodes(); ni.hasNext();) {
 				Node node = ni.nextNode();
 				if (ObjectServiceImpl.getName(node).matches(regex)) {
 					result.add(node);
 				}
 			}
+			return result;
+		} catch (PathNotFoundException pnfe) {
 			return result;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);

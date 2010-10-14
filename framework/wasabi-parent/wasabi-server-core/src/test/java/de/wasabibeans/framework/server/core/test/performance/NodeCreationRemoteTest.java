@@ -47,7 +47,7 @@ public class NodeCreationRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	// results: 44709, 43717, 43440, 43275
+	// results: 32619, 
 	public void create() throws Exception {
 		long start = System.currentTimeMillis();
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");

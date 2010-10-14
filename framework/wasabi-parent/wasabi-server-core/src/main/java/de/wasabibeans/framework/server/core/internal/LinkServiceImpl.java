@@ -45,6 +45,7 @@ import de.wasabibeans.framework.server.core.exception.ObjectAlreadyExistsExcepti
 import de.wasabibeans.framework.server.core.exception.ObjectDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
+import de.wasabibeans.framework.server.core.util.EmptyNodeIterator;
 import de.wasabibeans.framework.server.core.util.JmsConnector;
 
 public class LinkServiceImpl {
@@ -53,7 +54,13 @@ public class LinkServiceImpl {
 			String callerPrincipal) throws ObjectAlreadyExistsException, UnexpectedInternalProblemException,
 			ConcurrentModificationException, ObjectDoesNotExistException {
 		try {
-			Node linkNode = environmentNode.addNode(WasabiNodeProperty.LINKS + "/" + name, WasabiNodeType.LINK);
+			Node linkNode;
+			if (environmentNode.hasNode(WasabiNodeProperty.LINKS)) {
+				linkNode = environmentNode.addNode(WasabiNodeProperty.LINKS + "/" + name, WasabiNodeType.LINK);
+			} else {
+				Node links = environmentNode.addNode(WasabiNodeProperty.LINKS, WasabiNodeType.OBJECT_COLLECTION);
+				linkNode = links.addNode(name, WasabiNodeType.LINK);
+			}
 			setDestination(linkNode, destinationNode, s, false, null);
 			ObjectServiceImpl.created(linkNode, s, false, callerPrincipal, true);
 
@@ -125,6 +132,8 @@ public class LinkServiceImpl {
 	public static NodeIterator getLinks(Node locationNode) throws UnexpectedInternalProblemException {
 		try {
 			return locationNode.getNode(WasabiNodeProperty.LINKS).getNodes();
+		} catch (PathNotFoundException pnfe) {
+			return new EmptyNodeIterator();
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -192,8 +201,13 @@ public class LinkServiceImpl {
 			throws ObjectAlreadyExistsException, UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			ConcurrentModificationException {
 		try {
-			linkNode.getSession().move(linkNode.getPath(),
-					newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.LINKS + "/" + linkNode.getName());
+			if (newEnvironmentNode.hasNode(WasabiNodeProperty.LINKS)) {
+				s.move(linkNode.getPath(), newEnvironmentNode.getPath() + "/" + WasabiNodeProperty.LINKS + "/"
+						+ linkNode.getName());
+			} else {
+				Node links = newEnvironmentNode.addNode(WasabiNodeProperty.LINKS, WasabiNodeType.OBJECT_COLLECTION);
+				s.move(linkNode.getPath(), links.getPath() + "/" + linkNode.getName());
+			}
 			ObjectServiceImpl.modified(linkNode, s, false, callerPrincipal, false);
 
 			/* ACL Environment - Begin */
