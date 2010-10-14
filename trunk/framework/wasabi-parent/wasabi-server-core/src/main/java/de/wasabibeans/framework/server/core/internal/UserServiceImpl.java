@@ -29,6 +29,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
@@ -57,7 +58,7 @@ public class UserServiceImpl {
 			Node userNode = rootOfUsersNode.addNode(name, WasabiNodeType.USER);
 			setDisplayName(userNode, name, s, false, null);
 			Node homeRoomNode = RoomServiceImpl.create(name, RoomServiceImpl.getRootHome(s), s, false, callerPrincipal);
-			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, homeRoomNode);
+			userNode.setProperty(WasabiNodeProperty.HOME_ROOM, s.getValueFactory().createValue(homeRoomNode, true));
 			setStartRoom(userNode, homeRoomNode, s, false, null);
 			enter(userNode, homeRoomNode, s, false);
 			GroupServiceImpl.addMember(GroupServiceImpl.getWasabiGroup(s), userNode, s, false);
@@ -106,10 +107,10 @@ public class UserServiceImpl {
 
 			Node userRef = roomNode.getNode(WasabiNodeProperty.PRESENT_USERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
-			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, s.getValueFactory().createValue(userNode, true));
 			Node roomRef = userNode.getNode(WasabiNodeProperty.WHEREABOUTS).addNode(roomNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
-			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, roomNode);
+			roomRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, s.getValueFactory().createValue(roomNode, true));
 
 			if (doJcrSave) {
 				s.save();
@@ -411,7 +412,8 @@ public class UserServiceImpl {
 	public static void setStartRoom(Node userNode, Node roomNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			userNode.setProperty(WasabiNodeProperty.START_ROOM, roomNode);
+			Value value = roomNode != null ? s.getValueFactory().createValue(roomNode, true) : null;
+			userNode.setProperty(WasabiNodeProperty.START_ROOM, value);
 			ObjectServiceImpl.modified(userNode, s, false, callerPrincipal, false);
 
 			if (doJcrSave) {

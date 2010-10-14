@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
@@ -128,7 +129,12 @@ public class TransferManager {
 		try {
 			String label = versionHistory.getVersionLabels(version)[0];
 			Date creationDate = new Date(Long.parseLong(label));
-			String comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
+			String comment = null;
+			try {
+				comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
+			} catch (PathNotFoundException pnfe) {
+				// no comment set
+			}
 			return new WasabiVersionDTO(label, comment, creationDate);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
