@@ -61,10 +61,11 @@ public class GroupServiceImpl {
 
 			Node userRef = groupNode.getNode(WasabiNodeProperty.MEMBERS).addNode(userNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
-			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, userNode);
+			userRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, s.getValueFactory().createValue(userNode, true));
 			Node groupRef = userNode.getNode(WasabiNodeProperty.MEMBERSHIPS).addNode(groupNode.getIdentifier(),
 					WasabiNodeType.OBJECT_REF);
-			groupRef.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, groupNode);
+			groupRef
+					.setProperty(WasabiNodeProperty.REFERENCED_OBJECT, s.getValueFactory().createValue(groupNode, true));
 
 			/* WasabiCertificate - Begin */
 			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)

@@ -47,7 +47,7 @@ public class NodeCreationRemoteTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	// results: 32619, 
+	// results: 32619, 32115
 	public void create() throws Exception {
 		long start = System.currentTimeMillis();
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
@@ -58,6 +58,7 @@ public class NodeCreationRemoteTest extends WasabiRemoteTest {
 		}
 		utx.commit();
 		System.out.println("------ " + (System.currentTimeMillis() - start));
+		Thread.sleep(60 * 1000);
 		AssertJUnit.assertNotNull(roomService().getRoomByName(rootRoom, "hu4"));
 	}
 }

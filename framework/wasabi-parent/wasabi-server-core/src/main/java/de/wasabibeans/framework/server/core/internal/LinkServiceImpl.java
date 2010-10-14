@@ -32,6 +32,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
 import de.wasabibeans.framework.server.core.authorization.WasabiLinkACL;
@@ -259,7 +260,8 @@ public class LinkServiceImpl {
 	public static void setDestination(Node linkNode, Node objectNode, Session s, boolean doJcrSave,
 			String callerPrincipal) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			linkNode.setProperty(WasabiNodeProperty.DESTINATION, objectNode);
+			Value value = objectNode != null ? s.getValueFactory().createValue(objectNode, true) : null;
+			linkNode.setProperty(WasabiNodeProperty.DESTINATION, value);
 			ObjectServiceImpl.modified(linkNode, s, false, callerPrincipal, false);
 
 			if (doJcrSave) {

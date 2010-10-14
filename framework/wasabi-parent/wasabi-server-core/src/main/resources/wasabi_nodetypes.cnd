@@ -1,38 +1,21 @@
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 <wasabi='http://www.wasabibeans.de/jcr/wasabi/1.0'>
-<wasabiMix='http://www.wasabibeans.de/jcr/wasabiMix/1.0'>
 <wasabiStructure='http://www.wasabibeans.de/jcr/wasabiStructure/1.0'>
-
-[wasabiMix:created]
-	mixin
-	- wasabi:createdOn (DATE)
-	- wasabi:createdBy (WEAKREFERENCE) 
 	
-[wasabiMix:lastModified]
-	mixin
-	- wasabi:modifiedOn (DATE)
-	- wasabi:modifiedBy (WEAKREFERENCE) 
-	
-[wasabiMix:versionable] > mix:versionable
-	mixin
-	- wasabi:versionComment (STRING)
-	
-[wasabi:object] > nt:base, mix:referenceable, mix:lockable, wasabiMix:created, wasabiMix:lastModified
+[wasabi:object] > nt:base, mix:referenceable, mix:lockable
 	abstract
-	+ wasabi:attributes (wasabiStructure:objectCollection)
-	+ wasabi:tags (wasabiStructure:tags)
+	- * (UNDEFINED)
+	+ * (nt:base)
 	- wasabi:inheritance (BOOLEAN) = 'true' autocreated 
-	- wasabi:optLockId (LONG) 
+	- wasabi:optLockId (LONG) = '0' autocreated
 	
 [wasabi:location] > wasabi:object
 	abstract
 	+ wasabi:documents (wasabiStructure:objectCollection) 
 	+ wasabi:containers (wasabiStructure:objectCollection)
-	+ wasabi:links (wasabiStructure:objectCollection) 
 	
 [wasabi:room] > wasabi:location
-	- wasabi:pipeline (WEAKREFERENCE)
 	+ wasabi:rooms (wasabiStructure:objectCollection)
 	+ wasabi:presentUsers (wasabiStructure:refCollection) 
 	
@@ -40,46 +23,26 @@
 
 [wasabi:identity] > wasabi:object
 	abstract
-	- wasabi:displayName (STRING) 
 	
 [wasabi:group] > wasabi:identity
-	+ wasabi:subgroups (wasabiStructure:objectCollection)
-	+ wasabi:members (wasabiStructure:refCollection)
 	
 [wasabi:user] > wasabi:identity
-	- wasabi:homeRoom (WEAKREFERENCE)
-	- wasabi:startRoom (WEAKREFERENCE) 
 	- wasabi:active (BOOLEAN) = 'true' autocreated
-	+ wasabi:memberships (wasabiStructure:refCollection)
-	+ wasabi:whereabouts (wasabiStructure:refCollection) 
 
 [wasabi:document] > wasabi:object
-	primaryitem 'wasabi:content'
-	- wasabi:content (BINARY) 
-	+ wasabi:contentrefs (wasabiStructure:contentrefs) 
 	
 [wasabi:link] > wasabi:object
-	- wasabi:destination (WEAKREFERENCE) 
 	
 [wasabi:attribute] > wasabi:object
-	- wasabi:value (UNDEFINED)
-	- wasabi:type (STRING)
 	
 [wasabi:pipeline] > wasabi:object
-	- wasabi:filter (BINARY)
-	- wasabi:embeddable (BOOLEAN)
 	
 [wasabiStructure:contentrefs] > nt:base
 	+ * (wasabiStructure:contentref) 
 	
 [wasabiStructure:contentref] > nt:base
-	- wasabiStructure:filterClass (STRING)
-	- wasabiStructure:ref (STRING)
-	- wasabiStructure:document (WEAKREFERENCE)
-	- wasabiStructure:mimeType (STRING)
-	- wasabiStructure:jsonData (String)
-	- wasabiStructure:size (LONG)
-	- wasabiStructure:isContentAvailable (BOOLEAN)
+	- * (UNDEFINED)
+	+ * (nt:base)
 	
 [wasabiStructure:objectCollection] > nt:base
 	+ * (wasabi:object) 
@@ -88,10 +51,12 @@
 	+ * (wasabiStructure:objectref)
 	
 [wasabiStructure:objectref] > nt:base
-	- wasabiStructure:referencedObject (WEAKREFERENCE) 
+	- * (UNDEFINED)
+	+ * (nt:base) 
 	
 [wasabiStructure:tags] > nt:base
 	+ * (wasabiStructure:tag) 
 	
-[wasabiStructure:tag] > nt:base, wasabiMix:created
-	- wasabiStructure:text (STRING) 
+[wasabiStructure:tag] > nt:base
+	- * (UNDEFINED)
+	+ * (nt:base)  

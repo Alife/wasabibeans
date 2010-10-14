@@ -228,6 +228,8 @@ public class AttributeServiceImpl {
 				throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_WRONG_TYPE,
 						actualAttributeType));
 			}
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (IOException io) {
@@ -252,6 +254,8 @@ public class AttributeServiceImpl {
 				throw new AttributeValueException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_WRONG_TYPE,
 						actualAttributeType));
 			}
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (ItemNotFoundException infe) {
 			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
 		} catch (RepositoryException re) {

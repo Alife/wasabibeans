@@ -41,7 +41,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
@@ -120,25 +119,16 @@ public class DocumentServiceImpl {
 	public static Serializable getContent(Node documentNode) throws UnexpectedInternalProblemException,
 			DocumentContentException {
 		try {
-			Binary content = ((Property) documentNode.getPrimaryItem()).getBinary();
+			Binary content = documentNode.getProperty(WasabiNodeProperty.CONTENT).getBinary();
 			ObjectInputStream oIn = new ObjectInputStream(content.getStream());
 			return (Serializable) oIn.readObject();
+		} catch (PathNotFoundException pnfe) {
+			return null;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		} catch (Exception e) {
 			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD,
 					"content", "document"), e);
-		}
-	}
-
-	public static Node getDocument(Node contentrefNode) throws TargetDoesNotExistException,
-			UnexpectedInternalProblemException {
-		try {
-			return contentrefNode.getProperty(WasabiNodeProperty.DOCUMENT).getNode();
-		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 
@@ -472,6 +462,19 @@ public class DocumentServiceImpl {
 		} catch (ClassNotFoundException cnfe) {
 			throw new DocumentContentException(WasabiExceptionMessages.get(WasabiExceptionMessages.VALUE_LOAD,
 					"content", "document"), cnfe);
+		}
+	}
+
+	public static Node getDocument(Node contentrefNode) throws TargetDoesNotExistException,
+			UnexpectedInternalProblemException {
+		try {
+			return contentrefNode.getProperty(WasabiNodeProperty.DOCUMENT).getNode();
+		} catch (PathNotFoundException pnfe) {
+			return null;
+		} catch (ItemNotFoundException infe) {
+			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 

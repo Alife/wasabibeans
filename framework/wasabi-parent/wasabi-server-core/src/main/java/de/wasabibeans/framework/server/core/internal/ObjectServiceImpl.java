@@ -33,6 +33,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.lock.LockException;
 import javax.jcr.query.Query;
@@ -765,7 +766,8 @@ public class ObjectServiceImpl {
 	public static void setCreatedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, userNode);
+			Value value = userNode != null ? s.getValueFactory().createValue(userNode, true) : null;
+			objectNode.setProperty(WasabiNodeProperty.CREATED_BY, value);
 
 			if (doJcrSave) {
 				s.save();
@@ -807,7 +809,8 @@ public class ObjectServiceImpl {
 	public static void setModifiedBy(Node objectNode, Node userNode, Session s, boolean doJcrSave)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			objectNode.setProperty(WasabiNodeProperty.MODIFIED_BY, userNode);
+			Value value = userNode != null ? s.getValueFactory().createValue(userNode, true) : null;
+			objectNode.setProperty(WasabiNodeProperty.MODIFIED_BY, value);
 
 			if (doJcrSave) {
 				s.save();
@@ -849,6 +852,8 @@ public class ObjectServiceImpl {
 	public static long getOptLockId(Node objectNode) throws UnexpectedInternalProblemException {
 		try {
 			return objectNode.getProperty(WasabiNodeProperty.OPT_LOCK_ID).getLong();
+		} catch (PathNotFoundException pnfe) {
+			return 0L;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -902,7 +907,6 @@ public class ObjectServiceImpl {
 			ObjectServiceImpl.setCreatedBy(objectNode, currentUser, s, false);
 			ObjectServiceImpl.setModifiedOn(objectNode, timestamp, s, false);
 			ObjectServiceImpl.setModifiedBy(objectNode, currentUser, s, false);
-			ObjectServiceImpl.setOptLockId(objectNode, 0, s, false);
 
 			if (doJcrSave) {
 				s.save();
