@@ -51,6 +51,8 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiAuthorizer {
 
+	private static long maxLifeTime = 0;
+
 	/**
 	 * Checks if a requesting user is allowed to access a given objectNode by given permission. If WasabiCertificate is
 	 * enable and result of check is true, a certificate for objectNode and requesting user will be created.
@@ -76,7 +78,7 @@ public class WasabiAuthorizer {
 			if (cert) {
 				return true;
 			} else if (checkCalcRights(objectUUID, userUUID, userNode, permission, s)) {
-				WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
+				WasabiCertificate.setCertificate(userUUID, objectUUID, permission, maxLifeTime);
 				return true;
 			} else
 				return false;
@@ -207,17 +209,12 @@ public class WasabiAuthorizer {
 			String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
 			long time = java.lang.System.currentTimeMillis();
 			int[] rights = new int[8];
+			maxLifeTime = 0;
 
-			String getRights = "SELECT `object_id`, `view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, `priority` "
-					+ "FROM `wasabi_rights` WHERE "
-					+ "`object_id`=? "
-					+ " AND ((`start_time`<="
-					+ time
-					+ " AND `end_time`>="
-					+ time
-					+ ") OR (`start_time`=0 AND `end_time`=0)) "
-					+ "AND "
-					+ identityCheck
+			String getRights = "SELECT `object_id`, "
+					+ "`view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, " + "`priority`,`end_time` "
+					+ "FROM `wasabi_rights` WHERE " + "`object_id`=? " + " AND ((`start_time`<=" + time
+					+ " AND `end_time`>=" + time + ") OR (`start_time`=0 AND `end_time`=0)) " + "AND " + identityCheck
 					+ "ORDER BY `priority`";
 
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
@@ -229,36 +226,50 @@ public class WasabiAuthorizer {
 				for (WasabiACLEntry wasabiACLEntry : result) {
 					int prio = wasabiACLEntry.getPriority();
 					int right = getRight(wasabiACLEntry, permission);
+					long endTime = wasabiACLEntry.getEnd_Time();
+
 					switch (prio) {
 					case WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT:
 						if (right == -1)
 							return false;
-						else if (right == 1)
+						else if (right == 1) {
 							rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] = 1;
+							if (endTime > maxLifeTime)
+								maxLifeTime = endTime;
+						}
 						break;
 					case WasabiACLPriority.INHERITED_USER_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
 							return true;
 						else if (right == -1)
 							return false;
-						else if (right == 1)
+						else if (right == 1) {
 							rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
+							if (endTime > maxLifeTime)
+								maxLifeTime = endTime;
+						}
 						break;
 					case WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] == 1)
 							return true;
 						else if (right == -1)
 							return false;
-						else if (right == 1)
+						else if (right == 1) {
 							rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] = 1;
+							if (endTime > maxLifeTime)
+								maxLifeTime = endTime;
+						}
 						break;
 					case WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT:
 						if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
 							return true;
 						else if (right == -1)
 							return false;
-						else if (right == 1)
+						else if (right == 1) {
 							rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
+							if (endTime > maxLifeTime)
+								maxLifeTime = endTime;
+						}
 						break;
 					case WasabiACLPriority.EXPLICIT_USER_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] == 1)

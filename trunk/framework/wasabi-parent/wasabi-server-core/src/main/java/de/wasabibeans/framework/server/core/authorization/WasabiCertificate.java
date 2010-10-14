@@ -30,6 +30,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
@@ -39,23 +40,25 @@ import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.GroupServiceImpl;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
+import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JndiConnector;
 import de.wasabibeans.framework.server.core.util.WasabiCertificateHandle;
 
 public class WasabiCertificate {
 
-	private static ConcurrentHashMap<String, Boolean> commentRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> commentRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> commentRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> executeRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> executeRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> executeRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> grantRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> grantRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> grantRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> insertRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> insertRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> insertRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> readRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> readRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> readRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> viewRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> viewRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> viewRightQueue = new ConcurrentLinkedQueue<String>();
-	private static ConcurrentHashMap<String, Boolean> writeRightMap = new ConcurrentHashMap<String, Boolean>();
+	private static ConcurrentHashMap<String, Long> writeRightMap = new ConcurrentHashMap<String, Long>();
 	private static ConcurrentLinkedQueue<String> writeRightQueue = new ConcurrentLinkedQueue<String>();
 
 	private static String concatInputs(String userUUID, String objectUUID) {
@@ -348,13 +351,15 @@ public class WasabiCertificate {
 
 	public static boolean getCertificate(String userUUID, String objectUUID, int permission) {
 		String key = concatInputs(userUUID, objectUUID);
-		Boolean value;
+		Long value;
+		long time = java.lang.System.currentTimeMillis();
+
 		switch (permission) {
 		case WasabiPermission.VIEW:
 			value = viewRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -362,7 +367,7 @@ public class WasabiCertificate {
 			value = readRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -370,7 +375,7 @@ public class WasabiCertificate {
 			value = commentRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -378,7 +383,7 @@ public class WasabiCertificate {
 			value = executeRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -386,7 +391,7 @@ public class WasabiCertificate {
 			value = insertRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -394,7 +399,7 @@ public class WasabiCertificate {
 			value = writeRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -402,7 +407,7 @@ public class WasabiCertificate {
 			value = grantRightMap.get(key);
 			if (value == null)
 				return false;
-			else if (value)
+			else if (time < value || value == 0)
 				return true;
 			else
 				return false;
@@ -604,7 +609,31 @@ public class WasabiCertificate {
 		}
 	}
 
-	public static void setCertificate(String userUUID, String objectUUID, int permission) {
+	public static void invalidateCertificateForGroup(String objectUUID, String groupUUID, int permission)
+			throws UnexpectedInternalProblemException {
+		JndiConnector jndi = JndiConnector.getJNDIConnector();
+		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		Session s = jcr.getJCRSession();
+
+		try {
+			Node groupNode = s.getNodeByIdentifier(groupUUID);
+			Vector<Node> users = getAllUserByGroup(groupNode);
+			for (Node userNode : users) {
+				String userUUID = ObjectServiceImpl.getUUID(userNode);
+				invalidate(userUUID, objectUUID, permission);
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		} finally {
+			jndi.close();
+		}
+	}
+
+	public static void invalidateCertificateForUser(String objectUUID, String userUUID, int permission) {
+		invalidate(userUUID, objectUUID, permission);
+	}
+
+	public static void setCertificate(String userUUID, String objectUUID, int permission, long maxLifeTime) {
 		String key = concatInputs(userUUID, objectUUID);
 		switch (permission) {
 		case WasabiPermission.VIEW:
@@ -612,7 +641,7 @@ public class WasabiCertificate {
 				String topOfQueue = viewRightQueue.poll();
 				viewRightMap.remove(topOfQueue);
 			}
-			viewRightMap.put(key, true);
+			viewRightMap.put(key, maxLifeTime);
 			viewRightQueue.add(key);
 			break;
 		case WasabiPermission.READ:
@@ -620,7 +649,7 @@ public class WasabiCertificate {
 				String topOfQueue = readRightQueue.poll();
 				readRightMap.remove(topOfQueue);
 			}
-			readRightMap.put(key, true);
+			readRightMap.put(key, maxLifeTime);
 			readRightQueue.add(key);
 			break;
 		case WasabiPermission.COMMENT:
@@ -628,7 +657,7 @@ public class WasabiCertificate {
 				String topOfQueue = commentRightQueue.poll();
 				commentRightMap.remove(topOfQueue);
 			}
-			commentRightMap.put(key, true);
+			commentRightMap.put(key, maxLifeTime);
 			commentRightQueue.add(key);
 			break;
 		case WasabiPermission.EXECUTE:
@@ -636,7 +665,7 @@ public class WasabiCertificate {
 				String topOfQueue = executeRightQueue.poll();
 				executeRightMap.remove(topOfQueue);
 			}
-			executeRightMap.put(key, true);
+			executeRightMap.put(key, maxLifeTime);
 			executeRightQueue.add(key);
 			break;
 		case WasabiPermission.INSERT:
@@ -644,7 +673,7 @@ public class WasabiCertificate {
 				String topOfQueue = insertRightQueue.poll();
 				insertRightMap.remove(topOfQueue);
 			}
-			insertRightMap.put(key, true);
+			insertRightMap.put(key, maxLifeTime);
 			insertRightQueue.add(key);
 			break;
 		case WasabiPermission.WRITE:
@@ -652,7 +681,7 @@ public class WasabiCertificate {
 				String topOfQueue = writeRightQueue.poll();
 				writeRightMap.remove(topOfQueue);
 			}
-			writeRightMap.put(key, true);
+			writeRightMap.put(key, maxLifeTime);
 			writeRightQueue.add(key);
 			break;
 		case WasabiPermission.GRANT:
@@ -660,7 +689,7 @@ public class WasabiCertificate {
 				String topOfQueue = grantRightQueue.poll();
 				grantRightMap.remove(topOfQueue);
 			}
-			grantRightMap.put(key, true);
+			grantRightMap.put(key, maxLifeTime);
 			grantRightQueue.add(key);
 			break;
 		}

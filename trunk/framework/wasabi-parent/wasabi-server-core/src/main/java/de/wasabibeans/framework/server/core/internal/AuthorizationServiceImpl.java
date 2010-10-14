@@ -46,7 +46,6 @@ public class AuthorizationServiceImpl {
 		if (WasabiCertificate.getCertificate(userUUID, objectUUID, permission))
 			return true;
 		else if (WasabiAuthorizer.authorize(objectNode, ObjectServiceImpl.getName(userNode), permission, s)) {
-			WasabiCertificate.setCertificate(userUUID, objectUUID, permission);
 			return true;
 		} else
 			return false;
