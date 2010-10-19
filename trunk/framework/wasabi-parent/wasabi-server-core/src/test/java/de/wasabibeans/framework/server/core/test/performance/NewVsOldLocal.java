@@ -1,5 +1,8 @@
 package de.wasabibeans.framework.server.core.test.performance;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Vector;
 
 import javax.transaction.UserTransaction;
@@ -97,7 +100,7 @@ public class NewVsOldLocal extends Arquillian {
 
 	// @Test
 	public void createRooms() throws Exception {
-		int numberOfRooms = 4800;
+		int numberOfRooms = 4000;
 
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -111,7 +114,7 @@ public class NewVsOldLocal extends Arquillian {
 			roomService.create("room" + i, rootRoom);
 		}
 		utx.commit();
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
 		Thread.sleep(60 * 1000);
 		loCon.disconnect();
@@ -119,7 +122,7 @@ public class NewVsOldLocal extends Arquillian {
 
 	// @Test
 	public void getRooms() throws Exception {
-		int numberOfRooms = 4800;
+		int numberOfRooms = 2000;
 
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -137,9 +140,9 @@ public class NewVsOldLocal extends Arquillian {
 
 		long start = System.currentTimeMillis();
 		roomService.getRooms(rootRoom);
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
-		Thread.sleep(60 * 1000);
+		Thread.sleep(30 * 1000);
 		loCon.disconnect();
 	}
 
@@ -162,15 +165,15 @@ public class NewVsOldLocal extends Arquillian {
 			documentService.setContent(document, "test", null);
 		}
 		utx.commit();
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
-		Thread.sleep(60 * 1000);
+		Thread.sleep(40 * 1000);
 		loCon.disconnect();
 	}
 
 	// @Test
 	public void getAndReadDocuments() throws Exception {
-		int numberOfDocuments = 2000;
+		int numberOfDocuments = 1000;
 
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -195,17 +198,53 @@ public class NewVsOldLocal extends Arquillian {
 			documentService.getContent(doc);
 		}
 		utx.commit();
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
-		Thread.sleep(60 * 1000);
+		Thread.sleep(20 * 1000);
+		loCon.disconnect();
+	}
+
+	// @Test
+	public void getAndReadAndEditDocuments() throws Exception {
+		int numberOfDocuments = 1000;
+
+		beforeTest();
+		loCon.defaultConnectAndLogin();
+		RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
+		WasabiRoomDTO rootRoom = roomService.getRootRoom();
+		DocumentServiceLocal documentService = (DocumentServiceLocal) loCon.lookup("DocumentService");
+
+		// create the documents
+		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
+		utx.begin();
+		WasabiDocumentDTO document;
+		for (int i = 0; i < numberOfDocuments; i++) {
+			// System.out.println(i);
+			document = documentService.create("document" + i, rootRoom);
+			documentService.setContent(document, "test", null);
+		}
+		utx.commit();
+
+		utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
+		long start = System.currentTimeMillis();
+		utx.begin();
+		for (WasabiDocumentDTO doc : documentService.getDocuments(rootRoom)) {
+			// System.out.println("read");
+			documentService.getContent(doc);
+			documentService.setContent(doc, "newTest", null);
+		}
+		utx.commit();
+		log("------ " + (System.currentTimeMillis() - start));
+
+		Thread.sleep(20 * 1000);
 		loCon.disconnect();
 	}
 
 	// @Test
 	// tests searching within many objects
 	public void getUserByDisplayname() throws Exception {
-		int numberOfUsers = 4800;
-		int whichOneToQuery = 1312;
+		int numberOfUsers = 1000;
+		int whichOneToQuery = 533;
 
 		beforeTest();
 		loCon.defaultConnectAndLogin();
@@ -222,12 +261,12 @@ public class NewVsOldLocal extends Arquillian {
 		// query a user
 		long start = System.currentTimeMillis();
 		userService.getUsersByDisplayName("user" + whichOneToQuery);
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
 		loCon.disconnect();
 	}
 
-	// @Test
+	//@Test
 	public void createDocumentsWithContentConcurrently() throws Throwable {
 		final int numberOfDocuments = 200;
 		int numberOfUsers = 10;
@@ -238,6 +277,11 @@ public class NewVsOldLocal extends Arquillian {
 		RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
 		DocumentServiceLocal documentService = (DocumentServiceLocal) loCon.lookup("DocumentService");
 		documentService.create("initialDoc", roomService.getRootRoom());
+		/*
+		 * make that the above call does not interfere with the following transactions (due to some weird background
+		 * scheduling)
+		 */
+		Thread.sleep(500);
 		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 		utx.begin();
 		for (int i = 0; i < numberOfUsers; i++) {
@@ -266,6 +310,7 @@ public class NewVsOldLocal extends Arquillian {
 						utx.begin();
 						WasabiDocumentDTO document;
 						for (int i = 0; i < numberOfDocuments; i++) {
+							System.out.println(username + " creates " + i);
 							document = documentService.create(username + "-document" + i, rootRoom);
 							documentService.setContent(document, "test", null);
 						}
@@ -280,12 +325,12 @@ public class NewVsOldLocal extends Arquillian {
 			};
 		}
 		executeUserThreads(users);
-		Thread.sleep(60 * 1000);
+		Thread.sleep(5 * 1000);
 	}
 
-	// @Test
+	//@Test
 	public void getAndReadDocumentsConcurrently() throws Throwable {
-		final int numberOfDocuments = 2000;
+		final int numberOfDocuments = 1000;
 		int numberOfUsers = 10;
 
 		beforeTest();
@@ -347,7 +392,7 @@ public class NewVsOldLocal extends Arquillian {
 		executeUserThreads(users);
 	}
 
-	// @Test
+	//@Test
 	/*
 	 * concurrently: create users and groups, add members to wasabiGroup, remove members, delete some groups and users
 	 * again
@@ -361,6 +406,11 @@ public class NewVsOldLocal extends Arquillian {
 		UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 		GroupServiceLocal groupService = (GroupServiceLocal) loCon.lookup("GroupService");
 		groupService.create("initialSubgroup", groupService.getGroupByName(WasabiConstants.WASABI_GROUP_NAME));
+		/*
+		 * make that the above call does not interfere with the following transactions (due to some weird background
+		 * scheduling)
+		 */
+		Thread.sleep(500);
 		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 		utx.begin();
 		for (int i = 0; i < numberOfAdmins; i++) {
@@ -441,7 +491,6 @@ public class NewVsOldLocal extends Arquillian {
 			};
 		}
 		executeUserThreads(users);
-		Thread.sleep(60 * 1000);
 	}
 
 	@Test
@@ -449,7 +498,7 @@ public class NewVsOldLocal extends Arquillian {
 	 * concurrently: create room-link-container-document-attribute-'groups' and delete/edit some stuff
 	 */
 	public void userScenarioConcurrently() throws Throwable {
-		final int numberOfObjectGroups = 100;
+		final int numberOfObjectGroups = 10;
 		int numberOfUsers = 10;
 
 		beforeTest();
@@ -457,6 +506,11 @@ public class NewVsOldLocal extends Arquillian {
 		UserServiceLocal userService = (UserServiceLocal) loCon.lookup("UserService");
 		RoomServiceLocal roomService = (RoomServiceLocal) loCon.lookup("RoomService");
 		roomService.create("initialSubroom", roomService.getRootRoom());
+		/*
+		 * make that the above call does not interfere with the following transactions (due to some weird background
+		 * scheduling)
+		 */
+		Thread.sleep(500);
 		UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 		utx.begin();
 		for (int i = 0; i < numberOfUsers; i++) {
@@ -499,7 +553,7 @@ public class NewVsOldLocal extends Arquillian {
 						UserTransaction utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 						utx.begin();
 						for (int i = 0; i < numberOfObjectGroups; i++) {
-							System.out.println(username + " creates " + i);
+							//System.out.println(username + " creates " + i);
 							rooms[i] = roomService.create(username + "-room" + i, rootRoom);
 							links[i] = linkService.create(username + "-link" + i, rootRoom, rooms[i]);
 							containers[i] = containerService.create(username + "-container" + i, rooms[i]);
@@ -512,7 +566,7 @@ public class NewVsOldLocal extends Arquillian {
 						utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 						utx.begin();
 						for (WasabiDocumentDTO document : documents) {
-							System.out.println(username + " edits document");
+							//System.out.println(username + " edits document");
 							documentService.setContent(document, "newTest", null);
 						}
 						utx.commit();
@@ -521,7 +575,7 @@ public class NewVsOldLocal extends Arquillian {
 						utx = (UserTransaction) loCon.lookupGeneral("UserTransaction");
 						utx.begin();
 						for (WasabiContainerDTO container : containers) {
-							System.out.println(username + " adds tag");
+							//System.out.println(username + " adds tag");
 							tagService.addTag(container, "test");
 						}
 						utx.commit();
@@ -531,7 +585,7 @@ public class NewVsOldLocal extends Arquillian {
 						utx.begin();
 						for (int i = 0; i < rooms.length - 1; i++) {
 							if (i % 10 == 0) {
-								System.out.println(username + " removes room " + i);
+								//System.out.println(username + " removes room " + i);
 								roomService.remove(rooms[i], null);
 							}
 						}
@@ -547,7 +601,6 @@ public class NewVsOldLocal extends Arquillian {
 			};
 		}
 		executeUserThreads(users);
-		Thread.sleep(60 * 1000);
 	}
 
 	// ------------- stuff for concurrent executions ----------------------------------------------------
@@ -586,7 +639,7 @@ public class NewVsOldLocal extends Arquillian {
 		for (UserThread user : users) {
 			user.join();
 		}
-		System.out.println("------ " + (System.currentTimeMillis() - start));
+		log("------ " + (System.currentTimeMillis() - start));
 
 		for (Throwable t : throwables) {
 			t.printStackTrace();
@@ -594,5 +647,13 @@ public class NewVsOldLocal extends Arquillian {
 		if (!throwables.isEmpty()) {
 			throw throwables.get(0);
 		}
+	}
+
+	private void log(String text) throws Exception {
+		File log = new File("thelog.txt");
+		FileWriter fstream = new FileWriter(log, true);
+		BufferedWriter out = new BufferedWriter(fstream);
+		out.write(text + ", ");
+		out.close();
 	}
 }
