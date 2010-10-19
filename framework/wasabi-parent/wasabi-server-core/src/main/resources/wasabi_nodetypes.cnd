@@ -12,12 +12,12 @@
 	
 [wasabi:location] > wasabi:object
 	abstract
-	+ wasabi:documents (wasabiStructure:objectCollection) 
-	+ wasabi:containers (wasabiStructure:objectCollection)
+	+ wasabi:documents (wasabiStructure:objectCollection) VERSION
+	+ wasabi:containers (wasabiStructure:objectCollection) VERSION
 	
 [wasabi:room] > wasabi:location
-	+ wasabi:rooms (wasabiStructure:objectCollection)
-	+ wasabi:presentUsers (wasabiStructure:refCollection) 
+	+ wasabi:rooms (wasabiStructure:objectCollection) VERSION
+	+ wasabi:presentUsers (wasabiStructure:refCollection) IGNORE
 	
 [wasabi:container] > wasabi:location
 
@@ -45,7 +45,7 @@
 	+ * (nt:base)
 	
 [wasabiStructure:objectCollection] > nt:base
-	+ * (wasabi:object) 
+	+ * (wasabi:object) VERSION
 	
 [wasabiStructure:refCollection] > nt:base
 	+ * (wasabiStructure:objectref)
