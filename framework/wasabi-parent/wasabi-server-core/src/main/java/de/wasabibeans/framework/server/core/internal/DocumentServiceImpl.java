@@ -356,7 +356,6 @@ public class DocumentServiceImpl {
 				}
 			}
 
-			contentrefNode.setProperty(WasabiNodeProperty.DOCUMENT, documentNode);
 			contentrefNode.setProperty(WasabiNodeProperty.FILTER_CLASS, filter.getClass().getName());
 			contentrefNode.setProperty(WasabiNodeProperty.REF, ref);
 			contentrefNode.setProperty(WasabiNodeProperty.MIME_TYPE, mimeType);
@@ -375,6 +374,7 @@ public class DocumentServiceImpl {
 				}
 			});
 			contentrefNode.setProperty(WasabiNodeProperty.JSONDATA, gsonBuilder.create().toJson(filter));
+
 			ObjectServiceImpl.modified(documentNode, s, false, callerPrincipal, false);
 
 			if (doJcrSave) {
@@ -465,17 +465,8 @@ public class DocumentServiceImpl {
 		}
 	}
 
-	public static Node getDocument(Node contentrefNode) throws TargetDoesNotExistException,
-			UnexpectedInternalProblemException {
-		try {
-			return contentrefNode.getProperty(WasabiNodeProperty.DOCUMENT).getNode();
-		} catch (PathNotFoundException pnfe) {
-			return null;
-		} catch (ItemNotFoundException infe) {
-			throw new TargetDoesNotExistException(WasabiExceptionMessages.TARGET_NOT_FOUND, infe);
-		} catch (RepositoryException re) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
-		}
+	public static Node getDocument(Node contentrefNode) throws UnexpectedInternalProblemException {
+		return ObjectServiceImpl.getEnvironment(contentrefNode);
 	}
 
 	public static NodeIterator getContentRefs(Node documentNode) throws UnexpectedInternalProblemException {

@@ -14,6 +14,7 @@ import javax.interceptor.Interceptors;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
@@ -56,8 +57,8 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	/**
 	 * Creates a new version for the wasabi-object represented by the given {@code WasabiObjectDTO} {@code dto}. If the
 	 * given wasabi-object has a subtree that contains further versionable wasabi-objects, then a new version for each
-	 * of these versionable wasabi-objects will be created as well. The entire subtree of the given wasabi-object will
-	 * be locked during this method. All versions created by this method will have the same comment and the same label.
+	 * of these versionable wasabi-objects will be created as well. All versions created by this method will have the
+	 * same comment and the same label. Only applicable for wasabi-rooms, wasabi-containers and wasabi-documents.
 	 * 
 	 * @param object
 	 * @param comment
@@ -123,6 +124,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			throw new IllegalArgumentException(WasabiExceptionMessages.VERSIONING_NOT_SUPPORTED);
 		}
 
+		Vector<WasabiVersionDTO> versions = new Vector<WasabiVersionDTO>();
 		Session s = jcr.getJCRSession();
 		try {
 			Node objectNode = TransferManager.convertDTO2Node(object, s);
@@ -140,7 +142,6 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			VersionHistory versionHistory = s.getWorkspace().getVersionManager()
 					.getVersionHistory(objectNode.getPath());
 			String rootVersionName = versionHistory.getRootVersion().getName();
-			Vector<WasabiVersionDTO> versions = new Vector<WasabiVersionDTO>();
 			for (VersionIterator vi = versionHistory.getAllVersions(); vi.hasNext();) {
 				Version aVersion = vi.nextVersion();
 				// do not expose the JCR root version, it cannot be restored anyway
@@ -148,6 +149,9 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 					versions.add(TransferManager.convertVersion2DTO(aVersion, versionHistory));
 				}
 			}
+			return versions;
+		} catch (UnsupportedRepositoryOperationException uroe) {
+			// there are no versions yet
 			return versions;
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
@@ -169,8 +173,7 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 	 * Restores the version represented by the given {@code versionLabel} for the wasabi-object represented by the given
 	 * {@code WasabiObjectDTO} {@code dto}. If the subtree of the given wasabi-object contains further versionable
 	 * wasabi-objects, then a version represented by the given {@code vesionLabel} will be restored for each of these
-	 * versionable wasabi-objects as well. The entire subtree of the given wasabi-object will be locked during this
-	 * method.
+	 * versionable wasabi-objects as well. Only applicable for wasabi-rooms, wasabi-containers and wasabi-documents.
 	 * 
 	 * @param object
 	 * @param versionLabel

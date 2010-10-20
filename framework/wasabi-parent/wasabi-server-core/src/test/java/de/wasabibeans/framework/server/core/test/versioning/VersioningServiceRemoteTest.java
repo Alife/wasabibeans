@@ -2,6 +2,7 @@ package de.wasabibeans.framework.server.core.test.versioning;
 
 import java.util.Vector;
 
+import javax.ejb.EJBException;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.UserTransaction;
 
@@ -49,7 +50,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		document1 = documentService().create(DOCUMENT1, container1);
 		documentService().setContent(document1, DOCUMENT1, null);
 		document2 = documentService().create(DOCUMENT2, container1);
-		documentService().setContent(document1, DOCUMENT1, null);
+		documentService().setContent(document2, DOCUMENT2, null);
 		reWaCon.logout();
 
 		reWaCon.login("user", "user");
@@ -60,7 +61,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		reWaCon.logout();
 	}
 
-	@Test
+	//@Test
 	// tests whether the versioning methods throw appropriate exceptions when the attempt is made to version s.th. else
 	// than rooms, containers or documents
 	public void illegalParameterTest() throws Exception {
@@ -68,27 +69,33 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		try {
 			versioningService().getVersions(user);
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			versioningService().createVersion(user, "test");
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 
 		try {
 			versioningService().restoreVersion(user, "test");
 			AssertJUnit.fail();
-		} catch (IllegalArgumentException e) {
-			// passed
+		} catch (EJBException e) {
+			if (!(e.getCause() instanceof IllegalArgumentException)) {
+				AssertJUnit.fail();
+			}
 		}
 	}
 
 	@Test
-	// simple versioning test on a document; the subtree of a document contains no further versionable wasabi-object
+	// simple versioning test on a document; the subtree of a document contains no further versionable wasabi-objects
 	public void versioningADocumentTest() throws Exception {
 		versioningService().createVersion(document1, "test");
 		Vector<WasabiVersionDTO> versions = versioningService().getVersions(document1);
@@ -103,9 +110,10 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals(DOCUMENT1, documentService().getContent(document1).getValue());
 	}
 
-	@Test
+//	@Test
 	// tests that there are no problems when creating several versions of a document
 	public void versioningADocumentMultipleTimesTest() throws Exception {
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
 		versioningService().createVersion(document1, "test");
 		documentService().setContent(document1, "test2", null);
 		versioningService().createVersion(document1, "test2");
@@ -121,7 +129,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals("test2", documentService().getContent(document1).getValue());
 	}
 
-	@Test
+//	@Test
 	// more complex versioning test, as a room can have a subtree with further versionable wasabi-objects
 	public void versioningARoomTest() throws Exception {
 		versioningService().createVersion(room, "test");
@@ -161,7 +169,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertNotNull(documentService().getDocumentByName(container1, DOCUMENT2));
 	}
 
-	@Test
+//	@Test
 	// tests that there are no problems when creating several versions of a room
 	public void versioningARoomTestMultipleTimes() throws Exception {
 		versioningService().createVersion(room, "test");
@@ -196,7 +204,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals("test2", documentService().getContent(document1).getValue());
 	}
 
-	@Test
+//	@Test
 	// tests whether objects like links, attributes, and tags that do not have their own version history are versioned
 	// with their 'parent-objects'
 	public void versioningAppendingObjects() throws Exception {
@@ -229,7 +237,7 @@ public class VersioningServiceRemoteTest extends WasabiRemoteTest {
 		AssertJUnit.assertEquals("attribute", attributeService().getValue(String.class, attributes.get(0)).getValue());
 	}
 
-	@Test
+	//@Test
 	// tests whether the creation of a version is rolled back when this creation takes place within a transaction that
 	// fails
 	public void versioningWithinTxAndRollback() throws Exception {

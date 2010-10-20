@@ -28,6 +28,7 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
+import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.api.Run;
@@ -47,12 +48,15 @@ import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.event.WasabiEventType;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
+import de.wasabibeans.framework.server.core.internal.DocumentServiceImpl;
 import de.wasabibeans.framework.server.core.internal.RoomServiceImpl;
+import de.wasabibeans.framework.server.core.internal.VersioningServiceImpl;
 import de.wasabibeans.framework.server.core.local.RoomServiceLocal;
 import de.wasabibeans.framework.server.core.locking.Locker;
 import de.wasabibeans.framework.server.core.manager.WasabiManager;
 import de.wasabibeans.framework.server.core.pipes.auth.AuthTokenDelegate;
 import de.wasabibeans.framework.server.core.pipes.filter.Filter;
+import de.wasabibeans.framework.server.core.pipes.filter.SharedFilterBean;
 import de.wasabibeans.framework.server.core.pipes.filter.annotation.FilterField;
 import de.wasabibeans.framework.server.core.pipes.filter.impl.DocumentSource;
 import de.wasabibeans.framework.server.core.remote.RoomServiceRemote;
@@ -62,6 +66,7 @@ import de.wasabibeans.framework.server.core.test.util.LocalWasabiConnector;
 import de.wasabibeans.framework.server.core.util.DebugInterceptor;
 import de.wasabibeans.framework.server.core.util.HashGenerator;
 import de.wasabibeans.framework.server.core.util.JcrConnector;
+import de.wasabibeans.framework.server.core.util.JmsConnector;
 import de.wasabibeans.framework.server.core.util.JndiConnector;
 
 @Run(RunModeType.IN_CONTAINER)
@@ -114,21 +119,21 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			testHelper.initRepository();
 
 			Session s = jcr.getJCRSession();
-			VersionManager versionManager = s.getWorkspace().getVersionManager();
 
 			Node room = s.getRootNode().addNode(ROOM, WasabiNodeType.ROOM);
 			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			roomId = room.getIdentifier();
 
-			Node room1 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM1, WasabiNodeType.ROOM);
+			Node room1 = room.addNode(WasabiNodeProperty.ROOMS, WasabiNodeType.OBJECT_COLLECTION).addNode(ROOM1,
+					WasabiNodeType.ROOM);
 			room1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			room1Id = room1.getIdentifier();
 			Node room2 = room.getNode(WasabiNodeProperty.ROOMS).addNode(ROOM2, WasabiNodeType.ROOM);
 			room2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			room2Id = room2.getIdentifier();
 
-			Node container1 = room1.getNode(WasabiNodeProperty.CONTAINERS)
-					.addNode(CONTAINER1, WasabiNodeType.CONTAINER);
+			Node container1 = room1.addNode(WasabiNodeProperty.CONTAINERS, WasabiNodeType.OBJECT_COLLECTION).addNode(
+					CONTAINER1, WasabiNodeType.CONTAINER);
 			container1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			container1Id = container1.getIdentifier();
 			Node container2 = room1.getNode(WasabiNodeProperty.CONTAINERS)
@@ -136,8 +141,8 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			container2.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			container2Id = container2.getIdentifier();
 
-			Node document1 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT1,
-					WasabiNodeType.DOCUMENT);
+			Node document1 = container1.addNode(WasabiNodeProperty.DOCUMENTS, WasabiNodeType.OBJECT_COLLECTION)
+					.addNode(DOCUMENT1, WasabiNodeType.DOCUMENT);
 			document1.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 1);
 			document1Id = document1.getIdentifier();
 			Node document2 = container1.getNode(WasabiNodeProperty.DOCUMENTS).addNode(DOCUMENT2,
@@ -147,13 +152,6 @@ public class SimpleJCRVersioningTest extends Arquillian {
 
 			s.save();
 
-			versionManager.checkout(room.getPath());
-			versionManager.checkout(room1.getPath());
-			versionManager.checkout(room1.getPath());
-			versionManager.checkout(container1.getPath());
-			versionManager.checkout(container2.getPath());
-			versionManager.checkout(document1.getPath());
-			versionManager.checkout(document2.getPath());
 		} finally {
 			jcr.cleanup(true);
 			jndi.close();
@@ -216,23 +214,28 @@ public class SimpleJCRVersioningTest extends Arquillian {
 		setUpBeforeEachMethod();
 		JndiConnector jndi = JndiConnector.getJNDIConnector();
 		JcrConnector jcr = JcrConnector.getJCRConnector(jndi);
+		JmsConnector jms = JmsConnector.getJmsConnector(jndi);
+		SharedFilterBean sfb = (SharedFilterBean) jndi.lookup("test/SharedFilterBean/local");
 		try {
 			Session s = jcr.getJCRSession();
 			VersionManager versionManager = s.getWorkspace().getVersionManager();
-			Node room = s.getNodeByIdentifier(roomId);
+			Node document = s.getNodeByIdentifier(document1Id);
 
-			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 2);
-			s.save();
-			Version version = versionManager.checkin(room.getPath());
-			versionManager.getVersionHistory(room.getPath()).addVersionLabel(version.getName(), "hu", false);
-			versionManager.checkout(room.getPath());
+			DocumentServiceImpl.setContentPiped(document, "hallo", s, true, jms, sfb, WasabiConstants.ROOT_USER_NAME);
+			VersioningServiceImpl.createVersionRecursively(document, "hallo", "hallo", versionManager);
 
-			room.setProperty(WasabiNodeProperty.OPT_LOCK_ID, 3);
-			s.save();
-			version = versionManager.checkin(room.getPath());
-			versionManager.checkout(room.getPath());
+			Version version = versionManager.getVersionHistory(document.getPath()).getVersionByLabel("hallo");
 
 			printOutFullTree(version, "");
+			
+			DocumentServiceImpl.setContentPiped(document, "hallo2", s, true, jms, sfb, WasabiConstants.ROOT_USER_NAME);
+			System.out.println("---------------" + DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document).nextNode()));
+			
+			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
+			utx.begin();
+			VersioningServiceImpl.restoreVersionRecursively(document, "hallo", versionManager);
+			System.out.println("---------------" + DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document).nextNode()));
+			utx.commit();
 
 		} finally {
 			jcr.cleanup(true);

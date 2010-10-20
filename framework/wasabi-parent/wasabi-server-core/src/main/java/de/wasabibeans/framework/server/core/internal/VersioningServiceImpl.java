@@ -6,12 +6,14 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
+import de.wasabibeans.framework.server.core.common.WasabiNodeType;
 import de.wasabibeans.framework.server.core.exception.ConcurrentModificationException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
@@ -26,18 +28,26 @@ public class VersioningServiceImpl {
 	 * @param comment
 	 * @param versionManager
 	 * @throws UnexpectedInternalProblemException
-	 * @throws ConcurrentModificationException 
+	 * @throws ConcurrentModificationException
 	 */
 	public static void createVersionRecursively(Node node, String label, String comment, VersionManager versionManager)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			// check whether the node supports versioning
 			VersionHistory versionHistory = null;
+			// check whether the node supports versioning
 			try {
 				versionHistory = versionManager.getVersionHistory(node.getPath());
-			} catch (UnsupportedRepositoryOperationException uroe) {
-				// does not support versioning
-				return;
+			} catch (UnsupportedRepositoryOperationException uroe) { // does not support versioning yet
+				String primaryNodeType = node.getPrimaryNodeType().getName();
+				if (primaryNodeType.equals(WasabiNodeType.ROOM) || primaryNodeType.equals(WasabiNodeType.CONTAINER)
+						|| primaryNodeType.equals(WasabiNodeType.DOCUMENT)) { // but should support it
+					// make it versionable
+					node.addMixin(NodeType.MIX_VERSIONABLE);
+					node.getSession().save();
+					versionHistory = versionManager.getVersionHistory(node.getPath());
+				} else { // does not and should not support versioning
+					return;
+				}
 			}
 
 			// deal with the subtree first
@@ -69,7 +79,7 @@ public class VersioningServiceImpl {
 	 * @param label
 	 * @param versionManager
 	 * @throws UnexpectedInternalProblemException
-	 * @throws ConcurrentModificationException 
+	 * @throws ConcurrentModificationException
 	 */
 	public static void restoreVersionRecursively(Node node, String label, VersionManager versionManager)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
@@ -88,6 +98,9 @@ public class VersioningServiceImpl {
 			}
 
 			// restore the version
+			if (node.getSession().hasPendingChanges()) {
+				node.getSession().save();
+			}
 			versionManager.restoreByLabel(node.getPath(), label, true);
 			versionManager.checkout(node.getPath());
 		} catch (InvalidItemStateException iise) {
