@@ -26,12 +26,10 @@ import java.io.InputStream;
 import javax.jcr.Node;
 
 import de.wasabibeans.framework.server.core.exception.DocumentContentException;
-import de.wasabibeans.framework.server.core.exception.TargetDoesNotExistException;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 
 public interface ContentStore {
 
-	InputStream getContent(Node ref) throws UnexpectedInternalProblemException, DocumentContentException,
-			TargetDoesNotExistException;
+	InputStream getContent(Node ref) throws UnexpectedInternalProblemException, DocumentContentException;
 
 }
