@@ -131,6 +131,7 @@ public class UserService extends ObjectService implements UserServiceLocal, User
 		Session s = jcr.getJCRSession();
 		Vector<WasabiUserDTO> users = new Vector<WasabiUserDTO>();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
+		
 		try {
 
 			/* Authorization - Begin */
