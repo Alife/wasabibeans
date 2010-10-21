@@ -32,6 +32,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
+import de.wasabibeans.framework.server.core.authentication.FlushLoginCache;
 import de.wasabibeans.framework.server.core.authorization.WasabiCertificate;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserACL;
 import de.wasabibeans.framework.server.core.authorization.WasabiUserSQL;
@@ -437,6 +438,9 @@ public class UserServiceImpl {
 
 			// Database
 			WasabiUserSQL.setStatus(userNode, active);
+			
+			//Flush login cache
+			FlushLoginCache.flushLoginCache(userNode);
 
 			if (doJcrSave) {
 				s.save();

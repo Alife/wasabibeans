@@ -55,6 +55,9 @@ public class WasabiExceptionMessages {
 	/* JMS */
 	public final static String JMS_PROVIDER_FAILURE = "Internal Problem: Could not use JMS provider as expected.";
 	public final static String JMS_DESTINATION_INVALID = "The given jmsDestinationName does not belong to an existing JMS &0.";
+	
+	/* JMX */
+	public final static String JMX_FLUSH_CACHE = "Some problem occours during flush of the login cache.";
 
 	/* Database, SQL */
 	public final static String DB_FAILURE = "Internal Problem: Could not use database as expected.";
