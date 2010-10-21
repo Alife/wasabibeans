@@ -49,14 +49,13 @@ public class SqlLoginModule extends UsernamePasswordLoginModule {
 		return new Group[0];
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected String getUsersPassword() throws LoginException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
-			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler(WasabiUserEntry.class);
+			ResultSetHandler<List<WasabiUserEntry>> h = new BeanListHandler<WasabiUserEntry>(WasabiUserEntry.class);
 			List<WasabiUserEntry> result = run.query(WasabiConstants.SQL_LOGIN_MODULE_QUERY, h, getUsername());
 
 			if (result.size() > 1) {

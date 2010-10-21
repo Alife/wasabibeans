@@ -35,7 +35,7 @@ public interface WasabiConstants {
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
-	public final static boolean ACL_CERTIFICATE_ENABLE = true;
+	public final static boolean ACL_CERTIFICATE_ENABLE = false;
 	public final static int ACL_TIME_ENTRY_CLEANUP = 20;
 
 	/* Storage size of certificate maps */
@@ -77,7 +77,7 @@ public interface WasabiConstants {
 
 	public final static int preferredLoginModule = USE_JCR_LOGIN_MODULE;
 
-	public final static String SQL_LOGIN_MODULE_QUERY = "SELECT `password` FROM `wasabi_user` WHERE `username`=?";
+	public final static String SQL_LOGIN_MODULE_QUERY = "SELECT `password` FROM `wasabi_user` WHERE `username`=? AND `status`=1";
 
 	/* JNDI datasources */
 	public final static String JNDI_SQL_DATASOURCE = "java:/wasabi";

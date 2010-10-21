@@ -38,8 +38,10 @@ public interface TestHelperRemote {
 
 	public Vector<String> createManyNodes(int number) throws Exception;
 
-	public Vector<String> getChildrenByFilter(String parentId) throws Exception;
+	public void deactivateUser(String user) throws Exception;
 	
+	public Vector<String> getChildrenByFilter(String parentId) throws Exception;
+
 	public Vector<String> getChildrenByQuery(String parentId) throws Exception;
 
 	public Vector<String> getManyNodesByIdFilter(Vector<String> nodeIds) throws Exception;
@@ -67,7 +69,7 @@ public interface TestHelperRemote {
 	public void initScheduledTasks() throws Exception;
 
 	public void initTagServiceTest() throws Exception;
-
+	
 	public void initTestUser() throws Exception;
 	
 	public WasabiUserDTO initUserServiceTest() throws Exception;

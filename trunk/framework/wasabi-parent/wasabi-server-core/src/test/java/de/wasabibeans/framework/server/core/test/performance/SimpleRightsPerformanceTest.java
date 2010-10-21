@@ -76,22 +76,22 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-		utx.begin();
+		//utx.begin();
 		for (long i = 0; i < numberOfRooms; i++) {
 			roomService().create(String.valueOf(i), usersHome);
-			System.out.println("create room " + i);
+			//System.out.println("create room " + i);
 		}
-		utx.commit();
+		//utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
 
-		// utx.begin();
+		//utx.begin();
 		for (int j = 0; j < 2000; j++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
-		// utx.commit();
+	    //utx.commit();
 		long endTimeRead = java.lang.System.currentTimeMillis();
 
 		System.out.println("Write pass 1: " + (endTime - startTime));

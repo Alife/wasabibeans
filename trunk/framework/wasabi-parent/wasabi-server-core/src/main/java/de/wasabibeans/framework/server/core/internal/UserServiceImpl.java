@@ -435,6 +435,9 @@ public class UserServiceImpl {
 			userNode.setProperty(WasabiNodeProperty.ACTIVE, active);
 			ObjectServiceImpl.modified(userNode, s, false, callerPrincipal, false);
 
+			// Database
+			WasabiUserSQL.setStatus(userNode, active);
+
 			if (doJcrSave) {
 				s.save();
 			}

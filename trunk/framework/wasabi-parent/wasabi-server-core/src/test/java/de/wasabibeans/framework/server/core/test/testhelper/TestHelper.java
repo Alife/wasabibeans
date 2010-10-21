@@ -38,6 +38,7 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import de.wasabibeans.framework.server.core.bean.UserService;
 import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiNodeProperty;
 import de.wasabibeans.framework.server.core.common.WasabiPermission;
@@ -392,5 +393,17 @@ public class TestHelper implements TestHelperRemote, TestHelperLocal {
 	@PreDestroy
 	public void preDestroy() {
 		jndi.close();
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void deactivateUser(String user) throws Exception {
+		Session s = jcr.getJCRSession();
+		try {
+			Node userNode = UserServiceImpl.getUserByName(user, s);
+			UserServiceImpl.setStatus(userNode, false, s, true, user);
+		} finally {
+			jcr.cleanup(true);
+		}
 	}
 }

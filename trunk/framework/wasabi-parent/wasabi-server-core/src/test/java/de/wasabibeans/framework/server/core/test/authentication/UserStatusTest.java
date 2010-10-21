@@ -19,12 +19,7 @@
  *  Further information are online available at: http://www.wasabibeans.de
  */
 
-package de.wasabibeans.framework.server.core.test.authorization;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+package de.wasabibeans.framework.server.core.test.authentication;
 
 import org.jboss.arquillian.api.Run;
 import org.jboss.arquillian.api.RunModeType;
@@ -33,12 +28,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
-import de.wasabibeans.framework.server.core.exception.WasabiException;
 import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class MySQLTest extends WasabiRemoteTest {
+public class UserStatusTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -47,8 +41,13 @@ public class MySQLTest extends WasabiRemoteTest {
 		testhelper.initDatabase();
 		rootRoom = testhelper.initRepository();
 		testhelper.initTestUser();
+		testhelper.deactivateUser("user");
 
-		reWaCon.login("user", "user");
+		try {
+			reWaCon.login("user", "user");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	@AfterMethod
@@ -57,34 +56,19 @@ public class MySQLTest extends WasabiRemoteTest {
 	}
 
 	@Test
-	public void MySQLTest() throws WasabiException, SQLException, ClassNotFoundException {
-		final String dbDrv = "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource";
-		final String dbUrl = "jdbc:mysql://localhost:3306/wasabibeans";
-		final String dbUsr = "wasabi";
-		final String dbPwd = "wasabi";
-		final String dbTyp = "ENGINE=InnoDB";
-		final String dbTbl = "MeineTestTabelle1";
+	public void UserLoginTest() throws Exception {
+		System.out.println("=== UserStatusTest() ===");
 
-		Connection cn = null;
-		Statement st = null;
+		WasabiUserDTO user = userService().getUserByName("user");
+
+		System.out.print("Getting status of user:");
 		try {
-			Class.forName(dbDrv);
-			cn = (Connection) DriverManager.getConnection(dbUrl, dbUsr, dbPwd);
-			cn.setAutoCommit(false);
-			System.out.println("AutoCommit=" + cn.getAutoCommit() + ", TransactionIsolation="
-					+ cn.getTransactionIsolation());
-
-		} finally {
-			try {
-				if (null != st)
-					st.close();
-			} catch (Exception ex) {
-			}
-			try {
-				if (null != cn)
-					cn.close();
-			} catch (Exception ex) {
-			}
+			userService().getStatus(user);
+			System.out.println(userService().getStatus(user).getValue());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
+
+		System.out.println("===========================");
 	}
 }
