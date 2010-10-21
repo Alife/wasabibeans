@@ -56,6 +56,26 @@ public class WasabiUserSQL {
 		}
 	}
 
+	public static void setStatus(Node userNode, boolean status) throws UnexpectedInternalProblemException {
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
+
+		try {
+			int stat = 0;
+			if (status)
+				stat = 1;
+
+			String user = ObjectServiceImpl.getName(userNode);
+			String setStatusQuery = "UPDATE `wasabi_user` SET `status`=? WHERE `username`=?";
+
+			run.update(setStatusQuery, stat, user);
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
+		}
+	}
+
 	public static void SqlQueryForCreate(String name, String password) throws UnexpectedInternalProblemException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());

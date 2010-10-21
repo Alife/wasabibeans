@@ -63,8 +63,8 @@ public class WasabiManager {
 			/* Create user table and entries */
 			String dropWasabiUserTableQuery = "DROP TABLE IF EXISTS wasabi_user";
 			String createWasabiUserTableQuery = "CREATE TABLE IF NOT EXISTS wasabi_user ("
-					+ "`username` varchar(255) NOT NULL," + "`password` varchar(64) NOT NULL,"
-					+ "PRIMARY KEY (username)) ENGINE = InnoDB ;";
+					+ "`username` varchar(255) NOT NULL," + " `password` varchar(64) NOT NULL,"
+					+ " `status` bit(1) NOT NULL DEFAULT 1," + " PRIMARY KEY (username)) ENGINE = InnoDB ;";
 
 			run.update(dropWasabiUserTableQuery);
 			run.update(createWasabiUserTableQuery);
