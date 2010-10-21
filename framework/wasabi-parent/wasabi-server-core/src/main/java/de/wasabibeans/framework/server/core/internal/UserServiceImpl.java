@@ -320,8 +320,10 @@ public class UserServiceImpl {
 	public static void remove(Node userNode, Session s, boolean doJcrSave, String callerPrincipal)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			/* ACL Environment - Begin */
+			// Database
 			WasabiUserSQL.SqlQueryForRemove(userNode);
+
+			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
 				WasabiUserSQL.removeRights(userNode);
 			/* ACL Environment - End */
@@ -333,6 +335,9 @@ public class UserServiceImpl {
 						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
 						0, 0, 0, 0 });
 			/* WasabiCertificate - End */
+
+			// Flush login cache
+			FlushLoginCache.flushLoginCache(userNode);
 
 			// JCR
 			try {
@@ -368,6 +373,9 @@ public class UserServiceImpl {
 
 			// Database
 			WasabiUserSQL.SqlQueryForRename(wasabiUser, name);
+
+			// Flush login cache
+			FlushLoginCache.flushLoginCache(userNode);
 
 			if (doJcrSave) {
 				s.save();
@@ -438,8 +446,8 @@ public class UserServiceImpl {
 
 			// Database
 			WasabiUserSQL.setStatus(userNode, active);
-			
-			//Flush login cache
+
+			// Flush login cache
 			FlushLoginCache.flushLoginCache(userNode);
 
 			if (doJcrSave) {

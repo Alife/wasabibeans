@@ -30,6 +30,7 @@ import javax.management.ObjectName;
 
 import org.jboss.security.SimplePrincipal;
 
+import de.wasabibeans.framework.server.core.common.WasabiConstants;
 import de.wasabibeans.framework.server.core.common.WasabiExceptionMessages;
 import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemException;
 import de.wasabibeans.framework.server.core.internal.ObjectServiceImpl;
@@ -40,13 +41,13 @@ public class FlushLoginCache {
 		try {
 			String username = ObjectServiceImpl.getName(userNode);
 
-			String domain = "jmx-console";
+			String domain = WasabiConstants.JMX_SECURITY_DOMAIN;
 			Principal user = new SimplePrincipal(username);
 			ObjectName jaasMgr = new ObjectName("jboss.security:service=JaasSecurityManager");
 			Object[] params = { domain, user };
 			String[] signature = { "java.lang.String", Principal.class.getName() };
 			MBeanServer server = (MBeanServer) MBeanServerFactory.findMBeanServer(null).get(0);
-			server.invoke(jaasMgr, "flushAuthenticationCache", params, signature);
+			server.invoke(jaasMgr, "flushAuthenticationCache", params, signature);		
 		} catch (Exception e) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JMX_FLUSH_CACHE, e);
 		}

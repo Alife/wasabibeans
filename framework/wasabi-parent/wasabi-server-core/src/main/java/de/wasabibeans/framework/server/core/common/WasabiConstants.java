@@ -58,6 +58,9 @@ public interface WasabiConstants {
 
 	/* JMS for asynchronous pipelines */
 	public final static String JMS_QUEUE_PIPELINE = "queue/pipeline";
+	
+	/* JMX */
+	public final static String JMX_SECURITY_DOMAIN = "wasabi";
 
 	/* Enumerations */
 	public enum SortType {
