@@ -140,19 +140,19 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		System.out.print("Deactivating inheritance for inheritanceTestRoom... ");
 		aclService().deactivateInheritance(inheritanceTestRoom);
 		System.out.println("done.");
-		
+
 		aclService().remove(
 				inheritanceTestRoom,
 				user,
-				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
-						WasabiPermission.EXECUTE, WasabiPermission.INSERT, WasabiPermission.WRITE });
-		
+				new int[] { WasabiPermission.VIEW, WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.INSERT, WasabiPermission.WRITE });
+
 		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 
 		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
 		aclService().create(inheritanceTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
-		
+
 		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 
 		System.out.print("Creating subRoom1 at inheritanceTestRoom... ");
@@ -180,7 +180,7 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		System.out.print("Setting INSERT as userRight for inheritanceTestRoom... ");
 		aclService().create(inheritanceTestRoom, user, WasabiPermission.INSERT, true);
 		System.out.println("done.");
-		
+
 		System.out.print("Setting COMMENT as userRight for inheritanceTestRoom... ");
 		aclService().create(inheritanceTestRoom, user, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
@@ -195,7 +195,71 @@ public class ACLIneritanceTest extends WasabiRemoteTest {
 		displayACLEntry(inheritanceTestRoom, "inheritanceTestRoom");
 		displayACLEntry(subRoom1, "subRoom1");
 		displayACLEntry(subSubRoom1, "subSubRoom1");
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void inheritanceTest3() throws WasabiException {
+		System.out.println("=== inheritanceTest3() ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+
+		System.out.print("Creating inheritanceTestRoom at usersHome... ");
+		WasabiRoomDTO inheritanceTestRoom = null;
+		try {
+			inheritanceTestRoom = roomService().create("inheritanceTestRoom", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Deactivating inheritance for inheritanceTestRoom... ");
+		aclService().deactivateInheritance(inheritanceTestRoom);
+		System.out.println("done.");
+
+		aclService().remove(
+				inheritanceTestRoom,
+				user,
+				new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE,
+						WasabiPermission.WRITE });
+
+		System.out.print("Creating room1 at inheritanceTestRoom... ");
+		WasabiRoomDTO room1 = null;
+		try {
+			room1 = roomService().create("room1", inheritanceTestRoom);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Creating room2 at room1... ");
+		WasabiRoomDTO room2 = null;
+		try {
+			room2 = roomService().create("room2", room1);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting COMMENT forbiddance as userRight for inheritanceTestRoom... ");
+		aclService().create(inheritanceTestRoom, user, WasabiPermission.COMMENT, false);
+		System.out.println("done.");
+
+		System.out.print("Setting COMMENT as userRight for room1... ");
+		aclService().create(room1, user, WasabiPermission.COMMENT, true);
+		System.out.println("done.");
 		
+		displayACLEntry(room2, "room2");
+
+		System.out.print("Using hasPermission: ");
+		try {
+			System.out.println(authorizationService().hasPermission(room2, user, WasabiPermission.COMMENT));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
 		System.out.println("===========================");
 	}
 

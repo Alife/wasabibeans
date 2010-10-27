@@ -215,7 +215,7 @@ public class WasabiAuthorizer {
 					+ "`view`, `read`, `comment`, `execute`, `insert`, `write`, `grant`, " + "`priority`,`end_time` "
 					+ "FROM `wasabi_rights` WHERE " + "`object_id`=? " + " AND ((`start_time`<=" + time
 					+ " AND `end_time`>=" + time + ") OR (`start_time`=0 AND `end_time`=0)) " + "AND " + identityCheck
-					+ "ORDER BY `priority`";
+					+ "ORDER BY `priority`,`distance`";
 
 			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
 			List<WasabiACLEntry> result = run.query(getRights, h, objectUUID);
@@ -239,14 +239,23 @@ public class WasabiAuthorizer {
 						}
 						break;
 					case WasabiACLPriority.INHERITED_USER_TIME_RIGHT:
-						if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
-							return true;
-						else if (right == -1)
-							return false;
-						else if (right == 1) {
-							rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
-							if (endTime > maxLifeTime)
-								maxLifeTime = endTime;
+						if (WasabiConstants.ACL_DISTANCE_CHECK) {
+							if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1)
+								return true;
+						} else {
+							if (rights[WasabiACLPriority.EXPLICIT_USER_TIME_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1) {
+								rights[WasabiACLPriority.INHERITED_USER_TIME_RIGHT] = 1;
+								if (endTime > maxLifeTime)
+									maxLifeTime = endTime;
+							}
 						}
 						break;
 					case WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT:
@@ -261,14 +270,23 @@ public class WasabiAuthorizer {
 						}
 						break;
 					case WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT:
-						if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
-							return true;
-						else if (right == -1)
-							return false;
-						else if (right == 1) {
-							rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
-							if (endTime > maxLifeTime)
-								maxLifeTime = endTime;
+						if (WasabiConstants.ACL_DISTANCE_CHECK) {
+							if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1)
+								return true;
+						} else {
+							if (rights[WasabiACLPriority.EXPLICIT_GROUP_TIME_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1) {
+								rights[WasabiACLPriority.INHERITED_GROUP_TIME_RIGHT] = 1;
+								if (endTime > maxLifeTime)
+									maxLifeTime = endTime;
+							}
 						}
 						break;
 					case WasabiACLPriority.EXPLICIT_USER_RIGHT:
@@ -280,10 +298,17 @@ public class WasabiAuthorizer {
 							return true;
 						break;
 					case WasabiACLPriority.INHERITED_USER_RIGHT:
-						if (right == -1)
-							return false;
-						else if (right == 1)
-							rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
+						if (WasabiConstants.ACL_DISTANCE_CHECK) {
+							if (right == -1)
+								return false;
+							else if (right == 1)
+								return true;
+						} else {
+							if (right == -1)
+								return false;
+							else if (right == 1)
+								rights[WasabiACLPriority.INHERITED_USER_RIGHT] = 1;
+						}
 						break;
 					case WasabiACLPriority.EXPLICIT_GROUP_RIGHT:
 						if (rights[WasabiACLPriority.INHERITED_USER_RIGHT] == 1) {
@@ -294,12 +319,21 @@ public class WasabiAuthorizer {
 							rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] = 1;
 						break;
 					case WasabiACLPriority.INHERITED_GROUP_RIGHT:
-						if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
-							return true;
-						else if (right == -1)
-							return false;
-						else if (right == 1)
-							rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] = 1;
+						if (WasabiConstants.ACL_DISTANCE_CHECK) {
+							if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1)
+								return true;
+						} else {
+							if (rights[WasabiACLPriority.EXPLICIT_GROUP_RIGHT] == 1)
+								return true;
+							else if (right == -1)
+								return false;
+							else if (right == 1)
+								rights[WasabiACLPriority.INHERITED_GROUP_RIGHT] = 1;
+						}
 						break;
 					}
 				}

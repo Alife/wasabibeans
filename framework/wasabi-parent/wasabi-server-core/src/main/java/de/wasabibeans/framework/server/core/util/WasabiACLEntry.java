@@ -30,7 +30,7 @@ public class WasabiACLEntry {
 	private String parent_id = "";
 	private long start_time, end_time;
 	private String user_id = "";
-	private int view, read, insert, write, comment, execute, grant, priority;
+	private int view, read, insert, write, comment, execute, grant, priority, distance;
 	private String wasabi_type = "";
 
 	public WasabiACLEntry() {
@@ -38,6 +38,10 @@ public class WasabiACLEntry {
 
 	public int getComment() {
 		return this.comment;
+	}
+
+	public int getDistance() {
+		return this.distance;
 	}
 
 	public long getEnd_Time() {
@@ -106,6 +110,10 @@ public class WasabiACLEntry {
 
 	public void setComment(int comment) {
 		this.comment = comment;
+	}
+
+	public void setDistance(int distance) {
+		this.distance = distance;
 	}
 
 	public void setEnd_Time(long end_time) {

@@ -94,6 +94,7 @@ public class WasabiManager {
 					+ "`end_time` bigint(20) NOT NULL DEFAULT '0',"
 					+ "`inheritance_id` varchar(64) NOT NULL,"
 					+ "`priority` tinyint(2) NOT NULL,"
+					+ "`distance` tinyint(2) NOT NULL,"
 					+ "`wasabi_type` enum('ROOM', 'CONTAINER', 'DOCUMENT', 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
 					+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
 
