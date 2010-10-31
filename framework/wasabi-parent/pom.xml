@@ -44,6 +44,28 @@
 
 	</repositories>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <compilerVersion>1.6</compilerVersion>
+                        <target>1.6</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                     <groupId>org.apache.maven.plugins</groupId>
+                     <artifactId>maven-pmd-plugin</artifactId>
+                     <configuration>
+                         <targetJdk>1.6</targetJdk>
+                     </configuration>
+                 </plugin>
+             </plugins>
+        </pluginManagement>
+    </build>
+
 	<modules>
 		<module>wasabi-ear</module>
 		<module>wasabi-server-core</module>
