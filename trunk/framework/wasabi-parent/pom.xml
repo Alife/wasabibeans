@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.wasabibeans.framework</groupId>
 	<artifactId>wasabi-parent</artifactId>
@@ -12,6 +12,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<skipTests>true</skipTests>
+		<targetJdk>1.6</targetJdk>
 	</properties>
 
 	<repositories>
@@ -34,37 +35,37 @@
 			</snapshots>
 		</repository>
 		<repository>
-            <id>gson</id>
-            <url>http://google-gson.googlecode.com/svn/mavenrepo/</url>
-        </repository>
-        <repository>
-            <id>mandubian-mvn</id>
-            <url>http://mandubian-mvn.googlecode.com/svn/trunk/mandubian-mvn/repository</url>
-        </repository>
+			<id>gson</id>
+			<url>http://google-gson.googlecode.com/svn/mavenrepo/</url>
+		</repository>
+		<repository>
+			<id>mandubian-mvn</id>
+			<url>http://mandubian-mvn.googlecode.com/svn/trunk/mandubian-mvn/repository</url>
+		</repository>
 
 	</repositories>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <compilerVersion>1.6</compilerVersion>
-                        <target>1.6</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                     <groupId>org.apache.maven.plugins</groupId>
-                     <artifactId>maven-pmd-plugin</artifactId>
-                     <configuration>
-                         <targetJdk>1.6</targetJdk>
-                     </configuration>
-                 </plugin>
-             </plugins>
-        </pluginManagement>
-    </build>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<compilerVersion>${targetJdk}</compilerVersion>
+						<target>${targetJdk}</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-pmd-plugin</artifactId>
+					<configuration>
+						<targetJdk>${targetJdk}</targetJdk>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 	<modules>
 		<module>wasabi-ear</module>
