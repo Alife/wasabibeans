@@ -175,7 +175,8 @@ public class ACLServiceImpl {
 	/**
 	 * Creates an template ACL entry for a given location.
 	 * 
-	 * @param wasabiLocationNode
+	 * @param locationNode
+	 * @param identityNode
 	 * @param wasabiType
 	 * @param permission
 	 * @param allowance
@@ -183,17 +184,17 @@ public class ACLServiceImpl {
 	 * @param endTime
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static void createDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
+	public static void createDefault(Node locationNode, Node identityNode, WasabiType wasabiType, int[] permission,
 			boolean[] allowance, long startTime, long endTime) throws UnexpectedInternalProblemException {
 		try {
-			if (!wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
-					&& !wasabiLocationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
+			if (!locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
 				throw new IllegalArgumentException(WasabiExceptionMessages
 						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
 			}
 
-			updateDefaultRights(wasabiLocationNode, wasabiType, permission, allowanceConverter(allowance), startTime,
-					endTime);
+			updateDefaultRights(locationNode, identityNode, wasabiType, permission, allowanceConverter(allowance),
+					startTime, endTime);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -1045,7 +1046,7 @@ public class ACLServiceImpl {
 						inheritance = objectID;
 
 					if (distance == -1)
-						distance = dist+1;
+						distance = dist + 1;
 
 					if (userUUID.length() > 0) {
 						propagateUserInheritance(objectUUID, parentUUID, userUUID, view, read, comment, execute,
@@ -1277,22 +1278,23 @@ public class ACLServiceImpl {
 	/**
 	 * Removes a template ACL entry for a given locationNode and identityNode.
 	 * 
-	 * @param wasabiLocationNode
+	 * @param locationNode
+	 * @param identityNode
 	 * @param wasabiType
 	 * @param permission
 	 * @param startTime
 	 * @param endTime
 	 * @throws UnexpectedInternalProblemException
 	 */
-	public static void removeDefault(Node wasabiLocationNode, WasabiType wasabiType, int[] permission, long startTime,
-			long endTime) throws UnexpectedInternalProblemException {
+	public static void removeDefault(Node locationNode, Node identityNode, WasabiType wasabiType, int[] permission,
+			long startTime, long endTime) throws UnexpectedInternalProblemException {
 		int[] allowance = new int[permission.length];
 
 		for (int i = 0; i < allowance.length; i++)
 			allowance[i] = 0;
 
 		try {
-			updateDefaultRights(wasabiLocationNode, wasabiType, permission, allowance, startTime, endTime);
+			updateDefaultRights(locationNode, identityNode, wasabiType, permission, allowance, startTime, endTime);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -1612,7 +1614,7 @@ public class ACLServiceImpl {
 	/**
 	 * Updates template rights.
 	 * 
-	 * @param wasabiLocationNode
+	 * @param locationNode
 	 * @param wasabiType
 	 * @param permission
 	 * @param allowance
@@ -1621,24 +1623,27 @@ public class ACLServiceImpl {
 	 * @throws RepositoryException
 	 * @throws UnexpectedInternalProblemException
 	 */
-	private static void updateDefaultRights(Node wasabiLocationNode, WasabiType wasabiType, int[] permission,
-			int[] allowance, long startTime, long endTime) throws RepositoryException,
+	private static void updateDefaultRights(Node locationNode, Node identityNode, WasabiType wasabiType,
+			int[] permission, int[] allowance, long startTime, long endTime) throws RepositoryException,
 			UnexpectedInternalProblemException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
-			String locationUUID = ObjectServiceImpl.getUUID(wasabiLocationNode);
+			String locationUUID = ObjectServiceImpl.getUUID(locationNode);
+			String identityUUID = "";
+			if (identityNode != null)
+				identityUUID = ObjectServiceImpl.getUUID(identityNode);
 
 			int view = 0, read = 0, insert = 0, write = 0, execute = 0, comment = 0, grant = 0;
 
-			String getDefaultACLEntryQuery = "SELECT * FROM wasabi_template_rights "
-					+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
+			String getDefaultACLEntryQuery = "SELECT * FROM wasabi_template_rights " + "WHERE `location_id`=? "
+					+ "AND `identity_id`=? " + "AND `start_time`=? " + "AND `end_time`=? " + "AND `wasabi_type`=?";
 
 			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
 					WasabiACLEntryTemplate.class);
-			List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntryQuery, h, locationUUID, startTime,
-					endTime, wasabiType.toString());
+			List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntryQuery, h, locationUUID, identityUUID,
+					startTime, endTime, wasabiType.toString());
 
 			if (!result.isEmpty()) {
 				view = result.get(0).getView();
@@ -1677,14 +1682,15 @@ public class ACLServiceImpl {
 
 				if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0 && grant == 0) {
 					String deleteDefaultACLEntryQuery = "DELETE FROM wasabi_template_rights "
-							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
-					run.update(deleteDefaultACLEntryQuery, locationUUID, startTime, endTime, wasabiType.toString());
+							+ "WHERE `location_id`=? AND `identity_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
+					run.update(deleteDefaultACLEntryQuery, locationUUID, identityUUID, startTime, endTime, wasabiType
+							.toString());
 				} else {
 					String updateDefaultACLEntryQuery = "UPDATE wasabi_template_rights SET "
 							+ "`view`=?, `read`=?, `insert`=?, `write`=?, `execute`=?, `comment`=?, `grant`=?"
-							+ " WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
+							+ " WHERE `location_id`=? AND `identity_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
 					run.update(updateDefaultACLEntryQuery, view, read, insert, write, execute, comment, grant,
-							locationUUID, startTime, endTime, wasabiType.toString());
+							locationUUID, identityUUID, startTime, endTime, wasabiType.toString());
 				}
 			} else {
 
@@ -1716,14 +1722,17 @@ public class ACLServiceImpl {
 
 				if (view == 0 && read == 0 && insert == 0 && write == 0 && execute == 0 && comment == 0 && grant == 0) {
 					String deleteDefaultACLEntryQuery = "DELETE FROM wasabi_template_rights "
-							+ "WHERE `location_id`=? AND `start_time`=? AND `end_time`=? AND `wasabi_type`=?";
-					run.update(deleteDefaultACLEntryQuery, locationUUID, startTime, endTime, wasabiType.toString());
+							+ "WHERE `location_id`=? " + "AND `identity_id`=? " + "AND `start_time`=? "
+							+ "AND `end_time`=? " + "AND `wasabi_type`=?";
+					run.update(deleteDefaultACLEntryQuery, locationUUID, identityUUID, startTime, endTime, wasabiType
+							.toString());
 				} else {
 					String insertUserACLEntryQuery = "INSERT INTO wasabi_template_rights "
-							+ "(`location_id`, `wasabi_type`, `view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`)"
-							+ " VALUES (?,?,?,?,?,?,?,?,?,?,?)";
-					run.update(insertUserACLEntryQuery, locationUUID, wasabiType.toString(), view, read, insert, write,
-							execute, comment, grant, startTime, endTime);
+							+ "(`location_id`, `identity_id`, `wasabi_type`, "
+							+ "`view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, `start_time`, `end_time`)"
+							+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+					run.update(insertUserACLEntryQuery, locationUUID, identityUUID, wasabiType.toString(), view, read,
+							insert, write, execute, comment, grant, startTime, endTime);
 				}
 			}
 		} catch (SQLException e) {

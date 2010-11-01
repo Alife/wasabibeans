@@ -179,6 +179,8 @@ public class TransferManager {
 			WasabiACLEntryTemplate wasabiDefaultACLEntry) {
 		WasabiACLEntryTemplateDTO dto = new WasabiACLEntryTemplateDTO();
 		dto.setId(wasabiDefaultACLEntry.getId());
+		dto.setLocationID(wasabiDefaultACLEntry.getLocation_Id());
+		dto.setIdentityID(wasabiDefaultACLEntry.getIdentity_Id());
 		dto.setWasabiType(wasabiDefaultACLEntry.getWasabi_Type());
 		dto.setView(wasabiDefaultACLEntry.getView());
 		dto.setRead(wasabiDefaultACLEntry.getRead());

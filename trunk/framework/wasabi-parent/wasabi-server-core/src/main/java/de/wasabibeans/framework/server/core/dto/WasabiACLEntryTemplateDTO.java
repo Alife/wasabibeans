@@ -37,120 +37,29 @@ public class WasabiACLEntryTemplateDTO implements Serializable {
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	private static final long serialVersionUID = -3013164768060621298L;
 
+	protected int comment = 0;
+
+	protected long endTime = 0;
+
+	protected int execute = 0;
+	protected int grant = 0;
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected Long id = 0L;
+	protected String identityID;
+	protected int insert = 0;
+	protected String locationID;
+	protected int read = 0;
+	protected long startTime = 0;
 
+	protected int view = 0;
 	@XmlElement(namespace = "de.wasabibeans.framework.server.core.dto", required = true)
 	protected WasabiIdentityDTO wasabiIdentity;
 
-	protected int view = 0;
-	protected int read = 0;
-	protected int write = 0;
-	protected int insert = 0;
-	protected int execute = 0;
-	protected int comment = 0;
-	protected int grant = 0;
-
-	protected long startTime = 0;
-	protected long endTime = 0;
-
 	protected String wasabiType;
+	protected int write = 0;
 
 	protected WasabiACLEntryTemplateDTO() {
 
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	protected void setId(Long id) {
-		this.id = id;
-	}
-
-	protected void setView(int view) {
-		this.view = view;
-	}
-
-	protected void setRead(int read) {
-		this.read = read;
-	}
-
-	protected void setWrite(int write) {
-		this.write = write;
-	}
-
-	protected void setInsert(int insert) {
-		this.insert = insert;
-	}
-
-	protected void setExecute(int execute) {
-		this.execute = execute;
-	}
-
-	protected void setComment(int comment) {
-		this.comment = comment;
-	}
-
-	protected void setGrant(int grant) {
-		this.grant = grant;
-	}
-
-	protected void setWasabiType(String wasabiType) {
-		this.wasabiType = wasabiType;
-	}
-
-	public int getView() {
-		return this.view;
-	}
-
-	public int getRead() {
-		return this.read;
-	}
-
-	public int getInsert() {
-		return this.insert;
-	}
-
-	public int getExecute() {
-		return this.execute;
-	}
-
-	public int getWrite() {
-		return this.write;
-	}
-
-	public int getComment() {
-		return this.comment;
-	}
-
-	public int getGrant() {
-		return this.grant;
-	}
-
-	protected void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
-
-	public long getStartTime() {
-		return this.startTime;
-	}
-
-	protected void setEndTime(long endTime) {
-		this.endTime = endTime;
-	}
-
-	public long getEndTime() {
-		return this.endTime;
-	}
-
-	public WasabiType getWasabiType() {
-		return Enum.valueOf(WasabiType.class, this.wasabiType);
-	}
-
-	@Override
-	public int hashCode() {
-		return (id != null ? id.hashCode() : 0);
 	}
 
 	@Override
@@ -168,6 +77,115 @@ public class WasabiACLEntryTemplateDTO implements Serializable {
 		} else if (!id.equals(other.getId()))
 			return false;
 		return true;
+	}
+
+	public int getComment() {
+		return this.comment;
+	}
+
+	public long getEndTime() {
+		return this.endTime;
+	}
+
+	public int getExecute() {
+		return this.execute;
+	}
+
+	public int getGrant() {
+		return this.grant;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public String getIdentityID() {
+		return this.identityID;
+	}
+
+	public int getInsert() {
+		return this.insert;
+	}
+
+	public String getLocationID() {
+		return this.locationID;
+	}
+
+	public int getRead() {
+		return this.read;
+	}
+
+	public long getStartTime() {
+		return this.startTime;
+	}
+
+	public int getView() {
+		return this.view;
+	}
+
+	public WasabiType getWasabiType() {
+		return Enum.valueOf(WasabiType.class, this.wasabiType);
+	}
+
+	public int getWrite() {
+		return this.write;
+	}
+
+	@Override
+	public int hashCode() {
+		return (id != null ? id.hashCode() : 0);
+	}
+
+	protected void setComment(int comment) {
+		this.comment = comment;
+	}
+
+	protected void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	protected void setExecute(int execute) {
+		this.execute = execute;
+	}
+
+	protected void setGrant(int grant) {
+		this.grant = grant;
+	}
+
+	protected void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setIdentityID(String identityID) {
+		this.identityID = identityID;
+	}
+
+	protected void setInsert(int insert) {
+		this.insert = insert;
+	}
+
+	public void setLocationID(String locationID) {
+		this.locationID = locationID;
+	}
+
+	protected void setRead(int read) {
+		this.read = read;
+	}
+
+	protected void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	protected void setView(int view) {
+		this.view = view;
+	}
+
+	protected void setWasabiType(String wasabiType) {
+		this.wasabiType = wasabiType;
+	}
+
+	protected void setWrite(int write) {
+		this.write = write;
 	}
 
 	@Override

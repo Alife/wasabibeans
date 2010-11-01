@@ -24,40 +24,21 @@ package de.wasabibeans.framework.server.core.util;
 public class WasabiACLEntryTemplate {
 
 	private long id;
-	private int view, read, insert, write, comment, execute, grant;
-	private long start_time, end_time;
+	private String identity_id = "";
 	private String location_id = "";
+	private long start_time, end_time;
+	private int view, read, insert, write, comment, execute, grant;
 	private String wasabi_type;
 
 	public WasabiACLEntryTemplate() {
 	}
 
-	public long getId() {
-		return this.id;
-	}
-
-	public String getLocation_ID() {
-		return this.location_id;
-	}
-
-	public int getView() {
-		return this.view;
-	}
-
-	public int getRead() {
-		return this.read;
-	}
-
-	public int getWrite() {
-		return this.write;
-	}
-
-	public int getInsert() {
-		return this.insert;
-	}
-
 	public int getComment() {
 		return this.comment;
+	}
+
+	public long getEnd_Time() {
+		return this.end_time;
 	}
 
 	public int getExecute() {
@@ -68,48 +49,48 @@ public class WasabiACLEntryTemplate {
 		return this.grant;
 	}
 
+	public long getId() {
+		return this.id;
+	}
+
+	public String getIdentity_Id() {
+		return this.identity_id;
+	}
+
+	public int getInsert() {
+		return this.insert;
+	}
+
+	public String getLocation_Id() {
+		return this.location_id;
+	}
+
+	public int getRead() {
+		return this.read;
+	}
+
 	public long getStart_Time() {
 		return this.start_time;
 	}
 
-	public long getEnd_Time() {
-		return this.end_time;
+	public int getView() {
+		return this.view;
 	}
 
 	public String getWasabi_Type() {
 		return this.wasabi_type;
 	}
 
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public void setLocation_ID(String object_id) {
-		this.location_id = object_id;
-	}
-
-	public void setWasabi_Type(String wasabi_type) {
-		this.wasabi_type = wasabi_type;
-	}
-
-	public void setView(int view) {
-		this.view = view;
-	}
-
-	public void setRead(int read) {
-		this.read = read;
-	}
-
-	public void setInsert(int insert) {
-		this.insert = insert;
-	}
-
-	public void setWrite(int write) {
-		this.write = write;
+	public int getWrite() {
+		return this.write;
 	}
 
 	public void setComment(int comment) {
 		this.comment = comment;
+	}
+
+	public void setEnd_Time(long end_time) {
+		this.end_time = end_time;
 	}
 
 	public void setExecute(int execute) {
@@ -120,11 +101,39 @@ public class WasabiACLEntryTemplate {
 		this.grant = grant;
 	}
 
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setIdentity_Id(String identity_id) {
+		this.identity_id = identity_id;
+	}
+
+	public void setInsert(int insert) {
+		this.insert = insert;
+	}
+
+	public void setLocation_Id(String object_id) {
+		this.location_id = object_id;
+	}
+
+	public void setRead(int read) {
+		this.read = read;
+	}
+
 	public void setStart_Time(long start_time) {
 		this.start_time = start_time;
 	}
 
-	public void setEnd_Time(long end_time) {
-		this.end_time = end_time;
+	public void setView(int view) {
+		this.view = view;
+	}
+
+	public void setWasabi_Type(String wasabi_type) {
+		this.wasabi_type = wasabi_type;
+	}
+
+	public void setWrite(int write) {
+		this.write = write;
 	}
 }
