@@ -47,22 +47,6 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 @Run(RunModeType.AS_CLIENT)
 public class ACLCreateDefaultTest extends WasabiRemoteTest {
 
-	@BeforeMethod
-	public void setUpBeforeEachMethod() throws Exception {
-		// initialize test
-		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
-		testhelper.initDatabase();
-		rootRoom = testhelper.initRepository();
-		testhelper.initTestUser();
-
-		reWaCon.login("user", "user");
-	}
-
-	@AfterMethod
-	public void tearDownAfterEachMethod() throws Exception {
-		reWaCon.logout();
-	}
-
 	@Test
 	public void createTest() throws WasabiException {
 		// Create user
@@ -78,7 +62,7 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 		aclService().create(room1, user, new int[] { WasabiPermission.VIEW }, new boolean[] { true });
 		aclService().activateInheritance(room2);
 
-		aclService().createDefault(room2, WasabiType.ROOM,
+		aclService().createDefault(room2, user, WasabiType.ROOM,
 				new int[] { WasabiPermission.COMMENT, WasabiPermission.WRITE }, new boolean[] { true, true });
 
 		WasabiRoomDTO room3 = roomService().create("room3", room2);
@@ -88,6 +72,25 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 		WasabiRoomDTO room4 = roomService().create("room4", room3);
 
 		displayACLEntry(room4, "Raum4");
+	}
+
+	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException {
+		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
+		ACLEntries = aclService().getAclEntries(room);
+
+		System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+
+		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
+			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
+					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
+					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
+					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
+					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
+					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
+					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance()
+					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
+		}
 	}
 
 	private void displayDefaultACLEntry(WasabiLocationDTO room, String name) throws UnexpectedInternalProblemException,
@@ -114,22 +117,19 @@ public class ACLCreateDefaultTest extends WasabiRemoteTest {
 		}
 	}
 
-	private void displayACLEntry(WasabiObjectDTO room, String name) throws UnexpectedInternalProblemException,
-			ObjectDoesNotExistException, NoPermissionException {
-		Vector<WasabiACLEntryDTO> ACLEntries = new Vector<WasabiACLEntryDTO>();
-		ACLEntries = aclService().getAclEntries(room);
+	@BeforeMethod
+	public void setUpBeforeEachMethod() throws Exception {
+		// initialize test
+		TestHelperRemote testhelper = (TestHelperRemote) reWaCon.lookup("TestHelper");
+		testhelper.initDatabase();
+		rootRoom = testhelper.initRepository();
+		testhelper.initTestUser();
 
-		System.out.println("---- ACL entries for object (" + name + ") " + objectService().getUUID(room) + " ----");
+		reWaCon.login("user", "user");
+	}
 
-		for (WasabiACLEntryDTO wasabiACLEntryDTO : ACLEntries) {
-			System.out.println("[id=" + wasabiACLEntryDTO.getId() + ",user_id=" + wasabiACLEntryDTO.getUserId()
-					+ ",group_id=" + wasabiACLEntryDTO.getGroupId() + ",parent_id=" + wasabiACLEntryDTO.getParentId()
-					+ ",view=" + wasabiACLEntryDTO.getView() + ",read=" + wasabiACLEntryDTO.getRead() + ",insert="
-					+ wasabiACLEntryDTO.getInsert() + ",execute=" + wasabiACLEntryDTO.getExecute() + ",write="
-					+ wasabiACLEntryDTO.getWrite() + ",comment=" + wasabiACLEntryDTO.getComment() + ",grant="
-					+ wasabiACLEntryDTO.getGrant() + ",start_time=" + wasabiACLEntryDTO.getStartTime() + ",end_time="
-					+ wasabiACLEntryDTO.getEndTime() + ",inheritance=" + wasabiACLEntryDTO.getInheritance()
-					+ ",inheritance_id=" + wasabiACLEntryDTO.getInheritanceId());
-		}
+	@AfterMethod
+	public void tearDownAfterEachMethod() throws Exception {
+		reWaCon.logout();
 	}
 }

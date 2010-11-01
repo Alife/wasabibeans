@@ -128,7 +128,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 						WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
-		aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		aclService().createDefault(createDefaultTestRoom, null, WasabiType.ROOM, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
 
 		System.out.print("Creating someRoom at createDefaultTestRoom... ");
@@ -148,7 +148,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Setting TemplateRight for createDefaultTestRoom... ");
 		try {
-			aclService().createDefault(createDefaultTestRoom, WasabiType.ROOM, WasabiPermission.EXECUTE, true);
+			aclService().createDefault(createDefaultTestRoom, null, WasabiType.ROOM, WasabiPermission.EXECUTE, true);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -518,12 +518,13 @@ public class ACLServiceTest extends WasabiRemoteTest {
 						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesByTypeTestRoom... ");
-		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, user, WasabiType.ROOM, WasabiPermission.COMMENT,
+				true);
 		System.out.println("done.");
 
 		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesByTypeTestRoom... ");
-		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE,
-				true);
+		aclService().createDefault(getDefaultAclEntriesByTypeTestRoom, user, WasabiType.CONTAINER,
+				WasabiPermission.EXECUTE, true);
 		System.out.println("done.");
 
 		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesByTypeTestRoom...");
@@ -611,11 +612,12 @@ public class ACLServiceTest extends WasabiRemoteTest {
 						WasabiPermission.EXECUTE, WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight COMMENT, type ROOM for getDefaultAclEntriesTestRoom... ");
-		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		aclService().createDefault(getDefaultAclEntriesTestRoom, user, WasabiType.ROOM, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
 
 		System.out.print("Setting TemplateRight EXECUTE, type CONTAINER for getDefaultAclEntriesTestRoom... ");
-		aclService().createDefault(getDefaultAclEntriesTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
+		aclService().createDefault(getDefaultAclEntriesTestRoom, user, WasabiType.CONTAINER, WasabiPermission.EXECUTE,
+				true);
 		System.out.println("done.");
 
 		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
@@ -772,11 +774,11 @@ public class ACLServiceTest extends WasabiRemoteTest {
 						WasabiPermission.WRITE });
 
 		System.out.print("Setting TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
-		aclService().createDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT, true);
+		aclService().createDefault(removeDefaultTestRoom, null, WasabiType.ROOM, WasabiPermission.COMMENT, true);
 		System.out.println("done.");
 
 		System.out.print("Setting TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
-		aclService().createDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
+		aclService().createDefault(removeDefaultTestRoom, null, WasabiType.CONTAINER, WasabiPermission.EXECUTE, true);
 		System.out.println("done.");
 
 		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
@@ -803,7 +805,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 		}
 
 		System.out.print("Removing TemplateRight EXECUTE, type=CONTAINER for removeDefaultTestRoom... ");
-		aclService().removeDefault(removeDefaultTestRoom, WasabiType.CONTAINER, WasabiPermission.EXECUTE);
+		aclService().removeDefault(removeDefaultTestRoom, null, WasabiType.CONTAINER, WasabiPermission.EXECUTE);
 		System.out.println("done.");
 
 		System.out.println("Try to disply default ACLEntries for getDefaultAclEntriesTestRoom...");
@@ -835,7 +837,7 @@ public class ACLServiceTest extends WasabiRemoteTest {
 
 		System.out.print("Removing TemplateRight COMMENT, type=ROOM for removeDefaultTestRoom... ");
 		try {
-			aclService().removeDefault(removeDefaultTestRoom, WasabiType.ROOM, WasabiPermission.COMMENT);
+			aclService().removeDefault(removeDefaultTestRoom, null, WasabiType.ROOM, WasabiPermission.COMMENT);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
