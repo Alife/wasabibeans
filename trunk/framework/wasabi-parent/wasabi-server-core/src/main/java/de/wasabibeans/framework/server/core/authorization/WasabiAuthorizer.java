@@ -179,7 +179,8 @@ public class WasabiAuthorizer {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
 
-			return permissionFilter(objectUUID, userUUID, userNode, wasabiType, permission, s);
+			return permissionFilter1(objectUUID, userUUID, userNode, wasabiType, permission, s);
+			// return permissionFilter2(objectUUID, userUUID, userNode, wasabiType, permission, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
@@ -934,6 +935,7 @@ public class WasabiAuthorizer {
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
+
 		return allGroups;
 	}
 
@@ -1064,7 +1066,72 @@ public class WasabiAuthorizer {
 		return false;
 	}
 
-	private static Vector<String> permissionFilter(String parentUUID, String userUUID, Node userNode,
+	/**
+	 * Filters objects by permission
+	 * 
+	 * @param parentUUID
+	 * @param userUUID
+	 * @param userNode
+	 * @param wasabiType
+	 * @param permission
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	private static Vector<String> permissionFilter1(String parentUUID, String userUUID, Node userNode,
+			WasabiType wasabiType, int permission, Session s) throws UnexpectedInternalProblemException {
+		try {
+			SqlConnector sqlConnector = new SqlConnector();
+			QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
+
+			try {
+				Vector<String> results = new Vector<String>();
+				Vector<String> allGroups = getGroupMemberships(userNode, s);
+
+				String allGroupsQuery = getGroupMembershipQuery(allGroups);
+				String rightQueryAllow = getRightQueryAllow(permission);
+				String identityCheck = "(`user_id`='" + userUUID + "' OR " + allGroupsQuery + ") ";
+
+				long time = java.lang.System.currentTimeMillis();
+
+				String getACLEntries = "SELECT DISTINCT `object_id` " + "FROM `wasabi_rights` WHERE " + "`parent_id`='"
+						+ parentUUID + "'" + " AND `wasabi_type`='" + wasabiType.toString() + "'" + " AND "
+						+ identityCheck + " AND " + rightQueryAllow + "AND ((`start_time`<=" + time
+						+ " AND `end_time`>=" + time + ") OR (`start_time`=0 AND `end_time`=0)) ";
+
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getACLEntries, h);
+
+				for (WasabiACLEntry wasabiACLEntry : result) {
+					String objectUUID = wasabiACLEntry.getObject_Id();
+					if (authorize(s.getNodeByIdentifier(objectUUID), userNode.getName(), permission, s))
+						results.add(wasabiACLEntry.getObject_Id());
+				}
+
+				return results;
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			} finally {
+				sqlConnector.close();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Filters objects by permission
+	 * 
+	 * @param parentUUID
+	 * @param userUUID
+	 * @param userNode
+	 * @param wasabiType
+	 * @param permission
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	private static Vector<String> permissionFilter2(String parentUUID, String userUUID, Node userNode,
 			WasabiType wasabiType, int permission, Session s) throws UnexpectedInternalProblemException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
