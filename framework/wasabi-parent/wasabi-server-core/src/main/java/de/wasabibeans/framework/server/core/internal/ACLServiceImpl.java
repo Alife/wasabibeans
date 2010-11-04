@@ -976,7 +976,7 @@ public class ACLServiceImpl {
 					+ "(`object_id`, `user_id`, `parent_id`, `group_id`, "
 					+ "`view`, `read`, `insert`, `write`, `execute`, `comment`, `grant`, "
 					+ "`start_time`, `end_time`, `priority`, `inheritance_id`, `distance`, `wasabi_type`)"
-					+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 			int prio;
 			if ((startTime != 0 || endTime != 0))

@@ -72,15 +72,29 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node groupNode = TransferManager.convertDTO2Node(group, s);
 		Node userNode = TransferManager.convertDTO2Node(user, s);
+		String userName = ObjectServiceImpl.getName(userNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE) {
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
-						WasabiPermission.WRITE }, s))
+				// case: semi-free groups
+				if (!callerPrincipal.equals(userName)) {
+					if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+							WasabiPermission.WRITE, WasabiPermission.GRANT }, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()",
+								"INSERT, WRITE or GRANT", "group"));
+					if (!WasabiAuthorizer.authorize(userNode, callerPrincipal, new int[] { WasabiPermission.INSERT,
+							WasabiPermission.WRITE }, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()",
+								"INSERT or WRITE", "user"));
+				}
+				// case: free groups and private groups
+				else if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.EXECUTE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()",
-							"INSERT or WRITE", "group"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.addMember()", "EXECUTE",
+							"group"));
 		}
 		/* Authorization - End */
 
@@ -609,7 +623,7 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.remove()", "WRITE",
-							"document"));
+							"group"));
 				else
 					WasabiGroupACL
 							.remove(groupNode, callerPrincipal, s, WasabiConstants.JCR_SAVE_PER_METHOD, true, jms);
@@ -629,17 +643,20 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 		Session s = jcr.getJCRSession();
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
 		Node groupNode = TransferManager.convertDTO2Node(group, s);
+		Node userNode = TransferManager.convertDTO2Node(user, s);
+		String userName = ObjectServiceImpl.getName(userNode);
 
 		/* Authorization - Begin */
 		if (WasabiConstants.ACL_CHECK_ENABLE)
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.WRITE, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.removeMember()",
-							"WRITE", "group"));
+				if (!callerPrincipal.equals(userName))
+					if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, new int[] { WasabiPermission.WRITE,
+							WasabiPermission.GRANT }, s))
+						throw new NoPermissionException(WasabiExceptionMessages.get(
+								WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.removeMember()",
+								"WRITE or GRANT", "group"));
 		/* Authorization - End */
 
-		Node userNode = TransferManager.convertDTO2Node(user, s);
 		GroupServiceImpl.removeMember(groupNode, userNode, s, WasabiConstants.JCR_SAVE_PER_METHOD);
 		EventCreator.createMembershipEvent(groupNode, userNode, false, jms, callerPrincipal);
 

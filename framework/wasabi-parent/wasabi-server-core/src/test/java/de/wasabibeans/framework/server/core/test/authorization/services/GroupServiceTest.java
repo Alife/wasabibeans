@@ -44,8 +44,8 @@ import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 public class GroupServiceTest extends WasabiRemoteTest {
 
 	@Test
-	public void addMemberTest() throws WasabiException {
-		System.out.println("=== addMemberTest() ===");
+	public void addMemberTest1() throws WasabiException {
+		System.out.println("=== addMemberTest() for free and private groups ===");
 
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
@@ -68,6 +68,13 @@ public class GroupServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		aclService().remove(
+				testGroup,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
+						WasabiPermission.GRANT });
+
 		displayACLEntry(testGroup, "testGroup");
 
 		System.out.print("Adding user to testGroup...");
@@ -78,8 +85,8 @@ public class GroupServiceTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Setting INSERT fobidacne as groupRight for testGroup... ");
-		aclService().create(testGroup, wasabiGroup, WasabiPermission.INSERT, false);
+		System.out.print("Setting EXECUTE as groupRight for testGroup... ");
+		aclService().create(testGroup, wasabiGroup, WasabiPermission.EXECUTE, true);
 		System.out.println("done.");
 
 		displayACLEntry(testGroup, "testGroup");
@@ -87,6 +94,101 @@ public class GroupServiceTest extends WasabiRemoteTest {
 		System.out.print("Adding user to testGroup...");
 		try {
 			groupService().addMember(testGroup, user);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.println("===========================");
+	}
+
+	@Test
+	public void addMemberTest2() throws WasabiException {
+		System.out.println("=== addMemberTest() for semi free groups ===");
+
+		WasabiUserDTO user = userService().getUserByName("user");
+		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
+		WasabiGroupDTO wasabiGroup = groupService().getGroupByName(WasabiConstants.WASABI_GROUP_NAME);
+
+		System.out.print("Setting INSERT as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		System.out.print("Setting READ as groupRight for group wasabi... ");
+		aclService().create(wasabiGroup, wasabiGroup, WasabiPermission.READ, true);
+		System.out.println("done.");
+
+		System.out.print("Creating group testGroup...");
+		WasabiGroupDTO testGroup = null;
+		try {
+			testGroup = groupService().create("testGroup", wasabiGroup);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		aclService().remove(
+				testGroup,
+				user,
+				new int[] { WasabiPermission.VIEW, WasabiPermission.READ, WasabiPermission.COMMENT,
+						WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE,
+						WasabiPermission.GRANT });
+
+		displayACLEntry(testGroup, "testGroup");
+
+		System.out.println("Creating user newUser...");
+		WasabiUserDTO newUser = null;
+		try {
+			newUser = userService().create("newUser", "password");
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		aclService().remove(newUser, user,
+				new int[] { WasabiPermission.INSERT, WasabiPermission.EXECUTE, WasabiPermission.WRITE });
+
+		displayACLEntry(newUser, "newUser");
+
+		System.out.print("Adding newUser to testGroup...");
+		try {
+			groupService().addMember(testGroup, newUser);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting INSERT for newUser... ");
+		aclService().create(newUser, user, WasabiPermission.INSERT, true);
+		System.out.println("done.");
+
+		displayACLEntry(newUser, "newUser");
+
+		System.out.print("Adding newUser to testGroup...");
+		try {
+			groupService().addMember(testGroup, newUser);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.out.print("Setting INSERT fobidacne as groupRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.INSERT, false);
+		System.out.println("done.");
+
+		System.out.print("Setting WRITE fobidacne as groupRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.WRITE, false);
+		System.out.println("done.");
+
+		System.out.print("Setting GRANT fobidacne as groupRight for testGroup... ");
+		aclService().create(testGroup, user, WasabiPermission.GRANT, false);
+		System.out.println("done.");
+
+		displayACLEntry(testGroup, "testGroup");
+
+		System.out.print("Adding newUser to testGroup...");
+		try {
+			groupService().addMember(testGroup, newUser);
 			System.out.println("done.");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
