@@ -38,7 +38,7 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 public class WasabiGroupACL {
 
 	public static void ACLEntryForCreate(Node groupNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {	
 		if (ACLServiceImpl.getInheritance(groupNode))
 			ACLServiceImpl.setInheritance(groupNode, true);
 
