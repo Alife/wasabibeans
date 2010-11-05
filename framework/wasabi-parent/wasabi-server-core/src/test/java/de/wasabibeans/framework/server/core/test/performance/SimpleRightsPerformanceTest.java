@@ -69,25 +69,25 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 	public void createRooms1() throws WasabiException, LoginException, NamingException, NotSupportedException,
 			SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException,
 			HeuristicRollbackException {
-		int numberOfRooms = 50;
+		int numberOfRooms = 2000;
 
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		WasabiUserDTO user = userService().getUserByName("user");
 		WasabiRoomDTO usersHome = userService().getHomeRoom(user).getValue();
 
 		long startTime = java.lang.System.currentTimeMillis();
-		//utx.begin();
+		utx.begin();
 		for (long i = 0; i < numberOfRooms; i++) {
 			roomService().create(String.valueOf(i), usersHome);
 			//System.out.println("create room " + i);
 		}
-		//utx.commit();
+		utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
 
 		//utx.begin();
-		for (int j = 0; j < 2000; j++) {
+		for (int j = 0; j < 500; j++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
