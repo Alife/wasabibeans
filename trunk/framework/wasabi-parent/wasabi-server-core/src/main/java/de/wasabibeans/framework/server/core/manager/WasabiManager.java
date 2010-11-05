@@ -96,7 +96,7 @@ public class WasabiManager {
 					+ "`priority` tinyint(2) NOT NULL,"
 					+ "`distance` tinyint(2) NOT NULL,"
 					+ "`wasabi_type` enum('ROOM', 'CONTAINER', 'DOCUMENT', 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
-					+ "PRIMARY KEY (`id`)" + ") ENGINE = InnoDB ;";
+					+ "PRIMARY KEY (`id`), " + "KEY `object_id` (`object_id`), " + "KEY `parent_id` (`parent_id`)" + ") ENGINE = InnoDB ;";
 
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
@@ -105,7 +105,8 @@ public class WasabiManager {
 			String dropWasabiTemplateRightsTable = "DROP TABLE IF EXISTS wasabi_template_rights";
 			String createWasabiTeplateRightsTable = "CREATE TABLE `wasabi_template_rights` ("
 					+ "`id` int(11) NOT NULL AUTO_INCREMENT,"
-					+ "`location_id` varchar(64) NOT NULL," + "`identity_id` varchar(64) NOT NULL,"
+					+ "`location_id` varchar(64) NOT NULL,"
+					+ "`identity_id` varchar(64) NOT NULL,"
 					+ "`wasabi_type` enum('ROOM' ,'CONTAINER' ,'DOCUMENT' , 'LINK', 'ATTRIBUTE', 'USER', 'GROUP', 'ALL') NOT NULL,"
 					+ "`view` tinyint(2) NOT NULL," + "`read` tinyint(2) NOT NULL," + "`insert` tinyint(2) NOT NULL,"
 					+ "`write` tinyint(2) NOT NULL," + "`comment` tinyint(2) NOT NULL,"

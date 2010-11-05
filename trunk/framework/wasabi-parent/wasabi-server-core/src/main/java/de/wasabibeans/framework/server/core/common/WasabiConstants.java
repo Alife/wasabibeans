@@ -35,7 +35,7 @@ public interface WasabiConstants {
 	/* ACL checks and entries */
 	public final static boolean ACL_CHECK_ENABLE = true;
 	public final static boolean ACL_ENTRY_ENABLE = true;
-	public final static boolean ACL_CERTIFICATE_ENABLE = false;
+	public final static boolean ACL_CERTIFICATE_ENABLE = true;
 	public final static int ACL_TIME_ENTRY_CLEANUP = 20;
 	public final static boolean ACL_DISTANCE_CHECK = false;
 
