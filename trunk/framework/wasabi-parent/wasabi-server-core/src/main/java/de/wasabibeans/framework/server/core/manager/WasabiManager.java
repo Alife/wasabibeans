@@ -96,7 +96,8 @@ public class WasabiManager {
 					+ "`priority` tinyint(2) NOT NULL,"
 					+ "`distance` tinyint(2) NOT NULL,"
 					+ "`wasabi_type` enum('ROOM', 'CONTAINER', 'DOCUMENT', 'LINK', 'ATTRIBUTE', 'USER', 'GROUP') NOT NULL,"
-					+ "PRIMARY KEY (`id`), " + "KEY `object_id` (`object_id`), " + "KEY `parent_id` (`parent_id`)" + ") ENGINE = InnoDB ;";
+					+ "PRIMARY KEY (`id`), " + "KEY `object_id` (`object_id`), " + "KEY `parent_id` (`parent_id`)"
+					+ ") ENGINE = InnoDB ;";
 
 			run.update(dropWasabiRightsTable);
 			run.update(createWasabiRightsTable);
