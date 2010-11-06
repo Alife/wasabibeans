@@ -129,13 +129,19 @@ public class TransferManager {
 		try {
 			String label = versionHistory.getVersionLabels(version)[0];
 			Date creationDate = new Date(Long.parseLong(label));
+			String versionCreator = null;
+			try {
+				versionCreator = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_CREATOR).getString();
+			} catch (PathNotFoundException pnfe) {
+				// no versionCreator set
+			}
 			String comment = null;
 			try {
 				comment = version.getFrozenNode().getProperty(WasabiNodeProperty.VERSION_COMMENT).getString();
 			} catch (PathNotFoundException pnfe) {
 				// no comment set
 			}
-			return new WasabiVersionDTO(label, comment, creationDate);
+			return new WasabiVersionDTO(label, versionCreator, comment, creationDate);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
