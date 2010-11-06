@@ -30,8 +30,8 @@ public class VersioningServiceImpl {
 	 * @throws UnexpectedInternalProblemException
 	 * @throws ConcurrentModificationException
 	 */
-	public static void createVersionRecursively(Node node, String label, String comment, VersionManager versionManager)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {
+	public static void createVersionRecursively(Node node, String label, String callerPrincipal, String comment,
+			VersionManager versionManager) throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
 			VersionHistory versionHistory = null;
 			// check whether the node supports versioning
@@ -52,10 +52,11 @@ public class VersioningServiceImpl {
 
 			// deal with the subtree first
 			for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
-				createVersionRecursively(ni.nextNode(), label, comment, versionManager);
+				createVersionRecursively(ni.nextNode(), label, callerPrincipal, comment, versionManager);
 			}
 
 			// create a version
+			node.setProperty(WasabiNodeProperty.VERSION_CREATOR, callerPrincipal);
 			node.setProperty(WasabiNodeProperty.VERSION_COMMENT, comment);
 			node.getSession().save();
 			Version version = versionManager.checkin(node.getPath());

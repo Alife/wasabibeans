@@ -88,5 +88,6 @@ public class WasabiNodeProperty {
 	public static final String IS_CONTENT_AVAILABLE = WasabiConstants.JCR_NS_PREFIX_STRUCTURE + ":isContentAvailable";
 
 	// properties of versionable wasabi node types
+	public static final String VERSION_CREATOR = WasabiConstants.JCR_NS_PREFIX + ":versionCreator";
 	public static final String VERSION_COMMENT = WasabiConstants.JCR_NS_PREFIX + ":versionComment";
 }

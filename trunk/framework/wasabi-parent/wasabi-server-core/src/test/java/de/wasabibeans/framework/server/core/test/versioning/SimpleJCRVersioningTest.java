@@ -222,19 +222,24 @@ public class SimpleJCRVersioningTest extends Arquillian {
 			Node document = s.getNodeByIdentifier(document1Id);
 
 			DocumentServiceImpl.setContentPiped(document, "hallo", s, true, jms, sfb, WasabiConstants.ROOT_USER_NAME);
-			VersioningServiceImpl.createVersionRecursively(document, "hallo", "hallo", versionManager);
+			VersioningServiceImpl.createVersionRecursively(document, "hallo", WasabiConstants.ROOT_USER_NAME, "hallo",
+					versionManager);
 
 			Version version = versionManager.getVersionHistory(document.getPath()).getVersionByLabel("hallo");
 
 			printOutFullTree(version, "");
-			
+
 			DocumentServiceImpl.setContentPiped(document, "hallo2", s, true, jms, sfb, WasabiConstants.ROOT_USER_NAME);
-			System.out.println("---------------" + DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document).nextNode()));
-			
+			System.out.println("---------------"
+					+ DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document)
+							.nextNode()));
+
 			UserTransaction utx = (UserTransaction) jndi.lookup("UserTransaction");
 			utx.begin();
 			VersioningServiceImpl.restoreVersionRecursively(document, "hallo", versionManager);
-			System.out.println("---------------" + DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document).nextNode()));
+			System.out.println("---------------"
+					+ DocumentServiceImpl.getContentPiped(document, DocumentServiceImpl.getContentRefs(document)
+							.nextNode()));
 			utx.commit();
 
 		} finally {

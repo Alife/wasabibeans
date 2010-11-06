@@ -92,8 +92,8 @@ public class VersioningService implements VersioningServiceLocal, VersioningServ
 			// timestamp
 			String label = "" + Calendar.getInstance().getTimeInMillis();
 			// create versions for entire subtree
-			VersioningServiceImpl.createVersionRecursively(objectNode, label, comment, s.getWorkspace()
-					.getVersionManager());
+			VersioningServiceImpl.createVersionRecursively(objectNode, label, callerPrincipal, comment, s
+					.getWorkspace().getVersionManager());
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
