@@ -62,7 +62,7 @@ public class ACLTimeEntryCleaner implements ACLTimeEntryCleanerLocal {
 			certificateInvalidation(run, time);
 
 			run.update(cleanupACLTimeEntries, time);
-			logger.info("ACL time entry cleanup at " + time);
+			logger.debug("ACL time entry cleanup at " + time);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		} finally {
