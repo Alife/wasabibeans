@@ -179,8 +179,10 @@ public class WasabiAuthorizer {
 			Node userNode = UserServiceImpl.getUserByName(callerPrincipal, s);
 			String userUUID = userNode.getIdentifier();
 
-			return permissionFilter1(objectUUID, userUUID, userNode, wasabiType, permission, s);
-			// return permissionFilter2(objectUUID, userUUID, userNode, wasabiType, permission, s);
+			if(WasabiConstants.ACL_DISTANCE_CHECK)
+				return permissionFilter1(objectUUID, userUUID, userNode, wasabiType, permission, s);
+			else
+				return permissionFilter2(objectUUID, userUUID, userNode, wasabiType, permission, s);
 		} catch (RepositoryException re) {
 			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
