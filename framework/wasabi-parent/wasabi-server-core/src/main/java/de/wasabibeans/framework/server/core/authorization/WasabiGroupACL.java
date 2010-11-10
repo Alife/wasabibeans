@@ -61,7 +61,9 @@ public class WasabiGroupACL {
 	public static void ACLEntryForMove(Node groupNode, Node newParentGroupNode)
 			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String parentUUID = "";
+			String parentUUID = newParentGroupNode.getSession().getRootNode().getNode(
+					WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME).getIdentifier();
+
 			if (newParentGroupNode != null)
 				parentUUID = newParentGroupNode.getIdentifier();
 
