@@ -35,11 +35,16 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiAttributeSQL {
 
-	public static String[] SQLQueryForMove(String attributeUUID) throws UnexpectedInternalProblemException {
+	public static String[] SQLQueryForMove(String attributeUUID, String parentUUID) throws UnexpectedInternalProblemException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			// Update parent id
+			String updateParentID = "UPDATE `wasabi_rights` SET `parent_id`=? WHERE `object_id`=?";
+			run.update(updateParentID, parentUUID, attributeUUID);
+
+			// Get inheritance ids
 			String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
 					+ "WHERE `object_id`=? AND `inheritance_id`!=''";
 

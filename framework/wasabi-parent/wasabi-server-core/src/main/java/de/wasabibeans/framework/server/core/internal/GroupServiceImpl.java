@@ -343,7 +343,7 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode);
+					WasabiGroupACL.ACLEntryForMove(groupNode, newParentGroupNode);
 				/* ACL Environment - End */
 			} else {
 				Node rootOfGroupsNode = s.getRootNode().getNode(WasabiConstants.JCR_ROOT_FOR_GROUPS_NAME);
@@ -351,7 +351,7 @@ public class GroupServiceImpl {
 
 				/* ACL Environment - Begin */
 				if (WasabiConstants.ACL_ENTRY_ENABLE)
-					WasabiGroupACL.ACLEntryForMove(groupNode);
+					WasabiGroupACL.ACLEntryForMove(groupNode, newParentGroupNode);
 				/* ACL Environment - End */
 			}
 			ObjectServiceImpl.modified(groupNode, s, false, callerPrincipal, false);

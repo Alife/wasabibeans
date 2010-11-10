@@ -49,10 +49,11 @@ public class WasabiRoomACL {
 		// WasabiRoomSQL.createRandomSQLinserts();
 	}
 
-	public static void ACLEntryForMove(Node roomNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void ACLEntryForMove(Node roomNode, Node newEnvironmentNode)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier());
+			String[] inheritance_ids = WasabiRoomSQL.SQLQueryForMove(roomNode.getIdentifier(), newEnvironmentNode
+					.getIdentifier());
 			ACLServiceImpl.resetInheritance(roomNode, inheritance_ids);
 			if (ACLServiceImpl.getInheritance(roomNode))
 				ACLServiceImpl.setInheritance(roomNode, true);

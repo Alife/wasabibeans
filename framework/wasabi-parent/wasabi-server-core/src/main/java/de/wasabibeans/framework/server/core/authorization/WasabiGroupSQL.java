@@ -35,11 +35,17 @@ import de.wasabibeans.framework.server.core.util.WasabiACLEntry;
 
 public class WasabiGroupSQL {
 
-	public static String[] SQLQueryForMove(String groupUUID) throws UnexpectedInternalProblemException {
+	public static String[] SQLQueryForMove(String groupUUID, String parentUUID)
+			throws UnexpectedInternalProblemException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
 		try {
+			// Update parent id
+			String updateParentID = "UPDATE `wasabi_rights` SET `parent_id`=? WHERE `object_id`=?";
+			run.update(updateParentID, parentUUID, groupUUID);
+
+			// Get inheritance ids
 			String getInheritanceEntries = "SELECT `inheritance_id` FROM `wasabi_rights` "
 					+ "WHERE `object_id`=? AND `inheritance_id`!=''";
 

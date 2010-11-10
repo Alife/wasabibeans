@@ -251,7 +251,7 @@ public class DocumentServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiDocumentACL.ACLEntryForMove(documentNode);
+				WasabiDocumentACL.ACLEntryForMove(documentNode, newEnvironmentNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

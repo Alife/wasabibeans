@@ -45,10 +45,11 @@ public class WasabiLinkACL {
 			ACLServiceImpl.setInheritance(linkNode, true);
 	}
 
-	public static void ACLEntryForMove(Node linkNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void ACLEntryForMove(Node linkNode, Node newEnvironmentNode)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String[] inheritance_ids = WasabiLinkSQL.SQLQueryForMove(linkNode.getIdentifier());
+			String[] inheritance_ids = WasabiLinkSQL.SQLQueryForMove(linkNode.getIdentifier(), newEnvironmentNode
+					.getIdentifier());
 			ACLServiceImpl.resetInheritance(linkNode, inheritance_ids);
 			if (ACLServiceImpl.getInheritance(linkNode))
 				ACLServiceImpl.setInheritance(linkNode, true);

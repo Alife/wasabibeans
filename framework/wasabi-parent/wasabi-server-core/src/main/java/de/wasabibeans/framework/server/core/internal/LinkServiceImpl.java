@@ -213,7 +213,7 @@ public class LinkServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiLinkACL.ACLEntryForMove(linkNode);
+				WasabiLinkACL.ACLEntryForMove(linkNode, newEnvironmentNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {
