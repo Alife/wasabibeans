@@ -926,6 +926,79 @@ public class ACLServiceImpl {
 		}
 	}
 
+	public static List<WasabiACLEntryTemplate> getDefaultACLEntriesByIdentityAndByType(Node locationNode, Node identityNode,
+			WasabiType wasabiType, Session s) throws UnexpectedInternalProblemException {
+		try {
+			if (!locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
+				throw new IllegalArgumentException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
+			}
+
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			String locationUUID = ObjectServiceImpl.getUUID(locationNode);
+			String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+
+			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights "
+					+ "WHERE `location_id`=? AND `identity_id`=? AND `wasabi_type`=?";
+
+			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
+					WasabiACLEntryTemplate.class);
+			try {
+				List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntriesQuery, h, locationUUID,
+						identityUUID, wasabiType.toString());
+				return result;
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
+	/**
+	 * Returns a list with template ACL entries filtered by given identity.
+	 * 
+	 * @param locationNode
+	 * @param identityNode
+	 * @param s
+	 * @return
+	 * @throws UnexpectedInternalProblemException
+	 */
+	public static List<WasabiACLEntryTemplate> getDefaultACLEntriesByIdentity(Node locationNode, Node identityNode,
+			Session s) throws UnexpectedInternalProblemException {
+		try {
+			if (!locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.ROOM)
+					&& !locationNode.getPrimaryNodeType().getName().equals(WasabiNodeType.CONTAINER)) {
+				throw new IllegalArgumentException(WasabiExceptionMessages
+						.get(WasabiExceptionMessages.INTERNAL_TYPE_CONFLICT));
+			}
+
+			QueryRunner run = new QueryRunner(new SqlConnector().getDataSource());
+
+			String locationUUID = ObjectServiceImpl.getUUID(locationNode);
+			String identityUUID = ObjectServiceImpl.getUUID(identityNode);
+
+			String getDefaultACLEntriesQuery = "SELECT * FROM wasabi_template_rights "
+					+ "WHERE `location_id`=? AND `identity_id`=?";
+
+			ResultSetHandler<List<WasabiACLEntryTemplate>> h = new BeanListHandler<WasabiACLEntryTemplate>(
+					WasabiACLEntryTemplate.class);
+			try {
+				List<WasabiACLEntryTemplate> result = run.query(getDefaultACLEntriesQuery, h, locationUUID,
+						identityUUID);
+				return result;
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			}
+
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+		}
+	}
+
 	/**
 	 * Returns inheritance of a given objectNode. True if inheritance is active. False if inheritance is not active.
 	 * 
