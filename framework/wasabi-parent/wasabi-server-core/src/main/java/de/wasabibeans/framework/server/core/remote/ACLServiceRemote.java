@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.remote;
 import java.util.Vector;
 
 import javax.ejb.Remote;
+import javax.jcr.RepositoryException;
 
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
@@ -39,13 +40,13 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 @Remote
 public interface ACLServiceRemote {
-	
+
 	public void activateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
-	
+
 	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance,
 			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
@@ -151,5 +152,5 @@ public interface ACLServiceRemote {
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public void reset(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException, ConcurrentModificationException;
+			NoPermissionException, ConcurrentModificationException, RepositoryException;
 }
