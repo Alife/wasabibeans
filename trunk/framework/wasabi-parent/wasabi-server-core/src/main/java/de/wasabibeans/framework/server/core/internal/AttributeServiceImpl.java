@@ -279,7 +279,7 @@ public class AttributeServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiAttributeACL.ACLEntryForMove(attributeNode);
+				WasabiAttributeACL.ACLEntryForMove(attributeNode, newAffiliationNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

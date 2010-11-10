@@ -38,7 +38,7 @@ import de.wasabibeans.framework.server.core.util.JmsConnector;
 public class WasabiGroupACL {
 
 	public static void ACLEntryForCreate(Node groupNode, String callerPrincipal, Session s)
-			throws UnexpectedInternalProblemException, ConcurrentModificationException {	
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		if (ACLServiceImpl.getInheritance(groupNode))
 			ACLServiceImpl.setInheritance(groupNode, true);
 
@@ -58,10 +58,14 @@ public class WasabiGroupACL {
 		}
 	}
 
-	public static void ACLEntryForMove(Node groupNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException {
+	public static void ACLEntryForMove(Node groupNode, Node newParentGroupNode)
+			throws UnexpectedInternalProblemException, ConcurrentModificationException {
 		try {
-			String[] inheritance_ids = WasabiGroupSQL.SQLQueryForMove(groupNode.getIdentifier());
+			String parentUUID = "";
+			if (newParentGroupNode != null)
+				parentUUID = newParentGroupNode.getIdentifier();
+
+			String[] inheritance_ids = WasabiGroupSQL.SQLQueryForMove(groupNode.getIdentifier(), parentUUID);
 			ACLServiceImpl.resetInheritance(groupNode, inheritance_ids);
 			if (ACLServiceImpl.getInheritance(groupNode))
 				ACLServiceImpl.setInheritance(groupNode, true);

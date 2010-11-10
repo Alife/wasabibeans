@@ -56,7 +56,8 @@ public class ContainerServiceImpl {
 				containerNode = environmentNode.addNode(WasabiNodeProperty.CONTAINERS + "/" + name,
 						WasabiNodeType.CONTAINER);
 			} else {
-				Node containers = environmentNode.addNode(WasabiNodeProperty.CONTAINERS, WasabiNodeType.OBJECT_COLLECTION);
+				Node containers = environmentNode.addNode(WasabiNodeProperty.CONTAINERS,
+						WasabiNodeType.OBJECT_COLLECTION);
 				containerNode = containers.addNode(name, WasabiNodeType.CONTAINER);
 			}
 			ObjectServiceImpl.created(containerNode, s, false, callerPrincipal, true);
@@ -239,7 +240,7 @@ public class ContainerServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiContainerACL.ACLEntryForMove(containerNode);
+				WasabiContainerACL.ACLEntryForMove(containerNode, newEnvironmentNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {

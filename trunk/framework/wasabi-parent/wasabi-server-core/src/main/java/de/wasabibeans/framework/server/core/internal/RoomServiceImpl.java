@@ -257,7 +257,7 @@ public class RoomServiceImpl {
 
 			/* ACL Environment - Begin */
 			if (WasabiConstants.ACL_ENTRY_ENABLE)
-				WasabiRoomACL.ACLEntryForMove(roomNode);
+				WasabiRoomACL.ACLEntryForMove(roomNode, newEnvironmentNode);
 			/* ACL Environment - End */
 
 			if (doJcrSave) {
