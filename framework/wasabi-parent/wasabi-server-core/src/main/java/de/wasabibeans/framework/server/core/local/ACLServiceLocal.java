@@ -91,10 +91,10 @@ public interface ACLServiceLocal {
 			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
-	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO location)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
-	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentity(WasabiLocationDTO wasabiLocation,
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentity(WasabiLocationDTO location,
 			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 
@@ -102,7 +102,7 @@ public interface ACLServiceLocal {
 			WasabiIdentityDTO identity, WasabiType wasabiType) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException;
 
-	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO wasabiLocation,
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO location,
 			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
 

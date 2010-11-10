@@ -96,7 +96,7 @@ public class PermissionFilterTest extends WasabiRemoteTest {
 
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		utx.begin();
-		System.out.println("Creating 2000 documents with VIEW and 2000 without VIEW... ");
+		System.out.println("Creating 1000 documents with VIEW and 1000 without VIEW... ");
 		int c = 0;
 		for (int i = 0; i < 200; i++) {
 			for (int j = 0; j < 10; j++) {
