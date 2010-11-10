@@ -94,6 +94,14 @@ public interface ACLServiceLocal {
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
 
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentity(WasabiLocationDTO wasabiLocation,
+			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException;
+
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentityAndByType(WasabiLocationDTO location,
+			WasabiIdentityDTO identity, WasabiType wasabiType) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException;
+
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO wasabiLocation,
 			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;

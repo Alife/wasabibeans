@@ -39,13 +39,13 @@ import de.wasabibeans.framework.server.core.exception.UnexpectedInternalProblemE
 
 @Remote
 public interface ACLServiceRemote {
-
+	
 	public void activateInheritance(WasabiObjectDTO object) throws UnexpectedInternalProblemException,
 			ObjectDoesNotExistException, NoPermissionException, ConcurrentModificationException;
 
 	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
-
+	
 	public void create(WasabiObjectDTO object, WasabiIdentityDTO identity, int permission, boolean allowance,
 			long startTime, long endTime) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException;
@@ -93,6 +93,14 @@ public interface ACLServiceRemote {
 
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntries(WasabiLocationDTO wasabiLocation)
 			throws UnexpectedInternalProblemException, ObjectDoesNotExistException, NoPermissionException;
+
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentity(WasabiLocationDTO wasabiLocation,
+			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException;
+
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentityAndByType(WasabiLocationDTO location,
+			WasabiIdentityDTO identity, WasabiType wasabiType) throws UnexpectedInternalProblemException,
+			ObjectDoesNotExistException, NoPermissionException;
 
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO wasabiLocation,
 			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
