@@ -476,34 +476,6 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 	}
 
 	@Override
-	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO location,
-			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException {
-		Session s = jcr.getJCRSession();
-		Node locationNode = TransferManager.convertDTO2Node(location, s);
-		String callerPrincipal = ctx.getCallerPrincipal().getName();
-
-		/* Authorization - Begin */
-		if (WasabiConstants.ACL_CHECK_ENABLE)
-			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
-				if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.READ, s))
-					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
-							"ACLService.getDefaultAclEntriesByType()", "READ", "location"));
-		/* Authorization - End */
-
-		Vector<WasabiACLEntryTemplateDTO> wasabiDefaultACLEntriesDTO = new Vector<WasabiACLEntryTemplateDTO>();
-		List<WasabiACLEntryTemplate> wasabiDefaultALCEntries = ACLServiceImpl.getDefaultACLEntriesByType(locationNode,
-				wasabiType, s);
-
-		for (Iterator<WasabiACLEntryTemplate> iterator = wasabiDefaultALCEntries.iterator(); iterator.hasNext();) {
-			WasabiACLEntryTemplate wasabiDefaultACLEntry = (WasabiACLEntryTemplate) iterator.next();
-			wasabiDefaultACLEntriesDTO.add(TransferManager.convertWasabiACLEntryTemplate2DTO(wasabiDefaultACLEntry));
-		}
-		return wasabiDefaultACLEntriesDTO;
-	}
-
-	@Override
 	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByIdentity(WasabiLocationDTO location,
 			WasabiIdentityDTO identity) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
 			NoPermissionException {
@@ -553,6 +525,34 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 		Vector<WasabiACLEntryTemplateDTO> wasabiDefaultACLEntriesDTO = new Vector<WasabiACLEntryTemplateDTO>();
 		List<WasabiACLEntryTemplate> wasabiDefaultALCEntries = ACLServiceImpl.getDefaultACLEntriesByIdentityAndByType(
 				locationNode, identityNode, wasabiType, s);
+
+		for (Iterator<WasabiACLEntryTemplate> iterator = wasabiDefaultALCEntries.iterator(); iterator.hasNext();) {
+			WasabiACLEntryTemplate wasabiDefaultACLEntry = (WasabiACLEntryTemplate) iterator.next();
+			wasabiDefaultACLEntriesDTO.add(TransferManager.convertWasabiACLEntryTemplate2DTO(wasabiDefaultACLEntry));
+		}
+		return wasabiDefaultACLEntriesDTO;
+	}
+
+	@Override
+	public Vector<WasabiACLEntryTemplateDTO> getDefaultAclEntriesByType(WasabiLocationDTO location,
+			WasabiType wasabiType) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
+			NoPermissionException {
+		Session s = jcr.getJCRSession();
+		Node locationNode = TransferManager.convertDTO2Node(location, s);
+		String callerPrincipal = ctx.getCallerPrincipal().getName();
+
+		/* Authorization - Begin */
+		if (WasabiConstants.ACL_CHECK_ENABLE)
+			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
+				if (!WasabiAuthorizer.authorize(locationNode, callerPrincipal, WasabiPermission.READ, s))
+					throw new NoPermissionException(WasabiExceptionMessages.get(
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION,
+							"ACLService.getDefaultAclEntriesByType()", "READ", "location"));
+		/* Authorization - End */
+
+		Vector<WasabiACLEntryTemplateDTO> wasabiDefaultACLEntriesDTO = new Vector<WasabiACLEntryTemplateDTO>();
+		List<WasabiACLEntryTemplate> wasabiDefaultALCEntries = ACLServiceImpl.getDefaultACLEntriesByType(locationNode,
+				wasabiType, s);
 
 		for (Iterator<WasabiACLEntryTemplate> iterator = wasabiDefaultALCEntries.iterator(); iterator.hasNext();) {
 			WasabiACLEntryTemplate wasabiDefaultACLEntry = (WasabiACLEntryTemplate) iterator.next();
