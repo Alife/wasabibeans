@@ -24,6 +24,7 @@ package de.wasabibeans.framework.server.core.local;
 import java.util.Vector;
 
 import javax.ejb.Local;
+import javax.jcr.RepositoryException;
 
 import de.wasabibeans.framework.server.core.common.WasabiType;
 import de.wasabibeans.framework.server.core.dto.WasabiACLEntryDTO;
@@ -151,5 +152,5 @@ public interface ACLServiceLocal {
 			ObjectDoesNotExistException, NoPermissionException;
 
 	public void reset(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException, ConcurrentModificationException;
+			NoPermissionException, ConcurrentModificationException, RepositoryException;
 }

@@ -1162,6 +1162,79 @@ public class ACLServiceImpl {
 		}
 	}
 
+	private static void propagateInheritanceForOneChild(Node objectNode) throws UnexpectedInternalProblemException {
+		SqlConnector sqlConnector = new SqlConnector();
+		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
+
+		try {
+			try {
+				String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+				Node parentNode = objectNode.getParent().getParent();
+				String parentUUID = ObjectServiceImpl.getUUID(parentNode);
+
+				String getParentACLEntries = "SELECT * FROM `wasabi_rights` " + "WHERE `object_id`=?";
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getParentACLEntries, h, parentUUID);
+
+				for (WasabiACLEntry wasabiACLEntry : result) {
+					String userUUID = wasabiACLEntry.getUser_Id();
+					String groupUUID = wasabiACLEntry.getGroup_Id();
+
+					int view = wasabiACLEntry.getView();
+					int read = wasabiACLEntry.getRead();
+					int comment = wasabiACLEntry.getComment();
+					int execute = wasabiACLEntry.getExecute();
+					int insert = wasabiACLEntry.getInsert();
+					int write = wasabiACLEntry.getWrite();
+					int grant = wasabiACLEntry.getGrant();
+					int dist = wasabiACLEntry.getDistance();
+					long startTime = wasabiACLEntry.getStart_Time();
+					long endTime = wasabiACLEntry.getEnd_Time();
+					String wasabiType = wasabiACLEntry.getWasabi_Type();
+					String inheritance = wasabiACLEntry.getInheritance_Id();
+					String objectID = wasabiACLEntry.getObject_Id();
+
+					if (!(inheritance.length() > 0))
+						inheritance = objectID;
+
+					int distance = dist + 1;
+
+					if (userUUID.length() > 0) {
+						propagateUserInheritance(objectUUID, parentUUID, userUUID, view, read, comment, execute,
+								insert, write, grant, inheritance, distance, startTime, endTime, wasabiType, run);
+
+						/* WasabiCertificate - Begin */
+						if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+							WasabiCertificate.invalidateCertificate(objectNode, objectNode.getSession()
+									.getNodeByIdentifier(userUUID), new int[] { WasabiPermission.VIEW,
+									WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+									WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+									new int[] { 0, 0, 0, 0, 0, 0, 0 });
+						/* WasabiCertificate - End */
+					} else {
+						propagateGroupInheritance(objectUUID, parentUUID, groupUUID, view, read, comment, execute,
+								insert, write, grant, inheritance, distance, startTime, endTime, wasabiType, run);
+
+						/* WasabiCertificate - Begin */
+						if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+							WasabiCertificate.invalidateCertificate(objectNode, objectNode.getSession()
+									.getNodeByIdentifier(groupUUID), new int[] { WasabiPermission.VIEW,
+									WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+									WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT },
+									new int[] { 0, 0, 0, 0, 0, 0, 0 });
+						/* WasabiCertificate - End */
+					}
+				}
+			} catch (RepositoryException re) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
+			}
+		} catch (SQLException e) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+		} finally {
+			sqlConnector.close();
+		}
+	}
+
 	/**
 	 * Inserts inherited group rights controlled by {@link updateExplicitGroupRights}.
 	 * 
@@ -1381,8 +1454,11 @@ public class ACLServiceImpl {
 	 * 
 	 * @param objectNode
 	 * @throws UnexpectedInternalProblemException
+	 * @throws RepositoryException
+	 * @throws ConcurrentModificationException
 	 */
-	public static void reset(Node objectNode) throws UnexpectedInternalProblemException {
+	public static void reset(Node objectNode) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException, RepositoryException {
 		SqlConnector sqlConnector = new SqlConnector();
 		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
@@ -1414,8 +1490,11 @@ public class ACLServiceImpl {
 	 * @param objectNode
 	 * @param run
 	 * @throws UnexpectedInternalProblemException
+	 * @throws RepositoryException
+	 * @throws ConcurrentModificationException
 	 */
-	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException {
+	private static void resetChildren(Node objectNode, QueryRunner run) throws UnexpectedInternalProblemException,
+			ConcurrentModificationException, RepositoryException {
 		Vector<Node> Nodes = getChildren(objectNode);
 
 		if (!Nodes.isEmpty()) {
@@ -1437,13 +1516,20 @@ public class ACLServiceImpl {
 							0, 0, 0, 0, 0, 0 });
 				/* WasabiCertificate - End */
 
+				// set entries from parent
+				propagateInheritanceForOneChild(objectNode);
+
+				// set inheritance node property
+				ACLServiceImpl.setInheritanceNodeProperty(objectNode, true, objectNode.getSession(),
+						WasabiConstants.JCR_SAVE_PER_METHOD);
+
 				// next children
 				resetChildren(node, run);
-
-				// set entries from parent
-				setInheritance(objectNode, true);
 			}
+		} else {
+			setInheritance(objectNode, true);
 		}
+
 	}
 
 	/**
