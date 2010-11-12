@@ -36,7 +36,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import de.wasabibeans.framework.server.core.common.WasabiPermission;
 import de.wasabibeans.framework.server.core.dto.WasabiRoomDTO;
 import de.wasabibeans.framework.server.core.dto.WasabiUserDTO;
 import de.wasabibeans.framework.server.core.exception.WasabiException;
@@ -44,7 +43,7 @@ import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class PermissionDeleteTest extends WasabiRemoteTest {
+public class PermissionInheritanceBTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -84,17 +83,11 @@ public class PermissionDeleteTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
-		System.out.print("Deactivating inheritance for createTestRoom... ");
-		aclService().deactivateInheritance(testRoom);
-		System.out.println("done.");
-
-		aclService().remove(testRoom, user, new int[] { WasabiPermission.COMMENT, WasabiPermission.EXECUTE });
-
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		utx.begin();
 		System.out.println("Creating 1000 rooms in one hierarchy ");
 		WasabiRoomDTO roomRef = testRoom;
-		for (int i = 0; i < 999; i++) {
+		for (int i = 0; i < 499; i++) {
 			roomRef = roomService().create(new Integer(i).toString(), testRoom);
 			System.out.println("create room " + i);
 		}
@@ -102,11 +95,11 @@ public class PermissionDeleteTest extends WasabiRemoteTest {
 
 		long startTime = java.lang.System.currentTimeMillis();
 		utx.begin();
-		roomService().remove(testRoom, null);
+		aclService().activateInheritance(testRoom);
 		utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
-		System.out.println("Time for deleting rooms: " + (endTime - startTime));
+		System.out.println("Time for deakt inhc: " + (endTime - startTime));
 
 		System.out.println("===========================");
 

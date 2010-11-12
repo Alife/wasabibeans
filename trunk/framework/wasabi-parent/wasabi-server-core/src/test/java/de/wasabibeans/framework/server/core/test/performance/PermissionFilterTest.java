@@ -98,7 +98,7 @@ public class PermissionFilterTest extends WasabiRemoteTest {
 		utx.begin();
 		System.out.println("Creating 1000 documents with VIEW and 1000 without VIEW... ");
 		int c = 0;
-		for (int i = 0; i < 200; i++) {
+		for (int i = 0; i < 100; i++) {
 			for (int j = 0; j < 10; j++) {
 				documentService().create(new Integer(c).toString(), testRoom);
 				c++;
@@ -115,7 +115,9 @@ public class PermissionFilterTest extends WasabiRemoteTest {
 		System.out.println("Using permissionFilter... ");
 
 		long startTime = java.lang.System.currentTimeMillis();
+		//utx.begin();
 		Vector<WasabiDocumentDTO> docs = documentService().getDocuments(testRoom);
+		//utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
 		System.out.println("Getting " + docs.size() + " in " + (endTime - startTime));
@@ -123,7 +125,9 @@ public class PermissionFilterTest extends WasabiRemoteTest {
 		System.out.println("Using permissionFilter with certificates... ");
 
 		long startTimeC = java.lang.System.currentTimeMillis();
+		//utx.begin();
 		Vector<WasabiDocumentDTO> docsC = documentService().getDocuments(testRoom);
+		//utx.commit();
 		long endTimeC = java.lang.System.currentTimeMillis();
 
 		System.out.println("Getting " + docsC.size() + " in " + (endTimeC - startTimeC));
