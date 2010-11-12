@@ -43,7 +43,7 @@ import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
+public class SimpleReadPerformanceTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -69,7 +69,7 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 	public void createRooms1() throws WasabiException, LoginException, NamingException, NotSupportedException,
 			SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException,
 			HeuristicRollbackException {
-		int numberOfRooms = 15;
+		int numberOfRooms = 1000;
 
 		UserTransaction utx = (UserTransaction) reWaCon.lookupGeneral("UserTransaction");
 		WasabiUserDTO user = userService().getUserByName("user");
@@ -86,16 +86,84 @@ public class SimpleRightsPerformanceTest extends WasabiRemoteTest {
 
 		long startTimeRead = java.lang.System.currentTimeMillis();
 
+//		//utx.begin();
+//		for (int j = 0; j < 10; j++) {
+//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+//			roomService().getName(room);
+//		}
+//	    //utx.commit();
+//		long endTimeRead = java.lang.System.currentTimeMillis();
+
+		System.out.println("Write pass 1: " + (endTime - startTime));
+//		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
+		
+		long startTimeRead2 = java.lang.System.currentTimeMillis();
+		utx.begin();
+		for (int j = 0; j < 15; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+			roomService().getName(room);
+		}
+		long endTimeRead2 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 2: " + (endTimeRead2 - startTimeRead2));
+		
+		long startTimeRead3 = java.lang.System.currentTimeMillis();
+		utx.begin();
+		for (int j = 0; j < 50; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+			roomService().getName(room);
+		}
+		long endTimeRead3 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 3: " + (endTimeRead3 - startTimeRead3));
+		
+		long startTimeRead4 = java.lang.System.currentTimeMillis();
+		utx.begin();
+		for (int j = 0; j < 100; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+			roomService().getName(room);
+		}
+		long endTimeRead4 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 4: " + (endTimeRead4 - startTimeRead4));
+		
+		long startTimeRead5 = java.lang.System.currentTimeMillis();
+		utx.begin();
+		for (int j = 0; j < 250; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+			roomService().getName(room);
+		}
+		long endTimeRead5 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 5: " + (endTimeRead5 - startTimeRead5));
+		
+		long startTimeRead6 = java.lang.System.currentTimeMillis();
+		utx.begin();
+		for (int j = 0; j < 500; j++) {
+			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+			roomService().getName(room);
+		}
+		long endTimeRead6 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 6: " + (endTimeRead6 - startTimeRead6));
+		
+		long startTimeRead7 = java.lang.System.currentTimeMillis();
 		utx.begin();
 		for (int j = 0; j < 1000; j++) {
 			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
 			roomService().getName(room);
 		}
-	    utx.commit();
-		long endTimeRead = java.lang.System.currentTimeMillis();
-
-		System.out.println("Write pass 1: " + (endTime - startTime));
-		System.out.println("Read pass 1: " + (endTimeRead - startTimeRead));
+		long endTimeRead7 = java.lang.System.currentTimeMillis();
+		utx.commit();
+		System.out.println("Read pass 7: " + (endTimeRead7 - startTimeRead7));
+		
+//		long startTimeRead8 = java.lang.System.currentTimeMillis();
+//		for (int j = 0; j < 2000; j++) {
+//			WasabiRoomDTO room = roomService().getRoomByName(usersHome, String.valueOf(randNr(numberOfRooms - 1)));
+//			roomService().getName(room);
+//		}
+//		long endTimeRead8 = java.lang.System.currentTimeMillis();
+//		System.out.println("Read pass 8: " + (endTimeRead8 - startTimeRead8));
 	}
 
 	// @Test

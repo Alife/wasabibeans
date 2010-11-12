@@ -44,7 +44,7 @@ import de.wasabibeans.framework.server.core.test.remote.WasabiRemoteTest;
 import de.wasabibeans.framework.server.core.test.testhelper.TestHelperRemote;
 
 @Run(RunModeType.AS_CLIENT)
-public class PermissionDeleteTest extends WasabiRemoteTest {
+public class PermissionMoveTest extends WasabiRemoteTest {
 
 	@BeforeMethod
 	public void setUpBeforeEachMethod() throws Exception {
@@ -84,6 +84,15 @@ public class PermissionDeleteTest extends WasabiRemoteTest {
 			System.out.println(e.getMessage());
 		}
 
+		System.out.print("Creating testRoom2 at users home... ");
+		WasabiRoomDTO testRoom2 = null;
+		try {
+			testRoom2 = roomService().create("testRoom2", usersHome);
+			System.out.println("done.");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
 		System.out.print("Deactivating inheritance for createTestRoom... ");
 		aclService().deactivateInheritance(testRoom);
 		System.out.println("done.");
@@ -94,7 +103,7 @@ public class PermissionDeleteTest extends WasabiRemoteTest {
 		utx.begin();
 		System.out.println("Creating 1000 rooms in one hierarchy ");
 		WasabiRoomDTO roomRef = testRoom;
-		for (int i = 0; i < 999; i++) {
+		for (int i = 0; i < 499; i++) {
 			roomRef = roomService().create(new Integer(i).toString(), testRoom);
 			System.out.println("create room " + i);
 		}
@@ -102,11 +111,11 @@ public class PermissionDeleteTest extends WasabiRemoteTest {
 
 		long startTime = java.lang.System.currentTimeMillis();
 		utx.begin();
-		roomService().remove(testRoom, null);
+		roomService().move(testRoom, testRoom2, null);
 		utx.commit();
 		long endTime = java.lang.System.currentTimeMillis();
 
-		System.out.println("Time for deleting rooms: " + (endTime - startTime));
+		System.out.println("Time for moving rooms: " + (endTime - startTime));
 
 		System.out.println("===========================");
 
