@@ -123,7 +123,6 @@ public class Event2UserDestinationAllocator implements MessageListener {
 		for (Entry<String, SubscriptionInfo> subscriber : subscribers) {
 			try {
 				SubscriptionInfo info = subscriber.getValue();
-				// TODO check read permission
 				// get temporary destination of subscriber (queue or topic) and send message
 				if (info.isQueue()) {
 					jmsProducer.send(jmsSession.createQueue(info.getJmsDestinationName()), message);
