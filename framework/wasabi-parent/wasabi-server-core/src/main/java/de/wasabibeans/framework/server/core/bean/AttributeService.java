@@ -289,7 +289,7 @@ public class AttributeService extends ObjectService implements AttributeServiceL
 				if (!WasabiAuthorizer.authorizeChildreen(attributeNode, callerPrincipal, WasabiPermission.WRITE, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
 							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "AttributeService.move()", "WRITE",
-							"room and sub objects"));
+							"object and sub objects"));
 			}
 		/* Authorization - End */
 

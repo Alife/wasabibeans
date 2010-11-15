@@ -270,8 +270,8 @@ public class GroupService extends ObjectService implements GroupServiceLocal, Gr
 			if (!WasabiAuthorizer.isAdminUser(callerPrincipal, s))
 				if (!WasabiAuthorizer.authorize(groupNode, callerPrincipal, WasabiPermission.VIEW, s))
 					throw new NoPermissionException(WasabiExceptionMessages.get(
-							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION, "GroupService.getGroupByName()",
-							"VIEW", "group"));
+							WasabiExceptionMessages.AUTHORIZATION_NO_PERMISSION_RETURN,
+							"GroupService.getGroupByName()", "VIEW", "group"));
 		}
 		/* Authorization - End */
 

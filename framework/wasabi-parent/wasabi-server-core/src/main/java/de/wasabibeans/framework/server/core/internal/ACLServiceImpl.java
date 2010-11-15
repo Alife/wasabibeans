@@ -1524,35 +1524,39 @@ public class ACLServiceImpl {
 	 * @throws ConcurrentModificationException
 	 */
 	public static void reset(Node objectNode) throws UnexpectedInternalProblemException,
-			ConcurrentModificationException, RepositoryException {
-		SqlConnector sqlConnector = new SqlConnector();
-		QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
-
+			ConcurrentModificationException {
 		try {
-			String objectUUID = ObjectServiceImpl.getUUID(objectNode);
-			String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
-			run.update(deleteRights, objectUUID);
+			SqlConnector sqlConnector = new SqlConnector();
+			QueryRunner run = new QueryRunner(sqlConnector.getDataSource());
 
-			// set entries from parent
-			propagateInheritanceForOneChild(objectNode);
+			try {
+				String objectUUID = ObjectServiceImpl.getUUID(objectNode);
+				String deleteRights = "DELETE FROM `wasabi_rights` WHERE `object_id`=? AND `inheritance_id`!=''";
+				run.update(deleteRights, objectUUID);
 
-			/* WasabiCertificate - Begin */
-			if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
-				WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
-						WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
-						WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0, 0, 0,
-						0, 0, 0, 0 });
-			/* WasabiCertificate - End */
+				// set entries from parent
+				propagateInheritanceForOneChild(objectNode);
 
-			String getParentACLEntries = "SELECT * FROM `wasabi_rights` " + "WHERE `object_id`=?";
-			ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
-			List<WasabiACLEntry> result = run.query(getParentACLEntries, h, objectUUID);
+				/* WasabiCertificate - Begin */
+				if (WasabiConstants.ACL_CERTIFICATE_ENABLE)
+					WasabiCertificate.invalidateCertificateByObject(objectNode, new int[] { WasabiPermission.VIEW,
+							WasabiPermission.READ, WasabiPermission.EXECUTE, WasabiPermission.COMMENT,
+							WasabiPermission.INSERT, WasabiPermission.WRITE, WasabiPermission.GRANT }, new int[] { 0,
+							0, 0, 0, 0, 0, 0 });
+				/* WasabiCertificate - End */
 
-			resetChildren(objectNode, run, result);
-		} catch (SQLException e) {
-			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
-		} finally {
-			sqlConnector.close();
+				String getParentACLEntries = "SELECT * FROM `wasabi_rights` " + "WHERE `object_id`=?";
+				ResultSetHandler<List<WasabiACLEntry>> h = new BeanListHandler<WasabiACLEntry>(WasabiACLEntry.class);
+				List<WasabiACLEntry> result = run.query(getParentACLEntries, h, objectUUID);
+
+				resetChildren(objectNode, run, result);
+			} catch (SQLException e) {
+				throw new UnexpectedInternalProblemException(WasabiExceptionMessages.DB_FAILURE, e);
+			} finally {
+				sqlConnector.close();
+			}
+		} catch (RepositoryException re) {
+			throw new UnexpectedInternalProblemException(WasabiExceptionMessages.JCR_REPOSITORY_FAILURE, re);
 		}
 	}
 

@@ -34,7 +34,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.interceptor.Interceptors;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -820,7 +819,7 @@ public class ACLService implements ACLServiceLocal, ACLServiceRemote, WasabiAOP 
 
 	@Override
 	public void reset(WasabiObjectDTO object) throws UnexpectedInternalProblemException, ObjectDoesNotExistException,
-			NoPermissionException, ConcurrentModificationException, RepositoryException {
+			NoPermissionException, ConcurrentModificationException {
 		Session s = jcr.getJCRSession();
 		Node objectNode = TransferManager.convertDTO2Node(object, s);
 		String callerPrincipal = ctx.getCallerPrincipal().getName();
