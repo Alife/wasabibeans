@@ -37,15 +37,24 @@ public class VersioningServiceImpl {
 			// check whether the node supports versioning
 			try {
 				versionHistory = versionManager.getVersionHistory(node.getPath());
-			} catch (UnsupportedRepositoryOperationException uroe) { // does not support versioning yet
+			} catch (UnsupportedRepositoryOperationException uroe) { // does not support versioning yet...
 				String primaryNodeType = node.getPrimaryNodeType().getName();
 				if (primaryNodeType.equals(WasabiNodeType.ROOM) || primaryNodeType.equals(WasabiNodeType.CONTAINER)
-						|| primaryNodeType.equals(WasabiNodeType.DOCUMENT)) { // but should support it
+						|| primaryNodeType.equals(WasabiNodeType.DOCUMENT)) { // ...but should support it
 					// make it versionable
 					node.addMixin(NodeType.MIX_VERSIONABLE);
 					node.getSession().save();
 					versionHistory = versionManager.getVersionHistory(node.getPath());
-				} else { // does not and should not support versioning
+				} else if (primaryNodeType.equals(WasabiNodeType.OBJECT_COLLECTION)) {
+					String name = node.getName();
+					if (name.equals(WasabiNodeProperty.ROOMS) || name.equals(WasabiNodeProperty.CONTAINERS)
+							|| name.equals(WasabiNodeProperty.DOCUMENTS)) { // ...but should support it
+						// make it versionable
+						node.addMixin(NodeType.MIX_VERSIONABLE);
+						node.getSession().save();
+						versionHistory = versionManager.getVersionHistory(node.getPath());
+					}
+				} else { // ...and should not support versioning
 					return;
 				}
 			}
@@ -93,17 +102,17 @@ public class VersioningServiceImpl {
 				return;
 			}
 
-			// deal with the subtree first
-			for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
-				restoreVersionRecursively(ni.nextNode(), label, versionManager);
-			}
-
 			// restore the version
 			if (node.getSession().hasPendingChanges()) {
 				node.getSession().save();
 			}
 			versionManager.restoreByLabel(node.getPath(), label, true);
 			versionManager.checkout(node.getPath());
+
+			// deal with the subtree
+			for (NodeIterator ni = node.getNodes(); ni.hasNext();) {
+				restoreVersionRecursively(ni.nextNode(), label, versionManager);
+			}
 		} catch (InvalidItemStateException iise) {
 			throw new ConcurrentModificationException(WasabiExceptionMessages.CONCURRENT_MOD_INVALIDSTATE, iise);
 		} catch (LockException le) {
