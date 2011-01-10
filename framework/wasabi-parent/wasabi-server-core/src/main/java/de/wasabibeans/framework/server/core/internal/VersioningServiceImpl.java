@@ -53,6 +53,8 @@ public class VersioningServiceImpl {
 						node.addMixin(NodeType.MIX_VERSIONABLE);
 						node.getSession().save();
 						versionHistory = versionManager.getVersionHistory(node.getPath());
+					} else { // ...and should not support versioning
+						return;
 					}
 				} else { // ...and should not support versioning
 					return;

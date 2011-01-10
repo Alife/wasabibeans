@@ -45,6 +45,7 @@
 	+ * (nt:base)
 	
 [wasabiStructure:objectCollection] > nt:base
+	- * (UNDEFINED)
 	+ * (wasabi:object) VERSION
 	
 [wasabiStructure:refCollection] > nt:base
