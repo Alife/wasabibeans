@@ -1,0 +1,1 @@
+WasabiBeans is a JavaEE based framework to support the establishment of cooperative work and learning environments. If you have any questions, don't hesitate to contact me: schulte@uni-paderborn.de
